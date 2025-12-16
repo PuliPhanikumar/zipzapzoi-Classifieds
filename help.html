@@ -139,10 +139,10 @@
         document.getElementById('userAvatar').textContent = 'G';
     }
 
-    // --- 2. FAQ DATA ---
+    // --- 2. FAQ DATA & RENDER LOGIC (unchanged) ---
     const faqs = [
       { category: 'Buying', q: "How do I contact a seller?", a: "Go to the listing page and click the 'Chat' or 'Call' button. You must be logged in to start a conversation." },
-      { category: 'Buying', q: "Is payment handled on ZipZapZoi?", a: "Currently, we connect buyers and sellers. Payments should be made in person or via trusted methods after inspecting the item. Avoid sending money in advance." },
+      { category: 'Buying', q: "Is payment handled on ZipZapZoi?", a: "Currently, we connect buyers and sellers. Payments should be made in person. Avoid sending money in advance." },
       { category: 'Selling', q: "How do I post an ad?", a: "Click the 'Post Listing' button in the top right corner. Fill in the details, upload photos, and your ad will go live instantly." },
       { category: 'Selling', q: "Can I edit my listing?", a: "Yes. Go to your Seller Dashboard > My Listings, and click the Edit (pencil) icon." },
       { category: 'Account', q: "I forgot my password.", a: "On the Login page, click 'Forgot Password' to receive a reset link via email." },
@@ -150,12 +150,10 @@
       { category: 'Safety', q: "How do I report a user?", a: "Go to the user's profile or listing page and click the 'Flag' or 'Report' icon." }
     ];
 
-    // --- 3. RENDER LOGIC ---
     const faqContainer = document.getElementById('faqContainer');
 
     function renderFAQs(filterText = '', categoryFilter = '') {
       faqContainer.innerHTML = '';
-      
       const filtered = faqs.filter(item => {
         const matchesText = item.q.toLowerCase().includes(filterText.toLowerCase()) || item.a.toLowerCase().includes(filterText.toLowerCase());
         const matchesCat = categoryFilter ? item.category === categoryFilter : true;
@@ -171,7 +169,7 @@
         const div = document.createElement('div');
         div.className = "bg-white border border-gray-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-sm transition-shadow";
         div.onclick = () => toggleAccordion(index);
-        
+        div.id = `faq-wrapper-${index}`;
         div.innerHTML = `
           <div class="p-4 flex justify-between items-center bg-gray-50/50">
             <h3 class="font-bold text-gray-800 text-sm md:text-base">${item.q}</h3>
@@ -181,50 +179,54 @@
             <div class="py-4 border-t border-gray-100">${item.a}</div>
           </div>
         `;
-        // ID wrapper for toggle logic
-        div.id = `faq-wrapper-${index}`;
         faqContainer.appendChild(div);
       });
     }
 
-    // --- 4. INTERACTION ---
     function toggleAccordion(index) {
       const wrapper = document.getElementById(`faq-wrapper-${index}`);
       const wasOpen = wrapper.classList.contains('faq-open');
-      
-      // Close all others (Accordion behavior)
       document.querySelectorAll('[id^="faq-wrapper-"]').forEach(el => el.classList.remove('faq-open'));
-      
-      // Toggle clicked one
-      if (!wasOpen) {
-        wrapper.classList.add('faq-open');
-      }
+      if (!wasOpen) wrapper.classList.add('faq-open');
     }
 
     window.filterCategory = (cat) => {
-      document.getElementById('searchInput').value = ''; // Clear search
+      document.getElementById('searchInput').value = '';
       renderFAQs('', cat);
     };
 
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-      renderFAQs(e.target.value);
-    });
+    document.getElementById('searchInput').addEventListener('input', (e) => renderFAQs(e.target.value));
 
-    // --- 5. CONTACT FORM ---
+    // --- 3. UPDATED CONTACT FORM LOGIC ---
     document.getElementById('contactForm').onsubmit = (e) => {
       e.preventDefault();
+      
       const topic = document.getElementById('ticketTopic').value;
       const msg = document.getElementById('ticketMsg').value;
       
-      // Simulation: Save to localStorage for Admin Console? 
-      // For now, just alert success.
-      alert(`✅ Support Request Sent!\nTopic: ${topic}\nWe will contact you shortly.`);
+      // Create Ticket Object
+      const newTicket = {
+          id: 'tkt_' + Date.now(),
+          userId: currentUser ? currentUser.id : 'guest',
+          userName: currentUser ? currentUser.name : 'Guest User',
+          email: currentUser ? currentUser.email : 'Not Provided',
+          topic: topic,
+          message: msg,
+          status: 'Open', // Open, Resolved
+          timestamp: new Date().toISOString()
+      };
+
+      // Save to LocalStorage
+      const tickets = JSON.parse(localStorage.getItem('zzz_support_tickets') || '[]');
+      tickets.unshift(newTicket); // Add to top
+      localStorage.setItem('zzz_support_tickets', JSON.stringify(tickets));
+      
+      alert(`✅ Support Request Sent!\nReference ID: ${newTicket.id}\nOur team will review your "${topic}" request shortly.`);
       document.getElementById('contactForm').reset();
     };
 
     // Initial Load
     renderFAQs();
-
-  </script>
+</script>
 </body>
 </html>

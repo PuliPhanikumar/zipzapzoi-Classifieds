@@ -192,7 +192,13 @@
         if (foundMock) return foundMock;
         return null;
     }
-
+function reportListing() {
+   // ... existing UI logic ...
+   let flags = JSON.parse(localStorage.getItem('zzz_flags') || '[]');
+   flags.push({ itemId: currentItemId, title: itemTitle, reason: "User Reported", time: new Date() });
+   localStorage.setItem('zzz_flags', JSON.stringify(flags));
+   alert("Report sent to Admin!");
+}
     // --- 2. MAIN LOGIC ---
     let currentListing = null;
     const currentUser = JSON.parse(localStorage.getItem('zzz_user'));

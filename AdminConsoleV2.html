@@ -7,8 +7,9 @@
     const raw = localStorage.getItem('zzz_user');
     if (raw) {
       const user = JSON.parse(raw);
+      // Allow 'admin' or 'super_admin'
       if (user.role !== 'admin' && user.role !== 'super_admin') {
-        alert("Access Denied: Admin privileges required.");
+        alert("⛔ Access Denied: Admin privileges required.");
         window.location.href = 'classifieds.html';
       }
     } else {
@@ -18,12 +19,11 @@
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Command Center - ZipZapZoi</title>
+  <title>AdminOS V3 Ultimate - ZipZapZoi</title>
   
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;600&display=swap">
-  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
@@ -31,783 +31,845 @@
       theme: {
         extend: {
           fontFamily: { sans: ["Spline Sans", "sans-serif"] },
-          colors: { "primary": "#019863", "secondary": "#4D96A9", "warning": "#F59E0B", "danger": "#EF4444", "dark": "#0F172A" },
-          boxShadow: { "glass": "0 8px 32px 0 rgba(31, 38, 135, 0.07)" }
+          colors: { 
+            brand: "#019863", 
+            dark: "#0f172a",
+            danger: "#ef4444",
+            warning: "#f59e0b"
+          }
         }
       }
     }
   </script>
-
   <style>
-    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-    body { font-family: 'Spline Sans', sans-serif; background: #F8FAFC; }
-    
-    .sidebar { background: #0F172A; }
-    .sidebar a { color: #94A3B8; transition: all 0.2s; border-left: 3px solid transparent; }
-    .sidebar a.active { color: #fff; background: rgba(255,255,255,0.05); border-left-color: #019863; }
-    .sidebar a:hover:not(.active) { color: #fff; background: rgba(255,255,255,0.02); }
-    
-    .section-content { display: none; opacity: 0; transform: translateY(10px); transition: opacity 0.3s ease, transform 0.3s ease; }
-    .section-content.active { display: block; opacity: 1; transform: translateY(0); }
-
-    .custom-scroll::-webkit-scrollbar { width: 6px; }
-    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-    .custom-scroll::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 20px; }
-
-    .toggle-wrapper { position: relative; display: inline-flex; align-items: center; cursor: pointer; width: 44px; height: 24px; }
-    .toggle-input { position: absolute; opacity: 0; width: 0; height: 0; }
-    .toggle-track { width: 100%; height: 100%; background: #CBD5E1; border-radius: 9999px; transition: 0.3s; }
-    .toggle-knob { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .toggle-input:checked + .toggle-track { background: #019863; }
-    .toggle-input:checked + .toggle-track .toggle-knob { transform: translateX(20px); }
-    
-    @keyframes shake { 0% { transform: rotate(0deg); } 25% { transform: rotate(15deg); } 75% { transform: rotate(-15deg); } 100% { transform: rotate(0deg); } }
-    .bell-shake { animation: shake 0.5s infinite; color: #EF4444; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .active-nav { background-color: #019863; color: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+    .active-list-item { border-left: 4px solid #019863; background-color: #f0fdf4; }
   </style>
 </head>
-<body class="h-screen overflow-hidden flex text-slate-800">
+<body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden">
 
-  <aside class="sidebar w-64 text-white p-6 flex-shrink-0 flex flex-col h-full shadow-2xl z-50">
-    <div class="mb-8 flex items-center gap-3 px-2">
-      <div class="w-9 h-9 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg">Z</div>
-      <div><h1 class="text-lg font-bold text-white tracking-tight leading-tight">ZipZapZoi</h1><p class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Admin Console</p></div>
+  <aside class="w-64 bg-white border-r border-slate-200 flex flex-col z-20 shadow-xl">
+    <div class="h-16 flex items-center px-6 border-b border-slate-100 bg-slate-50">
+      <span class="material-symbols-outlined text-brand text-3xl mr-2">admin_panel_settings</span>
+      <h1 class="font-bold text-lg tracking-tight">Admin<span class="text-brand">OS</span> V3</h1>
     </div>
 
-    <div class="mb-4">
-        <p class="text-xs font-bold text-slate-500 uppercase px-3 mb-2">Main Menu</p>
-        <nav class="space-y-1">
-          <a href="#" class="nav-link active block px-3 py-2.5 rounded-lg flex items-center gap-3 text-sm font-medium" data-section="dashboard"><span class="material-symbols-outlined text-[20px]">analytics</span> Dashboard</a>
-          <a href="#" class="nav-link block px-3 py-2.5 rounded-lg flex items-center gap-3 text-sm font-medium" data-section="listings"><span class="material-symbols-outlined text-[20px]">inventory_2</span> Listings & Mods</a>
-          <a href="#" class="nav-link block px-3 py-2.5 rounded-lg flex items-center gap-3 text-sm font-medium" data-section="users"><span class="material-symbols-outlined text-[20px]">group</span> User Base</a>
-        </nav>
-    </div>
+    <nav class="flex-1 overflow-y-auto p-4 space-y-2">
+      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 mt-2">Operations</div>
+      
+      <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-link active-nav flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm">
+        <span class="material-symbols-outlined">dashboard</span> Dashboard
+      </a>
+      
+      <a href="#" onclick="switchTab('listings')" id="nav-listings" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all font-medium text-sm text-slate-600">
+        <span class="material-symbols-outlined">inventory_2</span> Listings
+      </a>
 
-    <div class="mb-4">
-        <p class="text-xs font-bold text-slate-500 uppercase px-3 mb-2">Configuration</p>
-        <nav class="space-y-1">
-          <a href="#" class="nav-link block px-3 py-2.5 rounded-lg flex items-center gap-3 text-sm font-medium" data-section="categories"><span class="material-symbols-outlined text-[20px]">category</span> Schema Manager</a>
-          <a href="#" class="nav-link block px-3 py-2.5 rounded-lg flex items-center gap-3 text-sm font-medium" data-section="settings"><span class="material-symbols-outlined text-[20px]">settings_suggest</span> Global Settings</a>
-          <a href="#" class="nav-link block px-3 py-2.5 rounded-lg flex items-center gap-3 text-sm font-medium" data-section="alerts"><span class="material-symbols-outlined text-[20px]">notifications</span> System Alerts</a>
-          <a href="#" class="nav-link block px-3 py-2.5 rounded-lg flex items-center gap-3 text-sm font-medium" data-section="logs"><span class="material-symbols-outlined text-[20px]">history</span> Audit Logs</a>
-        </nav>
-    </div>
+      <a href="#" onclick="switchTab('users')" id="nav-users" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all font-medium text-sm text-slate-600">
+        <span class="material-symbols-outlined">group</span> User Base
+      </a>
+      
+      <a href="#" onclick="switchTab('moderation')" id="nav-moderation" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all font-medium text-sm text-slate-600">
+        <span class="material-symbols-outlined text-red-500">flag</span> Reports & Mods
+      </a>
 
-    <div class="mt-auto pt-6 border-t border-slate-700">
-      <button onclick="handleLogout()" class="w-full px-4 py-2.5 rounded-lg bg-white/5 hover:bg-red-500/20 text-slate-300 hover:text-red-400 text-sm flex items-center justify-center gap-2 transition-all font-bold">
-        <span class="material-symbols-outlined text-sm">logout</span> Secure Logout
+      <a href="#" onclick="switchTab('support')" id="nav-support" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all font-medium text-sm text-slate-600">
+        <span class="material-symbols-outlined">support_agent</span> Support Desk
+      </a>
+
+      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-6 mb-2 px-2">Configuration</div>
+
+      <a href="#" onclick="switchTab('schema')" id="nav-schema" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all font-medium text-sm text-slate-600">
+        <span class="material-symbols-outlined text-purple-600">schema</span> Schema Manager
+      </a>
+
+      <a href="#" onclick="switchTab('settings')" id="nav-settings" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all font-medium text-sm text-slate-600">
+        <span class="material-symbols-outlined text-slate-700">settings_applications</span> Global Settings
+      </a>
+    </nav>
+
+    <div class="p-4 border-t border-slate-100 bg-slate-50">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center font-bold shadow-md" id="adminAvatar">A</div>
+        <div>
+          <p class="text-sm font-bold text-slate-800" id="adminName">Super Admin</p>
+          <p class="text-[10px] text-green-600 font-mono font-bold tracking-wide">● SYSTEM ONLINE</p>
+        </div>
+      </div>
+      <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-slate-600 py-2 rounded-lg text-sm font-bold transition-all shadow-sm">
+        <span class="material-symbols-outlined text-sm">logout</span> Logout
       </button>
     </div>
   </aside>
 
-  <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-[#F8FAFC]">
+  <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50">
     
-    <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 py-4 flex items-center justify-between flex-shrink-0 z-40 sticky top-0">
-      <div>
-          <h1 class="text-2xl font-bold text-slate-800" id="pageTitle">Dashboard</h1>
-          <p class="text-xs text-slate-500 font-medium" id="currentDate">Loading date...</p>
-      </div>
-      
-      <div class="flex items-center gap-6">
-        <button onclick="backupData()" class="hidden md:flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-primary bg-slate-100 hover:bg-primary/10 px-3 py-1.5 rounded-full transition-colors">
-            <span class="material-symbols-outlined text-sm">cloud_download</span> Backup
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shadow-sm z-10">
+      <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+        <span class="material-symbols-outlined text-brand" id="pageIcon">dashboard</span>
+        <span id="pageTitle">Dashboard</span>
+      </h2>
+      <div class="flex items-center gap-4">
+        <button onclick="refreshData()" class="p-2 text-slate-400 hover:text-brand hover:bg-green-50 rounded-full transition-colors" title="Refresh Data">
+          <span class="material-symbols-outlined">refresh</span>
         </button>
-
-        <button class="relative p-2 rounded-full hover:bg-slate-100 transition-colors" onclick="showSection('alerts')">
-           <span class="material-symbols-outlined text-slate-500" id="headerBellIcon">notifications</span>
-           <span id="headerAlertBadge" class="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white hidden"></span>
+        <button onclick="window.open('classifieds.html', '_blank')" class="bg-slate-800 hover:bg-black text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg transition-transform active:scale-95 flex items-center gap-2">
+          Live Site <span class="material-symbols-outlined text-sm">open_in_new</span>
         </button>
-
-        <button id="globalSaveBtn" onclick="saveSchema()" class="hidden bg-primary hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-primary/20 transition-transform active:scale-95 text-sm">
-           <span class="material-symbols-outlined text-lg">save</span> Save Schema
-        </button>
-        
-        <div class="flex items-center gap-3 pl-6 border-l border-slate-200 cursor-pointer hover:opacity-80 transition-opacity">
-          <div class="text-right hidden md:block">
-            <p class="font-bold text-slate-800 text-sm leading-none" id="adminName">Admin</p>
-            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5" id="adminRole">Super Admin</p>
-          </div>
-          <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-200 to-slate-100 border border-white shadow-sm flex items-center justify-center text-slate-600 font-bold text-lg" id="adminInit">A</div>
-        </div>
       </div>
     </header>
 
-    <div class="flex-1 overflow-y-auto p-8 custom-scroll" id="mainScrollArea">
-
-      <section id="dashboard" class="section-content active">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div class="bg-white p-6 rounded-2xl shadow-glass border border-slate-100"><p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Listings</p><p id="stat-listings" class="text-3xl font-black text-slate-800 mt-2">0</p></div>
-          <div class="bg-white p-6 rounded-2xl shadow-glass border border-slate-100 border-b-4 border-b-green-500">
-              <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Platform GMV</p>
-              <p id="stat-gmv" class="text-3xl font-black text-green-600 mt-2">₹0</p>
-              <p class="text-[10px] text-slate-400 mt-1">Total Sold Value</p>
+    <div id="contentArea" class="flex-1 overflow-y-auto p-8">
+      
+      <div id="tab-dashboard" class="tab-content block space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start">
+              <div><p class="text-xs font-bold text-slate-400 uppercase">Total Users</p><h3 class="text-3xl font-bold text-slate-800 mt-2" id="statUsers">0</h3></div>
+              <span class="material-symbols-outlined text-blue-500 bg-blue-50 p-2 rounded-lg">group</span>
+            </div>
           </div>
-          <div class="bg-white p-6 rounded-2xl shadow-glass border border-slate-100"><p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Pending Reports</p><p id="stat-flags" class="text-3xl font-black text-red-600 mt-2">0</p></div>
-          <div class="bg-white p-6 rounded-2xl shadow-glass border border-slate-100"><p class="text-slate-500 text-xs font-bold uppercase tracking-wider">User Base</p><p id="stat-users" class="text-3xl font-black text-primary mt-2">0</p></div>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
-            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2"><span class="material-symbols-outlined text-red-500">warning</span> Urgent Moderation</h3>
-                <button onclick="clearAllFlags()" class="text-xs font-bold text-slate-400 hover:text-red-600 transition-colors uppercase tracking-wide">Dismiss All</button>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start">
+              <div><p class="text-xs font-bold text-slate-400 uppercase">Active Listings</p><h3 class="text-3xl font-bold text-slate-800 mt-2" id="statListings">0</h3></div>
+              <span class="material-symbols-outlined text-brand bg-green-50 p-2 rounded-lg">inventory_2</span>
             </div>
-            <table class="w-full text-left">
-                <thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-bold tracking-wider"><tr><th class="px-6 py-3">Item ID</th><th class="px-6 py-3">Title</th><th class="px-6 py-3">Reason</th><th class="px-6 py-3">Reported At</th><th class="px-6 py-3 text-right">Action</th></tr></thead>
-                <tbody id="flagsTableBody" class="divide-y divide-slate-100 text-sm font-medium"></tbody>
-            </table>
-        </div>
-      </section>
-
-      <section id="listings" class="section-content">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-            <div><h2 class="text-2xl font-bold text-slate-800">Listings Database</h2><p class="text-sm text-slate-500">Full control over all marketplace items.</p></div>
-            <div class="flex gap-2 w-full md:w-auto">
-                <select id="listingFilterCat" onchange="renderListingsManager()" class="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-primary outline-none"><option value="">All Categories</option></select>
-                <input type="text" id="listingSearch" onkeyup="renderListingsManager()" placeholder="Search..." class="border border-slate-300 rounded-lg px-4 py-2 text-sm w-full md:w-64 focus:ring-2 focus:ring-primary outline-none shadow-sm">
-                <button onclick="exportData('listings')" class="bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-50" title="Export CSV"><span class="material-symbols-outlined text-lg">download</span></button>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start">
+              <div><p class="text-xs font-bold text-slate-400 uppercase">Support Tickets</p><h3 class="text-3xl font-bold text-slate-800 mt-2" id="statTickets">0</h3></div>
+              <span class="material-symbols-outlined text-orange-500 bg-orange-50 p-2 rounded-lg">support_agent</span>
             </div>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start">
+              <div><p class="text-xs font-bold text-slate-400 uppercase">Pending Reports</p><h3 class="text-3xl font-bold text-slate-800 mt-2" id="statFlags">0</h3></div>
+              <span class="material-symbols-outlined text-red-500 bg-red-50 p-2 rounded-lg">flag</span>
+            </div>
+          </div>
         </div>
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <table class="w-full text-left">
-                <thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-bold tracking-wider">
-                    <tr><th class="px-6 py-3">Item</th><th class="px-6 py-3">Category</th><th class="px-6 py-3">Seller</th><th class="px-6 py-3">Price</th><th class="px-6 py-3">Status</th><th class="px-6 py-3 text-right">Controls</th></tr>
-                </thead>
-                <tbody id="listingsManagerBody" class="divide-y divide-slate-100 text-sm font-medium text-slate-700"></tbody>
-            </table>
-        </div>
-      </section>
 
-      <section id="categories" class="section-content">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <h3 class="font-bold text-slate-800 mb-4">Activity Overview</h3>
+          <div class="h-64"><canvas id="activityChart"></canvas></div>
+        </div>
+      </div>
+
+      <div id="tab-listings" class="tab-content hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+             <h3 class="font-bold text-slate-700">Marketplace Database</h3>
+             <input type="text" placeholder="Search Listings..." class="bg-white border border-slate-200 rounded-lg px-4 py-2 text-sm w-64 focus:ring-2 focus:ring-brand">
+          </div>
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs">
+              <tr>
+                <th class="px-6 py-4">Item</th>
+                <th class="px-6 py-4">Seller</th>
+                <th class="px-6 py-4">Category</th>
+                <th class="px-6 py-4">Price</th>
+                <th class="px-6 py-4">Status</th>
+                <th class="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="listingsTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="tab-users" class="tab-content hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+             <h3 class="font-bold text-slate-700">Registered Users</h3>
+             <button onclick="openAddUserModal()" class="bg-brand text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-green-700 flex items-center gap-2">
+               <span class="material-symbols-outlined text-sm">person_add</span> Add New User
+             </button>
+          </div>
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs">
+              <tr>
+                <th class="px-6 py-4">User</th>
+                <th class="px-6 py-4">Email</th>
+                <th class="px-6 py-4">Role</th>
+                <th class="px-6 py-4">Status</th>
+                <th class="px-6 py-4">Verified</th>
+                <th class="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="tab-moderation" class="tab-content hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+             <h3 class="font-bold text-slate-700 flex items-center gap-2"><span class="material-symbols-outlined text-red-500">flag</span> Reported Items</h3>
+             <button onclick="clearReports()" class="text-xs font-bold text-slate-400 hover:text-red-500">Clear All</button>
+          </div>
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs">
+              <tr>
+                <th class="px-6 py-4">Report Time</th>
+                <th class="px-6 py-4">Item Name</th>
+                <th class="px-6 py-4">Reason</th>
+                <th class="px-6 py-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="reportsTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="tab-settings" class="tab-content hidden space-y-8">
+        
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+          <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-warning">campaign</span> Global System Alerts
+          </h3>
+          <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
+             <p class="text-sm text-yellow-800 mb-2">This message will appear at the top of ALL user pages.</p>
+             <div class="flex gap-4 items-center">
+               <input type="text" id="globalBannerInput" class="flex-1 border-yellow-300 rounded-lg px-4 py-2 text-sm focus:ring-warning" placeholder="e.g. System Maintenance scheduled for Sunday 2 AM...">
+               <label class="flex items-center gap-2 cursor-pointer font-bold text-sm text-slate-700">
+                 <input type="checkbox" id="bannerActive" class="rounded text-warning focus:ring-warning w-5 h-5"> Active
+               </label>
+             </div>
+          </div>
+          <button onclick="saveGlobalSettings()" class="bg-slate-800 text-white px-6 py-2 rounded-lg font-bold hover:bg-black transition-colors">Save Settings</button>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <span class="material-symbols-outlined text-slate-500">receipt_long</span> Audit Logs
+            </h3>
+            <button onclick="clearLogs()" class="text-red-500 text-xs font-bold hover:underline">Clear History</button>
+          </div>
+          <div class="max-h-96 overflow-y-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-50 text-slate-500 font-bold text-xs sticky top-0">
+                <tr>
+                  <th class="px-6 py-3">Timestamp</th>
+                  <th class="px-6 py-3">Admin</th>
+                  <th class="px-6 py-3">Action</th>
+                  <th class="px-6 py-3">Details</th>
+                </tr>
+              </thead>
+              <tbody id="logsTableBody" class="divide-y divide-slate-100 font-mono text-xs"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="tab-schema" class="tab-content hidden h-full flex flex-col">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-slate-800">Schema Architecture</h2>
-            <button onclick="resetSchemaToDefaults()" class="text-xs bg-slate-100 hover:bg-red-50 hover:text-red-600 px-4 py-2 rounded-lg font-bold border border-slate-200 transition-colors">Reset Defaults</button>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[650px]">
-          <div class="flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-full">
-            <div class="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center font-bold text-xs uppercase text-slate-500 tracking-wider">
-              <span>Categories</span><button onclick="promptAddCategory()" class="p-1.5 hover:bg-blue-100 text-blue-600 rounded-md transition-colors"><span class="material-symbols-outlined text-lg">add</span></button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-2 space-y-1 custom-scroll" id="categoriesList"></div>
+          <div>
+            <h3 class="text-xl font-bold text-slate-800">Visual Schema Editor</h3>
+            <p class="text-sm text-slate-500">Modify categories and fields used in "Post Listing".</p>
           </div>
-          <div class="flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-full">
-            <div class="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center font-bold text-xs uppercase text-slate-500 tracking-wider">
-              <span>Subcategories</span><button id="btnAddSub" onclick="promptAddSub()" disabled class="p-1.5 hover:bg-green-100 text-green-600 rounded-md disabled:opacity-30 transition-colors"><span class="material-symbols-outlined text-lg">add</span></button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-2 space-y-1 custom-scroll" id="subcategoriesList"><div class="h-full flex flex-col items-center justify-center text-slate-300 text-xs gap-2">Select Category</div></div>
-          </div>
-          <div class="flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-full">
-            <div class="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center font-bold text-xs uppercase text-slate-500 tracking-wider">
-              <span>Fields</span><button id="btnAddField" onclick="promptAddField()" disabled class="p-1.5 hover:bg-purple-100 text-purple-600 rounded-md disabled:opacity-30 transition-colors"><span class="material-symbols-outlined text-lg">add</span></button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-4 space-y-2 bg-slate-50/30 custom-scroll" id="fieldsList"><div class="h-full flex flex-col items-center justify-center text-slate-300 text-xs gap-2">Select Subcategory</div></div>
+          <div class="flex gap-3">
+             <button onclick="resetToFactory()" class="px-4 py-2 text-sm font-bold text-red-600 bg-red-50 rounded-lg hover:bg-red-100">Factory Reset</button>
+             <button onclick="saveSchemaToDB()" class="px-6 py-2 text-sm font-bold text-white bg-brand rounded-lg shadow-lg hover:bg-green-700 flex items-center gap-2">
+               <span class="material-symbols-outlined text-sm">save</span> Save Changes
+             </button>
           </div>
         </div>
-      </section>
-
-      <section id="users" class="section-content">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-          <div><h2 class="text-2xl font-bold text-slate-800">User Base</h2><p class="text-sm text-slate-500">Manage internal team and marketplace authors.</p></div>
-          <div class="flex gap-2">
-             <button onclick="broadcastMessage()" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-bold shadow hover:bg-blue-700 flex items-center gap-2"><span class="material-symbols-outlined text-sm">campaign</span> Broadcast</button>
-             <input type="text" id="userSearch" onkeyup="loadData()" placeholder="Find user..." class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none">
-             <button onclick="document.getElementById('userModal').showModal()" class="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm shadow hover:bg-green-700 transition-colors">Add Admin</button>
+        <div class="flex-1 grid grid-cols-12 gap-6 h-[550px]">
+          <div class="col-span-3 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+            <div class="p-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center"><span class="text-xs font-bold uppercase">1. Categories</span><button onclick="addItem('category')" class="text-brand hover:bg-green-100 p-1 rounded"><span class="material-symbols-outlined text-sm">add</span></button></div>
+            <div id="listCategories" class="overflow-y-auto flex-1 p-2 space-y-1"></div>
+          </div>
+          <div class="col-span-4 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+            <div class="p-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center"><span class="text-xs font-bold uppercase">2. Subcategories</span><button onclick="addItem('subcategory')" id="btnAddSub" class="text-brand hover:bg-green-100 p-1 rounded disabled:opacity-50" disabled><span class="material-symbols-outlined text-sm">add</span></button></div>
+            <div id="listSubcategories" class="overflow-y-auto flex-1 p-2 space-y-1"><div class="text-center text-slate-400 mt-10 text-xs">Select a Category</div></div>
+          </div>
+          <div class="col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+            <div class="p-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center"><span class="text-xs font-bold uppercase">3. Fields</span><button onclick="addItem('field')" id="btnAddField" class="text-brand hover:bg-green-100 p-1 rounded disabled:opacity-50" disabled><span class="material-symbols-outlined text-sm">add</span></button></div>
+            <div id="listFields" class="overflow-y-auto flex-1 p-2 space-y-1"><div class="text-center text-slate-400 mt-10 text-xs">Select a Subcategory</div></div>
           </div>
         </div>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden lg:col-span-1 h-fit">
-                <div class="p-4 bg-slate-50 font-bold border-b border-slate-200 text-slate-700 text-sm">Internal Team</div>
-                <table class="w-full text-left"><tbody id="adminUsersList" class="divide-y divide-slate-100 text-sm"></tbody></table>
-            </div>
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden lg:col-span-2">
-                <div class="p-4 bg-slate-50 font-bold border-b border-slate-200 text-slate-700 text-sm flex justify-between">
-                    <span>Marketplace Authors</span>
-                    <button onclick="exportData('users')" class="text-xs text-blue-600 hover:underline">Export Data</button>
-                </div>
-                <table class="w-full text-left"><tbody id="marketplaceUsersList" class="divide-y divide-slate-100 text-sm"></tbody></table>
-            </div>
+      </div>
+      
+      <div id="tab-support" class="tab-content hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+           <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+             <h3 class="font-bold text-slate-700">Support Tickets</h3>
+           </div>
+           <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs"><tr><th class="px-6 py-4">ID</th><th class="px-6 py-4">User</th><th class="px-6 py-4">Topic</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Action</th></tr></thead>
+            <tbody id="supportTableBody"></tbody>
+           </table>
         </div>
-      </section>
-
-      <section id="alerts" class="section-content">
-        <h2 class="text-2xl font-bold text-slate-800 mb-6">System Alerts & Notifications</h2>
-        <div class="max-w-2xl space-y-4">
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-            <div class="flex items-center gap-4">
-              <div class="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center"><span class="material-symbols-outlined">flag</span></div>
-              <div><h3 class="font-bold text-slate-800">High Report Volume</h3><p class="text-sm text-gray-500">Alert me when > 5 pending flags exist.</p></div>
-            </div>
-            <label class="toggle-wrapper"><input type="checkbox" class="toggle-input" checked><div class="toggle-track"><div class="toggle-knob"></div></div></label>
-          </div>
-          
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-            <div class="flex items-center gap-4">
-              <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center"><span class="material-symbols-outlined">person_add</span></div>
-              <div><h3 class="font-bold text-slate-800">New Admin Registration</h3><p class="text-sm text-gray-500">Notify when a new staff member is added.</p></div>
-            </div>
-            <label class="toggle-wrapper"><input type="checkbox" class="toggle-input" checked><div class="toggle-track"><div class="toggle-knob"></div></div></label>
-          </div>
-
-          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mt-6">
-              <h3 class="font-bold text-lg mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-yellow-500">campaign</span> Global Announcement</h3>
-              <textarea id="globalBannerInput" class="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary outline-none mb-3" rows="3" placeholder="e.g. Site maintenance scheduled for 10 PM."></textarea>
-              <div class="flex justify-between items-center">
-                  <label class="flex items-center gap-2 text-sm text-slate-600"><input type="checkbox" id="bannerActive" class="rounded text-primary"> Active</label>
-                  <button onclick="saveBanner()" class="px-4 py-2 bg-primary text-white rounded-lg text-xs font-bold">Update Banner</button>
-              </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="logs" class="section-content">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-slate-800">System Audit Log</h2>
-            <button onclick="clearLogs()" class="text-sm font-bold text-red-500 hover:underline">Clear History</button>
-        </div>
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <table class="w-full text-left">
-                <thead class="bg-slate-50 text-[11px] uppercase text-slate-500 font-bold"><tr><th class="px-6 py-3">Timestamp</th><th class="px-6 py-3">Admin</th><th class="px-6 py-3">Action</th><th class="px-6 py-3">Details</th></tr></thead>
-                <tbody id="logsTableBody" class="divide-y divide-slate-100 text-sm font-mono text-slate-600"></tbody>
-            </table>
-        </div>
-      </section>
-
-      <section id="settings" class="section-content">
-        <div class="max-w-4xl mx-auto">
-            <h2 class="text-2xl font-bold text-slate-800 mb-6">Global Configuration</h2>
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-6">
-                <h3 class="font-bold text-lg mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-blue-500">database</span> Database Management</h3>
-                <div class="space-y-3">
-                    <button onclick="backupData()" class="w-full py-2.5 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 hover:bg-slate-50 flex justify-center gap-2"><span class="material-symbols-outlined text-sm">download</span> Download Full Backup</button>
-                    <div class="relative">
-                        <input type="file" id="restoreFile" class="absolute inset-0 opacity-0 cursor-pointer" onchange="restoreData(this)">
-                        <button class="w-full py-2.5 bg-slate-800 text-white rounded-lg text-sm font-bold hover:bg-slate-900 flex justify-center gap-2"><span class="material-symbols-outlined text-sm">upload</span> Restore from Backup</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-      </section>
+      </div>
 
     </div>
   </main>
 
-  <dialog id="viewListingModal" class="p-0 rounded-2xl shadow-2xl w-full max-w-2xl backdrop:bg-black/60">
-      <div class="bg-white overflow-hidden h-full flex flex-col max-h-[80vh]">
-          <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h3 class="font-bold text-lg text-slate-800">Inspection</h3>
-              <button onclick="document.getElementById('viewListingModal').close()" class="text-slate-400 hover:text-red-500"><span class="material-symbols-outlined">close</span></button>
-          </div>
-          <div class="p-6 overflow-y-auto" id="viewModalContent"></div>
+  <div id="editModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
+      <div class="bg-brand p-4 flex justify-between items-center">
+        <h3 class="text-white font-bold" id="modalTitle">Edit Item</h3>
+        <button onclick="closeModal('editModal')" class="text-white hover:bg-white/20 rounded-full p-1"><span class="material-symbols-outlined">close</span></button>
       </div>
-  </dialog>
-
-  <dialog id="editListingModal" class="p-6 rounded-2xl shadow-2xl w-96 backdrop:bg-black/60">
-      <h3 class="text-xl font-bold mb-4 text-slate-800">Edit Listing</h3>
-      <input type="hidden" id="editListingId">
-      <div class="space-y-4">
-          <div><label class="block text-xs font-bold text-slate-500 mb-1">TITLE</label><input type="text" id="editListingTitle" class="w-full border rounded-lg px-3 py-2 text-sm font-bold"></div>
-          <div><label class="block text-xs font-bold text-slate-500 mb-1">PRICE</label><input type="text" id="editListingPrice" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
-          <div><label class="block text-xs font-bold text-slate-500 mb-1">STATUS</label><select id="editListingStatus" class="w-full border rounded-lg px-3 py-2 text-sm"><option value="active">Active</option><option value="sold">Sold</option><option value="banned">Banned</option><option value="pending">Pending</option></select></div>
-          <div class="flex justify-end gap-2 pt-2">
-              <button onclick="document.getElementById('editListingModal').close()" class="px-4 py-2 border rounded-lg text-sm font-bold hover:bg-slate-50">Cancel</button>
-              <button onclick="saveListingChanges()" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-green-700">Save</button>
-          </div>
-      </div>
-  </dialog>
-
-  <dialog id="userDetailModal" class="p-0 rounded-2xl shadow-2xl w-full max-w-lg backdrop:bg-black/60">
-      <div class="bg-white">
-          <div class="h-24 bg-gradient-to-r from-primary to-secondary relative">
-             <button onclick="document.getElementById('userDetailModal').close()" class="absolute top-2 right-2 text-white/80 hover:text-white"><span class="material-symbols-outlined">close</span></button>
-          </div>
-          <div class="px-6 pb-6 -mt-10">
-              <div class="w-20 h-20 rounded-full bg-white p-1 shadow-lg mb-3">
-                  <div class="w-full h-full rounded-full bg-slate-200 flex items-center justify-center font-bold text-2xl text-slate-500" id="modalUserInit">U</div>
-              </div>
-              <h2 class="text-2xl font-bold text-slate-800" id="modalUserName">User Name</h2>
-              <p class="text-slate-500 text-sm mb-6">Marketplace Author</p>
-              
-              <div class="grid grid-cols-2 gap-4 mb-6">
-                  <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-center">
-                      <p class="text-xs text-slate-400 uppercase font-bold">Items Posted</p>
-                      <p class="text-xl font-bold text-primary" id="modalUserCount">0</p>
-                  </div>
-                  <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-center">
-                      <p class="text-xs text-slate-400 uppercase font-bold">Total Value</p>
-                      <p class="text-xl font-bold text-slate-700" id="modalUserValue">$0</p>
-                  </div>
-              </div>
-              
-              <div class="flex gap-2">
-                  <button id="modalVerifyBtn" class="flex-1 py-2.5 rounded-lg font-bold border transition-colors">Verify User</button>
-                  <button id="modalBanBtn" class="flex-1 py-2.5 rounded-lg font-bold border transition-colors">Ban User</button>
-              </div>
-          </div>
-      </div>
-  </dialog>
-
-  <dialog id="userModal" class="p-6 rounded-2xl shadow-2xl w-full max-w-md backdrop:bg-black/50">
-      <h3 class="text-xl font-bold mb-4 text-slate-800">New Staff Account</h3>
-      <form id="createUserForm" class="space-y-4">
-        <div><label class="block text-xs font-bold text-slate-500 mb-1">FULL NAME</label><input type="text" id="newUserName" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" required></div>
-        <div><label class="block text-xs font-bold text-slate-500 mb-1">EMAIL</label><input type="email" id="newUserEmail" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" required></div>
-        <div><label class="block text-xs font-bold text-slate-500 mb-1">PASSWORD</label><input type="password" id="newUserPass" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="Set initial password" required></div>
-        <div><label class="block text-xs font-bold text-slate-500 mb-1">ROLE</label><select id="newUserRole" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white"><option value="admin">Administrator</option><option value="moderator">Moderator</option></select></div>
-        <div class="flex justify-end gap-2 pt-4">
-            <button type="button" onclick="document.getElementById('userModal').close()" class="px-4 py-2 border rounded-lg text-sm font-bold hover:bg-slate-50">Cancel</button>
-            <button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-green-700">Create</button>
+      <div class="p-6 space-y-4">
+        <div>
+           <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Label Name</label>
+           <input type="text" id="editLabel" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand" placeholder="e.g. Fuel Type">
         </div>
-      </form>
-  </dialog>
-
-<script>
-// ==========================================
-// 1. DATA CORE & SCHEMA
-// ==========================================
-const DEFAULT_SCHEMA = {
-    categories: [ { id: 'electronics', label: 'Electronics', icon: 'devices' }, { id: 'vehicles', label: 'Vehicles', icon: 'directions_car' }, { id: 'home', label: 'Home', icon: 'yard' }, { id: 'real_estate', label: 'Real Estate', icon: 'real_estate_agent' } ],
-    subcategories: [ { id: 'mobiles', categoryId: 'electronics', label: 'Mobiles' }, { id: 'cars', categoryId: 'vehicles', label: 'Cars' } ],
-    fields: [ { id: 'brand', subcategoryId: 'mobiles', label: 'Brand', type: 'text' } ]
-};
-
-let schema = JSON.parse(localStorage.getItem('zzz_classifieds_schema') || JSON.stringify(DEFAULT_SCHEMA));
-let catState = { selCat: null, selSub: null };
-
-// --- HELPERS ---
-function logAction(action, details) {
-    const logs = JSON.parse(localStorage.getItem('zzz_admin_logs') || '[]');
-    const admin = document.getElementById('adminName').textContent;
-    logs.unshift({ time: new Date().toISOString(), admin, action, details });
-    if(logs.length > 100) logs.pop(); 
-    localStorage.setItem('zzz_admin_logs', JSON.stringify(logs));
-}
-
-function sendSystemNotification(targetUserName, message) {
-    const msgs = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
-    msgs.unshift({
-        id: 'sys_msg_' + Date.now(),
-        fromUserId: 'admin_system',
-        fromName: 'ZipZapZoi Support', 
-        toName: targetUserName,     
-        listingTitle: 'Notification',
-        text: message,
-        timestamp: new Date().toISOString(),
-        read: false,
-        type: 'system'
-    });
-    localStorage.setItem('zzz_messages', JSON.stringify(msgs));
-}
-
-function loadData() {
-    const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-    const flags = JSON.parse(localStorage.getItem('zzz_flags') || '[]');
-    const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-    const logs = JSON.parse(localStorage.getItem('zzz_admin_logs') || '[]');
-
-    document.getElementById('stat-listings').textContent = listings.length;
-    document.getElementById('stat-flags').textContent = flags.length;
-    document.getElementById('stat-cats').textContent = schema.categories.length;
-    
-    // REVENUE CALCULATION
-    const soldItems = listings.filter(l => l.status === 'sold');
-    const totalGMV = soldItems.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
-    document.getElementById('stat-gmv').textContent = '₹' + totalGMV.toLocaleString();
-    
-    // Unique User Count (Admins + Authors)
-    document.getElementById('stat-users').textContent = users.length + [...new Set(listings.map(l => l.userName))].length;
-    
-    // Alerts Logic
-    const bell = document.getElementById('headerBellIcon');
-    const badge = document.getElementById('headerAlertBadge');
-    if(flags.length > 0) { bell.classList.add('bell-shake'); badge.classList.remove('hidden'); } else { bell.classList.remove('bell-shake'); badge.classList.add('hidden'); }
-
-    // Init Dropdown
-    const filterSelect = document.getElementById('listingFilterCat');
-    if(filterSelect.children.length <= 1) { 
-        schema.categories.forEach(c => {
-            const opt = document.createElement('option'); opt.value = c.label; opt.textContent = c.label; filterSelect.appendChild(opt);
-        });
-    }
-
-    renderListingsManager();
-    renderFlags(flags);
-    renderUsers(users, listings);
-    renderCatAll();
-    renderLogs(logs);
-    
-    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-}
-
-// --- RENDER FUNCTIONS ---
-function renderLogs(logs) {
-    const tbody = document.getElementById('logsTableBody');
-    if(!tbody) return;
-    tbody.innerHTML = logs.map(l => `<tr class="border-b border-slate-50 hover:bg-slate-50/50"><td class="px-6 py-3 text-slate-400 text-xs">${new Date(l.time).toLocaleString()}</td><td class="px-6 py-3 font-bold text-slate-700">${l.admin}</td><td class="px-6 py-3 text-primary font-medium">${l.action}</td><td class="px-6 py-3 text-slate-600 truncate max-w-xs">${l.details}</td></tr>`).join('');
-}
-
-function renderListingsManager() {
-    const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-    const tbody = document.getElementById('listingsManagerBody');
-    const search = document.getElementById('listingSearch').value.toLowerCase();
-    const filter = document.getElementById('listingFilterCat').value;
-    
-    const filtered = listings.filter(l => {
-        const matchesSearch = (l.title+l.id).toLowerCase().includes(search);
-        const matchesFilter = filter ? l.category === filter : true;
-        return matchesSearch && matchesFilter;
-    });
-
-    if(filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 italic">No listings match.</td></tr>`; return; }
-
-    tbody.innerHTML = filtered.map(l => {
-        const isPending = l.status === 'pending';
-        return `
-        <tr class="hover:bg-slate-50 border-b border-slate-100 transition-colors ${isPending ? 'bg-yellow-50' : ''}">
-            <td class="px-6 py-3 flex items-center gap-3"><img src="${l.image || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-lg object-cover border border-slate-200"><div><div class="font-bold text-sm text-slate-800 truncate w-48">${l.title}</div><div class="text-[10px] text-slate-400 font-mono">${l.id}</div></div></td>
-            <td class="px-6 py-3 text-sm text-slate-600"><span class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-xs">${l.category}</span></td>
-            <td class="px-6 py-3 text-sm font-medium text-slate-700 cursor-pointer hover:text-primary hover:underline" onclick="openUserDetail('${l.userName}')">${l.userName || 'User'}</td>
-            <td class="px-6 py-3 font-bold text-slate-800">₹${l.price}</td>
-            <td class="px-6 py-3"><span class="text-[10px] uppercase px-2 py-1 rounded-full font-bold tracking-wide ${l.status==='active'?'bg-green-100 text-green-700':(l.status==='pending'?'bg-yellow-100 text-yellow-700':'bg-red-100 text-red-600')}">${l.status || 'Active'}</span></td>
-            <td class="px-6 py-3 text-right space-x-1">
-                ${isPending ? `<button onclick="approveListing('${l.id}')" class="text-white bg-green-500 hover:bg-green-600 p-1.5 rounded shadow-sm" title="Approve"><span class="material-symbols-outlined text-lg">check</span></button>` : `<button onclick="featureListing('${l.id}')" class="text-yellow-500 hover:bg-yellow-50 p-1.5 rounded" title="Feature"><span class="material-symbols-outlined text-lg">star</span></button>`}
-                <button onclick="viewListing('${l.id}')" class="text-slate-400 hover:text-blue-500 p-1.5 hover:bg-blue-50 rounded" title="View"><span class="material-symbols-outlined text-lg">visibility</span></button>
-                <button onclick="openEditListing('${l.id}')" class="text-slate-400 hover:text-orange-500 p-1.5 hover:bg-orange-50 rounded" title="Edit"><span class="material-symbols-outlined text-lg">edit</span></button>
-                <button onclick="deleteListing('${l.id}')" class="text-slate-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded" title="Delete"><span class="material-symbols-outlined text-lg">delete</span></button>
-            </td>
-        </tr>
-    `}).join('');
-}
-
-function renderFlags(flags) {
-    const tbody = document.getElementById('flagsTableBody');
-    if (flags.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400 font-medium">All clear! No reports pending.</td></tr>'; return; }
-    tbody.innerHTML = flags.map(f => `<tr class="border-b border-slate-50 hover:bg-red-50/10 group"><td class="px-6 py-3 font-mono text-xs text-slate-500">${f.itemId}</td><td class="px-6 py-3 font-bold text-slate-800">${f.title}</td><td class="px-6 py-3 text-red-600 font-bold text-xs uppercase bg-red-50 px-2 py-1 rounded w-fit">${f.reason}</td><td class="px-6 py-3 text-xs text-slate-500">${new Date(f.time).toLocaleDateString()}</td><td class="px-6 py-3 text-right"><button onclick="viewListing('${f.itemId}')" class="text-xs font-bold text-blue-500 hover:underline mr-3">Inspect</button><button onclick="deleteListing('${f.itemId}')" class="text-xs font-bold text-red-500 hover:underline">Ban Item</button></td></tr>`).join('');
-}
-
-function renderUsers(admins, listings) {
-    const banned = JSON.parse(localStorage.getItem('zzz_banned_users') || '[]');
-    const search = document.getElementById('userSearch') ? document.getElementById('userSearch').value.toLowerCase() : '';
-
-    // Admin List
-    document.getElementById('adminUsersList').innerHTML = admins.filter(u=>u.role!=='user').map(u => `<tr class="hover:bg-purple-50/30 border-b border-slate-100"><td class="px-6 py-3 flex items-center gap-3"><div class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center font-bold text-xs">${u.name.charAt(0)}</div><span class="font-bold text-sm text-slate-700">${u.name}</span></td><td class="px-6 py-3 text-xs uppercase font-bold text-slate-500">${u.role}</td><td class="px-6 py-3 text-green-600 text-xs font-bold">Active</td><td class="px-6 py-3"><button onclick="deleteUser('${u.id}')" class="text-slate-400 hover:text-red-600 transition-colors"><span class="material-symbols-outlined text-lg">block</span></button></td></tr>`).join('');
-
-    // Marketplace Authors
-    const authors = [...new Set(listings.map(l => l.userName))];
-    const filteredAuthors = authors.filter(a => a && a.toLowerCase().includes(search));
-    
-    document.getElementById('marketplaceUsersList').innerHTML = filteredAuthors.map(name => {
-        const isBanned = banned.includes(name);
-        return `<tr class="hover:bg-slate-50 border-b border-slate-100 cursor-pointer" onclick="openUserDetail('${name}')"><td class="px-6 py-3 font-bold text-slate-700 text-sm">${name}</td><td class="px-6 py-3 text-xs text-slate-500">Author</td><td class="px-6 py-3 ${isBanned ? 'text-red-600' : 'text-green-600'} text-xs font-bold uppercase">${isBanned ? 'Banned' : 'Active'}</td><td class="px-6 py-3 text-right"><span class="material-symbols-outlined text-slate-300 text-lg flex justify-end gap-2"><button onclick="impersonateUser('${name}'); event.stopPropagation()" class="text-xs border px-1 rounded hover:bg-slate-100">Ghost</button></span></td></tr>`;
-    }).join('');
-}
-
-function renderCatAll() {
-    document.getElementById('categoriesList').innerHTML = schema.categories.map(c => `<div onclick="selCat('${c.id}')" class="flex justify-between items-center p-2.5 rounded-lg cursor-pointer transition-all ${catState.selCat===c.id ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm' : 'hover:bg-slate-50 border border-transparent'}"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-lg opacity-70">${c.icon}</span> <span class="font-medium text-sm">${c.label}</span></div><button onclick="delCat('${c.id}', event)" class="text-slate-300 hover:text-red-500 px-2">×</button></div>`).join('');
-    
-    const subContainer = document.getElementById('subcategoriesList');
-    if(catState.selCat) {
-        const subs = (schema.subcategories || []).filter(s => s.categoryId === catState.selCat);
-        subContainer.innerHTML = subs.length ? subs.map(s => `<div onclick="selSub('${s.id}')" class="flex justify-between items-center p-2.5 rounded-lg cursor-pointer transition-all ${catState.selSub===s.id ? 'bg-green-50 text-green-700 border border-green-200 shadow-sm' : 'hover:bg-slate-50 border border-transparent'}"><span class="font-medium text-sm">${s.label}</span><button onclick="delSub('${s.id}', event)" class="text-slate-300 hover:text-red-500 px-2">×</button></div>`).join('') : '<div class="p-8 text-center text-slate-400 text-xs italic">No subcategories defined.</div>';
-        document.getElementById('btnAddSub').disabled = false;
-    } else { subContainer.innerHTML = '<div class="h-full flex flex-col items-center justify-center text-slate-300 text-xs gap-2"><span class="material-symbols-outlined text-4xl opacity-20">arrow_back</span>Select a Category</div>'; document.getElementById('btnAddSub').disabled = true; }
-
-    const fieldContainer = document.getElementById('fieldsList');
-    if(catState.selSub) {
-        const fields = (schema.fields || []).filter(f => f.subcategoryId === catState.selSub);
-        fieldContainer.innerHTML = fields.length ? fields.map(f => `<div class="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-lg mb-2 shadow-sm"><div><span class="font-bold text-sm block text-slate-700">${f.label}</span> <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">${f.type}</span></div><button onclick="delField('${f.id}')" class="text-slate-300 hover:text-red-500 px-2">×</button></div>`).join('') : '<div class="p-8 text-center text-slate-400 text-xs italic">No custom fields defined.</div>';
-        document.getElementById('btnAddField').disabled = false;
-    } else { fieldContainer.innerHTML = '<div class="h-full flex flex-col items-center justify-center text-slate-300 text-xs gap-2"><span class="material-symbols-outlined text-4xl opacity-20">arrow_back</span>Select a Subcategory</div>'; document.getElementById('btnAddField').disabled = true; }
-}
-
-// --- ACTIONS ---
-
-// Listing Actions
-window.deleteListing = (id) => {
-    if(!confirm("Permanently delete this listing?")) return;
-    let listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-    const item = listings.find(l => l.id == id);
-    listings = listings.filter(l => l.id != id);
-    localStorage.setItem('zzz_listings', JSON.stringify(listings));
-    
-    // Notify User
-    if(item) sendSystemNotification(item.userName, `Your listing "${item.title}" was removed by moderation.`);
-    
-    logAction('Moderation', `Deleted Listing: ${item ? item.title : id}`);
-    loadData();
-    document.getElementById('viewListingModal').close();
-}
-
-window.approveListing = (id) => {
-    let listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-    const idx = listings.findIndex(l => l.id == id);
-    if(idx !== -1) {
-        listings[idx].status = 'active';
-        localStorage.setItem('zzz_listings', JSON.stringify(listings));
-        sendSystemNotification(listings[idx].userName, `Your listing "${listings[idx].title}" is approved!`);
-        logAction('Moderation', `Approved: ${listings[idx].title}`);
-        loadData();
-    }
-}
-
-window.featureListing = (id) => {
-    let listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-    const idx = listings.findIndex(l => l.id == id);
-    if(idx !== -1) {
-        listings[idx].tag = 'Featured'; // Mark as featured
-        localStorage.setItem('zzz_listings', JSON.stringify(listings));
-        sendSystemNotification(listings[idx].userName, `Congratulations! Your listing "${listings[idx].title}" has been Featured by Admins!`);
-        alert("Listing Featured!");
-        logAction('Moderation', `Featured: ${listings[idx].title}`);
-        loadData();
-    }
-}
-
-window.openEditListing = (id) => {
-    const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-    const item = listings.find(l => l.id === id);
-    if(item) {
-        document.getElementById('editListingId').value = id;
-        document.getElementById('editListingTitle').value = item.title;
-        document.getElementById('editListingPrice').value = item.price;
-        document.getElementById('editListingStatus').value = item.status || 'active';
-        document.getElementById('editListingModal').showModal();
-    }
-}
-
-window.saveListingChanges = () => {
-    const id = document.getElementById('editListingId').value;
-    let listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-    const idx = listings.findIndex(l => l.id === id);
-    if(idx !== -1) {
-        listings[idx].title = document.getElementById('editListingTitle').value;
-        listings[idx].price = document.getElementById('editListingPrice').value;
-        listings[idx].status = document.getElementById('editListingStatus').value;
-        localStorage.setItem('zzz_listings', JSON.stringify(listings));
-        logAction('Moderation', `Edited Listing: ${listings[idx].title}`);
-        loadData();
-        document.getElementById('editListingModal').close();
-    }
-}
-
-window.viewListing = (id) => {
-    const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-    const item = listings.find(l => l.id === id);
-    if(item) {
-        document.getElementById('viewModalContent').innerHTML = `
-            <div class="flex gap-4">
-                <img src="${item.image}" class="w-1/3 h-32 object-cover rounded-lg bg-slate-100">
-                <div class="flex-1">
-                    <h2 class="text-xl font-bold text-slate-800">${item.title}</h2>
-                    <p class="text-primary font-bold text-lg mb-2">₹${item.price}</p>
-                    <div class="flex gap-2 mb-2"><span class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded">${item.category}</span><span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">${item.status || 'Active'}</span></div>
-                    <p class="text-xs text-slate-500">Seller: <span class="font-bold text-slate-700">${item.userName}</span></p>
-                </div>
+        
+        <div id="fieldExtras" class="hidden space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Input Type</label>
+            <select id="editType" onchange="toggleOptionsInput()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-slate-50">
+              <option value="text">Text Box</option>
+              <option value="textarea">Long Text Area</option>
+              <option value="number">Number</option>
+              <option value="select">Dropdown (Select)</option>
+              <option value="date">Date Picker</option>
+              <option value="checkbox">Yes/No Checkbox</option>
+            </select>
+          </div>
+          
+          <div id="optionsContainer" class="hidden">
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Dropdown Options</label>
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+               <p class="text-[10px] text-yellow-800 mb-2 font-bold">Enter options separated by commas:</p>
+               <textarea id="editOptions" class="w-full border-yellow-300 rounded-md px-3 py-2 text-sm focus:ring-yellow-400" placeholder="e.g. Petrol, Diesel, EV, Hybrid" rows="3"></textarea>
             </div>
-            <div class="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-100"><h4 class="text-xs font-bold text-slate-400 uppercase mb-2">Description</h4><p class="text-sm text-slate-600">${item.description}</p></div>
-            <div class="mt-4 text-xs text-slate-400 font-mono">ID: ${item.id}</div>
-        `;
-        document.getElementById('viewListingModal').showModal();
-    }
-}
+          </div>
+        </div>
+        
+        <div id="catExtras" class="hidden">
+           <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Icon Name (Google Material)</label>
+           <input type="text" id="editIcon" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" placeholder="e.g. smartphone">
+        </div>
+        
+        <div class="pt-4 flex gap-3">
+          <button onclick="saveItem()" class="flex-1 bg-brand text-white font-bold py-2 rounded-lg shadow-md hover:bg-green-700">Save Changes</button>
+          <button onclick="deleteItem()" class="px-4 py-2 text-red-500 font-bold border border-red-200 rounded-lg hover:bg-red-50">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-window.clearAllFlags = () => { if(confirm("Dismiss all reports?")) { localStorage.setItem('zzz_flags', '[]'); logAction('Moderation', 'Cleared all reports'); loadData(); } }
+  <div id="userModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+      <div class="bg-slate-800 p-4 flex justify-between items-center">
+        <h3 class="text-white font-bold">Manage User</h3>
+        <button onclick="closeModal('userModal')" class="text-white hover:bg-white/20 rounded-full p-1"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <form onsubmit="handleUserSubmit(event)" class="p-6 space-y-4">
+        <input type="hidden" id="editUserId">
+        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name</label><input type="text" id="newUserName" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></div>
+        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label><input type="email" id="newUserEmail" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></div>
+        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Password</label><input type="text" id="newUserPass" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" placeholder="Set Password"></div>
+        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Role</label><select id="newUserRole" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"><option value="user">User</option><option value="admin">Admin</option></select></div>
+        <button type="submit" class="w-full bg-brand text-white font-bold py-2 rounded-lg mt-4">Save User</button>
+      </form>
+    </div>
+  </div>
 
-// User Actions (Updated with Verify)
-window.openUserDetail = (name) => {
-    const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-    const banned = JSON.parse(localStorage.getItem('zzz_banned_users') || '[]');
-    const verified = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
-    
-    const userListings = listings.filter(l => l.userName === name);
-    const totalValue = userListings.reduce((sum, item) => sum + Number(item.price), 0);
-    const isBanned = banned.includes(name);
-    const isVerified = verified.includes(name);
-
-    document.getElementById('modalUserInit').textContent = name.charAt(0).toUpperCase();
-    document.getElementById('modalUserName').textContent = name;
-    document.getElementById('modalUserCount').textContent = userListings.length;
-    document.getElementById('modalUserValue').textContent = '₹' + totalValue.toLocaleString();
-    
-    // Ban Button State
-    const banBtn = document.getElementById('modalBanBtn');
-    banBtn.textContent = isBanned ? "Unban User" : "Ban User";
-    banBtn.className = isBanned ? "flex-1 py-2.5 rounded-lg font-bold border border-green-500 text-green-600" : "flex-1 py-2.5 rounded-lg font-bold bg-red-500 text-white shadow";
-    banBtn.onclick = () => { isBanned ? unbanUser(name) : banUser(name); document.getElementById('userDetailModal').close(); };
-
-    // Verify Button State
-    const verBtn = document.getElementById('modalVerifyBtn');
-    verBtn.textContent = isVerified ? "Unverify" : "Verify User";
-    verBtn.className = isVerified ? "flex-1 py-2.5 rounded-lg font-bold border border-gray-300 text-gray-500" : "flex-1 py-2.5 rounded-lg font-bold bg-blue-500 text-white shadow";
-    verBtn.onclick = () => { toggleVerify(name); document.getElementById('userDetailModal').close(); };
-
-    document.getElementById('userDetailModal').showModal();
-}
-
-window.toggleVerify = (name) => {
-    let verified = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
-    if(verified.includes(name)) verified = verified.filter(n => n !== name);
-    else { verified.push(name); sendSystemNotification(name, "Your profile has been verified!"); }
-    localStorage.setItem('zzz_verified_users', JSON.stringify(verified));
-    logAction('User Mgmt', `Toggled Verification: ${name}`);
-    loadData();
-}
-
-window.banUser = (name) => {
-    if(confirm(`Ban user ${name}?`)) {
-        let banned = JSON.parse(localStorage.getItem('zzz_banned_users') || '[]');
-        banned.push(name);
-        localStorage.setItem('zzz_banned_users', JSON.stringify(banned));
-        logAction('User Mgmt', `Banned User: ${name}`);
-        loadData();
-    }
-}
-window.unbanUser = (name) => {
-    let banned = JSON.parse(localStorage.getItem('zzz_banned_users') || '[]');
-    banned = banned.filter(n => n !== name);
-    localStorage.setItem('zzz_banned_users', JSON.stringify(banned));
-    logAction('User Mgmt', `Unbanned User: ${name}`);
-    loadData();
-}
-
-window.deleteUser = (id) => {
-    if(confirm("Remove this Admin access?")) {
-        let users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-        users = users.filter(u => u.id !== id);
-        localStorage.setItem('zzz_users', JSON.stringify(users));
-        logAction('Admin Mgmt', `Removed Admin ID: ${id}`);
-        loadData();
-    }
-}
-
-// IMPERSONATION
-window.impersonateUser = (userName) => {
-    if(!confirm(`Log in as "${userName}"? You will lose your Admin session.`)) return;
-    const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-    const userItem = listings.find(l => l.userName === userName);
-    const ghostSession = { id: userItem ? userItem.userId : 'ghost_'+Date.now(), name: userName, role: 'user', email: 'ghost@zipzapzoi.com' };
-    localStorage.setItem('zzz_user', JSON.stringify(ghostSession));
-    window.location.href = 'Seller Dashboard.html';
-}
-
-// BROADCAST
-window.broadcastMessage = () => {
-    const msg = prompt("Enter message to send to ALL users:");
-    if(!msg) return;
-    const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-    const uniqueUsers = [...new Set(listings.map(l => l.userName))];
-    uniqueUsers.forEach(user => { sendSystemNotification(user, `📢 ADMIN BROADCAST: ${msg}`); });
-    alert(`Sent to ${uniqueUsers.length} users.`);
-    logAction('Communication', `Broadcast: ${msg}`);
-}
-
-// Create Admin (With Password)
-document.getElementById('createUserForm').onsubmit = (e) => {
-    e.preventDefault();
-    const name = document.getElementById('newUserName').value;
-    const email = document.getElementById('newUserEmail').value;
-    const password = document.getElementById('newUserPass').value; 
-    const role = document.getElementById('newUserRole').value;
-    
-    const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-    users.push({ id:'adm_'+Date.now(), name, email, password, role, status:'active' });
-    localStorage.setItem('zzz_users', JSON.stringify(users));
-    
-    alert(`Admin Created!\nEmail: ${email}\nPassword: ${password}`);
-    logAction('Admin Mgmt', `Created Admin: ${email}`);
-    document.getElementById('userModal').close();
-    loadData();
-    e.target.reset();
-};
-
-// Schema Logic
-function selCat(id) { catState.selCat = id; catState.selSub = null; renderCatAll(); }
-function selSub(id) { catState.selSub = id; renderCatAll(); }
-function promptAddCategory() { const n = prompt("Category Name:"); if(n) { schema.categories.push({ id: n.toLowerCase().replace(/\s/g,'_'), label:n, icon:'category' }); saveSchema(); renderCatAll(); logAction('Schema', `Added Category: ${n}`); } }
-function promptAddSub() { const n = prompt("Subcategory Name:"); if(n) { schema.subcategories.push({ id:'sub_'+Date.now(), categoryId:catState.selCat, label:n }); saveSchema(); renderCatAll(); logAction('Schema', `Added Subcategory: ${n}`); } }
-function promptAddField() { const n = prompt("Field Label:"); if(n) { schema.fields.push({ id:'f_'+Date.now(), subcategoryId:catState.selSub, label:n, type:'text' }); saveSchema(); renderCatAll(); logAction('Schema', `Added Field: ${n}`); } }
-window.delCat = (id,e) => { e.stopPropagation(); if(confirm("Delete Category?")) { schema.categories=schema.categories.filter(x=>x.id!==id); saveSchema(); catState.selCat=null; renderCatAll(); logAction('Schema', `Deleted Category ${id}`); } }
-window.delSub = (id,e) => { e.stopPropagation(); if(confirm("Delete Sub?")) { schema.subcategories=schema.subcategories.filter(x=>x.id!==id); saveSchema(); catState.selSub=null; renderCatAll(); logAction('Schema', `Deleted Subcategory ${id}`); } }
-window.delField = (id) => { if(confirm("Delete Field?")) { schema.fields=schema.fields.filter(x=>x.id!==id); saveSchema(); renderCatAll(); logAction('Schema', `Deleted Field ${id}`); } }
-
-function saveSchema() {
-    localStorage.setItem('zzz_classifieds_schema', JSON.stringify(schema));
-    const btn = document.getElementById('globalSaveBtn');
-    btn.innerHTML = `<span class="material-symbols-outlined text-lg">check_circle</span> Saved!`;
-    setTimeout(() => btn.innerHTML = `<span class="material-symbols-outlined text-lg">save</span> Save Schema`, 1500);
-}
-
-function resetSchemaToDefaults() {
-    if(confirm("Reset entire schema to defaults?")) {
-        localStorage.setItem('zzz_classifieds_schema', JSON.stringify(DEFAULT_SCHEMA));
-        logAction('System', 'Reset Schema to Defaults');
-        window.location.reload();
-    }
-}
-
-// Banner
-function saveBanner() {
-    const text = document.getElementById('globalBannerInput').value;
-    const active = document.getElementById('bannerActive').checked;
-    localStorage.setItem('zzz_global_alert', JSON.stringify({text, active}));
-    alert("Global Announcement Updated!");
-    logAction('Config', `Updated Banner: ${text}`);
-}
-
-window.clearAllFlags = () => { if(confirm("Dismiss all reports?")) { localStorage.setItem('zzz_flags', '[]'); logAction('Moderation', 'Cleared all reports'); loadData(); } }
-
-// System Utils
-window.backupData = () => {
-    const data = { listings: localStorage.getItem('zzz_listings'), schema: localStorage.getItem('zzz_classifieds_schema'), users: localStorage.getItem('zzz_users'), flags: localStorage.getItem('zzz_flags'), logs: localStorage.getItem('zzz_admin_logs') };
-    const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `zipzapzoi_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
-    logAction('System', 'Downloaded Full Backup');
-}
-
-window.restoreData = (input) => {
-    const file = input.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const data = JSON.parse(e.target.result);
-            if(data.listings) localStorage.setItem('zzz_listings', data.listings);
-            if(data.schema) localStorage.setItem('zzz_classifieds_schema', data.schema);
-            if(data.users) localStorage.setItem('zzz_users', data.users);
-            if(data.flags) localStorage.setItem('zzz_flags', data.flags);
-            if(data.logs) localStorage.setItem('zzz_admin_logs', data.logs);
-            alert("System Restored Successfully!");
-            window.location.reload();
-        } catch(err) { alert("Invalid Backup File"); }
+  <script>
+    // --- 1. CORE & DATA (THE MASSIVE COMPLETE SCHEMA) ---
+    const FACTORY_SCHEMA = {
+        categories: [ 
+          { id: 'electronics', label: 'Electronics', icon: 'devices' }, 
+          { id: 'vehicles', label: 'Vehicles', icon: 'directions_car' }, 
+          { id: 'real_estate', label: 'Real Estate', icon: 'real_estate_agent' },
+          { id: 'jobs', label: 'Jobs', icon: 'work' },
+          { id: 'services', label: 'Services', icon: 'handyman' },
+          { id: 'pets', label: 'Pets', icon: 'pets' },
+          { id: 'clothing', label: 'Clothing', icon: 'checkroom' },
+          { id: 'home', label: 'Home', icon: 'yard' },
+          { id: 'food', label: 'Food', icon: 'restaurant' },
+          { id: 'events', label: 'Events', icon: 'celebration' },
+          { id: 'doctors', label: 'Doctors', icon: 'stethoscope' },
+          { id: 'tourism', label: 'Tourism', icon: 'flight' },
+          { id: 'sports', label: 'Sports', icon: 'sports_soccer' },
+          { id: 'charity', label: 'Charity', icon: 'volunteer_activism' }
+        ],
+        subcategories: [
+          // Electronics
+          { id: 'mobiles', categoryId: 'electronics', label: 'Mobiles' },
+          { id: 'laptops', categoryId: 'electronics', label: 'Laptops' },
+          { id: 'cameras', categoryId: 'electronics', label: 'Cameras' },
+          { id: 'accessories', categoryId: 'electronics', label: 'Accessories' },
+          // Vehicles
+          { id: 'cars', categoryId: 'vehicles', label: 'Cars' },
+          { id: 'bikes', categoryId: 'vehicles', label: 'Bikes' },
+          { id: 'commercial', categoryId: 'vehicles', label: 'Commercial Vehicles' },
+          // Real Estate
+          { id: 'apartments', categoryId: 'real_estate', label: 'Apartments' },
+          { id: 'plots', categoryId: 'real_estate', label: 'Plots' },
+          { id: 'houses', categoryId: 'real_estate', label: 'Houses' },
+          { id: 'shops', categoryId: 'real_estate', label: 'Shops' },
+          // Jobs
+          { id: 'it', categoryId: 'jobs', label: 'IT & Software' },
+          { id: 'sales', categoryId: 'jobs', label: 'Sales' },
+          { id: 'driver', categoryId: 'jobs', label: 'Driver' },
+          // Clothing
+          { id: 'men', categoryId: 'clothing', label: 'Men' },
+          { id: 'women', categoryId: 'clothing', label: 'Women' },
+          { id: 'kids', categoryId: 'clothing', label: 'Kids' },
+          // Pets
+          { id: 'dogs', categoryId: 'pets', label: 'Dogs' },
+          { id: 'cats', categoryId: 'pets', label: 'Cats' },
+          // Services
+          { id: 'cleaning', categoryId: 'services', label: 'Cleaning' },
+          { id: 'repair', categoryId: 'services', label: 'Repairs' },
+          // Home
+          { id: 'furniture', categoryId: 'home', label: 'Furniture' },
+          { id: 'decor', categoryId: 'home', label: 'Decor' },
+          // Food
+          { id: 'homemade', categoryId: 'food', label: 'Homemade' },
+          { id: 'bakery', categoryId: 'food', label: 'Bakery' },
+          // Events
+          { id: 'wedding', categoryId: 'events', label: 'Wedding' },
+          { id: 'birthday', categoryId: 'events', label: 'Birthday' },
+          // Doctors
+          { id: 'general', categoryId: 'doctors', label: 'General Physician' },
+          { id: 'dentist', categoryId: 'doctors', label: 'Dentist' },
+          // Tourism
+          { id: 'packages', categoryId: 'tourism', label: 'Packages' },
+          { id: 'hotels', categoryId: 'tourism', label: 'Hotels' },
+          // Sports
+          { id: 'cricket', categoryId: 'sports', label: 'Cricket' },
+          { id: 'football', categoryId: 'sports', label: 'Football' },
+          // Charity
+          { id: 'donate', categoryId: 'charity', label: 'Donate Items' },
+          { id: 'ngo', categoryId: 'charity', label: 'NGO' }
+        ],
+        fields: [
+          // Electronics Fields
+          { id: 'brand', subcategoryId: 'mobiles', label: 'Brand', type: 'text' },
+          { id: 'storage', subcategoryId: 'mobiles', label: 'Storage', type: 'select', options: '64GB, 128GB, 256GB' },
+          { id: 'ram_lap', subcategoryId: 'laptops', label: 'RAM', type: 'number' },
+          { id: 'proc', subcategoryId: 'laptops', label: 'Processor', type: 'select', options: 'Intel i5, Intel i7, M1, M2' },
+          // Vehicle Fields
+          { id: 'fuel', subcategoryId: 'cars', label: 'Fuel Type', type: 'select', options: 'Petrol, Diesel, EV' },
+          { id: 'km', subcategoryId: 'cars', label: 'KM Driven', type: 'number' },
+          { id: 'year', subcategoryId: 'cars', label: 'Year', type: 'number' },
+          // Real Estate Fields
+          { id: 'bhk', subcategoryId: 'apartments', label: 'BHK', type: 'select', options: '1, 2, 3, 4+' },
+          { id: 'area', subcategoryId: 'apartments', label: 'Area (sq ft)', type: 'number' },
+          { id: 'facing', subcategoryId: 'plots', label: 'Facing', type: 'select', options: 'North, East, West, South' },
+          // Job Fields
+          { id: 'salary', subcategoryId: 'it', label: 'Salary', type: 'number' },
+          { id: 'exp', subcategoryId: 'it', label: 'Experience', type: 'select', options: 'Fresher, 1-3 Yrs, 3+ Yrs' },
+          // Clothing Fields
+          { id: 'size_m', subcategoryId: 'men', label: 'Size', type: 'select', options: 'S, M, L, XL' },
+          { id: 'material', subcategoryId: 'men', label: 'Material', type: 'text' }
+          // (Extensible via UI)
+        ]
     };
-    reader.readAsText(file);
-}
 
-document.querySelectorAll('.nav-link').forEach(link => {
-  link.onclick = (e) => {
-    e.preventDefault();
-    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-    link.classList.add('active');
-    document.querySelectorAll('.section-content').forEach(s => s.classList.remove('active'));
-    document.getElementById(link.dataset.section).classList.add('active');
-    const saveBtn = document.getElementById('globalSaveBtn');
-    if(link.dataset.section === 'categories') saveBtn.classList.remove('hidden'); else saveBtn.classList.add('hidden');
-  }
-});
+    let schema = { categories: [], subcategories: [], fields: [] };
+    let selectedCatId = null, selectedSubId = null, editingItem = null;
 
-function handleLogout() { localStorage.removeItem('zzz_user'); window.location.href = 'Login Page.html'; }
-function clearLogs() { if(confirm("Clear history?")) { localStorage.setItem('zzz_admin_logs', '[]'); loadData(); } }
+    document.addEventListener('DOMContentLoaded', () => {
+        loadData();
+        loadSchema();
+        loadSettings();
+        renderLogs();
+        
+        // Activity Chart
+        new Chart(document.getElementById('activityChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{ label: 'Traffic', data: [50, 60, 45, 80, 70, 90, 100], borderColor: '#019863', tension: 0.4 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    });
 
-// Init
-document.addEventListener('DOMContentLoaded', () => {
-    const u = JSON.parse(localStorage.getItem('zzz_user'));
-    if(u) { document.getElementById('adminName').textContent = u.name; document.getElementById('adminInit').textContent = u.name.charAt(0); document.getElementById('adminRole').textContent = u.role.toUpperCase(); }
-    loadData();
-    
-    const banner = JSON.parse(localStorage.getItem('zzz_global_alert') || '{}');
-    if(banner.text) {
-        document.getElementById('globalBannerInput').value = banner.text;
-        document.getElementById('bannerActive').checked = banner.active;
+    // --- 2. NAVIGATION ---
+    function switchTab(id) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById('tab-' + id).classList.remove('hidden');
+        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active-nav', 'bg-slate-100'));
+        document.getElementById('nav-' + id).classList.add('active-nav');
+        
+        const titles = { dashboard: 'Dashboard', listings: 'Listings Manager', users: 'User Base', settings: 'Global Settings', schema: 'Schema Manager', support: 'Support Desk', moderation: 'Moderation Queue' };
+        document.getElementById('pageTitle').textContent = titles[id];
+        
+        if(id === 'listings') loadListings();
+        if(id === 'users') loadUsers();
+        if(id === 'settings') renderLogs();
+        if(id === 'support') loadSupport();
+        if(id === 'moderation') loadReports();
     }
-});
-</script>
+
+    // --- 3. DATA LOADERS ---
+    function loadData() {
+        const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+        const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+        const tickets = JSON.parse(localStorage.getItem('zzz_support_tickets') || '[]');
+        const flags = JSON.parse(localStorage.getItem('zzz_flags') || '[]');
+        
+        document.getElementById('statUsers').textContent = users.length;
+        document.getElementById('statListings').textContent = listings.length;
+        document.getElementById('statTickets').textContent = tickets.filter(t => t.status === 'Open').length;
+        document.getElementById('statFlags').textContent = flags.length;
+    }
+
+    function loadListings() {
+        const list = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+        const tbody = document.getElementById('listingsTableBody');
+        tbody.innerHTML = list.map(l => `
+            <tr class="hover:bg-slate-50 border-b border-slate-50">
+                <td class="px-6 py-4 font-bold text-slate-700">${l.title}</td>
+                <td class="px-6 py-4 text-xs text-slate-500">${l.userName}</td>
+                <td class="px-6 py-4 text-xs bg-slate-100 rounded">${l.category}</td>
+                <td class="px-6 py-4 text-brand font-bold">₹${l.price}</td>
+                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs uppercase font-bold">${l.status}</span></td>
+                <td class="px-6 py-4 text-right flex gap-2 justify-end">
+                    <button onclick="window.open('Listing Detail.html?id=${l.id}', '_blank')" class="text-blue-500 text-xs font-bold hover:underline">View</button>
+                    <button onclick="window.open('Post Listing.html?id=${l.id}', '_blank')" class="text-slate-500 text-xs font-bold hover:underline">Edit</button>
+                    <button onclick="deleteListing('${l.id}')" class="text-red-500 text-xs font-bold hover:underline">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function loadUsers() {
+        const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+        const banned = JSON.parse(localStorage.getItem('zzz_banned_users') || '[]');
+        const verified = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
+        
+        const tbody = document.getElementById('usersTableBody');
+        tbody.innerHTML = users.map(u => {
+            const isBanned = banned.includes(u.name);
+            const isVerified = verified.includes(u.name);
+            return `
+            <tr class="hover:bg-slate-50 border-b border-slate-50">
+                <td class="px-6 py-4 flex items-center gap-2"><div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold">${u.name.charAt(0)}</div> ${u.name}</td>
+                <td class="px-6 py-4 text-xs font-mono">${u.email}</td>
+                <td class="px-6 py-4"><span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs uppercase font-bold">${u.role}</span></td>
+                <td class="px-6 py-4"><span class="${isBanned ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'} px-2 py-1 rounded text-xs uppercase font-bold">${isBanned ? 'Banned' : 'Active'}</span></td>
+                <td class="px-6 py-4">${isVerified ? '<span class="text-blue-500 material-symbols-outlined text-sm">verified</span>' : '<span class="text-slate-300 text-xs">No</span>'}</td>
+                <td class="px-6 py-4 text-right flex gap-2 justify-end">
+                    <button onclick="openEditUser('${u.id}')" class="text-slate-500 text-xs font-bold hover:underline">Edit</button>
+                    <button onclick="toggleVerify('${u.name}')" class="text-blue-500 text-xs font-bold hover:underline">${isVerified ? 'Unverify' : 'Verify'}</button>
+                    <button onclick="toggleBan('${u.name}')" class="text-${isBanned ? 'green' : 'red'}-500 text-xs font-bold hover:underline">${isBanned ? 'Unban' : 'Ban'}</button>
+                </td>
+            </tr>
+        `}).join('');
+    }
+    
+    function loadReports() {
+        const reports = JSON.parse(localStorage.getItem('zzz_flags') || '[]');
+        const tbody = document.getElementById('reportsTableBody');
+        if(reports.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-400">No reported items.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = reports.map(r => `
+            <tr class="hover:bg-slate-50 border-b border-slate-50">
+                <td class="px-6 py-4 text-xs text-slate-400">${new Date(r.time).toLocaleDateString()}</td>
+                <td class="px-6 py-4 font-bold text-slate-700">${r.title}</td>
+                <td class="px-6 py-4 text-red-500 text-xs font-bold">${r.reason}</td>
+                <td class="px-6 py-4 text-right flex gap-2 justify-end">
+                    <button onclick="window.open('Listing Detail.html?id=${r.itemId}', '_blank')" class="text-blue-500 text-xs font-bold hover:underline">Inspect</button>
+                    <button onclick="deleteListing('${r.itemId}')" class="text-red-500 text-xs font-bold hover:underline">Delete Item</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    function loadSupport() {
+        const tickets = JSON.parse(localStorage.getItem('zzz_support_tickets') || '[]');
+        const tbody = document.getElementById('supportTableBody');
+        tbody.innerHTML = tickets.map(t => `
+            <tr class="hover:bg-slate-50 border-b border-slate-50">
+                <td class="px-6 py-4 text-xs text-slate-400 font-mono">${t.id}</td>
+                <td class="px-6 py-4 font-bold text-slate-700">${t.userName}</td>
+                <td class="px-6 py-4 text-brand font-bold">${t.topic}</td>
+                <td class="px-6 py-4"><span class="${t.status === 'Open' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'} px-2 py-1 rounded text-xs uppercase font-bold">${t.status}</span></td>
+                <td class="px-6 py-4 text-right">${t.status === 'Open' ? `<button onclick="resolveTicket('${t.id}')" class="text-green-600 font-bold text-xs">Resolve</button>` : ''}</td>
+            </tr>
+        `).join('');
+    }
+
+    // --- 4. ACTIONS & LOGGING ---
+    function logAction(action, detail) {
+        const logs = JSON.parse(localStorage.getItem('zzz_admin_logs') || '[]');
+        logs.unshift({ time: new Date().toLocaleString(), admin: 'Admin', action, detail });
+        localStorage.setItem('zzz_admin_logs', JSON.stringify(logs));
+        renderLogs();
+    }
+
+    function renderLogs() {
+        const logs = JSON.parse(localStorage.getItem('zzz_admin_logs') || '[]');
+        const tbody = document.getElementById('logsTableBody');
+        if(!tbody) return;
+        tbody.innerHTML = logs.map(l => `
+            <tr><td class="px-6 py-2 text-slate-400">${l.time}</td><td class="px-6 py-2 font-bold">${l.admin}</td><td class="px-6 py-2 text-brand">${l.action}</td><td class="px-6 py-2 text-slate-600">${l.detail}</td></tr>
+        `).join('');
+    }
+
+    function deleteListing(id) {
+        if(!confirm("Delete this listing?")) return;
+        let list = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+        list = list.filter(l => l.id !== id);
+        localStorage.setItem('zzz_listings', JSON.stringify(list));
+        logAction("DELETE_LISTING", `Deleted listing ID ${id}`);
+        loadListings();
+        loadData();
+    }
+    
+    function clearReports() {
+        if(!confirm("Clear all reports?")) return;
+        localStorage.setItem('zzz_flags', '[]');
+        loadReports();
+    }
+
+    function toggleBan(name) {
+        let banned = JSON.parse(localStorage.getItem('zzz_banned_users') || '[]');
+        if(banned.includes(name)) {
+            banned = banned.filter(n => n !== name);
+            logAction("UNBAN_USER", `Unbanned user ${name}`);
+        } else {
+            banned.push(name);
+            logAction("BAN_USER", `Banned user ${name}`);
+        }
+        localStorage.setItem('zzz_banned_users', JSON.stringify(banned));
+        loadUsers();
+    }
+    
+    function toggleVerify(name) {
+        let verified = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
+        if(verified.includes(name)) {
+            verified = verified.filter(n => n !== name);
+            logAction("UNVERIFY_USER", `Unverified user ${name}`);
+        } else {
+            verified.push(name);
+            logAction("VERIFY_USER", `Verified user ${name}`);
+        }
+        localStorage.setItem('zzz_verified_users', JSON.stringify(verified));
+        loadUsers();
+    }
+    
+    function resolveTicket(id) {
+        let tickets = JSON.parse(localStorage.getItem('zzz_support_tickets') || '[]');
+        const idx = tickets.findIndex(t => t.id === id);
+        if(idx !== -1) {
+            tickets[idx].status = 'Resolved';
+            localStorage.setItem('zzz_support_tickets', JSON.stringify(tickets));
+            logAction("RESOLVE_TICKET", `Resolved ticket ${id}`);
+            loadSupport();
+        }
+    }
+
+    function clearLogs() {
+        if(confirm("Clear all audit logs?")) {
+            localStorage.setItem('zzz_admin_logs', '[]');
+            renderLogs();
+        }
+    }
+
+    // --- 5. GLOBAL SETTINGS ---
+    function loadSettings() {
+        const banner = JSON.parse(localStorage.getItem('zzz_global_alert') || '{}');
+        if(banner.text) document.getElementById('globalBannerInput').value = banner.text;
+        if(banner.active) document.getElementById('bannerActive').checked = true;
+    }
+
+    function saveGlobalSettings() {
+        const text = document.getElementById('globalBannerInput').value;
+        const active = document.getElementById('bannerActive').checked;
+        localStorage.setItem('zzz_global_alert', JSON.stringify({ text, active }));
+        logAction("SETTINGS_UPDATE", `Updated Global Banner: ${active ? 'Active' : 'Inactive'}`);
+        alert("Settings Saved!");
+    }
+
+    // --- 6. ADD/EDIT USER ---
+    function openAddUserModal() { 
+        document.getElementById('editUserId').value = '';
+        document.getElementById('newUserName').value = '';
+        document.getElementById('newUserEmail').value = '';
+        document.getElementById('newUserPass').value = '';
+        document.getElementById('userModal').classList.remove('hidden'); 
+    }
+    
+    function openEditUser(id) {
+        const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+        const u = users.find(x => x.id === id);
+        if(u) {
+            document.getElementById('editUserId').value = u.id;
+            document.getElementById('newUserName').value = u.name;
+            document.getElementById('newUserEmail').value = u.email;
+            document.getElementById('newUserPass').value = u.password;
+            document.getElementById('newUserRole').value = u.role;
+            document.getElementById('userModal').classList.remove('hidden');
+        }
+    }
+    
+    function handleUserSubmit(e) {
+        e.preventDefault();
+        const id = document.getElementById('editUserId').value;
+        const name = document.getElementById('newUserName').value;
+        const email = document.getElementById('newUserEmail').value;
+        const pass = document.getElementById('newUserPass').value;
+        const role = document.getElementById('newUserRole').value;
+
+        let users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+        
+        if(id) {
+            // Edit Mode
+            const idx = users.findIndex(u => u.id === id);
+            if(idx !== -1) {
+                users[idx] = { ...users[idx], name, email, password: pass, role };
+                logAction("EDIT_USER", `Updated user: ${email}`);
+            }
+        } else {
+            // Create Mode
+            if(users.some(u => u.email === email)) return alert("Email already exists!");
+            users.push({ id: 'u_'+Date.now(), name, email, password: pass, role, avatar: '' });
+            logAction("CREATE_USER", `Created ${role}: ${email}`);
+        }
+        
+        localStorage.setItem('zzz_users', JSON.stringify(users));
+        alert("User Saved!");
+        closeModal('userModal');
+        loadUsers();
+    }
+
+    // --- 7. SCHEMA EDITOR LOGIC (WITH NEW DROPDOWN TOGGLE) ---
+    function loadSchema() {
+        const s = localStorage.getItem('zzz_classifieds_schema');
+        if(s) schema = JSON.parse(s);
+        else { schema = JSON.parse(JSON.stringify(FACTORY_SCHEMA)); localStorage.setItem('zzz_classifieds_schema', JSON.stringify(schema)); }
+        renderCategories();
+    }
+    
+    function renderCategories() {
+        document.getElementById('listCategories').innerHTML = schema.categories.map(c => 
+            `<div onclick="selCat('${c.id}')" class="p-3 rounded hover:bg-slate-50 cursor-pointer flex items-center justify-between ${selectedCatId===c.id ? 'active-list-item':''}"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-slate-400 text-sm">${c.icon}</span> <span class="text-sm font-medium">${c.label}</span></div><button onclick="editItem(event,'category','${c.id}')" class="text-slate-300 hover:text-blue-500"><span class="material-symbols-outlined text-sm">edit</span></button></div>`
+        ).join('');
+    }
+    
+    function selCat(id) {
+        selectedCatId = id; selectedSubId = null;
+        renderCategories();
+        const subs = schema.subcategories.filter(s => s.categoryId === id);
+        document.getElementById('listSubcategories').innerHTML = subs.length ? subs.map(s => `<div onclick="selSub('${s.id}')" class="p-3 rounded hover:bg-slate-50 cursor-pointer flex justify-between ${selectedSubId===s.id ? 'active-list-item':''}"><span class="text-sm font-medium">${s.label}</span><button onclick="editItem(event,'subcategory','${s.id}')" class="text-slate-300 hover:text-blue-500"><span class="material-symbols-outlined text-sm">edit</span></button></div>`).join('') : '<div class="text-center text-xs text-slate-400 mt-4">No Subcategories</div>';
+        document.getElementById('btnAddSub').disabled = false;
+        document.getElementById('listFields').innerHTML = '<div class="text-center text-xs text-slate-400 mt-10">Select a Subcategory</div>';
+    }
+
+    function selSub(id) {
+        selectedSubId = id;
+        selCat(selectedCatId); // re-render to highlight sub
+        const fields = schema.fields.filter(f => f.subcategoryId === id);
+        document.getElementById('listFields').innerHTML = fields.length ? fields.map(f => `<div class="p-3 border border-slate-100 rounded mb-2 bg-white flex justify-between group"><div><p class="text-sm font-bold">${f.label}</p><span class="text-[10px] bg-slate-100 px-1 rounded uppercase">${f.type}</span></div><button onclick="editItem(event,'field','${f.id}')" class="text-slate-300 hover:text-blue-500 opacity-0 group-hover:opacity-100"><span class="material-symbols-outlined text-sm">edit</span></button></div>`).join('') : '<div class="text-center text-xs text-slate-400 mt-4">No Fields</div>';
+        document.getElementById('btnAddField').disabled = false;
+    }
+    
+    // TOGGLE OPTIONS VISIBILITY (NEW)
+    function toggleOptionsInput() {
+        const type = document.getElementById('editType').value;
+        const container = document.getElementById('optionsContainer');
+        if(type === 'select') {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+        }
+    }
+
+    function editItem(e, type, id) {
+        e.stopPropagation();
+        editingItem = { type, id };
+        let item;
+        if(type==='category') item=schema.categories.find(x=>x.id===id);
+        if(type==='subcategory') item=schema.subcategories.find(x=>x.id===id);
+        if(type==='field') item=schema.fields.find(x=>x.id===id);
+        
+        document.getElementById('editLabel').value = item.label;
+        document.getElementById('modalTitle').textContent = "Edit " + type;
+        document.getElementById('catExtras').classList.toggle('hidden', type!=='category');
+        document.getElementById('fieldExtras').classList.toggle('hidden', type!=='field');
+        
+        if(type==='category') document.getElementById('editIcon').value = item.icon;
+        
+        if(type==='field') { 
+            document.getElementById('editType').value = item.type; 
+            document.getElementById('editOptions').value = item.options || ''; 
+            toggleOptionsInput(); // Ensure correct visibility
+        }
+        
+        document.getElementById('editModal').classList.remove('hidden');
+    }
+
+    function addItem(type) {
+        editingItem = { type, id: null };
+        document.getElementById('editLabel').value = '';
+        document.getElementById('modalTitle').textContent = "Add " + type;
+        document.getElementById('catExtras').classList.toggle('hidden', type!=='category');
+        document.getElementById('fieldExtras').classList.toggle('hidden', type!=='field');
+        
+        if(type === 'field') {
+             document.getElementById('editType').value = 'text';
+             toggleOptionsInput();
+        }
+
+        document.getElementById('editModal').classList.remove('hidden');
+    }
+
+    function saveItem() {
+        const label = document.getElementById('editLabel').value;
+        if(!label) return;
+        
+        if(!editingItem.id) { // NEW
+            const newId = label.toLowerCase().replace(/[^a-z0-9]/g,'_') + '_' + Date.now();
+            if(editingItem.type === 'category') schema.categories.push({ id: newId, label, icon: document.getElementById('editIcon').value || 'circle' });
+            if(editingItem.type === 'subcategory') schema.subcategories.push({ id: newId, categoryId: selectedCatId, label });
+            if(editingItem.type === 'field') schema.fields.push({ id: newId, subcategoryId: selectedSubId, label, type: document.getElementById('editType').value, options: document.getElementById('editOptions').value });
+        } else { // EDIT
+            if(editingItem.type === 'category') { const i = schema.categories.find(x=>x.id===editingItem.id); i.label = label; i.icon = document.getElementById('editIcon').value; }
+            if(editingItem.type === 'subcategory') { const i = schema.subcategories.find(x=>x.id===editingItem.id); i.label = label; }
+            if(editingItem.type === 'field') { const i = schema.fields.find(x=>x.id===editingItem.id); i.label = label; i.type = document.getElementById('editType').value; i.options = document.getElementById('editOptions').value; }
+        }
+        
+        saveSchemaToDB();
+        closeModal('editModal');
+        if(selectedCatId) selCat(selectedCatId);
+        if(selectedSubId) selSub(selectedSubId);
+    }
+
+    function deleteItem() {
+        if(!editingItem.id) return;
+        if(!confirm("Delete item?")) return;
+        if(editingItem.type === 'category') schema.categories = schema.categories.filter(x=>x.id!==editingItem.id);
+        if(editingItem.type === 'subcategory') schema.subcategories = schema.subcategories.filter(x=>x.id!==editingItem.id);
+        if(editingItem.type === 'field') schema.fields = schema.fields.filter(x=>x.id!==editingItem.id);
+        saveSchemaToDB();
+        closeModal('editModal');
+        renderCategories();
+    }
+
+    function saveSchemaToDB() {
+        localStorage.setItem('zzz_classifieds_schema', JSON.stringify(schema));
+        logAction("SCHEMA_CHANGE", `Updated Schema Structure`);
+    }
+
+    function resetToFactory() {
+        if(confirm("Reset Schema to Defaults?")) {
+            localStorage.setItem('zzz_classifieds_schema', JSON.stringify(FACTORY_SCHEMA));
+            location.reload();
+        }
+    }
+
+    // Modal Helpers
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    function handleLogout() { localStorage.removeItem('zzz_user'); window.location.href = 'Login Page.html'; }
+    function refreshData() { loadData(); alert("Data Refreshed"); }
+
+  </script>
 </body>
 </html>

@@ -176,25 +176,25 @@
   <script>
     // --- 1. SETUP ---
     const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
-    if(currentUser) document.getElementById('navAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+    if(currentUser && document.getElementById('navAvatar')) {
+        document.getElementById('navAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+    }
 
     // --- 2. DATA SOURCE ---
-    // Combine Mock Data + LocalStorage Listings
     const mockData = [
-        { id: '101', title: "iPhone 14 Pro - Deep Purple", category: "Electronics", price: 65000, image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=600&q=80", location: "Bengaluru", time: "2 hrs ago", condition: "Used" },
-        { id: '102', title: "Royal Enfield Classic 350", category: "Vehicles", price: 145000, image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80", location: "Mumbai", time: "5 hrs ago", condition: "Used" },
-        { id: '103', title: "2 BHK Apartment", category: "Real Estate", price: 25000, image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80", location: "Hyderabad", time: "Yesterday", condition: "New" },
-        { id: '104', title: "Graphic Designer Job", category: "Jobs", price: 45000, image: "https://images.unsplash.com/photo-1626785774573-4b799314346d?auto=format&fit=crop&w=600&q=80", location: "Remote", time: "1 day ago", condition: "New" },
-        { id: '105', title: "Golden Retriever Puppy", category: "Pets", price: 15000, image: "https://images.unsplash.com/photo-1629740032638-58bfd37eb74e?auto=format&fit=crop&w=600&q=80", location: "Delhi", time: "3 days ago", condition: "New" },
-        { id: '106', title: "Sony Headphones", category: "Electronics", price: 22000, image: "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&w=600&q=80", location: "Chennai", time: "1 week ago", condition: "New" }
+        { id: '101', title: "iPhone 14 Pro - Deep Purple", category: "Electronics", price: 65000, image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=600&q=80", location: "Bengaluru", time: "2 hrs ago", condition: "Used", status: "active" },
+        { id: '102', title: "Royal Enfield Classic 350", category: "Vehicles", price: 145000, image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80", location: "Mumbai", time: "5 hrs ago", condition: "Used", status: "active" },
+        { id: '103', title: "2 BHK Apartment", category: "Real Estate", price: 25000, image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80", location: "Hyderabad", time: "Yesterday", condition: "New", status: "active" },
+        { id: '104', title: "Graphic Designer Job", category: "Jobs", price: 45000, image: "https://images.unsplash.com/photo-1626785774573-4b799314346d?auto=format&fit=crop&w=600&q=80", location: "Remote", time: "1 day ago", condition: "New", status: "active" },
+        { id: '105', title: "Golden Retriever Puppy", category: "Pets", price: 15000, image: "https://images.unsplash.com/photo-1629740032638-58bfd37eb74e?auto=format&fit=crop&w=600&q=80", location: "Delhi", time: "3 days ago", condition: "New", status: "active" },
+        { id: '106', title: "Sony Headphones", category: "Electronics", price: 22000, image: "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&w=600&q=80", location: "Chennai", time: "1 week ago", condition: "New", status: "active" }
     ];
 
     function getAllListings() {
         const userPosts = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-        // Normalize user posts to match mock structure if needed
         const normalizedUserPosts = userPosts.map(p => ({
             ...p,
-            price: Number(p.price) // Ensure price is number
+            price: Number(p.price) 
         }));
         return [...normalizedUserPosts, ...mockData];
     }
@@ -209,7 +209,7 @@
       if(headerInput) query = headerInput;
 
       document.getElementById('queryText').textContent = query || "All Items";
-      document.getElementById('headerSearch').value = query; // Sync inputs
+      document.getElementById('headerSearch').value = query; 
 
       // Get Filter Values
       const selectedCats = Array.from(document.querySelectorAll('.filter-cat:checked')).map(cb => cb.value);
@@ -219,13 +219,16 @@
 
       let results = getAllListings();
 
-      // 1. Search Text
+      // 0. Filter out Sold/Banned Items (CRITICAL FIX)
+      results = results.filter(item => item.status === 'active' || !item.status);
+
+      // 1. Search Text (Title OR Category OR Location)
       if(query) {
         const q = query.toLowerCase();
         results = results.filter(item => 
-           item.title.toLowerCase().includes(q) || 
-           item.category.toLowerCase().includes(q) ||
-           item.location.toLowerCase().includes(q)
+           (item.title && item.title.toLowerCase().includes(q)) || 
+           (item.category && item.category.toLowerCase().includes(q)) ||
+           (item.location && item.location.toLowerCase().includes(q))
         );
       }
 
@@ -245,7 +248,6 @@
       // 5. Sorting
       if(sortVal === 'price_low') results.sort((a,b) => a.price - b.price);
       if(sortVal === 'price_high') results.sort((a,b) => b.price - a.price);
-      // Newest is default (mock data assumed ordered or relies on time string which is hard to sort perfectly without timestamps)
 
       renderResults(results);
     }
@@ -273,7 +275,7 @@
           <div class="relative h-48 bg-gray-100 overflow-hidden">
             <img src="${item.image || 'https://via.placeholder.com/300'}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
             <span class="absolute top-2 left-2 bg-black/60 text-white text-[10px] uppercase font-bold px-2 py-1 rounded backdrop-blur-sm tracking-wide">${item.category}</span>
-            <button class="absolute top-2 right-2 p-2 bg-white/90 rounded-full text-gray-400 hover:text-red-500 shadow-sm transition-colors" title="Save">
+            <button class="absolute top-2 right-2 p-2 bg-white/90 rounded-full text-gray-400 hover:text-red-500 shadow-sm transition-colors" title="Save" onclick="event.preventDefault(); toggleFavorite('${item.id}')">
               <span class="material-symbols-outlined text-lg leading-none">favorite</span>
             </button>
           </div>
@@ -316,14 +318,21 @@
       
       applyFilters();
     }
+    
+    // Quick Favorite Toggle Logic for Search Results
+    window.toggleFavorite = (id) => {
+       // Just a stub to prevent errors if clicked. 
+       // Fully connected logic is in classifieds.html, but this prevents the link jump.
+       alert("Please login or view details to save favorites!");
+    };
 
     // Handle Enter Key
     document.getElementById('headerSearch').addEventListener('keypress', (e) => { if(e.key === 'Enter') performSearch(); });
-    document.getElementById('mobileSearch').addEventListener('keypress', (e) => { if(e.key === 'Enter') performSearch('mobile'); });
+    const mobileSearch = document.getElementById('mobileSearch');
+    if(mobileSearch) mobileSearch.addEventListener('keypress', (e) => { if(e.key === 'Enter') performSearch('mobile'); });
 
     // Initial Load
     applyFilters();
-
-  </script>
+</script>
 </body>
 </html>

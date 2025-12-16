@@ -152,6 +152,18 @@
     if(currentUser) document.getElementById('navAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
 
     // --- 2. LOAD PROFILE ---
+    // In profile.html -> loadProfile()
+const verifiedUsers = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
+const isVerified = verifiedUsers.includes(currentUser.name); // Using name as ID based on AdminConsole logic
+
+if(isVerified) {
+    // Assuming you have an element with ID 'profileName' or a container for the badge
+    const badge = document.createElement('span');
+    badge.className = "material-symbols-outlined text-blue-500 text-xl ml-2 align-middle";
+    badge.title = "Verified User";
+    badge.textContent = "verified";
+    document.getElementById('profileName').appendChild(badge); // Adjust ID to match your HTML
+}
     function loadProfile() {
       // Find listings for this seller
       let displayListings = [];
@@ -213,7 +225,34 @@
         activeBtn.classList.remove('tab-inactive');
         activeBtn.classList.add('tab-active');
     };
+// In profile.html -> File Input Listener
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
 
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const base64String = event.target.result;
+        
+        // 1. Update UI immediately
+        document.getElementById('profileImage').src = base64String;
+        
+        // 2. Update Session
+        currentUser.avatar = base64String;
+        localStorage.setItem('zzz_user', JSON.stringify(currentUser));
+        
+        // 3. Update Master User Database (So Admin sees it too)
+        let allUsers = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+        const userIdx = allUsers.findIndex(u => u.email === currentUser.email);
+        if(userIdx !== -1) {
+            allUsers[userIdx].avatar = base64String;
+            localStorage.setItem('zzz_users', JSON.stringify(allUsers));
+        }
+        
+        alert("Profile photo updated!");
+    };
+    reader.readAsDataURL(file);
+});
     // CHAT LOGIC
     window.startChat = () => {
         if(!currentUser) return window.location.href = 'Login Page.html';

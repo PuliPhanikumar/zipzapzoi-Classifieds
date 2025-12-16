@@ -307,15 +307,29 @@
 
       function getAllListings() {
         const userPosts = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-        return [...userPosts, ...mockListings];
+        // Merge mock data + user posts
+        const allData = [...userPosts, ...mockListings];
+        
+        // --- CRITICAL FILTER ---
+        // Only return items that are 'active' or have no status (legacy mock data)
+        // This hides 'sold', 'banned', or 'pending' items from the main feed
+        return allData.filter(item => {
+            return item.status === 'active' || !item.status; 
+        });
       }
 
       // --- 2. RENDER LOGIC ---
-      function renderListings(filter = 'All') {
-        const grid = document.getElementById('listingsGrid');
-        grid.innerHTML = '';
-        let data = getAllListings();
-        const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+      // In classifieds.html -> renderListings()
+function renderListings(filter = 'All') {
+  const grid = document.getElementById('listingsGrid');
+  grid.innerHTML = '';
+  let data = getAllListings();
+  const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+
+  // --- NEW CODE START: Filter out banned/sold items ---
+  // Only show active items in the main feed
+  data = data.filter(item => item.status === 'active' || !item.status); 
+  // --- NEW CODE END ---
 
         if (filter !== 'All') {
           data = data.filter(item => item.category && item.category.includes(filter));
