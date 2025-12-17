@@ -16,312 +16,263 @@
           colors: {
             "primary": "#019863",
             "secondary": "#4D96A9",
-            "background-light": "#F7F9FC",
-            "background-dark": "#1A202C",
-            "text-light": "#333333",
-            "text-dark": "#E2E8F0",
-            "accent": "#FFD166",
+            "background-light": "#F7F9FC"
           },
           fontFamily: { "display": ["Spline Sans", "sans-serif"] },
-          borderRadius: { "DEFAULT": "12px", "xl": "24px" },
-          boxShadow: { 'bouncy': '0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.07)' }
-        },
-      },
+          boxShadow: { "bouncy": "0 10px 20px -5px rgba(0,0,0,.1)" }
+        }
+      }
     }
   </script>
   <style>
-    .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    /* Hide scrollbar for gallery */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="font-display bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark antialiased transition-colors duration-300">
+<body class="font-display bg-background-light text-gray-800 min-h-screen flex flex-col">
 
-  <header class="w-full bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <span class="material-symbols-outlined text-secondary text-3xl">all_inclusive</span>
-        <h2 class="text-xl font-bold">ZipZapZoi</h2>
-      </div>
+  <header class="bg-white border-b sticky top-0 z-50">
+    <div class="container mx-auto px-6 h-16 flex items-center justify-between">
+      <a href="classifieds.html" class="flex items-center gap-2 text-primary font-bold text-xl">
+        <span class="material-symbols-outlined text-3xl">all_inclusive</span>
+        ZipZapZoi
+      </a>
       <div class="flex items-center gap-4">
-          <button onclick="reportItem()" class="text-gray-400 hover:text-red-500 transition-colors" title="Report Ad">
-            <span class="material-symbols-outlined">flag</span>
-          </button>
-          <a href="classifieds.html" class="flex items-center gap-1 text-sm font-semibold hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-lg">arrow_back</span> Back to Browse
-          </a>
-      </div>
+   <button onclick="history.back()" class="hidden md:flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-bold text-xs transition-colors">
+      <span class="material-symbols-outlined text-sm">arrow_back</span> Back
+   </button>
+   
+   <div id="navAvatar" class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">U</div>
+</div>
     </div>
   </header>
 
-  <main class="w-full max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+  <main class="flex-grow container mx-auto px-4 py-8">
     
-    <div class="flex flex-wrap gap-2 px-1 pb-6 text-sm">
-      <a class="text-gray-500 hover:text-primary" href="classifieds.html">Home</a>
-      <span class="text-gray-400">/</span>
-      <a class="text-gray-500 hover:text-primary" href="classifieds.html" id="breadCategoryLink">Categories</a>
-      <span class="text-gray-400">/</span>
-      <span class="text-primary font-bold" id="breadTitle">Details</span>
+    <div class="text-sm text-gray-400 mb-6 flex items-center gap-2">
+      <a href="classifieds.html" class="hover:text-primary">Home</a> <span class="material-symbols-outlined text-xs">chevron_right</span>
+      <span id="crumbCat">Category</span> <span class="material-symbols-outlined text-xs">chevron_right</span>
+      <span id="crumbTitle" class="text-gray-800 font-bold truncate max-w-[200px]">Item</span>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       
-      <div class="lg:col-span-3 flex flex-col gap-8">
-        
-        <div id="gallery" class="relative rounded-2xl shadow-bouncy overflow-hidden group bg-gray-100 dark:bg-gray-700 aspect-video">
-          <div id="galleryMain" class="w-full h-full bg-center bg-no-repeat bg-contain transition-all duration-300"></div>
-          
-          <button id="galleryPrev" class="absolute top-1/2 left-4 -translate-y-1/2 bg-white/80 dark:bg-black/50 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110">
-            <span class="material-symbols-outlined">arrow_back_ios_new</span>
-          </button>
-          <button id="galleryNext" class="absolute top-1/2 right-4 -translate-y-1/2 bg-white/80 dark:bg-black/50 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110">
-            <span class="material-symbols-outlined">arrow_forward_ios</span>
-          </button>
-          
-          <div id="galleryDots" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2"></div>
+      <div class="lg:col-span-2 space-y-4">
+        <div class="bg-white rounded-3xl shadow-sm border overflow-hidden h-[400px] md:h-[500px] relative group bg-gray-100 flex items-center justify-center">
+           <img id="mainImage" src="https://via.placeholder.com/800" class="w-full h-full object-contain transition-opacity duration-300">
+           <span id="statusBadge" class="hidden absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold uppercase shadow-lg z-10">SOLD</span>
         </div>
 
-        <div id="galleryThumbnails" class="flex gap-3 overflow-x-auto pb-2 hidden"></div>
-
-        <div class="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-bouncy">
-          <h3 class="text-xl font-bold mb-4 border-b border-gray-100 dark:border-gray-700 pb-2">Description</h3>
-          <p id="listingDescription" class="text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">Loading description...</p>
-        </div>
-
+        <div id="imageGallery" class="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+           </div>
       </div>
 
-      <div class="lg:col-span-2 flex flex-col gap-6">
-        
-        <div class="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-bouncy flex flex-col gap-4 border-t-4 border-primary">
-          <div>
-             <span id="listingCategoryBadge" class="inline-block px-3 py-1 bg-gray-100 dark:bg-gray-700 text-xs font-bold uppercase tracking-wider text-gray-500 rounded-full mb-2">Category</span>
-             <h1 id="listingTitle" class="text-2xl font-bold leading-tight">Loading Title...</h1>
-          </div>
-          
-          <div class="text-4xl font-bold text-primary tracking-tight" id="listingPrice">--</div>
-          
-          <div id="attributesGrid" class="grid grid-cols-2 gap-3 py-4 border-t border-b border-gray-100 dark:border-gray-700">
+      <div class="space-y-6">
+        <div class="bg-white p-6 rounded-3xl shadow-bouncy border border-gray-100">
+           <div class="flex justify-between items-start">
+             <div>
+               <p id="detailCat" class="text-xs font-bold text-primary uppercase tracking-wider mb-1">CATEGORY</p>
+               <h1 id="detailTitle" class="text-2xl font-bold text-gray-900 leading-tight">Loading Title...</h1>
              </div>
+             <button onclick="toggleFav()" class="p-2 bg-gray-50 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors">
+               <span id="favIcon" class="material-symbols-outlined">favorite</span>
+             </button>
+           </div>
+           
+           <div class="mt-4 pb-6 border-b border-gray-100">
+             <h2 id="detailPrice" class="text-4xl font-black text-gray-900">₹ 0</h2>
+             <p class="text-gray-400 text-sm mt-1 flex items-center gap-1">
+               <span class="material-symbols-outlined text-sm">location_on</span> <span id="detailLoc">Location</span>
+               <span class="mx-1">•</span> <span id="detailTime">Just now</span>
+             </p>
+           </div>
 
-          <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-            <span class="material-symbols-outlined text-lg">location_on</span>
-            <span id="listingLocation">Loading location...</span>
-          </div>
-          <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-            <span class="material-symbols-outlined text-lg">schedule</span>
-            <span id="listingTime">Posted recently</span>
-          </div>
+           <div id="actionArea" class="mt-6 flex flex-col gap-3"></div>
+        </div>
 
-          <div class="flex gap-3 pt-2">
-            <button onclick="openMessageModal()" class="flex-1 bg-secondary hover:bg-primary text-white h-12 rounded-xl font-bold shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2">
-              <span class="material-symbols-outlined">chat</span> Chat
-            </button>
-            <button onclick="callSeller()" class="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-text-light dark:text-text-dark h-12 rounded-xl font-bold transition-all flex items-center justify-center gap-2">
-              <span class="material-symbols-outlined">call</span> Call
-            </button>
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-shadow" onclick="goToProfile()">
+          <h3 class="font-bold text-gray-400 text-xs uppercase mb-4">Sold By</h3>
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold text-gray-500" id="sellerInit">?</div>
+            <div>
+              <p id="sellerName" class="font-bold text-gray-900">Seller Name</p>
+              <p class="text-xs text-primary font-bold">View Profile</p>
+            </div>
+            <span class="material-symbols-outlined ml-auto text-gray-300">chevron_right</span>
           </div>
         </div>
 
-        <div class="p-5 bg-white dark:bg-gray-800 rounded-2xl shadow-bouncy flex items-center gap-4">
-          <div class="w-14 h-14 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white text-xl font-bold" id="sellerAvatar">S</div>
-          <div class="flex-1">
-            <p id="sellerName" class="font-bold text-lg text-gray-800 dark:text-white">Seller Name</p>
-            <div class="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-              <span class="material-symbols-outlined text-yellow-500 text-sm">star</span>
-              <span>4.8 (Verified)</span>
-            </div>
-          </div>
-          <a href="#" id="viewProfileBtn" class="text-sm font-bold text-secondary hover:underline">View Profile</a>
-        </div>
-
-        <div class="p-5 bg-white dark:bg-gray-800 rounded-2xl shadow-bouncy">
-          <h3 class="font-bold text-sm text-gray-500 dark:text-gray-400 mb-3">Location Map</h3>
-          <div class="w-full h-40 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity" onclick="window.open('http://maps.google.com', '_blank')">
-            <div class="text-center text-gray-400">
-               <span class="material-symbols-outlined text-3xl">map</span>
-               <p class="text-xs mt-1">Open in Google Maps</p>
-            </div>
-          </div>
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+          <h3 class="font-bold text-gray-900 mb-3">Description</h3>
+          <p id="detailDesc" class="text-gray-600 text-sm leading-relaxed whitespace-pre-line">No description.</p>
+          <div id="dynamicFields" class="mt-4 grid grid-cols-2 gap-2 text-xs"></div>
         </div>
 
       </div>
-    </div>
-
-    <div class="mt-12">
-      <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">You Might Also Like</h2>
-      <div id="similarGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-         </div>
     </div>
 
   </main>
 
-  <div id="messageModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
-      <div class="bg-secondary p-4 flex justify-between items-center text-white">
-        <h3 class="font-bold text-lg">Contact Seller</h3>
-        <button onclick="closeMessageModal()" class="material-symbols-outlined hover:bg-white/20 rounded-full p-1">close</button>
-      </div>
-      <div class="p-6 space-y-4">
-        <div>
-          <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Subject</label>
-          <input type="text" id="msgSubject" class="w-full bg-gray-50 dark:bg-gray-700 border-none rounded-lg text-sm dark:text-white" readonly>
-        </div>
-        <div>
-           <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Your Message</label>
-           <textarea id="msgText" rows="4" class="w-full bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-secondary dark:text-white" placeholder="Hi, is this still available?"></textarea>
-        </div>
-        <button onclick="sendMessage()" class="w-full bg-primary hover:bg-green-600 text-white font-bold py-3 rounded-xl shadow-lg transition-transform active:scale-95">Send Message</button>
-      </div>
-    </div>
-  </div>
+  <footer class="bg-white border-t py-6 text-center text-sm text-gray-500 mt-auto">
+    &copy; 2024 ZipZapZoi
+  </footer>
 
   <script>
-  (function() {
-    // --- 1. DATA SOURCES ---
+    // --- 1. DATA SOURCE ---
     const mockListings = [
-        { id: '101', title: "iPhone 14 Pro - Deep Purple", category: "Electronics", price: "65000", location: "Bengaluru", time: "2 hrs ago", image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=600&q=80", desc: "Pristine condition iPhone 14 Pro.", brand: "Apple", condition: "Used - Like New" },
-        { id: '102', title: "Royal Enfield Classic 350", category: "Vehicles", price: "145000", location: "Mumbai", time: "5 hrs ago", image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80", desc: "Single owner.", brand: "Royal Enfield", year: "2021" },
-        { id: '103', title: "2 BHK Apartment for Rent", category: "Real Estate", price: "25000", location: "Hyderabad", time: "Yesterday", image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80", desc: "Spacious flat.", area: "1200 sqft" }
+        { id: '101', title: "iPhone 14 Pro", category: "Electronics", price: "65000", location: "Bengaluru", time: "2 hrs ago", image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=600&q=80", images: ["https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=600&q=80"], userId: 'user_bob', userName: 'Bob Builder' },
+        { id: '102', title: "Royal Enfield 350", category: "Vehicles", price: "145000", location: "Mumbai", time: "5 hrs ago", image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80", userId: 'user_alice', userName: 'Alice W' },
     ];
 
-    // Helper: Safely get listing
-    function getListingById(id) {
-        if(!id) return null;
-        const userPosts = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-        const foundUser = userPosts.find(p => p.id == id);
-        if (foundUser) return { ...foundUser, isUserPost: true };
-        const foundMock = mockListings.find(p => p.id == id);
-        if (foundMock) return foundMock;
-        return null;
-    }
-function reportListing() {
-   // ... existing UI logic ...
-   let flags = JSON.parse(localStorage.getItem('zzz_flags') || '[]');
-   flags.push({ itemId: currentItemId, title: itemTitle, reason: "User Reported", time: new Date() });
-   localStorage.setItem('zzz_flags', JSON.stringify(flags));
-   alert("Report sent to Admin!");
-}
-    // --- 2. MAIN LOGIC ---
-    let currentListing = null;
+    // --- 2. INIT ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const itemId = urlParams.get('id');
     const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
+    let currentItem = null;
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const params = new URLSearchParams(window.location.search);
-        let id = params.get('id');
+    if(currentUser) document.getElementById('navAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
 
-        // *** FAILSAFE: Default to Mock 101 if no ID or invalid ID ***
-        currentListing = getListingById(id);
-        if (!currentListing) {
-            console.warn("Listing not found or no ID. Loading Demo Item.");
-            currentListing = mockListings[0]; // Fallback to iPhone
-            id = '101'; // Force ID
+    function loadItem() {
+      // MERGE DATA
+      const userPosts = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+      const allListings = [...userPosts, ...mockListings];
+      
+      currentItem = allListings.find(i => i.id === itemId);
+
+      if(!currentItem) {
+        document.body.innerHTML = `<div class="h-screen flex flex-col items-center justify-center text-center p-4">
+          <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">search_off</span>
+          <h1 class="text-2xl font-bold text-gray-700">Listing Not Found</h1>
+          <a href="classifieds.html" class="mt-4 bg-primary text-white px-6 py-2 rounded-full font-bold">Back to Classifieds</a>
+        </div>`;
+        return;
+      }
+
+      // TEXT DETAILS
+      document.title = currentItem.title;
+      document.getElementById('crumbTitle').textContent = currentItem.title;
+      document.getElementById('crumbCat').textContent = currentItem.category;
+      
+      document.getElementById('detailCat').textContent = currentItem.category;
+      document.getElementById('detailTitle').textContent = currentItem.title;
+      document.getElementById('detailPrice').textContent = "₹ " + currentItem.price;
+      document.getElementById('detailLoc').textContent = currentItem.city || currentItem.location;
+      document.getElementById('detailDesc').textContent = currentItem.description || "No description provided.";
+      
+      document.getElementById('sellerName').textContent = currentItem.userName || "User";
+      document.getElementById('sellerInit').textContent = (currentItem.userName || "U").charAt(0).toUpperCase();
+
+      if(currentItem.status === 'sold') {
+          document.getElementById('statusBadge').classList.remove('hidden');
+          document.getElementById('mainImage').classList.add('grayscale');
+      }
+
+      // --- 3. GALLERY LOGIC ---
+      const mainImg = document.getElementById('mainImage');
+      const gallery = document.getElementById('imageGallery');
+      
+      // Default to main image
+      mainImg.src = currentItem.image || 'https://via.placeholder.com/800';
+
+      // Check for array of images
+      const imgList = (currentItem.images && currentItem.images.length > 0) 
+                      ? currentItem.images 
+                      : [currentItem.image || 'https://via.placeholder.com/800'];
+
+      // Generate Thumbnails
+      if (imgList.length > 1) {
+          gallery.innerHTML = imgList.map((src, index) => `
+              <img src="${src}" onclick="swapImage(this)" 
+                   class="w-20 h-20 rounded-xl object-cover cursor-pointer border-2 ${index === 0 ? 'border-primary' : 'border-transparent'} hover:border-primary transition-all opacity-80 hover:opacity-100 flex-shrink-0"
+                   data-src="${src}">
+          `).join('');
+      } else {
+          gallery.classList.add('hidden'); // Hide strip if only 1 photo
+      }
+
+      renderActionButtons();
+    }
+
+    // Function to swap main image
+    window.swapImage = (el) => {
+        const main = document.getElementById('mainImage');
+        // Reset all borders
+        document.querySelectorAll('#imageGallery img').forEach(img => img.classList.replace('border-primary', 'border-transparent'));
+        // Set active border
+        el.classList.replace('border-transparent', 'border-primary');
+        // Fade effect
+        main.style.opacity = '0.5';
+        setTimeout(() => {
+            main.src = el.dataset.src;
+            main.style.opacity = '1';
+        }, 150);
+    }
+
+    // --- 4. BUTTONS ---
+    function renderActionButtons() {
+      const area = document.getElementById('actionArea');
+      
+      if(currentUser && currentItem.userId === currentUser.id) {
+        area.innerHTML = `
+          <button onclick="editItem()" class="w-full bg-gray-800 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-black transition-transform active:scale-95 flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined">edit_square</span> Edit Listing
+          </button>
+          <button onclick="deleteItem()" class="w-full bg-white text-red-500 border border-red-100 font-bold py-3.5 rounded-xl hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined">delete</span> Delete
+          </button>
+        `;
+      } else {
+        const isSold = currentItem.status === 'sold';
+        area.innerHTML = `
+          <button onclick="startChat()" ${isSold ? 'disabled' : ''} class="w-full bg-secondary text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-cyan-700 transition-transform active:scale-95 flex items-center justify-center gap-2 ${isSold ? 'opacity-50 cursor-not-allowed' : ''}">
+            <span class="material-symbols-outlined">chat</span> ${isSold ? 'Item Sold' : 'Chat with Seller'}
+          </button>
+          <button onclick="callSeller()" class="w-full bg-white text-primary border border-green-100 font-bold py-3.5 rounded-xl hover:bg-green-50 transition-colors flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined">call</span> Show Phone Number
+          </button>
+        `;
+      }
+    }
+
+    // --- ACTIONS ---
+    function startChat() {
+      if(!currentUser) return window.location.href = `Login Page.html?redirect=Listing Detail.html?id=${itemId}`;
+      const intent = { action: 'start_chat', partnerId: currentItem.userId, partnerName: currentItem.userName, listingId: currentItem.id, listingTitle: currentItem.title };
+      localStorage.setItem('zzz_chat_intent', JSON.stringify(intent));
+      window.location.href = "Inbox.html";
+    }
+
+    function editItem() { window.location.href = `Post Listing.html?id=${itemId}`; }
+
+    function deleteItem() {
+      if(!confirm("Delete this listing?")) return;
+      let list = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+      list = list.filter(i => i.id !== itemId);
+      localStorage.setItem('zzz_listings', JSON.stringify(list));
+      alert("Deleted.");
+      window.location.href = "Seller Dashboard.html";
+    }
+
+    function callSeller() { alert("Phone: +91 98XXX XXXXX"); }
+    function goToProfile() { if(currentItem.userId) window.location.href = `profile.html?sellerId=${currentItem.userId}`; }
+
+    // FAVORITES
+    window.toggleFav = () => {
+        const icon = document.getElementById('favIcon');
+        let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+        const exists = favs.find(f => f.id === itemId);
+        if(exists) {
+            favs = favs.filter(f => f.id !== itemId);
+            icon.classList.remove('text-red-500'); icon.style.fontVariationSettings = "'FILL' 0";
+        } else {
+            favs.push(currentItem);
+            icon.classList.add('text-red-500'); icon.style.fontVariationSettings = "'FILL' 1";
         }
+        localStorage.setItem('zzz_favorites', JSON.stringify(favs));
+    }
 
-        // --- POPULATE UI ---
-        document.title = `${currentListing.title} - ZipZapZoi`;
-        document.getElementById('listingTitle').textContent = currentListing.title;
-        document.getElementById('listingPrice').textContent = currentListing.category === 'Charity' ? 'Free' : `₹ ${currentListing.price}`;
-        document.getElementById('listingLocation').textContent = currentListing.location || `${currentListing.city}, ${currentListing.state}`;
-        document.getElementById('listingTime').textContent = currentListing.time || 'Just now';
-        document.getElementById('listingDescription').textContent = currentListing.description || currentListing.desc || "No description.";
-        document.getElementById('listingCategoryBadge').textContent = currentListing.category || "Item";
-        document.getElementById('breadCategoryLink').textContent = currentListing.category || "Browse";
-        document.getElementById('breadTitle').textContent = (currentListing.title || "").substring(0, 20) + '...';
-        
-        // Seller
-        const sellerName = currentListing.userName || currentListing.sellerName || "Verified Seller";
-        const sellerId = currentListing.userId || 'demo_user';
-        document.getElementById('sellerName').textContent = sellerName;
-        document.getElementById('sellerAvatar').textContent = sellerName.charAt(0).toUpperCase();
-        document.getElementById('viewProfileBtn').href = `profile.html?sellerId=${sellerId}`;
-
-        // Dynamic Attributes
-        const attributesGrid = document.getElementById('attributesGrid');
-        attributesGrid.innerHTML = '';
-        const metaKeys = ['brand', 'condition', 'year', 'km_driven', 'fuel', 'area', 'furnishing'];
-        metaKeys.forEach(k => {
-            if(currentListing[k]) {
-                attributesGrid.innerHTML += `<div class="flex flex-col bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg"><span class="text-xs text-gray-500 uppercase">${k}</span><span class="font-bold text-sm truncate dark:text-white">${currentListing[k]}</span></div>`;
-            }
-        });
-
-        // Images
-        let images = currentListing.images || [currentListing.image || 'https://via.placeholder.com/800x600'];
-        if(images.length === 0) images = ['https://via.placeholder.com/800x600'];
-        
-        const galleryMain = document.getElementById('galleryMain');
-        galleryMain.style.backgroundImage = `url('${images[0]}')`;
-        
-        // Message Subject
-        document.getElementById('msgSubject').value = `Re: ${currentListing.title}`;
-        
-        // Similar Items
-        const similarGrid = document.getElementById('similarGrid');
-        const similar = mockListings.filter(l => l.id != currentListing.id).slice(0,4);
-        if(similarGrid) {
-            similar.forEach(item => {
-               similarGrid.innerHTML += `
-               <a href="Listing Detail.html?id=${item.id}" class="group block bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden">
-                    <div class="h-40 bg-cover bg-center" style="background-image: url('${item.image}')"></div>
-                    <div class="p-3">
-                        <h4 class="font-bold truncate group-hover:text-primary text-gray-800 dark:text-white">${item.title}</h4>
-                        <p class="text-primary font-bold">₹ ${item.price}</p>
-                    </div>
-                </a>`;
-            });
-        }
-    });
-
-    // --- GLOBAL ACTIONS ---
-    window.openMessageModal = () => {
-        if(!currentUser) {
-            // Save current location to redirect back
-            window.location.href = `Login Page.html`;
-            return;
-        }
-        document.getElementById('messageModal').classList.remove('hidden');
-    };
-    
-    window.closeMessageModal = () => document.getElementById('messageModal').classList.add('hidden');
-
-    window.sendMessage = () => {
-        const text = document.getElementById('msgText').value;
-        if(!text) return alert("Please type a message.");
-        
-        const msgs = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
-        msgs.push({
-            id: 'msg_' + Date.now(),
-            fromUserId: currentUser.id,
-            fromName: currentUser.name,
-            toUserId: currentListing ? currentListing.userId : 'seller_1',
-            toName: currentListing ? (currentListing.userName || 'Seller') : 'Seller',
-            listingId: currentListing ? currentListing.id : '101',
-            listingTitle: currentListing ? currentListing.title : 'Item',
-            text: text,
-            timestamp: new Date().toISOString(),
-            read: false
-        });
-        localStorage.setItem('zzz_messages', JSON.stringify(msgs));
-        alert("Message Sent! Check your Inbox.");
-        closeMessageModal();
-    };
-
-    window.reportItem = () => {
-        if(!confirm("Report this listing?")) return;
-        const flags = JSON.parse(localStorage.getItem('zzz_flags') || '[]');
-        flags.push({
-            itemId: currentListing ? currentListing.id : 'unknown',
-            title: currentListing ? currentListing.title : 'unknown',
-            reason: 'User Reported',
-            time: new Date().toISOString()
-        });
-        localStorage.setItem('zzz_flags', JSON.stringify(flags));
-        alert("Report submitted.");
-    };
-    
-    window.callSeller = () => {
-        alert("Seller Phone: +91 98XXX XXXXX (Hidden for privacy)");
-    };
-
-  })();
+    loadItem();
   </script>
 </body>
 </html>

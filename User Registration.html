@@ -1,184 +1,187 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Create Your ZipZapZoi Account</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Join ZipZapZoi</title>
 
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
 
-<script>
-tailwind.config = {
-  darkMode: "class",
-  theme: {
-    extend: {
-      colors: {
-        "primary": "#019863", // Updated to match Classifieds Theme
-        "secondary": "#4D96A9",
-        "background-light": "#F7F5FF",
-        "background-dark": "#1a1a1a",
-      },
-      fontFamily: { "display": ["Spline Sans", "sans-serif"] },
-      borderRadius: { "DEFAULT": "1rem", "lg": "1.5rem", "xl": "2rem", "full": "9999px" },
-      keyframes: {
-        bounceIn: { '0%': { transform: 'scale(0.8)', opacity: '0' }, '60%': { transform: 'scale(1.05)', opacity: '1' }, '100%': { transform: 'scale(1)' }},
-      },
-      animation: { 'bounce-in': 'bounceIn 0.6s ease-out forwards' },
-    },
-  },
-};
-</script>
-
-<style>
-.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; font-size: 20px; }
-/* Custom Checkbox */
-.fake-captcha { display:flex; align-items:center; gap:.75rem; padding:.6rem .75rem; border-radius:.7rem; border:1px solid rgba(0,0,0,0.06); background:linear-gradient(180deg,#fff,#fafafa); }
-.fake-captcha .box { width:26px; height:26px; border-radius:6px; border:2px solid #ddd; display:flex; align-items:center; justify-content:center; background:#fff; transition:all .18s ease; }
-.fake-captcha input:checked + .box { border-color:#019863; background:#019863; transform:scale(1.05); }
-.fake-captcha input:checked + .box::after { content:'✔'; color:white; font-size:16px; font-weight:bold; }
-</style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: "#019863",
+            brandDark: "#017a50",
+            accent: "#4D96A9",
+          },
+          fontFamily: { sans: ["Spline Sans", "sans-serif"] },
+          animation: {
+            'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+          },
+          keyframes: {
+            fadeInUp: {
+              '0%': { opacity: '0', transform: 'translateY(10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
 </head>
+<body class="bg-gray-50 min-h-screen flex">
 
-<body class="bg-background-light dark:bg-background-dark font-display text-[#4A4A4A] dark:text-gray-300">
-<div class="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden p-4 sm:p-6 lg:p-8">
-<div class="relative z-10 w-full max-w-md animate-bounce-in">
-<header class="flex flex-col items-center gap-4 text-center mb-8">
-  <div class="flex items-center gap-3 text-[#181411] dark:text-white">
-    <div class="h-10 w-10 text-primary">
-      <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M36.7273 44C33.9891 44 31.6043 39.8386 30.3636 33.69C29.123 39.8386 26.7382 44 24 44C21.2618 44 18.877 39.8386 17.6364 33.69C16.3957 39.8386 14.0109 44 11.2727 44C7.25611 44 4 35.0457 4 24C4 12.9543 7.25611 4 11.2727 4C14.0109 4 16.3957 8.16144 17.6364 14.31C18.877 8.16144 21.2618 4 24 4C26.7382 4 29.123 8.16144 30.3636 14.31C31.6043 8.16144 33.9891 4 36.7273 4C40.7439 4 44 12.9543 44 24C44 35.0457 40.7439 44 36.7273 44Z" fill="currentColor"/></svg>
-    </div>
-    <h2 class="text-2xl font-bold tracking-tight">ZipZapZoi</h2>
-  </div>
-  <h1 class="text-[#181411] dark:text-white tracking-tight text-3xl sm:text-4xl font-bold leading-tight">Join the Fun!</h1>
-</header>
-
-<main class="flex flex-col gap-6 rounded-xl bg-white/70 dark:bg-background-dark/70 backdrop-blur-lg p-6 sm:p-8 shadow-2xl shadow-gray-500/10 dark:shadow-black/20">
-<form id="registerForm" class="flex flex-col gap-4">
-
-  <label class="flex flex-col gap-2">
-    <p class="font-bold text-sm">Full Name</p>
-    <input id="regName" type="text" placeholder="John Doe" class="form-input h-12 rounded-lg border border-gray-300 bg-white p-4 text-base dark:border-gray-600 dark:bg-gray-800 dark:text-white" required/>
-  </label>
-
-  <label class="flex flex-col gap-2">
-    <p class="font-bold text-sm">Email Address</p>
-    <input id="regEmail" type="email" placeholder="you@example.com" class="form-input h-12 rounded-lg border border-gray-300 bg-white p-4 text-base dark:border-gray-600 dark:bg-gray-800 dark:text-white" required/>
-  </label>
-
-  <label class="flex flex-col gap-2">
-    <p class="font-bold text-sm">Password</p>
-    <input id="regPassword" type="password" placeholder="Create a password" class="form-input h-12 rounded-lg border border-gray-300 bg-white p-4 text-base dark:border-gray-600 dark:bg-gray-800 dark:text-white" required/>
-  </label>
-
-  <label class="flex flex-col gap-2">
-    <p class="font-bold text-sm">Confirm Password</p>
-    <input id="regConfirm" type="password" placeholder="Confirm password" class="form-input h-12 rounded-lg border border-gray-300 bg-white p-4 text-base dark:border-gray-600 dark:bg-gray-800 dark:text-white" required/>
-  </label>
-
-  <label class="fake-captcha mt-2 cursor-pointer select-none">
-    <input id="fakeCaptcha" type="checkbox" class="sr-only"/>
-    <div class="box"></div>
-    <div>
-      <div class="text-sm font-medium">I'm not a robot</div>
-      <p class="text-xs text-gray-500">Anti-bot verification</p>
-    </div>
-  </label>
-
-  <label class="flex items-center gap-2 mt-2 select-none">
-    <input id="terms" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"/>
-    <p class="text-sm">I agree to the <a href="#" class="text-primary font-bold hover:underline">Terms & Conditions</a></p>
-  </label>
-
-  <button id="registerBtn" type="button" class="mt-4 flex h-14 w-full items-center justify-center rounded-full bg-primary text-white text-lg font-bold shadow-lg hover:-translate-y-1 hover:shadow-xl transition-all">
-    Create My Account
-  </button>
-</form>
-
-<p class="text-center text-sm mt-2 text-gray-600 dark:text-gray-400">
-  Already have an account? <a href="Login Page.html" class="font-bold text-primary underline">Log In</a>
-</p>
-</main>
-</div>
-</div>
-
-<script>
-(function(){
-  const nameInput = document.getElementById('regName');
-  const emailInput = document.getElementById('regEmail');
-  const passInput = document.getElementById('regPassword');
-  const confirmInput = document.getElementById('regConfirm');
-  const terms = document.getElementById('terms');
-  const captcha = document.getElementById('fakeCaptcha');
-  const btn = document.getElementById('registerBtn');
-
-  btn.addEventListener('click', ()=>{
-    const name = nameInput.value.trim();
-    const email = emailInput.value.trim().toLowerCase();
-    const password = passInput.value.trim();
-    const confirm = confirmInput.value.trim();
-
-    // Validation
-    if(!name || !email || !password || !confirm){
-      alert('⚠️ Please fill in all fields.');
-      return;
-    }
-    if(password !== confirm){
-      alert('❌ Passwords do not match.');
-      return;
-    }
-    if(!captcha.checked){
-      alert('🤖 Please verify you are not a robot.');
-      return;
-    }
-    if(!terms.checked){
-      alert('📜 You must agree to the Terms & Conditions.');
-      return;
-    }
-
-    // 1. Check existing users in Mock DB
-    const existingUsers = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+  <div class="hidden lg:flex w-1/2 bg-brand relative overflow-hidden items-center justify-center text-white p-12">
+    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 20px 20px;"></div>
     
-    // Check if email taken
-    if(existingUsers.some(u => u.email === email)){
-      alert('❌ An account with this email already exists. Please Log In.');
-      window.location.href = 'Login Page.html';
-      return;
+    <div class="relative z-10 max-w-lg">
+      <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-8 border border-white/30 shadow-xl">
+        <span class="material-symbols-outlined text-4xl">all_inclusive</span>
+      </div>
+      <h1 class="text-5xl font-bold mb-6 leading-tight">Turn your clutter into <span class="text-yellow-300">cash.</span></h1>
+      <p class="text-lg text-green-50 opacity-90 mb-8 leading-relaxed">Join thousands of people buying and selling locally. It's safe, fast, and 100% free to start.</p>
+      
+      <div class="flex gap-4">
+        <div class="flex -space-x-3">
+           <img class="w-10 h-10 rounded-full border-2 border-brand" src="https://i.pravatar.cc/100?img=1">
+           <img class="w-10 h-10 rounded-full border-2 border-brand" src="https://i.pravatar.cc/100?img=5">
+           <img class="w-10 h-10 rounded-full border-2 border-brand" src="https://i.pravatar.cc/100?img=8">
+        </div>
+        <p class="flex items-center text-sm font-medium"><span class="font-bold text-yellow-300 mr-1">4.9/5</span> from verified users</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-white">
+    <div class="w-full max-w-md animate-fade-in-up">
+      
+      <div class="lg:hidden flex items-center gap-2 text-brand font-bold text-xl mb-8">
+        <span class="material-symbols-outlined text-3xl">all_inclusive</span> ZipZapZoi
+      </div>
+
+      <h2 class="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
+      <p class="text-gray-500 mb-8">Start your journey with us today.</p>
+
+      <form id="regForm" class="space-y-5">
+        
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1.5">Full Name</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">person</span>
+            <input type="text" id="fullName" required placeholder="John Doe" 
+                   class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition-all font-medium">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1.5">Email Address</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">mail</span>
+            <input type="email" id="email" required placeholder="name@example.com" 
+                   class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition-all font-medium">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1.5">Password</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">lock</span>
+            <input type="password" id="password" required placeholder="Create a strong password" 
+                   class="w-full pl-10 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition-all font-medium">
+            <button type="button" onclick="togglePass()" class="absolute right-3 top-3.5 text-gray-400 hover:text-brand transition-colors">
+              <span id="eyeIcon" class="material-symbols-outlined text-[20px]">visibility</span>
+            </button>
+          </div>
+          <p class="text-xs text-gray-400 mt-1.5 ml-1">Must be at least 6 characters</p>
+        </div>
+
+        <div class="flex items-start gap-3 mt-2">
+          <input type="checkbox" id="terms" class="mt-1 w-4 h-4 text-brand rounded border-gray-300 focus:ring-brand">
+          <label for="terms" class="text-sm text-gray-500">
+            I agree to the <a href="legal.html" class="text-brand font-bold hover:underline">Terms of Service</a> and <a href="#" class="text-brand font-bold hover:underline">Privacy Policy</a>.
+          </label>
+        </div>
+
+        <button type="submit" class="w-full bg-brand hover:bg-brandDark text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-4">
+          <span>Create Account</span>
+          <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+        </button>
+
+      </form>
+
+      <p class="text-center text-gray-500 mt-8 font-medium">
+        Already have an account? <a href="Login Page.html" class="text-brand font-bold hover:underline">Log In</a>
+      </p>
+
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('regForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const name = document.getElementById('fullName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const terms = document.getElementById('terms').checked;
+
+      // VALIDATION
+      if(!terms) return alert("Please agree to the Terms & Conditions.");
+      if(password.length < 6) return alert("Password must be at least 6 characters.");
+
+      // CHECK EXISTING
+      const existingUsers = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+      if(existingUsers.some(u => u.email === email)) {
+        alert("This email is already registered. Please Login.");
+        window.location.href = 'Login Page.html';
+        return;
+      }
+
+      // CREATE USER
+      const role = email.includes('admin') ? 'admin' : 'user';
+      const newUser = {
+        id: 'user_' + Date.now(),
+        name: name,
+        email: email,
+        password: password, // Note: In production, hash this!
+        role: role,
+        avatar: `https://ui-avatars.com/api/?name=${name}&background=019863&color=fff`,
+        joined: new Date().toISOString()
+      };
+
+      // SAVE
+      existingUsers.push(newUser);
+      localStorage.setItem('zzz_users', JSON.stringify(existingUsers));
+      
+      // AUTO LOGIN
+      localStorage.setItem('zzz_user', JSON.stringify(newUser));
+
+      // SUCCESS ANIMATION
+      const btn = this.querySelector('button');
+      btn.innerHTML = `<span class="material-symbols-outlined animate-spin">refresh</span> Creating...`;
+      btn.classList.add('opacity-75', 'cursor-not-allowed');
+      
+      setTimeout(() => {
+        window.location.href = 'classifieds.html';
+      }, 1000);
+    });
+
+    function togglePass() {
+      const input = document.getElementById('password');
+      const icon = document.getElementById('eyeIcon');
+      if (input.type === "password") {
+        input.type = "text";
+        icon.textContent = "visibility_off";
+      } else {
+        input.type = "password";
+        icon.textContent = "visibility";
+      }
     }
+  </script>
 
-    // 2. Determine Role (Simple Logic: 'admin' in email = admin role)
-    const role = email.includes('admin') ? 'admin' : 'user';
-
-    // 3. Create User Object
-    const newUser = {
-      id: 'user_' + Date.now(),
-      name: name,
-      email: email,
-      password: password, // In real app, never store plain text!
-      role: role,
-      avatar: 'https://via.placeholder.com/150'
-    };
-
-    // 4. Save to Mock DB (LocalStorage)
-    existingUsers.push(newUser);
-    localStorage.setItem('zzz_users', JSON.stringify(existingUsers));
-
-    // 5. Auto-Login (Set Session)
-    localStorage.setItem('zzz_user', JSON.stringify(newUser));
-
-    alert('✅ Account created successfully! Logging you in...');
-
-    // 6. Redirect Based on Role
-    if(role === 'admin'){
-      window.location.href = 'AdminConsoleV2.html';
-    } else {
-      window.location.href = 'classifieds.html';
-    }
-  });
-})();
-</script>
 </body>
 </html>

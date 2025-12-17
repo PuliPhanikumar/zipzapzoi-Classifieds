@@ -19,7 +19,7 @@
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AdminOS V3 Ultimate - ZipZapZoi</title>
+  <title>AdminOS Ultimate - ZipZapZoi</title>
   
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;600&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
@@ -54,7 +54,7 @@
   <aside class="w-64 bg-white border-r border-slate-200 flex flex-col z-20 shadow-xl">
     <div class="h-16 flex items-center px-6 border-b border-slate-100 bg-slate-50">
       <span class="material-symbols-outlined text-brand text-3xl mr-2">admin_panel_settings</span>
-      <h1 class="font-bold text-lg tracking-tight">Admin<span class="text-brand">OS</span> V3</h1>
+      <h1 class="font-bold text-lg tracking-tight">Admin<span class="text-brand">OS</span></h1>
     </div>
 
     <nav class="flex-1 overflow-y-auto p-4 space-y-2">
@@ -73,14 +73,14 @@
       </a>
       
       <a href="#" onclick="switchTab('moderation')" id="nav-moderation" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all font-medium text-sm text-slate-600">
-        <span class="material-symbols-outlined text-red-500">flag</span> Reports & Mods
+        <span class="material-symbols-outlined text-red-500">gavel</span> Moderation
       </a>
 
       <a href="#" onclick="switchTab('support')" id="nav-support" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all font-medium text-sm text-slate-600">
         <span class="material-symbols-outlined">support_agent</span> Support Desk
       </a>
 
-      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-6 mb-2 px-2">Configuration</div>
+      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-6 mb-2 px-2">System Core</div>
 
       <a href="#" onclick="switchTab('schema')" id="nav-schema" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all font-medium text-sm text-slate-600">
         <span class="material-symbols-outlined text-purple-600">schema</span> Schema Manager
@@ -96,7 +96,7 @@
         <div class="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center font-bold shadow-md" id="adminAvatar">A</div>
         <div>
           <p class="text-sm font-bold text-slate-800" id="adminName">Super Admin</p>
-          <p class="text-[10px] text-green-600 font-mono font-bold tracking-wide">● SYSTEM ONLINE</p>
+          <p class="text-[10px] text-green-600 font-mono font-bold tracking-wide">● ONLINE</p>
         </div>
       </div>
       <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-slate-600 py-2 rounded-lg text-sm font-bold transition-all shadow-sm">
@@ -151,7 +151,6 @@
             </div>
           </div>
         </div>
-
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
           <h3 class="font-bold text-slate-800 mb-4">Activity Overview</h3>
           <div class="h-64"><canvas id="activityChart"></canvas></div>
@@ -166,14 +165,7 @@
           </div>
           <table class="w-full text-left text-sm">
             <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs">
-              <tr>
-                <th class="px-6 py-4">Item</th>
-                <th class="px-6 py-4">Seller</th>
-                <th class="px-6 py-4">Category</th>
-                <th class="px-6 py-4">Price</th>
-                <th class="px-6 py-4">Status</th>
-                <th class="px-6 py-4 text-right">Actions</th>
-              </tr>
+              <tr><th class="px-6 py-4">Item</th><th class="px-6 py-4">Seller</th><th class="px-6 py-4">Category</th><th class="px-6 py-4">Price</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Actions</th></tr>
             </thead>
             <tbody id="listingsTableBody" class="divide-y divide-slate-100"></tbody>
           </table>
@@ -190,14 +182,7 @@
           </div>
           <table class="w-full text-left text-sm">
             <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs">
-              <tr>
-                <th class="px-6 py-4">User</th>
-                <th class="px-6 py-4">Email</th>
-                <th class="px-6 py-4">Role</th>
-                <th class="px-6 py-4">Status</th>
-                <th class="px-6 py-4">Verified</th>
-                <th class="px-6 py-4 text-right">Actions</th>
-              </tr>
+              <tr><th class="px-6 py-4">User</th><th class="px-6 py-4">Email</th><th class="px-6 py-4">Role</th><th class="px-6 py-4">Status</th><th class="px-6 py-4">Verified</th><th class="px-6 py-4 text-right">Actions</th></tr>
             </thead>
             <tbody id="usersTableBody" class="divide-y divide-slate-100"></tbody>
           </table>
@@ -212,12 +197,7 @@
           </div>
           <table class="w-full text-left text-sm">
             <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs">
-              <tr>
-                <th class="px-6 py-4">Report Time</th>
-                <th class="px-6 py-4">Item Name</th>
-                <th class="px-6 py-4">Reason</th>
-                <th class="px-6 py-4 text-right">Action</th>
-              </tr>
+              <tr><th class="px-6 py-4">Report Time</th><th class="px-6 py-4">Item Name</th><th class="px-6 py-4">Reason</th><th class="px-6 py-4 text-right">Action</th></tr>
             </thead>
             <tbody id="reportsTableBody" class="divide-y divide-slate-100"></tbody>
           </table>
@@ -225,15 +205,13 @@
       </div>
 
       <div id="tab-settings" class="tab-content hidden space-y-8">
-        
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
           <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
             <span class="material-symbols-outlined text-warning">campaign</span> Global System Alerts
           </h3>
           <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
-             <p class="text-sm text-yellow-800 mb-2">This message will appear at the top of ALL user pages.</p>
              <div class="flex gap-4 items-center">
-               <input type="text" id="globalBannerInput" class="flex-1 border-yellow-300 rounded-lg px-4 py-2 text-sm focus:ring-warning" placeholder="e.g. System Maintenance scheduled for Sunday 2 AM...">
+               <input type="text" id="globalBannerInput" class="flex-1 border-yellow-300 rounded-lg px-4 py-2 text-sm focus:ring-warning" placeholder="System Alert Message...">
                <label class="flex items-center gap-2 cursor-pointer font-bold text-sm text-slate-700">
                  <input type="checkbox" id="bannerActive" class="rounded text-warning focus:ring-warning w-5 h-5"> Active
                </label>
@@ -241,42 +219,26 @@
           </div>
           <button onclick="saveGlobalSettings()" class="bg-slate-800 text-white px-6 py-2 rounded-lg font-bold hover:bg-black transition-colors">Save Settings</button>
         </div>
-
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <span class="material-symbols-outlined text-slate-500">receipt_long</span> Audit Logs
-            </h3>
+            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2"><span class="material-symbols-outlined text-slate-500">receipt_long</span> Audit Logs</h3>
             <button onclick="clearLogs()" class="text-red-500 text-xs font-bold hover:underline">Clear History</button>
           </div>
           <div class="max-h-96 overflow-y-auto">
             <table class="w-full text-left text-sm">
-              <thead class="bg-slate-50 text-slate-500 font-bold text-xs sticky top-0">
-                <tr>
-                  <th class="px-6 py-3">Timestamp</th>
-                  <th class="px-6 py-3">Admin</th>
-                  <th class="px-6 py-3">Action</th>
-                  <th class="px-6 py-3">Details</th>
-                </tr>
-              </thead>
+              <thead class="bg-slate-50 text-slate-500 font-bold text-xs sticky top-0"><tr><th class="px-6 py-3">Timestamp</th><th class="px-6 py-3">Admin</th><th class="px-6 py-3">Action</th><th class="px-6 py-3">Details</th></tr></thead>
               <tbody id="logsTableBody" class="divide-y divide-slate-100 font-mono text-xs"></tbody>
             </table>
           </div>
         </div>
-
       </div>
 
       <div id="tab-schema" class="tab-content hidden h-full flex flex-col">
         <div class="flex justify-between items-center mb-6">
-          <div>
-            <h3 class="text-xl font-bold text-slate-800">Visual Schema Editor</h3>
-            <p class="text-sm text-slate-500">Modify categories and fields used in "Post Listing".</p>
-          </div>
+          <div><h3 class="text-xl font-bold text-slate-800">Schema Architecture</h3><p class="text-sm text-slate-500">Manage Categories, Subcategories & Fields</p></div>
           <div class="flex gap-3">
-             <button onclick="resetToFactory()" class="px-4 py-2 text-sm font-bold text-red-600 bg-red-50 rounded-lg hover:bg-red-100">Factory Reset</button>
-             <button onclick="saveSchemaToDB()" class="px-6 py-2 text-sm font-bold text-white bg-brand rounded-lg shadow-lg hover:bg-green-700 flex items-center gap-2">
-               <span class="material-symbols-outlined text-sm">save</span> Save Changes
-             </button>
+             <button onclick="resetToFactory()" class="px-4 py-2 text-sm font-bold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 shadow-sm border border-red-200">Factory Reset</button>
+             <button onclick="saveSchemaToDB()" class="px-6 py-2 text-sm font-bold text-white bg-brand rounded-lg shadow-lg hover:bg-green-700 flex items-center gap-2"><span class="material-symbols-outlined text-sm">save</span> Save Changes</button>
           </div>
         </div>
         <div class="flex-1 grid grid-cols-12 gap-6 h-[550px]">
@@ -297,77 +259,50 @@
       
       <div id="tab-support" class="tab-content hidden">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-           <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-             <h3 class="font-bold text-slate-700">Support Tickets</h3>
-           </div>
+           <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50"><h3 class="font-bold text-slate-700">Support Tickets</h3></div>
            <table class="w-full text-left text-sm">
             <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs"><tr><th class="px-6 py-4">ID</th><th class="px-6 py-4">User</th><th class="px-6 py-4">Topic</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Action</th></tr></thead>
             <tbody id="supportTableBody"></tbody>
            </table>
         </div>
       </div>
-
     </div>
   </main>
 
   <div id="editModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
-      <div class="bg-brand p-4 flex justify-between items-center">
-        <h3 class="text-white font-bold" id="modalTitle">Edit Item</h3>
-        <button onclick="closeModal('editModal')" class="text-white hover:bg-white/20 rounded-full p-1"><span class="material-symbols-outlined">close</span></button>
-      </div>
+      <div class="bg-brand p-4 flex justify-between items-center"><h3 class="text-white font-bold" id="modalTitle">Edit Item</h3><button onclick="closeModal('editModal')" class="text-white hover:bg-white/20 rounded-full p-1"><span class="material-symbols-outlined">close</span></button></div>
       <div class="p-6 space-y-4">
-        <div>
-           <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Label Name</label>
-           <input type="text" id="editLabel" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand" placeholder="e.g. Fuel Type">
-        </div>
-        
+        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Label Name</label><input type="text" id="editLabel" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand"></div>
         <div id="fieldExtras" class="hidden space-y-4">
           <div>
             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Input Type</label>
             <select id="editType" onchange="toggleOptionsInput()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-slate-50">
-              <option value="text">Text Box</option>
-              <option value="textarea">Long Text Area</option>
-              <option value="number">Number</option>
-              <option value="select">Dropdown (Select)</option>
-              <option value="date">Date Picker</option>
-              <option value="checkbox">Yes/No Checkbox</option>
+              <option value="text">Text Box</option><option value="textarea">Long Text Area</option><option value="number">Number</option><option value="select">Dropdown (Select)</option><option value="date">Date Picker</option><option value="checkbox">Yes/No Checkbox</option>
             </select>
           </div>
-          
           <div id="optionsContainer" class="hidden">
             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Dropdown Options</label>
             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-               <p class="text-[10px] text-yellow-800 mb-2 font-bold">Enter options separated by commas:</p>
-               <textarea id="editOptions" class="w-full border-yellow-300 rounded-md px-3 py-2 text-sm focus:ring-yellow-400" placeholder="e.g. Petrol, Diesel, EV, Hybrid" rows="3"></textarea>
+               <p class="text-[10px] text-yellow-800 mb-2 font-bold">Comma separated values:</p>
+               <textarea id="editOptions" class="w-full border-yellow-300 rounded-md px-3 py-2 text-sm focus:ring-yellow-400" rows="3"></textarea>
             </div>
           </div>
         </div>
-        
-        <div id="catExtras" class="hidden">
-           <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Icon Name (Google Material)</label>
-           <input type="text" id="editIcon" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" placeholder="e.g. smartphone">
-        </div>
-        
-        <div class="pt-4 flex gap-3">
-          <button onclick="saveItem()" class="flex-1 bg-brand text-white font-bold py-2 rounded-lg shadow-md hover:bg-green-700">Save Changes</button>
-          <button onclick="deleteItem()" class="px-4 py-2 text-red-500 font-bold border border-red-200 rounded-lg hover:bg-red-50">Delete</button>
-        </div>
+        <div id="catExtras" class="hidden"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Icon Name</label><input type="text" id="editIcon" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></div>
+        <div class="pt-4 flex gap-3"><button onclick="saveItem()" class="flex-1 bg-brand text-white font-bold py-2 rounded-lg shadow-md hover:bg-green-700">Save</button><button onclick="deleteItem()" class="px-4 py-2 text-red-500 font-bold border border-red-200 rounded-lg hover:bg-red-50">Delete</button></div>
       </div>
     </div>
   </div>
 
   <div id="userModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-      <div class="bg-slate-800 p-4 flex justify-between items-center">
-        <h3 class="text-white font-bold">Manage User</h3>
-        <button onclick="closeModal('userModal')" class="text-white hover:bg-white/20 rounded-full p-1"><span class="material-symbols-outlined">close</span></button>
-      </div>
+      <div class="bg-slate-800 p-4 flex justify-between items-center"><h3 class="text-white font-bold">Manage User</h3><button onclick="closeModal('userModal')" class="text-white hover:bg-white/20 rounded-full p-1"><span class="material-symbols-outlined">close</span></button></div>
       <form onsubmit="handleUserSubmit(event)" class="p-6 space-y-4">
         <input type="hidden" id="editUserId">
         <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name</label><input type="text" id="newUserName" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></div>
         <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label><input type="email" id="newUserEmail" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></div>
-        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Password</label><input type="text" id="newUserPass" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" placeholder="Set Password"></div>
+        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Password</label><input type="text" id="newUserPass" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></div>
         <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Role</label><select id="newUserRole" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"><option value="user">User</option><option value="admin">Admin</option></select></div>
         <button type="submit" class="w-full bg-brand text-white font-bold py-2 rounded-lg mt-4">Save User</button>
       </form>
@@ -375,96 +310,209 @@
   </div>
 
   <script>
-    // --- 1. CORE & DATA (THE MASSIVE COMPLETE SCHEMA) ---
+    // --- 1. CORE & DATA (THE MASTER SCHEMA) ---
+    // Contains ALL Categories, Subcategories, and Fields defined in the requirement.
     const FACTORY_SCHEMA = {
         categories: [ 
           { id: 'electronics', label: 'Electronics', icon: 'devices' }, 
           { id: 'vehicles', label: 'Vehicles', icon: 'directions_car' }, 
+          { id: 'home', label: 'Home & Garden', icon: 'yard' }, 
+          { id: 'clothing', label: 'Clothing', icon: 'checkroom' },
           { id: 'real_estate', label: 'Real Estate', icon: 'real_estate_agent' },
           { id: 'jobs', label: 'Jobs', icon: 'work' },
           { id: 'services', label: 'Services', icon: 'handyman' },
-          { id: 'pets', label: 'Pets', icon: 'pets' },
-          { id: 'clothing', label: 'Clothing', icon: 'checkroom' },
-          { id: 'home', label: 'Home', icon: 'yard' },
-          { id: 'food', label: 'Food', icon: 'restaurant' },
-          { id: 'events', label: 'Events', icon: 'celebration' },
-          { id: 'doctors', label: 'Doctors', icon: 'stethoscope' },
-          { id: 'tourism', label: 'Tourism', icon: 'flight' },
           { id: 'sports', label: 'Sports', icon: 'sports_soccer' },
-          { id: 'charity', label: 'Charity', icon: 'volunteer_activism' }
+          { id: 'pets', label: 'Pets', icon: 'pets' },
+          { id: 'tourism', label: 'Tourism', icon: 'flight' },
+          { id: 'doctors', label: 'Doctors', icon: 'stethoscope' },
+          { id: 'charity', label: 'Charity & Donation', icon: 'volunteer_activism' },
+          { id: 'food', label: 'Restaurant & Food', icon: 'restaurant' },
+          { id: 'events', label: 'Occasional Events', icon: 'celebration' }
         ],
         subcategories: [
           // Electronics
-          { id: 'mobiles', categoryId: 'electronics', label: 'Mobiles' },
-          { id: 'laptops', categoryId: 'electronics', label: 'Laptops' },
-          { id: 'cameras', categoryId: 'electronics', label: 'Cameras' },
-          { id: 'accessories', categoryId: 'electronics', label: 'Accessories' },
+          { id: 'mobiles', categoryId: 'electronics', label: 'Mobiles & Accessories' },
+          { id: 'laptops', categoryId: 'electronics', label: 'Computers & Laptops' },
+          { id: 'appliances', categoryId: 'electronics', label: 'Home Appliances' },
+          { id: 'tv_audio', categoryId: 'electronics', label: 'TVs - Audio & Video' },
+          { id: 'cameras', categoryId: 'electronics', label: 'Cameras & Photography' },
+          { id: 'gaming', categoryId: 'electronics', label: 'Gaming & Consoles' },
+          { id: 'wearables', categoryId: 'electronics', label: 'Wearables' },
+          { id: 'kitchen_elec', categoryId: 'electronics', label: 'Kitchen Electronics' },
+          { id: 'office_elec', categoryId: 'electronics', label: 'Office Electronics' },
+          { id: 'other_elec', categoryId: 'electronics', label: 'Other Electronics' },
+
           // Vehicles
           { id: 'cars', categoryId: 'vehicles', label: 'Cars' },
-          { id: 'bikes', categoryId: 'vehicles', label: 'Bikes' },
+          { id: 'bikes', categoryId: 'vehicles', label: 'Bikes & Scooters' },
           { id: 'commercial', categoryId: 'vehicles', label: 'Commercial Vehicles' },
+          { id: 'auto', categoryId: 'vehicles', label: 'Auto Rickshaws' },
+          { id: 'ev', categoryId: 'vehicles', label: 'Electric Vehicles (EVs)' },
+          { id: 'bicycles', categoryId: 'vehicles', label: 'Bicycles' },
+          { id: 'parts', categoryId: 'vehicles', label: 'Parts & Accessories' },
+          { id: 'boats', categoryId: 'vehicles', label: 'Boats & Others' },
+
+          // Home & Garden
+          { id: 'furniture', categoryId: 'home', label: 'Furniture' },
+          { id: 'decor', categoryId: 'home', label: 'Home Decor' },
+          { id: 'kitchen', categoryId: 'home', label: 'Kitchen & Dining' },
+          { id: 'plants', categoryId: 'home', label: 'Plants & Garden' },
+          { id: 'tools', categoryId: 'home', label: 'Tools & Hardware' },
+          { id: 'cleaning', categoryId: 'home', label: 'Cleaning & Household' },
+          { id: 'bedding', categoryId: 'home', label: 'Bedding & Bath' },
+          { id: 'other_home', categoryId: 'home', label: 'Others' },
+
+          // Clothing
+          { id: 'men', categoryId: 'clothing', label: 'Men Clothing' },
+          { id: 'women', categoryId: 'clothing', label: 'Women Clothing' },
+          { id: 'kids', categoryId: 'clothing', label: 'Kids Clothing' },
+          { id: 'sportswear', categoryId: 'clothing', label: 'Sports Wear' },
+          { id: 'footwear', categoryId: 'clothing', label: 'Foot Wear' },
+          { id: 'ethnic', categoryId: 'clothing', label: 'Ethnic & Traditional' },
+          { id: 'accessories', categoryId: 'clothing', label: 'Accessories' },
+
           // Real Estate
-          { id: 'apartments', categoryId: 'real_estate', label: 'Apartments' },
-          { id: 'plots', categoryId: 'real_estate', label: 'Plots' },
-          { id: 'houses', categoryId: 'real_estate', label: 'Houses' },
-          { id: 'shops', categoryId: 'real_estate', label: 'Shops' },
+          { id: 'residential', categoryId: 'real_estate', label: 'Residential Properties' },
+          { id: 'commercial_prop', categoryId: 'real_estate', label: 'Commercial Properties' },
+          { id: 'rental', categoryId: 'real_estate', label: 'Rental Listings' },
+          { id: 'land', categoryId: 'real_estate', label: 'Land & Plots' },
+          { id: 'special_prop', categoryId: 'real_estate', label: 'Special Categories' },
+          { id: 'services_prop', categoryId: 'real_estate', label: 'Real Estate Services' },
+          { id: 'pg', categoryId: 'real_estate', label: 'PG / Hostels' },
+
           // Jobs
           { id: 'it', categoryId: 'jobs', label: 'IT & Software' },
-          { id: 'sales', categoryId: 'jobs', label: 'Sales' },
-          { id: 'driver', categoryId: 'jobs', label: 'Driver' },
-          // Clothing
-          { id: 'men', categoryId: 'clothing', label: 'Men' },
-          { id: 'women', categoryId: 'clothing', label: 'Women' },
-          { id: 'kids', categoryId: 'clothing', label: 'Kids' },
-          // Pets
-          { id: 'dogs', categoryId: 'pets', label: 'Dogs' },
-          { id: 'cats', categoryId: 'pets', label: 'Cats' },
+          { id: 'sales', categoryId: 'jobs', label: 'Sales & Marketing' },
+          { id: 'finance', categoryId: 'jobs', label: 'Accounting & Finance' },
+          { id: 'hr', categoryId: 'jobs', label: 'HR' },
+          { id: 'bpo', categoryId: 'jobs', label: 'Customer Service / BPO' },
+          { id: 'teaching', categoryId: 'jobs', label: 'Education & Training' },
+          { id: 'healthcare_job', categoryId: 'jobs', label: 'Healthcare' },
+          { id: 'engineering', categoryId: 'jobs', label: 'Engineering' },
+          { id: 'construction', categoryId: 'jobs', label: 'Construction' },
+          { id: 'hospitality', categoryId: 'jobs', label: 'Hospitality & Travel' },
+          { id: 'retail', categoryId: 'jobs', label: 'Retail' },
+          { id: 'transport', categoryId: 'jobs', label: 'Transport & Logistics' },
+          { id: 'media', categoryId: 'jobs', label: 'Media & Creative' },
+          { id: 'govt', categoryId: 'jobs', label: 'Govt & Public Sector' },
+          { id: 'parttime', categoryId: 'jobs', label: 'Part-time / Freelance' },
+
           // Services
-          { id: 'cleaning', categoryId: 'services', label: 'Cleaning' },
-          { id: 'repair', categoryId: 'services', label: 'Repairs' },
-          // Home
-          { id: 'furniture', categoryId: 'home', label: 'Furniture' },
-          { id: 'decor', categoryId: 'home', label: 'Decor' },
-          // Food
-          { id: 'homemade', categoryId: 'food', label: 'Homemade' },
-          { id: 'bakery', categoryId: 'food', label: 'Bakery' },
-          // Events
-          { id: 'wedding', categoryId: 'events', label: 'Wedding' },
-          { id: 'birthday', categoryId: 'events', label: 'Birthday' },
-          // Doctors
-          { id: 'general', categoryId: 'doctors', label: 'General Physician' },
-          { id: 'dentist', categoryId: 'doctors', label: 'Dentist' },
-          // Tourism
-          { id: 'packages', categoryId: 'tourism', label: 'Packages' },
-          { id: 'hotels', categoryId: 'tourism', label: 'Hotels' },
+          { id: 'home_svc', categoryId: 'services', label: 'Home Services' },
+          { id: 'auto_svc', categoryId: 'services', label: 'Automotive Services' },
+          { id: 'health_svc', categoryId: 'services', label: 'Health & Wellness' },
+          { id: 'beauty_svc', categoryId: 'services', label: 'Beauty & Personal Care' },
+          { id: 'edu_svc', categoryId: 'services', label: 'Education & Training' },
+          { id: 'astrology', categoryId: 'services', label: 'Astrology' },
+
           // Sports
-          { id: 'cricket', categoryId: 'sports', label: 'Cricket' },
-          { id: 'football', categoryId: 'sports', label: 'Football' },
+          { id: 'equip', categoryId: 'sports', label: 'Sports Equipment' },
+          { id: 'fitness', categoryId: 'sports', label: 'Fitness & Training' },
+          { id: 'outdoor', categoryId: 'sports', label: 'Outdoor & Adventure' },
+          { id: 'team', categoryId: 'sports', label: 'Team Sports' },
+          { id: 'indoor', categoryId: 'sports', label: 'Indoor Games' },
+          { id: 'athletic', categoryId: 'sports', label: 'Athletic Apparel' },
+          { id: 'coaching', categoryId: 'sports', label: 'Coaching' },
+          { id: 'water', categoryId: 'sports', label: 'Water Sports' },
+
+          // Pets
+          { id: 'adoption', categoryId: 'pets', label: 'Pets / Adoption' },
+          { id: 'pet_acc', categoryId: 'pets', label: 'Pet Accessories' },
+          { id: 'pet_food', categoryId: 'pets', label: 'Pet Food' },
+          { id: 'pet_svc', categoryId: 'pets', label: 'Pet Services' },
+          { id: 'pet_health', categoryId: 'pets', label: 'Pet Health' },
+
+          // Tourism
+          { id: 'packages', categoryId: 'tourism', label: 'Travel Packages' },
+          { id: 'transport_tour', categoryId: 'tourism', label: 'Transport Services' },
+          { id: 'accomm', categoryId: 'tourism', label: 'Accommodation' },
+          { id: 'adventure', categoryId: 'tourism', label: 'Adventure' },
+          { id: 'local', categoryId: 'tourism', label: 'Local Experiences' },
+          { id: 'visa', categoryId: 'tourism', label: 'Visa Services' },
+
+          // Doctors
+          { id: 'general_med', categoryId: 'doctors', label: 'General & Family Medicine' },
+          { id: 'specialists', categoryId: 'doctors', label: 'Specialists' },
+          { id: 'women_health', categoryId: 'doctors', label: 'Women’s Health' },
+          { id: 'child_health', categoryId: 'doctors', label: 'Children’s Health' },
+          { id: 'dental', categoryId: 'doctors', label: 'Dental Care' },
+          { id: 'mental', categoryId: 'doctors', label: 'Mental Health' },
+          { id: 'surgery', categoryId: 'doctors', label: 'Surgical Services' },
+          { id: 'alt_care', categoryId: 'doctors', label: 'Alternative Care' },
+          { id: 'diagnostics', categoryId: 'doctors', label: 'Diagnostics' },
+
           // Charity
-          { id: 'donate', categoryId: 'charity', label: 'Donate Items' },
-          { id: 'ngo', categoryId: 'charity', label: 'NGO' }
+          { id: 'edu_aid', categoryId: 'charity', label: 'Education Aid' },
+          { id: 'med_support', categoryId: 'charity', label: 'Medical Support' },
+          { id: 'food_ess', categoryId: 'charity', label: 'Food & Essentials' },
+          { id: 'disaster', categoryId: 'charity', label: 'Disaster Relief' },
+          { id: 'animal_welfare', categoryId: 'charity', label: 'Animal Welfare' },
+          { id: 'community', categoryId: 'charity', label: 'Community Dev' },
+
+          // Food
+          { id: 'rest_sale', categoryId: 'food', label: 'Restaurant For Sale' },
+          { id: 'catering', categoryId: 'food', label: 'Catering' },
+          { id: 'home_chef', categoryId: 'food', label: 'Home Chefs' },
+          { id: 'street_food', categoryId: 'food', label: 'Street Food' },
+          { id: 'bakery', categoryId: 'food', label: 'Bakery' },
+          { id: 'organic', categoryId: 'food', label: 'Organic' },
+
+          // Events
+          { id: 'weddings', categoryId: 'events', label: 'Weddings' },
+          { id: 'birthdays', categoryId: 'events', label: 'Birthdays' },
+          { id: 'festivals', categoryId: 'events', label: 'Festivals' },
+          { id: 'corporate', categoryId: 'events', label: 'Corporate Events' },
+          { id: 'concerts', categoryId: 'events', label: 'Concerts' }
         ],
         fields: [
-          // Electronics Fields
-          { id: 'brand', subcategoryId: 'mobiles', label: 'Brand', type: 'text' },
-          { id: 'storage', subcategoryId: 'mobiles', label: 'Storage', type: 'select', options: '64GB, 128GB, 256GB' },
-          { id: 'ram_lap', subcategoryId: 'laptops', label: 'RAM', type: 'number' },
-          { id: 'proc', subcategoryId: 'laptops', label: 'Processor', type: 'select', options: 'Intel i5, Intel i7, M1, M2' },
-          // Vehicle Fields
-          { id: 'fuel', subcategoryId: 'cars', label: 'Fuel Type', type: 'select', options: 'Petrol, Diesel, EV' },
+          // Common
+          { id: 'brand', subcategoryId: 'mobiles', label: 'Brand Name', type: 'text' },
+          { id: 'brand_lap', subcategoryId: 'laptops', label: 'Brand Name', type: 'text' },
+          { id: 'brand_car', subcategoryId: 'cars', label: 'Brand/Make', type: 'text' },
+          
+          // Vehicles Specific
+          { id: 'year', subcategoryId: 'cars', label: 'Year of Manufacture', type: 'number' },
+          { id: 'fuel', subcategoryId: 'cars', label: 'Fuel Type', type: 'select', options: 'Petrol, Diesel, Electric, Hybrid, CNG' },
+          { id: 'trans', subcategoryId: 'cars', label: 'Transmission', type: 'select', options: 'Manual, Automatic' },
           { id: 'km', subcategoryId: 'cars', label: 'KM Driven', type: 'number' },
-          { id: 'year', subcategoryId: 'cars', label: 'Year', type: 'number' },
-          // Real Estate Fields
-          { id: 'bhk', subcategoryId: 'apartments', label: 'BHK', type: 'select', options: '1, 2, 3, 4+' },
-          { id: 'area', subcategoryId: 'apartments', label: 'Area (sq ft)', type: 'number' },
-          { id: 'facing', subcategoryId: 'plots', label: 'Facing', type: 'select', options: 'North, East, West, South' },
-          // Job Fields
-          { id: 'salary', subcategoryId: 'it', label: 'Salary', type: 'number' },
-          { id: 'exp', subcategoryId: 'it', label: 'Experience', type: 'select', options: 'Fresher, 1-3 Yrs, 3+ Yrs' },
-          // Clothing Fields
-          { id: 'size_m', subcategoryId: 'men', label: 'Size', type: 'select', options: 'S, M, L, XL' },
-          { id: 'material', subcategoryId: 'men', label: 'Material', type: 'text' }
-          // (Extensible via UI)
+          { id: 'owner', subcategoryId: 'cars', label: 'Owner', type: 'select', options: '1st, 2nd, 3rd, 4th, 5th+' },
+          
+          { id: 'fuel_bike', subcategoryId: 'bikes', label: 'Fuel Type', type: 'select', options: 'Petrol, Electric' },
+          { id: 'km_bike', subcategoryId: 'bikes', label: 'KM Driven', type: 'number' },
+
+          // Real Estate Specific
+          { id: 'list_type', subcategoryId: 'residential', label: 'Type', type: 'select', options: 'For Rent, For Sale' },
+          { id: 'list_by', subcategoryId: 'residential', label: 'Listed By', type: 'select', options: 'Owner, Dealer, Builder' },
+          { id: 'area', subcategoryId: 'residential', label: 'Area (sq ft)', type: 'number' },
+          { id: 'bhk', subcategoryId: 'residential', label: 'BHK', type: 'select', options: '1 RK, 1 BHK, 2 BHK, 3 BHK, 4+ BHK' },
+          { id: 'facing', subcategoryId: 'residential', label: 'Facing', type: 'select', options: 'North, East, West, South, NE, NW, SE, SW' },
+          { id: 'proj', subcategoryId: 'residential', label: 'Project Name', type: 'text' },
+
+          { id: 'len', subcategoryId: 'land', label: 'Length (ft)', type: 'number' },
+          { id: 'breadth', subcategoryId: 'land', label: 'Breadth (ft)', type: 'number' },
+
+          // Clothing Specific
+          { id: 'size_m', subcategoryId: 'men', label: 'Size', type: 'select', options: 'S, M, L, XL, XXL' },
+          { id: 'size_w', subcategoryId: 'women', label: 'Size', type: 'select', options: 'XS, S, M, L, XL' },
+          { id: 'target', subcategoryId: 'sportswear', label: 'Target Group', type: 'select', options: 'Men, Women, Kids' },
+          { id: 'type_foot', subcategoryId: 'footwear', label: 'Type', type: 'select', options: 'Men, Women, Kids' },
+
+          // Jobs Specific
+          { id: 'role', subcategoryId: 'it', label: 'Position/Role', type: 'text' },
+          { id: 'sal_min', subcategoryId: 'it', label: 'Salary From', type: 'number' },
+          { id: 'sal_max', subcategoryId: 'it', label: 'Salary To', type: 'number' },
+          { id: 'exp', subcategoryId: 'it', label: 'Experience', type: 'select', options: 'Fresher, 1-2 Yrs, 3-5 Yrs, 5+ Yrs' },
+
+          // Doctors
+          { id: 'fee', subcategoryId: 'general_med', label: 'Consultancy Fee (₹)', type: 'number' },
+          { id: 'spec_type', subcategoryId: 'specialists', label: 'Specialization', type: 'select', options: 'Cardiologist, Neurologist, Orthopedist, Dermatologist, Oncologist' },
+
+          // Charity (No Price Logic handled by ID check in Post Listing)
+          { id: 'date', subcategoryId: 'edu_aid', label: 'Event Date', type: 'date' },
+          
+          // Placeholders for Location (Post Listing Logic handles population)
+          { id: 'state', subcategoryId: 'mobiles', label: 'State', type: 'select', options: 'Auto-Loaded by System' },
+          { id: 'city', subcategoryId: 'mobiles', label: 'City', type: 'select', options: 'Auto-Loaded by System' }
         ]
     };
 
@@ -740,7 +788,7 @@
         loadUsers();
     }
 
-    // --- 7. SCHEMA EDITOR LOGIC (WITH NEW DROPDOWN TOGGLE) ---
+    // --- 7. SCHEMA EDITOR LOGIC ---
     function loadSchema() {
         const s = localStorage.getItem('zzz_classifieds_schema');
         if(s) schema = JSON.parse(s);
@@ -771,7 +819,7 @@
         document.getElementById('btnAddField').disabled = false;
     }
     
-    // TOGGLE OPTIONS VISIBILITY (NEW)
+    // TOGGLE OPTIONS VISIBILITY
     function toggleOptionsInput() {
         const type = document.getElementById('editType').value;
         const container = document.getElementById('optionsContainer');
@@ -800,7 +848,7 @@
         if(type==='field') { 
             document.getElementById('editType').value = item.type; 
             document.getElementById('editOptions').value = item.options || ''; 
-            toggleOptionsInput(); // Ensure correct visibility
+            toggleOptionsInput();
         }
         
         document.getElementById('editModal').classList.remove('hidden');
@@ -859,7 +907,7 @@
     }
 
     function resetToFactory() {
-        if(confirm("Reset Schema to Defaults?")) {
+        if(confirm("DANGER: This will replace your schema with the Master Factory Default list. Continue?")) {
             localStorage.setItem('zzz_classifieds_schema', JSON.stringify(FACTORY_SCHEMA));
             location.reload();
         }

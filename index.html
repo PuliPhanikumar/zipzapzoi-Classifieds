@@ -266,63 +266,6 @@
 </div>
 </div>
 <script>
-  <script>
-  // Wait for the progress bar animation to end, then navigate to dashboard.html
-  (function() {
-    // select the animated bar inside the rounded progress container
-    const progressBar = document.querySelector('.w-80 .h-4');
-    // fallback timeout in case animationend doesn't fire (ms)
-    const fallback = 7000;
-
-    function goToDashboard() {
-      // replace with exact filename of your dashboard file
-      window.location.href = '2 Main DashBoard.html';
-    }
-
-    if (progressBar) {
-      // If the 'progress' animation finishes this fires
-      progressBar.addEventListener('animationend', () => {
-        // small buffer to let logo settle visually
-        setTimeout(goToDashboard, 250);
-      }, { once: true });
-
-      // safety fallback
-      setTimeout(goToDashboard, fallback);
-    } else {
-      // if element not found, wait 3.5s then navigate
-      setTimeout(goToDashboard, 3500);
-    }
-  })();
-</script>
-<script>
-  // Wait for the progress bar animation to end, then navigate to dashboard.html
-  (function() {
-    // select the animated bar inside the rounded progress container
-    const progressBar = document.querySelector('.w-80 .h-4');
-    // fallback timeout in case animationend doesn't fire (ms)
-    const fallback = 7000;
-
-    function goToDashboard() {
-      // replace with exact filename of your dashboard file
-      window.location.href = '2 Main DashBoard.html';
-    }
-
-    if (progressBar) {
-      // If the 'progress' animation finishes this fires
-      progressBar.addEventListener('animationend', () => {
-        // small buffer to let logo settle visually
-        setTimeout(goToDashboard, 250);
-      }, { once: true });
-
-      // safety fallback
-      setTimeout(goToDashboard, fallback);
-    } else {
-      // if element not found, wait 3.5s then navigate
-      setTimeout(goToDashboard, 3500);
-    }
-  })();
-</script>
-<script>
   // Auto-redirect from Splash to Dashboard after 4 seconds
   setTimeout(function() {
     // Redirect to dashboard.html (must exist in same folder)

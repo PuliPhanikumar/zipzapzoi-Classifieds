@@ -25,107 +25,146 @@
     }
   </script>
 </head>
-<body class="font-display bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 flex items-center justify-center min-h-screen p-4">
+<body class="font-display bg-background-light text-gray-800 flex items-center justify-center min-h-screen p-4">
 
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-    <div class="bg-secondary p-8 text-center text-white">
-      <div class="flex justify-center mb-4">
-        <span class="material-symbols-outlined text-6xl">account_circle</span>
+  <div class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
+    
+    <div class="hidden md:block w-1/2 bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1556740758-90de374c12ad?auto=format&fit=crop&w=800&q=80');">
+      <div class="absolute inset-0 bg-primary/80 backdrop-blur-sm flex flex-col justify-center p-12 text-white">
+        <h2 class="text-4xl font-bold mb-4">Welcome Back!</h2>
+        <p class="text-lg opacity-90">Log in to manage your listings, chat with buyers, and discover great deals on ZipZapZoi.</p>
       </div>
-      <h2 class="text-3xl font-bold">Welcome Back!</h2>
-      <p class="text-white/80 mt-2">Log in to manage your listings</p>
     </div>
 
-    <div class="p-8">
+    <div class="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
+      
+      <div class="text-center mb-8">
+         <span class="material-symbols-outlined text-5xl text-primary mb-2">all_inclusive</span>
+         <h1 class="text-3xl font-bold text-gray-900">Sign In</h1>
+         <p class="text-gray-400">Enter your credentials to access your account.</p>
+      </div>
+
       <form id="loginForm" class="space-y-6">
         <div>
-          <label class="block text-sm font-bold mb-2 text-gray-600 dark:text-gray-300">Email Address</label>
-          <input type="email" id="email" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-secondary outline-none transition-all" placeholder="name@example.com" required>
+          <label class="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
+          <div class="relative">
+             <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400">mail</span>
+             <input type="email" id="email" required placeholder="name@example.com" 
+                   class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+          </div>
         </div>
-        
+
         <div>
-          <label class="block text-sm font-bold mb-2 text-gray-600 dark:text-gray-300">Password</label>
-          <input type="password" id="password" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-secondary outline-none transition-all" placeholder="••••••••" required>
+          <label class="block text-sm font-bold text-gray-700 mb-2">Password</label>
+          <div class="relative">
+             <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400">lock</span>
+             <input type="password" id="password" required placeholder="••••••••" 
+                   class="w-full pl-10 pr-12 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+             <button type="button" onclick="togglePass()" class="absolute right-3 top-3.5 text-gray-400 hover:text-primary">
+               <span id="eyeIcon" class="material-symbols-outlined">visibility</span>
+             </button>
+          </div>
+          <div class="flex justify-end mt-2">
+            <a href="forgot password.html" class="text-sm font-bold text-primary hover:underline">Forgot Password?</a>
+          </div>
         </div>
 
-        <div class="flex items-center justify-between text-sm">
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" class="rounded text-secondary focus:ring-secondary">
-            <span class="text-gray-500">Remember me</span>
-          </label>
-          <a href="#" class="text-secondary font-bold hover:underline">Forgot Password?</a>
-        </div>
-
-        <button type="submit" class="w-full py-4 bg-primary hover:bg-green-600 text-white font-bold rounded-xl shadow-lg transform transition hover:-translate-y-1">
-          Log In
+        <button type="submit" class="w-full bg-primary hover:bg-green-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2">
+          <span>Log In</span> <span class="material-symbols-outlined">arrow_forward</span>
         </button>
       </form>
 
-      <div class="mt-8 text-center text-sm text-gray-500">
-        Don't have an account? <a href="User Registration.html" class="text-secondary font-bold hover:underline">Sign Up</a>
+      <div class="mt-8 text-center border-t pt-6">
+        <p class="text-gray-500 font-medium">Don't have an account?</p>
+        <a href="User Registration.html" class="inline-block mt-2 text-primary font-bold hover:underline">Create New Account</a>
       </div>
-      
-      <div class="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800 text-xs text-center text-gray-600 dark:text-gray-400">
-        <p class="font-bold mb-1">Demo Credentials:</p>
-        <p>Admin: <span class="font-mono bg-white dark:bg-black px-1 rounded">admin@zipzapzoi.com</span> / <span class="font-mono bg-white dark:bg-black px-1 rounded">admin123</span></p>
-        <p class="mt-1">User: <span class="font-mono bg-white dark:bg-black px-1 rounded">user@zipzapzoi.com</span> / <span class="font-mono bg-white dark:bg-black px-1 rounded">user123</span></p>
+
+      <div class="mt-6 p-3 bg-gray-50 rounded-lg text-xs text-gray-400 text-center">
+        <p class="font-bold mb-1">Demo Accounts:</p>
+        <p>Admin: admin@zipzapzoi.com / admin123</p>
+        <p>User: user@zipzapzoi.com / user123</p>
       </div>
+
     </div>
   </div>
 
   <script>
+    // --- LOGIN LOGIC ---
     document.getElementById('loginForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value.trim();
+      
+      // 1. CHECK REGISTERED USERS (LocalStorage)
+      const registeredUsers = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+      const foundUser = registeredUsers.find(u => u.email === email && u.password === password);
 
-      // --- MOCK AUTH LOGIC ---
-      
-      // 1. ADMIN LOGIN
-      if (email === 'admin@zipzapzoi.com' && password === 'admin123') {
-        const adminUser = {
-          id: 'admin_01',
-          name: 'Super Admin',
-          email: email,
-          role: 'admin', // Critical Role Flag
-          avatar: 'https://via.placeholder.com/150'
-        };
-        
-        // Save to Session
-        // Note: We use the same key 'zzz_user' but with a role property
-        localStorage.setItem('zzz_user', JSON.stringify(adminUser));
-        
-        // Redirect to Admin Console
-        alert("Login Successful! Redirecting to Admin Console...");
-        window.location.href = 'AdminConsoleV2.html';
-      } 
-      
-      // 2. REGULAR USER LOGIN
-      else if (email === 'user@zipzapzoi.com' && password === 'user123') {
-        const regularUser = {
-          id: 'user_01',
-          name: 'Zoi User',
-          email: email,
-          role: 'user',
-          avatar: 'https://via.placeholder.com/150'
-        };
-        
-        localStorage.setItem('zzz_user', JSON.stringify(regularUser));
-        
-        // Redirect based on URL param or default to Classifieds
-        const params = new URLSearchParams(window.location.search);
-        const redirect = params.get('redirect') || 'classifieds.html';
-        
-        alert("Login Successful!");
-        window.location.href = redirect;
-      } 
-      
-      // 3. FAILED LOGIN
-      else {
-        alert("Invalid Email or Password. Please try the demo credentials.");
+      if (foundUser) {
+          loginSuccess(foundUser);
+          return;
       }
+
+      // 2. CHECK DEMO ADMIN (Hardcoded Fallback)
+      if (email === 'admin@zipzapzoi.com' && password === 'admin123') {
+          const adminUser = {
+            id: 'admin_01',
+            name: 'Super Admin',
+            email: email,
+            role: 'admin',
+            avatar: 'https://via.placeholder.com/150'
+          };
+          loginSuccess(adminUser);
+          return;
+      } 
+      
+      // 3. CHECK DEMO USER (Hardcoded Fallback)
+      if (email === 'user@zipzapzoi.com' && password === 'user123') {
+          const demoUser = {
+            id: 'user_01',
+            name: 'Zoi User',
+            email: email,
+            role: 'user',
+            avatar: 'https://via.placeholder.com/150'
+          };
+          loginSuccess(demoUser);
+          return;
+      }
+
+      // 4. FAILED
+      alert("❌ Invalid Email or Password.\nPlease try again or register a new account.");
     });
+
+    function loginSuccess(userObj) {
+        // Save Session
+        localStorage.setItem('zzz_user', JSON.stringify(userObj));
+        
+        // Redirect Logic
+        const params = new URLSearchParams(window.location.search);
+        const redirect = params.get('redirect');
+
+        if(redirect) {
+            window.location.href = redirect;
+        } else if (userObj.role === 'admin') {
+            window.location.href = 'AdminConsoleV2.html';
+        } else {
+            window.location.href = 'classifieds.html';
+        }
+    }
+
+    // Toggle Password Visibility
+    function togglePass() {
+      const input = document.getElementById('password');
+      const icon = document.getElementById('eyeIcon');
+      if (input.type === "password") {
+        input.type = "text";
+        icon.textContent = "visibility_off";
+      } else {
+        input.type = "password";
+        icon.textContent = "visibility";
+      }
+    }
   </script>
+
 </body>
 </html>

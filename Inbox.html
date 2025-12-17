@@ -6,7 +6,7 @@
   (function() {
     const raw = localStorage.getItem('zzz_user');
     if (!raw) {
-      window.location.href = 'Login Page.html';
+      window.location.href = 'Login Page.html?redirect=Inbox.html';
     }
   })();
   </script>
@@ -114,7 +114,6 @@
              <button class="hidden md:flex p-2 text-gray-400 hover:text-red-500 rounded-full hover:bg-gray-100" onclick="closeChatDesktop()" title="Close Chat">
                <span class="material-symbols-outlined">close</span>
              </button>
-             <button class="md:hidden text-gray-400"><span class="material-symbols-outlined">more_vert</span></button>
           </div>
         </div>
 
@@ -122,8 +121,8 @@
            <div class="flex items-center gap-3 overflow-hidden">
              <div class="w-10 h-10 bg-gray-100 rounded bg-cover bg-center flex-shrink-0" id="contextImg" style="background-image: url('https://via.placeholder.com/150');"></div>
              <div class="min-w-0">
-               <p class="font-bold text-gray-800 truncate" id="contextTitle">Listing Title</p>
-               <p class="text-primary font-bold text-xs" id="contextPrice">₹ 0</p>
+               <p class="font-bold text-gray-800 truncate" id="contextTitle">General Chat</p>
+               <p class="text-primary font-bold text-xs" id="contextPrice"></p>
              </div>
            </div>
            <a href="#" id="contextLink" class="text-xs font-bold text-blue-600 hover:underline bg-blue-50 px-3 py-1 rounded-full whitespace-nowrap">View Ad</a>
@@ -135,7 +134,7 @@
         <div class="px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar bg-[#efeae2]/50" id="quickReplies">
            <button class="bg-white border border-gray-200 rounded-full px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-primary shadow-sm whitespace-nowrap transition-colors" onclick="setInput('Is this still available?')">Is this available?</button>
            <button class="bg-white border border-gray-200 rounded-full px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-primary shadow-sm whitespace-nowrap transition-colors" onclick="setInput('What is your best price?')">Best price?</button>
-           <button class="bg-white border border-gray-200 rounded-full px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-primary shadow-sm whitespace-nowrap transition-colors" onclick="setInput('Yes, it is available!')">Yes, available!</button>
+           <button class="bg-white border border-gray-200 rounded-full px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-primary shadow-sm whitespace-nowrap transition-colors" onclick="setInput('I am interested!')">I am interested!</button>
         </div>
 
         <div class="bg-white p-3 border-t border-gray-200 flex items-center gap-2">
@@ -156,28 +155,8 @@
     
     document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
 
-    // --- 1. DATA SEEDING (Auto-fill if empty) ---
-    function seedData() {
-      let allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      if(allMsgs.length > 0) return; 
-
-      const now = Date.now();
-      const samples = [
-        {
-          id: 'msg_1', fromUserId: 'user_bob', fromName: 'Bob Builder', toUserId: currentUser.id, toName: currentUser.name,
-          listingId: '101', listingTitle: 'iPhone 14 Pro - Deep Purple', text: 'Hi, is the price negotiable?', timestamp: new Date(now - 86400000).toISOString(), read: false
-        },
-        {
-          id: 'msg_2', fromUserId: 'user_alice', fromName: 'Alice Wonderland', toUserId: currentUser.id, toName: currentUser.name,
-          listingId: '102', listingTitle: 'Royal Enfield Classic 350', text: 'Can I come see the bike tomorrow?', timestamp: new Date(now - 3600000).toISOString(), read: false
-        }
-      ];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(samples));
-    }
-
-    // --- 2. LOAD CONVERSATIONS ---
+    // --- 1. DATA LOADING ---
     function getConversations() {
-      seedData();
       const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       const convMap = {};
 
@@ -245,7 +224,7 @@
         }).join('');
     }
 
-    // --- 3. OPEN CHAT ---
+    // --- 2. OPEN CHAT ---
     function openChat(convId) {
       activeConvId = convId;
       
@@ -265,20 +244,29 @@
 
       if(updated) { localStorage.setItem(STORAGE_KEY, JSON.stringify(allMsgs)); renderList(); }
       
-      // UI Updates (Responsive Handling)
-      document.getElementById('emptyState').classList.add('hidden'); // Always hide empty state when chatting
-      document.getElementById('chatArea').classList.remove('hidden'); // Ensure right col is visible
-      document.getElementById('activeChat').classList.remove('hidden'); // Show chat UI
+      // UI Updates
+      document.getElementById('emptyState').classList.add('hidden');
+      document.getElementById('chatArea').classList.remove('hidden');
+      document.getElementById('activeChat').classList.remove('hidden');
       
-      // On Mobile (< 768px), hide the sidebar
-      if(window.innerWidth < 768) {
-        document.getElementById('sidebar').classList.add('hidden');
+      // Mobile
+      if(window.innerWidth < 768) { document.getElementById('sidebar').classList.add('hidden'); }
+
+      // Identify Other User
+      let otherName = 'User';
+      let listTitle = 'Listing';
+      
+      if(msgs.length > 0) {
+         otherName = msgs[0].fromUserId === currentUser.id ? msgs[0].toName : msgs[0].fromName;
+         listTitle = msgs[0].listingTitle;
+      } else {
+         // Fallback if opening empty/new chat
+         // This relies on activeConvId or external set
       }
 
-      const otherName = msgs[0].fromUserId === currentUser.id ? msgs[0].toName : msgs[0].fromName;
       document.getElementById('chatName').textContent = otherName || 'User';
       document.getElementById('chatAvatar').textContent = (otherName || '?').charAt(0);
-      document.getElementById('contextTitle').textContent = msgs[0].listingTitle;
+      document.getElementById('contextTitle').textContent = listTitle;
       document.getElementById('contextLink').href = `Listing Detail.html?id=${listingId}`;
 
       const feed = document.getElementById('messagesFeed');
@@ -298,20 +286,84 @@
       feed.scrollTop = feed.scrollHeight;
     }
 
-    // --- 4. SEND MESSAGE & AUTO-REPLY ---
+    // --- 3. CHECK FOR NEW CHAT INTENT ---
+    function checkChatIntent() {
+        const intentRaw = localStorage.getItem('zzz_chat_intent');
+        if (!intentRaw) return;
+
+        const intent = JSON.parse(intentRaw);
+        localStorage.removeItem('zzz_chat_intent'); // Clear it immediately
+
+        // 1. Search for existing conversation
+        const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const existingMsg = allMsgs.find(m => 
+            (m.fromUserId === intent.partnerId && m.toUserId === currentUser.id) ||
+            (m.fromUserId === currentUser.id && m.toUserId === intent.partnerId)
+        );
+
+        if (existingMsg) {
+            // Found existing -> Open it
+            const participants = [existingMsg.fromUserId, existingMsg.toUserId].sort().join('_');
+            const convId = `${participants}_${existingMsg.listingId}`;
+            openChat(convId);
+        } else {
+            // 2. Start NEW Chat Interface
+            startNewChatUI(intent);
+        }
+    }
+
+    function startNewChatUI(intent) {
+        document.getElementById('emptyState').classList.add('hidden');
+        document.getElementById('chatArea').classList.remove('hidden');
+        document.getElementById('activeChat').classList.remove('hidden');
+        if(window.innerWidth < 768) document.getElementById('sidebar').classList.add('hidden');
+
+        // Setup Draft UI
+        document.getElementById('chatName').textContent = intent.partnerName || "User";
+        document.getElementById('chatAvatar').textContent = (intent.partnerName || "?").charAt(0).toUpperCase();
+        
+        // Context Banner
+        document.getElementById('contextTitle').textContent = intent.listingTitle || "Direct Message";
+        document.getElementById('contextPrice').textContent = ""; 
+        document.getElementById('contextLink').href = "#";
+
+        // Generate a temporary ID
+        const pIds = [currentUser.id, intent.partnerId].sort().join('_');
+        activeConvId = `${pIds}_${intent.listingId || 'general'}`;
+
+        // Clear Feed with Welcome Message
+        document.getElementById('messagesFeed').innerHTML = `
+            <div class="text-center text-gray-400 text-sm mt-10">
+                <p>Starting new chat with <span class="font-bold">${intent.partnerName}</span></p>
+                <p>Say Hi! 👋</p>
+            </div>
+        `;
+        
+        // Store temp data on the input for the sendMessage function
+        document.getElementById('msgInput').dataset.tempPartnerId = intent.partnerId;
+        document.getElementById('msgInput').dataset.tempPartnerName = intent.partnerName;
+    }
+
+    // --- 4. SEND MESSAGE ---
     function sendMessage() {
       const txt = document.getElementById('msgInput').value.trim();
       if(!txt || !activeConvId) return;
 
-      const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       const parts = activeConvId.split('_');
-      const otherUserId = parts[0] === currentUser.id ? parts[1] : parts[0]; 
       
-      const refMsg = allMsgs.find(m => {
-         const p = [m.fromUserId, m.toUserId].sort().join('_');
-         return `${p}_${m.listingId}` === activeConvId;
-      });
-      const otherName = refMsg ? (refMsg.fromUserId === currentUser.id ? refMsg.toName : refMsg.fromName) : 'User';
+      // Determine Receiver
+      let otherUserId = parts[0] === currentUser.id ? parts[1] : parts[0];
+      let otherName = document.getElementById('chatName').textContent;
+      let listTitle = document.getElementById('contextTitle').textContent;
+      let listId = parts[2];
+
+      // Handle "Draft/New" mode where parts might vary or be 'general'
+      if(document.getElementById('msgInput').dataset.tempPartnerId) {
+          otherUserId = document.getElementById('msgInput').dataset.tempPartnerId;
+          otherName = document.getElementById('msgInput').dataset.tempPartnerName;
+          delete document.getElementById('msgInput').dataset.tempPartnerId; // Clear draft flag
+      }
 
       const newMsg = {
         id: 'msg_' + Date.now(),
@@ -319,8 +371,8 @@
         fromName: currentUser.name,
         toUserId: otherUserId,
         toName: otherName,
-        listingId: refMsg.listingId,
-        listingTitle: refMsg.listingTitle,
+        listingId: listId,
+        listingTitle: listTitle,
         text: txt,
         timestamp: new Date().toISOString(),
         read: false
@@ -330,21 +382,18 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(allMsgs));
       
       document.getElementById('msgInput').value = '';
-      openChat(activeConvId); // Refresh Chat UI instantly
-      renderList(); // Update Sidebar Snippet
+      openChat(activeConvId); // Reload to show real message
+      renderList(); // Update sidebar
       
-      // TRIGGER SIMULATED REPLY
-      document.getElementById('typingIndicator').innerHTML = '<span class="animate-pulse text-primary">typing...</span>';
-      
+      // Auto-Reply Sim (Optional)
       setTimeout(() => {
-         simulateReply(activeConvId, otherUserId, otherName, refMsg.listingId, refMsg.listingTitle);
+         simulateReply(activeConvId, otherUserId, otherName, listId, listTitle);
       }, 2000);
     }
 
     function simulateReply(convId, userId, userName, listId, listTitle) {
-      const replies = ["Yes, it is available!", "Can you send more pics?", "I can offer ₹500 less.", "When can I come see it?", "Let's meet tomorrow.", "Okay, sounds good."];
-      const randomText = replies[Math.floor(Math.random() * replies.length)];
-
+      // Basic simulation logic...
+      const replies = ["Okay, sounds good.", "Can you share more info?", "I am interested."];
       const replyMsg = {
         id: 'msg_' + Date.now(),
         fromUserId: userId,
@@ -353,21 +402,15 @@
         toName: currentUser.name,
         listingId: listId,
         listingTitle: listTitle,
-        text: randomText,
+        text: replies[Math.floor(Math.random() * replies.length)],
         timestamp: new Date().toISOString(),
         read: false
       };
-
       const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY));
       allMsgs.push(replyMsg);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(allMsgs));
-
-      // If user is currently looking at THIS chat, refresh it
-      if (activeConvId === convId) {
-        document.getElementById('typingIndicator').innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span> Online';
-        openChat(convId);
-      }
-      renderList(); // Update badge
+      if (activeConvId === convId) openChat(convId);
+      renderList();
     }
 
     function setInput(text) {
@@ -375,22 +418,17 @@
       document.getElementById('msgInput').focus();
     }
 
-    // --- 5. RESPONSIVE HELPERS ---
-    
-    // CLOSE CHAT (Mobile): Go back to list
     function closeChatMobile() {
       document.getElementById('activeChat').classList.add('hidden');
-      document.getElementById('sidebar').classList.remove('hidden'); // Show List
+      document.getElementById('sidebar').classList.remove('hidden');
       activeConvId = null;
-      renderList(); // Clear active styling
+      renderList();
     }
-
-    // CLOSE CHAT (Desktop): Show Empty State
     function closeChatDesktop() {
       document.getElementById('activeChat').classList.add('hidden');
-      document.getElementById('emptyState').classList.remove('hidden'); // Show "Select a Conversation"
+      document.getElementById('emptyState').classList.remove('hidden');
       activeConvId = null;
-      renderList(); // Clear active styling
+      renderList();
     }
 
     document.getElementById('msgInput').addEventListener('keypress', function (e) {
@@ -401,6 +439,7 @@
 
     // Initial Load
     renderList();
+    checkChatIntent(); // <--- CRITICAL: Check for new chats on load
 
   </script>
 </body>
