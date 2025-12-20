@@ -1,203 +1,289 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>
-  // --- AUTH CHECK ---
-  (function() {
-    const raw = localStorage.getItem('zzz_user');
-    if (!raw) { window.location.href = 'Login Page.html'; }
-  })();
-  </script>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ZipZapZoi - Seller Dashboard</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+
   <script>
     tailwind.config = {
       theme: {
         extend: {
+          colors: {
+            brand: "#019863",
+            accent: "#4D96A9",
+            bgLight: "#F8F9FA",
+          },
           fontFamily: { sans: ["Spline Sans", "sans-serif"] },
-          colors: { "primary": "#019863", "secondary": "#4D96A9", "background-light": "#F7F9FC" },
-          boxShadow: { "bouncy": "0 10px 20px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)" }
+          boxShadow: {
+            soft: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
+          }
         }
       }
     }
   </script>
-  <style>
-    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-    .nav-item.active { background: #E6F4F1; color: #019863; border-right: 3px solid #019863; }
-  </style>
 </head>
-<body class="bg-background-light h-screen flex overflow-hidden text-gray-800">
+<body class="bg-bgLight text-gray-800 flex min-h-screen">
 
-  <aside class="w-64 bg-white border-r border-gray-200 flex flex-col hidden md:flex z-20 shadow-xl">
-    <div class="p-6 flex items-center gap-3 border-b border-gray-100">
-      <span class="material-symbols-outlined text-primary text-3xl">all_inclusive</span>
-      <div><h1 class="font-bold text-xl tracking-tight text-gray-800">ZipZapZoi</h1><p class="text-xs text-gray-500 uppercase tracking-wider">Seller Hub</p></div>
+  <aside class="hidden md:flex w-64 bg-white border-r flex-col sticky top-0 h-screen">
+    <div class="p-6 border-b flex items-center gap-2 text-brand font-bold text-xl">
+      <span class="material-symbols-outlined text-3xl">all_inclusive</span> ZipZapZoi
     </div>
-    <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
-      <a href="#" onclick="showSection('dashboard')" id="nav-dashboard" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-all font-medium active">
-        <span class="material-symbols-outlined">dashboard</span> Dashboard
+    
+    <nav class="flex-1 p-4 space-y-2">
+      <a href="#" class="flex items-center gap-3 px-4 py-3 bg-green-50 text-brand font-bold rounded-xl">
+        <span class="material-symbols-outlined">dashboard</span> Overview
       </a>
-      <a href="#" onclick="showSection('listings')" id="nav-listings" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-all font-medium">
-        <span class="material-symbols-outlined">inventory_2</span> My Listings
+      <a href="classifieds.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-gray-900 font-medium rounded-xl transition-colors">
+        <span class="material-symbols-outlined">storefront</span> Browse Market
       </a>
-      <a href="Inbox.html" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-all font-medium">
-        <span class="material-symbols-outlined">chat</span> Messages <span id="navMsgBadge" class="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden">0</span>
+      <a href="Inbox.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-gray-900 font-medium rounded-xl transition-colors">
+        <span class="material-symbols-outlined">mail</span> Messages
+        <span id="sideBadge" class="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden">0</span>
       </a>
-      <a href="#" onclick="showSection('payouts')" id="nav-payouts" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-all font-medium">
-        <span class="material-symbols-outlined">payments</span> Payouts
+      <a href="Post Listing.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-gray-900 font-medium rounded-xl transition-colors">
+        <span class="material-symbols-outlined">add_circle</span> Post New Ad
       </a>
-      <a href="#" onclick="showSection('settings')" id="nav-settings" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-all font-medium">
-        <span class="material-symbols-outlined">settings</span> Settings
+      <a href="profile.html?sellerId=me" onclick="this.href='profile.html?sellerId='+currentUser.id" class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-gray-900 font-medium rounded-xl transition-colors">
+        <span class="material-symbols-outlined">person</span> Public Profile
       </a>
     </nav>
-    <div class="p-4 border-t border-gray-200">
-      <a href="classifieds.html" class="flex items-center gap-2 text-sm text-gray-500 hover:text-primary mb-4 px-2"><span class="material-symbols-outlined text-lg">arrow_back</span> Back to Site</a>
-      <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 py-2.5 rounded-lg font-bold hover:bg-red-100 transition-colors"><span class="material-symbols-outlined text-lg">logout</span> Logout</button>
+
+    <div class="p-4 border-t">
+      <button onclick="handleLogout()" class="flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 font-bold rounded-xl w-full transition-colors">
+        <span class="material-symbols-outlined">logout</span> Log Out
+      </button>
     </div>
   </aside>
 
-  <main class="flex-1 flex flex-col h-full relative overflow-hidden">
-    <header class="flex items-center justify-between bg-white border-b border-gray-200 px-8 py-4">
-      <h2 class="text-2xl font-bold text-gray-800" id="pageTitle">Dashboard</h2>
-      <div class="flex items-center gap-6">
-        <a href="Post Listing.html" class="flex items-center gap-2 bg-primary hover:bg-green-700 text-white px-5 py-2.5 rounded-full font-bold shadow-bouncy transition-transform hover:-translate-y-0.5"><span class="material-symbols-outlined text-lg">add_circle</span> Post New Ad</a>
-        <div class="flex items-center gap-3 pl-6 border-l border-gray-200">
-          <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg" id="userInitial">U</div>
-          <div><p class="text-sm font-bold text-gray-800" id="userName">User</p><p class="text-xs text-green-600 font-medium">Verified Seller</p></div>
-        </div>
+  <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    
+    <header class="md:hidden bg-white border-b h-16 flex items-center justify-between px-4 sticky top-0 z-20">
+      <div class="flex items-center gap-2 text-brand font-bold text-lg">
+        <span class="material-symbols-outlined text-2xl">all_inclusive</span> Dashboard
       </div>
+      <button onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="p-2 text-gray-600">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
     </header>
 
-    <div class="flex-1 overflow-y-auto p-6 md:p-8 scroll-smooth" id="mainArea">
-      <section id="dashboard" class="space-y-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg text-white"><p class="text-blue-100 text-sm">Total Views</p><p class="text-4xl font-bold mt-1">12.5K</p></div>
-          <div class="bg-gradient-to-br from-primary to-green-600 p-6 rounded-2xl shadow-lg text-white"><p class="text-green-100 text-sm">Active Chats</p><p class="text-4xl font-bold mt-1" id="dashChatCount">0</p><p class="text-xs bg-white/20 inline-block px-2 py-1 rounded mt-3 font-medium" id="dashUnreadText">0 New Messages</p></div>
-          <div class="bg-white p-6 rounded-2xl shadow-bouncy border border-gray-100"><p class="text-gray-500 text-sm">Live Listings</p><p class="text-4xl font-bold text-gray-800 mt-1" id="liveCount">0</p><a href="#" onclick="showSection('listings')" class="text-xs text-primary font-bold mt-3 inline-block hover:underline">Manage Listings →</a></div>
-          <div class="bg-white p-6 rounded-2xl shadow-bouncy border border-gray-100"><p class="text-gray-500 text-sm">Seller Rating</p><div class="flex items-center gap-1 mt-1"><span class="text-4xl font-bold text-gray-800">4.8</span><span class="material-symbols-outlined text-yellow-400">star</span></div></div>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-bouncy border border-gray-100">
-            <h3 class="font-bold text-lg text-gray-800 mb-4">Performance Analytics</h3>
-            <div class="h-64 w-full"><canvas id="sellerChart"></canvas></div>
-          </div>
-          <div class="bg-white p-6 rounded-2xl shadow-bouncy border border-gray-100 flex flex-col">
-            <h3 class="font-bold text-lg text-gray-800 mb-4">Recent Messages</h3>
-            <div class="flex-1 space-y-4 overflow-y-auto pr-2" id="recentMsgList"></div>
-            <a href="Inbox.html" class="mt-4 text-center text-sm font-bold text-primary hover:underline">View All Messages</a>
-          </div>
-        </div>
-      </section>
+    <div id="mobileMenu" class="hidden md:hidden bg-white border-b shadow-lg absolute top-16 left-0 right-0 z-10 p-4 space-y-2">
+      <a href="classifieds.html" class="block p-3 hover:bg-gray-50 rounded-lg">Browse Market</a>
+      <a href="Inbox.html" class="block p-3 hover:bg-gray-50 rounded-lg">Messages</a>
+      <a href="Post Listing.html" class="block p-3 hover:bg-gray-50 rounded-lg text-brand font-bold">Post New Ad</a>
+      <button onclick="handleLogout()" class="block w-full text-left p-3 text-red-500 font-bold">Log Out</button>
+    </div>
 
-      <section id="listings" class="hidden space-y-6">
-        <div class="bg-white rounded-2xl shadow-bouncy border border-gray-100 overflow-hidden">
-          <div class="p-6 border-b border-gray-100 flex justify-between items-center"><h3 class="font-bold text-lg text-gray-800">Your Listings</h3></div>
-          <table class="w-full text-left">
-            <thead class="bg-gray-50 border-b border-gray-100 text-xs uppercase text-gray-500 font-semibold">
-              <tr><th class="px-6 py-4">Item</th><th class="px-6 py-4">Price</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Actions</th></tr>
-            </thead>
-            <tbody id="listingsTableBody" class="divide-y divide-gray-100 text-sm"></tbody>
-          </table>
+    <div class="flex-1 overflow-y-auto p-4 md:p-8">
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Hello, <span id="userName">User</span>! 👋</h1>
+          <p class="text-gray-500 text-sm">Here is what's happening with your listings today.</p>
         </div>
-      </section>
+        <a href="Post Listing.html" class="bg-brand hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-brand/20 transition-all active:scale-95 flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined">add</span> Post New Ad
+        </a>
+      </div>
 
-      <section id="payouts" class="hidden"><div class="bg-white p-10 rounded-2xl text-center"><h3 class="font-bold">Payouts Coming Soon</h3></div></section>
-      <section id="settings" class="hidden"><div class="bg-white p-10 rounded-2xl text-center"><h3 class="font-bold">Settings Coming Soon</h3></div></section>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white p-5 rounded-2xl shadow-soft border border-gray-100">
+          <div class="flex justify-between items-start mb-2">
+            <div class="p-2 bg-blue-50 text-blue-600 rounded-lg"><span class="material-symbols-outlined">visibility</span></div>
+            <span class="text-xs font-bold text-green-500 bg-green-50 px-2 py-1 rounded">+12%</span>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900" id="statViews">0</h3>
+          <p class="text-xs text-gray-400 font-bold">TOTAL VIEWS</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-soft border border-gray-100">
+          <div class="flex justify-between items-start mb-2">
+            <div class="p-2 bg-purple-50 text-purple-600 rounded-lg"><span class="material-symbols-outlined">inventory_2</span></div>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900" id="statActive">0</h3>
+          <p class="text-xs text-gray-400 font-bold">ACTIVE LISTINGS</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-soft border border-gray-100">
+          <div class="flex justify-between items-start mb-2">
+            <div class="p-2 bg-orange-50 text-orange-600 rounded-lg"><span class="material-symbols-outlined">mail</span></div>
+            <span id="msgBadge" class="hidden text-xs font-bold text-white bg-red-500 px-2 py-1 rounded-full">New</span>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900" id="statMsgs">0</h3>
+          <p class="text-xs text-gray-400 font-bold">MESSAGES</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-soft border border-gray-100">
+          <div class="flex justify-between items-start mb-2">
+            <div class="p-2 bg-green-50 text-green-600 rounded-lg"><span class="material-symbols-outlined">monetization_on</span></div>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900" id="statSold">0</h3>
+          <p class="text-xs text-gray-400 font-bold">ITEMS SOLD</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-3xl shadow-soft border border-gray-100 mb-8">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="font-bold text-gray-800">Performance Overview</h3>
+          <select class="text-xs bg-gray-50 border-none rounded-lg p-2 font-bold text-gray-500 outline-none">
+            <option>Last 7 Days</option>
+            <option>This Month</option>
+          </select>
+        </div>
+        <div class="h-64 w-full">
+          <canvas id="performanceChart"></canvas>
+        </div>
+      </div>
+
+      <h3 class="font-bold text-gray-800 text-lg mb-4">Your Listings</h3>
+      <div id="listingsList" class="space-y-4">
+        <div class="text-center py-12 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-300">
+          <span class="material-symbols-outlined text-4xl mb-2">post_add</span>
+          <p>You haven't posted anything yet.</p>
+        </div>
+      </div>
+
     </div>
   </main>
 
   <script>
-    // --- 1. SETUP ---
-    const user = JSON.parse(localStorage.getItem('zzz_user'));
-    if(user){ document.getElementById('userName').textContent = user.name; document.getElementById('userInitial').textContent = user.name.charAt(0); }
-
-    // --- 2. LISTINGS LOGIC ---
-    function loadListings() {
-      const allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-      const myListings = user ? allListings.filter(l => l.userId === user.id) : []; 
-      
-      document.getElementById('liveCount').textContent = myListings.length;
-      const tbody = document.getElementById('listingsTableBody');
-      
-      if(myListings.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400">No listings yet. <a href="Post Listing.html" class="text-primary hover:underline">Create one!</a></td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = myListings.map(item => `
-        <tr class="hover:bg-gray-50 transition-colors">
-          <td class="px-6 py-4"><div class="flex items-center gap-3"><div class="w-12 h-12 rounded-lg bg-gray-100 bg-cover bg-center border border-gray-200" style="background-image: url('${item.image}')"></div><div><p class="font-bold text-gray-800 line-clamp-1">${item.title}</p><p class="text-xs text-gray-500">${item.category}</p></div></div></td>
-          <td class="px-6 py-4 font-bold text-gray-700">₹ ${item.price}</td>
-          <td class="px-6 py-4"><span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">Active</span></td>
-          <td class="px-6 py-4 text-right">
-            <div class="flex justify-end gap-2">
-              <button onclick="editItem('${item.id}')" class="p-2 text-gray-400 hover:text-blue-500 hover:bg-white rounded-lg transition-all" title="Edit"><span class="material-symbols-outlined text-base">edit</span></button>
-              <button onclick="viewItem('${item.id}')" class="p-2 text-gray-400 hover:text-green-500 hover:bg-white rounded-lg transition-all" title="View"><span class="material-symbols-outlined text-base">visibility</span></button>
-              <button onclick="deleteItem('${item.id}')" class="p-2 text-gray-400 hover:text-red-500 hover:bg-white rounded-lg transition-all" title="Delete"><span class="material-symbols-outlined text-base">delete</span></button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
-    }
-
-    // --- 3. ACTIONS ---
-    window.editItem = (id) => { window.location.href = `Post Listing.html?id=${id}`; }
-    window.viewItem = (id) => { window.location.href = `Listing Detail.html?id=${id}`; }
+    // --- 1. AUTH & INIT ---
+    const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
     
-    window.deleteItem = (id) => {
-      if(confirm("Delete this listing?")) {
-        let listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-        listings = listings.filter(l => l.id != id);
-        localStorage.setItem('zzz_listings', JSON.stringify(listings));
-        loadListings();
-      }
+    if (!currentUser) {
+      window.location.href = 'Login Page.html';
+    } else {
+      document.getElementById('userName').textContent = currentUser.name.split(' ')[0];
     }
 
-    // --- 4. NAVIGATION ---
-    window.showSection = (id) => {
-      ['dashboard', 'listings', 'payouts', 'settings'].forEach(sid => {
-        document.getElementById(sid).classList.add('hidden');
-        document.getElementById('nav-'+sid).classList.remove('active', 'bg-green-50', 'text-primary', 'border-r-4', 'border-primary');
-      });
-      document.getElementById(id).classList.remove('hidden');
-      document.getElementById('nav-'+id).classList.add('active');
-      document.getElementById('pageTitle').textContent = id.charAt(0).toUpperCase() + id.slice(1);
-    }
-
-    window.handleLogout = () => {
+    function handleLogout() {
       localStorage.removeItem('zzz_user');
       window.location.href = 'Login Page.html';
     }
 
-    // --- 5. STATS ---
-    function updateStats(){
-        const msgs = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
-        const unread = msgs.filter(m => m.toUserId === user?.id && !m.read).length;
-        if(unread > 0) {
-            document.getElementById('navMsgBadge').textContent = unread;
-            document.getElementById('navMsgBadge').classList.remove('hidden');
-            document.getElementById('dashUnreadText').textContent = `${unread} New Messages`;
-        }
-        
-        // Chart
-        new Chart(document.getElementById('sellerChart').getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: ['M','T','W','T','F','S','S'],
-                datasets: [{label:'Views', data:[10,25,15,30,45,60,80], borderColor:'#019863', tension:0.4}]
-            },
-            options: { responsive:true, maintainAspectRatio:false }
-        });
+    // --- 2. LOAD DATA ---
+    function loadDashboard() {
+      const allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+      const myListings = allListings.filter(item => item.userId === currentUser.id);
+      
+      const allMsgs = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
+      const unreadCount = allMsgs.filter(m => m.toUserId === currentUser.id && !m.read).length;
+
+      // Update Stats
+      document.getElementById('statActive').textContent = myListings.filter(i => i.status !== 'sold').length;
+      document.getElementById('statSold').textContent = myListings.filter(i => i.status === 'sold').length;
+      document.getElementById('statMsgs').textContent = unreadCount;
+      document.getElementById('statViews').textContent = myListings.length * 142; // Mock views logic
+
+      if(unreadCount > 0) {
+        document.getElementById('sideBadge').classList.remove('hidden');
+        document.getElementById('sideBadge').textContent = unreadCount;
+        document.getElementById('msgBadge').classList.remove('hidden');
+      }
+
+      renderList(myListings);
+      initChart();
     }
 
-    loadListings();
-    if(user) updateStats();
+    // --- 3. RENDER LISTINGS ---
+    function renderList(items) {
+      const container = document.getElementById('listingsList');
+      if(items.length === 0) return; // Keep default empty state
 
+      container.innerHTML = items.map(item => `
+        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+          
+          <img src="${item.image || 'https://via.placeholder.com/150'}" class="w-full md:w-24 h-24 object-cover rounded-xl bg-gray-100">
+          
+          <div class="flex-1 text-center md:text-left">
+            <div class="flex items-center justify-center md:justify-start gap-2 mb-1">
+              <h4 class="font-bold text-gray-900">${item.title}</h4>
+              ${item.status === 'sold' 
+                ? '<span class="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">SOLD</span>' 
+                : '<span class="bg-green-100 text-green-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">ACTIVE</span>'}
+            </div>
+            <p class="text-brand font-bold">₹ ${item.price}</p>
+            <p class="text-xs text-gray-400 mt-1">${new Date(item.time || Date.now()).toLocaleDateString()}</p>
+          </div>
+
+          <div class="flex gap-2 w-full md:w-auto">
+            ${item.status !== 'sold' ? `
+              <button onclick="markSold('${item.id}')" class="flex-1 md:flex-none px-4 py-2 bg-gray-50 hover:bg-green-50 text-green-600 rounded-lg text-sm font-bold transition-colors">Mark Sold</button>
+              <button onclick="editItem('${item.id}')" class="flex-1 md:flex-none px-4 py-2 bg-gray-50 hover:bg-blue-50 text-blue-600 rounded-lg text-sm font-bold transition-colors">Edit</button>
+            ` : ''}
+            <button onclick="deleteItem('${item.id}')" class="flex-1 md:flex-none px-4 py-2 bg-gray-50 hover:bg-red-50 text-red-500 rounded-lg text-sm font-bold transition-colors">Delete</button>
+          </div>
+
+        </div>
+      `).join('');
+    }
+
+    // --- 4. ACTIONS ---
+    window.markSold = (id) => {
+      if(!confirm("Mark this item as Sold? It will no longer appear in search.")) return;
+      updateStatus(id, 'sold');
+    };
+
+    window.deleteItem = (id) => {
+      if(!confirm("Permanently delete this listing?")) return;
+      let all = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+      all = all.filter(i => i.id !== id);
+      localStorage.setItem('zzz_listings', JSON.stringify(all));
+      loadDashboard();
+    };
+
+    window.editItem = (id) => {
+      window.location.href = `Post Listing.html?id=${id}`;
+    };
+
+    function updateStatus(id, status) {
+      let all = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+      const idx = all.findIndex(i => i.id === id);
+      if(idx > -1) {
+        all[idx].status = status;
+        localStorage.setItem('zzz_listings', JSON.stringify(all));
+        loadDashboard();
+      }
+    }
+
+    // --- 5. CHART ---
+    function initChart() {
+      const ctx = document.getElementById('performanceChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [{
+            label: 'Profile Views',
+            data: [12, 19, 15, 25, 22, 30, 45],
+            borderColor: '#019863',
+            backgroundColor: 'rgba(1, 152, 99, 0.05)',
+            tension: 0.4,
+            fill: true,
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { borderDash: [2, 4], color: '#f0f0f0' }, border: { display: false } },
+            x: { grid: { display: false }, border: { display: false } }
+          }
+        }
+      });
+    }
+
+    loadDashboard();
   </script>
 </body>
 </html>
