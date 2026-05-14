@@ -1,22 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>
-  // --- ADMIN SECURITY CHECK ---
-  (function() {
-    const raw = localStorage.getItem('zzz_user');
-    if (raw) {
-      const user = JSON.parse(raw);
-      // Allow 'admin' or 'super_admin'
-      if (user.role !== 'admin' && user.role !== 'super_admin') {
-        alert("⛔ Access Denied: Admin privileges required.");
-        window.location.href = 'classifieds.html';
-      }
-    } else {
-        window.location.href = 'Login Page.html?redirect=AdminConsoleV2.html';
-    }
-  })();
-  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AdminOS Ultimate - ZipZapZoi</title>
@@ -310,211 +294,129 @@
   </div>
 
   <script>
-    // --- 1. CORE & DATA (THE MASTER SCHEMA) ---
-    // Contains ALL Categories, Subcategories, and Fields defined in the requirement.
-    const FACTORY_SCHEMA = {
-        categories: [ 
-          { id: 'electronics', label: 'Electronics', icon: 'devices' }, 
-          { id: 'vehicles', label: 'Vehicles', icon: 'directions_car' }, 
-          { id: 'home', label: 'Home & Garden', icon: 'yard' }, 
-          { id: 'clothing', label: 'Clothing', icon: 'checkroom' },
-          { id: 'real_estate', label: 'Real Estate', icon: 'real_estate_agent' },
-          { id: 'jobs', label: 'Jobs', icon: 'work' },
-          { id: 'services', label: 'Services', icon: 'handyman' },
-          { id: 'sports', label: 'Sports', icon: 'sports_soccer' },
-          { id: 'pets', label: 'Pets', icon: 'pets' },
-          { id: 'tourism', label: 'Tourism', icon: 'flight' },
-          { id: 'doctors', label: 'Doctors', icon: 'stethoscope' },
-          { id: 'charity', label: 'Charity & Donation', icon: 'volunteer_activism' },
-          { id: 'food', label: 'Restaurant & Food', icon: 'restaurant' },
-          { id: 'events', label: 'Occasional Events', icon: 'celebration' }
-        ],
-        subcategories: [
-          // Electronics
-          { id: 'mobiles', categoryId: 'electronics', label: 'Mobiles & Accessories' },
-          { id: 'laptops', categoryId: 'electronics', label: 'Computers & Laptops' },
-          { id: 'appliances', categoryId: 'electronics', label: 'Home Appliances' },
-          { id: 'tv_audio', categoryId: 'electronics', label: 'TVs - Audio & Video' },
-          { id: 'cameras', categoryId: 'electronics', label: 'Cameras & Photography' },
-          { id: 'gaming', categoryId: 'electronics', label: 'Gaming & Consoles' },
-          { id: 'wearables', categoryId: 'electronics', label: 'Wearables' },
-          { id: 'kitchen_elec', categoryId: 'electronics', label: 'Kitchen Electronics' },
-          { id: 'office_elec', categoryId: 'electronics', label: 'Office Electronics' },
-          { id: 'other_elec', categoryId: 'electronics', label: 'Other Electronics' },
+  // --- ADMIN SECURITY CHECK ---
+  (function() {
+    const raw = localStorage.getItem('zzz_user');
+    if (raw) {
+      const user = JSON.parse(raw);
+      if (user.role !== 'admin' && user.role !== 'super_admin') {
+        alert("⛔ Access Denied: Admin privileges required.");
+        window.location.href = 'classifieds.html';
+      }
+    } else {
+        window.location.href = 'Login Page.html?redirect=AdminConsoleV2.html';
+    }
+  })();
 
-          // Vehicles
-          { id: 'cars', categoryId: 'vehicles', label: 'Cars' },
-          { id: 'bikes', categoryId: 'vehicles', label: 'Bikes & Scooters' },
-          { id: 'commercial', categoryId: 'vehicles', label: 'Commercial Vehicles' },
-          { id: 'auto', categoryId: 'vehicles', label: 'Auto Rickshaws' },
-          { id: 'ev', categoryId: 'vehicles', label: 'Electric Vehicles (EVs)' },
-          { id: 'bicycles', categoryId: 'vehicles', label: 'Bicycles' },
-          { id: 'parts', categoryId: 'vehicles', label: 'Parts & Accessories' },
-          { id: 'boats', categoryId: 'vehicles', label: 'Boats & Others' },
+  // --- 1. CORE & DATA (THE MASTER BRAIN) ---
+  const FACTORY_SCHEMA = {
+    categories: [ 
+      { id: 'electronics', label: 'Electronics', icon: 'devices', color: 'text-cyan-500' }, 
+      { id: 'vehicles', label: 'Vehicles', icon: 'directions_car', color: 'text-blue-600' }, 
+      { id: 'home', label: 'Home & Garden', icon: 'yard', color: 'text-green-600' }, 
+      { id: 'clothing', label: 'Clothing', icon: 'checkroom', color: 'text-pink-500' },
+      { id: 'real_estate', label: 'Real Estate', icon: 'real_estate_agent', color: 'text-purple-600' },
+      { id: 'jobs', label: 'Jobs', icon: 'work', color: 'text-red-500', priceLabel: 'Salary (Approx)' },
+      { id: 'services', label: 'Services', icon: 'handyman', color: 'text-orange-500', photoLimit: 4 },
+      { id: 'sports', label: 'Sports', icon: 'sports_soccer', color: 'text-teal-500', photoLimit: 4 },
+      { id: 'pets', label: 'Pets', icon: 'pets', color: 'text-yellow-600', photoLimit: 6 },
+      { id: 'tourism', label: 'Tourism', icon: 'flight', color: 'text-sky-500', photoLimit: 6 },
+      { id: 'doctors', label: 'Doctors', icon: 'stethoscope', color: 'text-rose-600', priceLabel: 'Consultancy Fee', photoLimit: 4 },
+      { id: 'charity', label: 'Charity', icon: 'volunteer_activism', color: 'text-green-500', hidePrice: true, photoLimit: 2, note: 'Charity listings are free.' },
+      { id: 'food', label: 'Restaurant & Food', icon: 'restaurant', color: 'text-orange-600', photoLimit: 6 },
+      { id: 'events', label: 'Events', icon: 'celebration', color: 'text-purple-500', photoLimit: 6 }
+    ],
+    subcategories: [
+      // ELECTRONICS
+      { id: 'mobiles', categoryId: 'electronics', label: 'Mobiles & Accessories' },
+      { id: 'laptops', categoryId: 'electronics', label: 'Computers & Laptops' },
+      { id: 'appliances', categoryId: 'electronics', label: 'Home Appliances' },
+      { id: 'cameras', categoryId: 'electronics', label: 'Cameras & Photography' },
+      { id: 'tv_audio', categoryId: 'electronics', label: 'TVs - Audio & Video' },
+      { id: 'gaming', categoryId: 'electronics', label: 'Gaming & Consoles' },
+      // VEHICLES
+      { id: 'cars', categoryId: 'vehicles', label: 'Cars' },
+      { id: 'bikes', categoryId: 'vehicles', label: 'Bikes & Scooters' },
+      { id: 'commercial', categoryId: 'vehicles', label: 'Commercial Vehicles' },
+      { id: 'ev', categoryId: 'vehicles', label: 'Electric Vehicles' },
+      { id: 'parts', categoryId: 'vehicles', label: 'Spare Parts' },
+      // REAL ESTATE
+      { id: 'apartments', categoryId: 'real_estate', label: 'Apartments' },
+      { id: 'houses', categoryId: 'real_estate', label: 'Independent Houses' },
+      { id: 'plots', categoryId: 'real_estate', label: 'Plots/Land' },
+      { id: 'rentals', categoryId: 'real_estate', label: 'Rental Houses' },
+      { id: 'pg', categoryId: 'real_estate', label: 'PG / Hostels' },
+      // JOBS
+      { id: 'it_jobs', categoryId: 'jobs', label: 'IT & Software' },
+      { id: 'sales_jobs', categoryId: 'jobs', label: 'Sales & Marketing' },
+      { id: 'hr_jobs', categoryId: 'jobs', label: 'HR & Admin' },
+      { id: 'finance', categoryId: 'jobs', label: 'Finance & Accounting' },
+      { id: 'driver', categoryId: 'jobs', label: 'Driver / Delivery' },
+      // SERVICES
+      { id: 'home_svc', categoryId: 'services', label: 'Home Services' },
+      { id: 'tutors', categoryId: 'services', label: 'Education/Tutors' },
+      { id: 'beauty', categoryId: 'services', label: 'Beauty & Salon' },
+      // DOCTORS
+      { id: 'dentist', categoryId: 'doctors', label: 'Dentist' },
+      { id: 'general', categoryId: 'doctors', label: 'General Physician' },
+      { id: 'cardio', categoryId: 'doctors', label: 'Cardiologist' },
+      { id: 'derma', categoryId: 'doctors', label: 'Dermatologist' },
+      // CHARITY
+      { id: 'donation', categoryId: 'charity', label: 'Donation' },
+      { id: 'ngo', categoryId: 'charity', label: 'NGO Activities' },
+      { id: 'medical_aid', categoryId: 'charity', label: 'Medical Aid' },
+      // FOOD
+      { id: 'catering', categoryId: 'food', label: 'Catering' },
+      { id: 'homemade', categoryId: 'food', label: 'Home Chef' },
+      { id: 'bakery', categoryId: 'food', label: 'Bakery Items' },
+      // EVENTS
+      { id: 'weddings', categoryId: 'events', label: 'Weddings' },
+      { id: 'parties', categoryId: 'events', label: 'Birthdays & Parties' },
+      { id: 'corporate', categoryId: 'events', label: 'Corporate Events' }
+    ],
+    fields: [
+      // ELECTRONICS (Common fields mapped to main subs for ease)
+      { id: 'brand_mob', subcategoryId: 'mobiles', label: 'Brand Name', type: 'text', required: true },
+      { id: 'cond_mob', subcategoryId: 'mobiles', label: 'Condition', type: 'select', options: 'New, Used - Good, Used - Fair, Refurbished', required: true },
+      { id: 'brand_lap', subcategoryId: 'laptops', label: 'Brand Name', type: 'text', required: true },
+      { id: 'proc', subcategoryId: 'laptops', label: 'Processor', type: 'text' },
+      { id: 'ram', subcategoryId: 'laptops', label: 'RAM', type: 'select', options: '4GB, 8GB, 16GB, 32GB' },
+      
+      // VEHICLES
+      { id: 'v_brand', subcategoryId: 'cars', label: 'Brand/Make', type: 'text', required: true },
+      { id: 'v_year', subcategoryId: 'cars', label: 'Year', type: 'number', required: true },
+      { id: 'v_fuel', subcategoryId: 'cars', label: 'Fuel Type', type: 'select', options: 'Petrol, Diesel, CNG, Electric, Hybrid' },
+      { id: 'v_trans', subcategoryId: 'cars', label: 'Transmission', type: 'select', options: 'Manual, Automatic' },
+      { id: 'v_km', subcategoryId: 'cars', label: 'KM Driven', type: 'number' },
+      { id: 'v_owners', subcategoryId: 'cars', label: 'No. of Owners', type: 'select', options: '1st, 2nd, 3rd, 4th+' },
 
-          // Home & Garden
-          { id: 'furniture', categoryId: 'home', label: 'Furniture' },
-          { id: 'decor', categoryId: 'home', label: 'Home Decor' },
-          { id: 'kitchen', categoryId: 'home', label: 'Kitchen & Dining' },
-          { id: 'plants', categoryId: 'home', label: 'Plants & Garden' },
-          { id: 'tools', categoryId: 'home', label: 'Tools & Hardware' },
-          { id: 'cleaning', categoryId: 'home', label: 'Cleaning & Household' },
-          { id: 'bedding', categoryId: 'home', label: 'Bedding & Bath' },
-          { id: 'other_home', categoryId: 'home', label: 'Others' },
+      // REAL ESTATE
+      { id: 're_type', subcategoryId: 'apartments', label: 'Listing Type', type: 'select', options: 'For Sale, For Rent' },
+      { id: 're_bhk', subcategoryId: 'apartments', label: 'BHK', type: 'select', options: '1 RK, 1 BHK, 2 BHK, 3 BHK, 4+ BHK' },
+      { id: 're_area', subcategoryId: 'apartments', label: 'Area (sq ft)', type: 'number', required: true },
+      { id: 're_furn', subcategoryId: 'apartments', label: 'Furnishing', type: 'select', options: 'Fully Furnished, Semi, Unfurnished' },
+      { id: 're_proj', subcategoryId: 'apartments', label: 'Project Name', type: 'text' },
 
-          // Clothing
-          { id: 'men', categoryId: 'clothing', label: 'Men Clothing' },
-          { id: 'women', categoryId: 'clothing', label: 'Women Clothing' },
-          { id: 'kids', categoryId: 'clothing', label: 'Kids Clothing' },
-          { id: 'sportswear', categoryId: 'clothing', label: 'Sports Wear' },
-          { id: 'footwear', categoryId: 'clothing', label: 'Foot Wear' },
-          { id: 'ethnic', categoryId: 'clothing', label: 'Ethnic & Traditional' },
-          { id: 'accessories', categoryId: 'clothing', label: 'Accessories' },
+      // JOBS
+      { id: 'j_role', subcategoryId: 'it_jobs', label: 'Role/Position', type: 'text', required: true },
+      { id: 'j_exp', subcategoryId: 'it_jobs', label: 'Experience', type: 'select', options: 'Fresher, 0-1 Years, 1-3 Years, 3-5 Years, 5+ Years' },
+      { id: 'j_sal_min', subcategoryId: 'it_jobs', label: 'Salary Min', type: 'number' },
+      { id: 'j_sal_max', subcategoryId: 'it_jobs', label: 'Salary Max', type: 'number' },
+      
+      // DOCTORS
+      { id: 'd_qual', subcategoryId: 'dentist', label: 'Qualification', type: 'text', placeholder: 'e.g. BDS, MDS' },
+      { id: 'd_exp', subcategoryId: 'dentist', label: 'Experience (Years)', type: 'number' },
+      { id: 'd_avail', subcategoryId: 'dentist', label: 'Availability', type: 'text', placeholder: 'Mon-Sat 10am-6pm' },
 
-          // Real Estate
-          { id: 'residential', categoryId: 'real_estate', label: 'Residential Properties' },
-          { id: 'commercial_prop', categoryId: 'real_estate', label: 'Commercial Properties' },
-          { id: 'rental', categoryId: 'real_estate', label: 'Rental Listings' },
-          { id: 'land', categoryId: 'real_estate', label: 'Land & Plots' },
-          { id: 'special_prop', categoryId: 'real_estate', label: 'Special Categories' },
-          { id: 'services_prop', categoryId: 'real_estate', label: 'Real Estate Services' },
-          { id: 'pg', categoryId: 'real_estate', label: 'PG / Hostels' },
+      // FOOD
+      { id: 'f_fssai', subcategoryId: 'homemade', label: 'FSSAI License (Optional)', type: 'text' },
+      { id: 'f_type', subcategoryId: 'homemade', label: 'Type', type: 'select', options: 'Veg, Non-Veg, Both' },
 
-          // Jobs
-          { id: 'it', categoryId: 'jobs', label: 'IT & Software' },
-          { id: 'sales', categoryId: 'jobs', label: 'Sales & Marketing' },
-          { id: 'finance', categoryId: 'jobs', label: 'Accounting & Finance' },
-          { id: 'hr', categoryId: 'jobs', label: 'HR' },
-          { id: 'bpo', categoryId: 'jobs', label: 'Customer Service / BPO' },
-          { id: 'teaching', categoryId: 'jobs', label: 'Education & Training' },
-          { id: 'healthcare_job', categoryId: 'jobs', label: 'Healthcare' },
-          { id: 'engineering', categoryId: 'jobs', label: 'Engineering' },
-          { id: 'construction', categoryId: 'jobs', label: 'Construction' },
-          { id: 'hospitality', categoryId: 'jobs', label: 'Hospitality & Travel' },
-          { id: 'retail', categoryId: 'jobs', label: 'Retail' },
-          { id: 'transport', categoryId: 'jobs', label: 'Transport & Logistics' },
-          { id: 'media', categoryId: 'jobs', label: 'Media & Creative' },
-          { id: 'govt', categoryId: 'jobs', label: 'Govt & Public Sector' },
-          { id: 'parttime', categoryId: 'jobs', label: 'Part-time / Freelance' },
-
-          // Services
-          { id: 'home_svc', categoryId: 'services', label: 'Home Services' },
-          { id: 'auto_svc', categoryId: 'services', label: 'Automotive Services' },
-          { id: 'health_svc', categoryId: 'services', label: 'Health & Wellness' },
-          { id: 'beauty_svc', categoryId: 'services', label: 'Beauty & Personal Care' },
-          { id: 'edu_svc', categoryId: 'services', label: 'Education & Training' },
-          { id: 'astrology', categoryId: 'services', label: 'Astrology' },
-
-          // Sports
-          { id: 'equip', categoryId: 'sports', label: 'Sports Equipment' },
-          { id: 'fitness', categoryId: 'sports', label: 'Fitness & Training' },
-          { id: 'outdoor', categoryId: 'sports', label: 'Outdoor & Adventure' },
-          { id: 'team', categoryId: 'sports', label: 'Team Sports' },
-          { id: 'indoor', categoryId: 'sports', label: 'Indoor Games' },
-          { id: 'athletic', categoryId: 'sports', label: 'Athletic Apparel' },
-          { id: 'coaching', categoryId: 'sports', label: 'Coaching' },
-          { id: 'water', categoryId: 'sports', label: 'Water Sports' },
-
-          // Pets
-          { id: 'adoption', categoryId: 'pets', label: 'Pets / Adoption' },
-          { id: 'pet_acc', categoryId: 'pets', label: 'Pet Accessories' },
-          { id: 'pet_food', categoryId: 'pets', label: 'Pet Food' },
-          { id: 'pet_svc', categoryId: 'pets', label: 'Pet Services' },
-          { id: 'pet_health', categoryId: 'pets', label: 'Pet Health' },
-
-          // Tourism
-          { id: 'packages', categoryId: 'tourism', label: 'Travel Packages' },
-          { id: 'transport_tour', categoryId: 'tourism', label: 'Transport Services' },
-          { id: 'accomm', categoryId: 'tourism', label: 'Accommodation' },
-          { id: 'adventure', categoryId: 'tourism', label: 'Adventure' },
-          { id: 'local', categoryId: 'tourism', label: 'Local Experiences' },
-          { id: 'visa', categoryId: 'tourism', label: 'Visa Services' },
-
-          // Doctors
-          { id: 'general_med', categoryId: 'doctors', label: 'General & Family Medicine' },
-          { id: 'specialists', categoryId: 'doctors', label: 'Specialists' },
-          { id: 'women_health', categoryId: 'doctors', label: 'Women’s Health' },
-          { id: 'child_health', categoryId: 'doctors', label: 'Children’s Health' },
-          { id: 'dental', categoryId: 'doctors', label: 'Dental Care' },
-          { id: 'mental', categoryId: 'doctors', label: 'Mental Health' },
-          { id: 'surgery', categoryId: 'doctors', label: 'Surgical Services' },
-          { id: 'alt_care', categoryId: 'doctors', label: 'Alternative Care' },
-          { id: 'diagnostics', categoryId: 'doctors', label: 'Diagnostics' },
-
-          // Charity
-          { id: 'edu_aid', categoryId: 'charity', label: 'Education Aid' },
-          { id: 'med_support', categoryId: 'charity', label: 'Medical Support' },
-          { id: 'food_ess', categoryId: 'charity', label: 'Food & Essentials' },
-          { id: 'disaster', categoryId: 'charity', label: 'Disaster Relief' },
-          { id: 'animal_welfare', categoryId: 'charity', label: 'Animal Welfare' },
-          { id: 'community', categoryId: 'charity', label: 'Community Dev' },
-
-          // Food
-          { id: 'rest_sale', categoryId: 'food', label: 'Restaurant For Sale' },
-          { id: 'catering', categoryId: 'food', label: 'Catering' },
-          { id: 'home_chef', categoryId: 'food', label: 'Home Chefs' },
-          { id: 'street_food', categoryId: 'food', label: 'Street Food' },
-          { id: 'bakery', categoryId: 'food', label: 'Bakery' },
-          { id: 'organic', categoryId: 'food', label: 'Organic' },
-
-          // Events
-          { id: 'weddings', categoryId: 'events', label: 'Weddings' },
-          { id: 'birthdays', categoryId: 'events', label: 'Birthdays' },
-          { id: 'festivals', categoryId: 'events', label: 'Festivals' },
-          { id: 'corporate', categoryId: 'events', label: 'Corporate Events' },
-          { id: 'concerts', categoryId: 'events', label: 'Concerts' }
-        ],
-        fields: [
-          // Common
-          { id: 'brand', subcategoryId: 'mobiles', label: 'Brand Name', type: 'text' },
-          { id: 'brand_lap', subcategoryId: 'laptops', label: 'Brand Name', type: 'text' },
-          { id: 'brand_car', subcategoryId: 'cars', label: 'Brand/Make', type: 'text' },
-          
-          // Vehicles Specific
-          { id: 'year', subcategoryId: 'cars', label: 'Year of Manufacture', type: 'number' },
-          { id: 'fuel', subcategoryId: 'cars', label: 'Fuel Type', type: 'select', options: 'Petrol, Diesel, Electric, Hybrid, CNG' },
-          { id: 'trans', subcategoryId: 'cars', label: 'Transmission', type: 'select', options: 'Manual, Automatic' },
-          { id: 'km', subcategoryId: 'cars', label: 'KM Driven', type: 'number' },
-          { id: 'owner', subcategoryId: 'cars', label: 'Owner', type: 'select', options: '1st, 2nd, 3rd, 4th, 5th+' },
-          
-          { id: 'fuel_bike', subcategoryId: 'bikes', label: 'Fuel Type', type: 'select', options: 'Petrol, Electric' },
-          { id: 'km_bike', subcategoryId: 'bikes', label: 'KM Driven', type: 'number' },
-
-          // Real Estate Specific
-          { id: 'list_type', subcategoryId: 'residential', label: 'Type', type: 'select', options: 'For Rent, For Sale' },
-          { id: 'list_by', subcategoryId: 'residential', label: 'Listed By', type: 'select', options: 'Owner, Dealer, Builder' },
-          { id: 'area', subcategoryId: 'residential', label: 'Area (sq ft)', type: 'number' },
-          { id: 'bhk', subcategoryId: 'residential', label: 'BHK', type: 'select', options: '1 RK, 1 BHK, 2 BHK, 3 BHK, 4+ BHK' },
-          { id: 'facing', subcategoryId: 'residential', label: 'Facing', type: 'select', options: 'North, East, West, South, NE, NW, SE, SW' },
-          { id: 'proj', subcategoryId: 'residential', label: 'Project Name', type: 'text' },
-
-          { id: 'len', subcategoryId: 'land', label: 'Length (ft)', type: 'number' },
-          { id: 'breadth', subcategoryId: 'land', label: 'Breadth (ft)', type: 'number' },
-
-          // Clothing Specific
-          { id: 'size_m', subcategoryId: 'men', label: 'Size', type: 'select', options: 'S, M, L, XL, XXL' },
-          { id: 'size_w', subcategoryId: 'women', label: 'Size', type: 'select', options: 'XS, S, M, L, XL' },
-          { id: 'target', subcategoryId: 'sportswear', label: 'Target Group', type: 'select', options: 'Men, Women, Kids' },
-          { id: 'type_foot', subcategoryId: 'footwear', label: 'Type', type: 'select', options: 'Men, Women, Kids' },
-
-          // Jobs Specific
-          { id: 'role', subcategoryId: 'it', label: 'Position/Role', type: 'text' },
-          { id: 'sal_min', subcategoryId: 'it', label: 'Salary From', type: 'number' },
-          { id: 'sal_max', subcategoryId: 'it', label: 'Salary To', type: 'number' },
-          { id: 'exp', subcategoryId: 'it', label: 'Experience', type: 'select', options: 'Fresher, 1-2 Yrs, 3-5 Yrs, 5+ Yrs' },
-
-          // Doctors
-          { id: 'fee', subcategoryId: 'general_med', label: 'Consultancy Fee (₹)', type: 'number' },
-          { id: 'spec_type', subcategoryId: 'specialists', label: 'Specialization', type: 'select', options: 'Cardiologist, Neurologist, Orthopedist, Dermatologist, Oncologist' },
-
-          // Charity (No Price Logic handled by ID check in Post Listing)
-          { id: 'date', subcategoryId: 'edu_aid', label: 'Event Date', type: 'date' },
-          
-          // Placeholders for Location (Post Listing Logic handles population)
-          { id: 'state', subcategoryId: 'mobiles', label: 'State', type: 'select', options: 'Auto-Loaded by System' },
-          { id: 'city', subcategoryId: 'mobiles', label: 'City', type: 'select', options: 'Auto-Loaded by System' }
-        ]
-    };
+      // EVENTS
+      { id: 'e_cap', subcategoryId: 'weddings', label: 'Capacity (Pax)', type: 'number' },
+      { id: 'e_book', subcategoryId: 'weddings', label: 'Booking Type', type: 'select', options: 'Advance Required, Full Payment' }
+    ]
+  };
 
     let schema = { categories: [], subcategories: [], fields: [] };
     let selectedCatId = null, selectedSubId = null, editingItem = null;
@@ -526,14 +428,17 @@
         renderLogs();
         
         // Activity Chart
-        new Chart(document.getElementById('activityChart').getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{ label: 'Traffic', data: [50, 60, 45, 80, 70, 90, 100], borderColor: '#019863', tension: 0.4 }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
+        const ctx = document.getElementById('activityChart');
+        if(ctx) {
+            new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{ label: 'Traffic', data: [50, 60, 45, 80, 70, 90, 100], borderColor: '#019863', tension: 0.4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
     });
 
     // --- 2. NAVIGATION ---

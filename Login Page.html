@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Sign in to ZipZapZoi to manage your listings, chat with buyers, and discover great local deals."/>
   <title>ZipZapZoi - Login</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300..700&display=swap" rel="stylesheet"/>
@@ -16,7 +17,6 @@
             "primary": "#019863",
             "secondary": "#4D96A9",
             "background-light": "#F8F9FA",
-            "background-dark": "#1A1B1C",
           },
           fontFamily: { "display": ["Spline Sans", "sans-serif"] },
           borderRadius: { "DEFAULT": "1rem" }
@@ -39,7 +39,9 @@
     <div class="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
       
       <div class="text-center mb-8">
-         <span class="material-symbols-outlined text-5xl text-primary mb-2">all_inclusive</span>
+         <a href="classifieds.html" class="flex items-center justify-center gap-2 text-primary font-bold text-2xl mb-4">
+           <span class="material-symbols-outlined text-4xl">all_inclusive</span> ZipZapZoi
+         </a>
          <h1 class="text-3xl font-bold text-gray-900">Sign In</h1>
          <p class="text-gray-400">Enter your credentials to access your account.</p>
       </div>
@@ -69,7 +71,7 @@
           </div>
         </div>
 
-        <button type="submit" class="w-full bg-primary hover:bg-green-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2">
+        <button type="submit" id="loginBtn" class="w-full bg-primary hover:bg-green-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2">
           <span>Log In</span> <span class="material-symbols-outlined">arrow_forward</span>
         </button>
       </form>
@@ -88,83 +90,61 @@
     </div>
   </div>
 
+  <script src="js/utils.js"></script>
   <script>
-    // --- LOGIN LOGIC ---
     document.getElementById('loginForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value.trim();
+      const btn = document.getElementById('loginBtn');
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="material-symbols-outlined animate-spin">refresh</span> Signing in...';
       
-      // 1. CHECK REGISTERED USERS (LocalStorage)
-      const registeredUsers = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-      const foundUser = registeredUsers.find(u => u.email === email && u.password === password);
+      setTimeout(() => {
+        // 1. CHECK REGISTERED USERS
+        const registeredUsers = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+        const foundUser = registeredUsers.find(u => u.email === email && u.password === password);
+        if (foundUser) { loginSuccess(foundUser); return; }
 
-      if (foundUser) {
-          loginSuccess(foundUser);
+        // 2. DEMO ADMIN
+        if (email === 'admin@zipzapzoi.com' && password === 'admin123') {
+          loginSuccess({ id: 'admin_01', name: 'Super Admin', email, role: 'admin', avatar: '' });
           return;
-      }
+        }
+        
+        // 3. DEMO USER
+        if (email === 'user@zipzapzoi.com' && password === 'user123') {
+          loginSuccess({ id: 'user_01', name: 'Zoi User', email, role: 'user', phone: '', avatar: '' });
+          return;
+        }
 
-      // 2. CHECK DEMO ADMIN (Hardcoded Fallback)
-      if (email === 'admin@zipzapzoi.com' && password === 'admin123') {
-          const adminUser = {
-            id: 'admin_01',
-            name: 'Super Admin',
-            email: email,
-            role: 'admin',
-            avatar: 'https://via.placeholder.com/150'
-          };
-          loginSuccess(adminUser);
-          return;
-      } 
-      
-      // 3. CHECK DEMO USER (Hardcoded Fallback)
-      if (email === 'user@zipzapzoi.com' && password === 'user123') {
-          const demoUser = {
-            id: 'user_01',
-            name: 'Zoi User',
-            email: email,
-            role: 'user',
-            avatar: 'https://via.placeholder.com/150'
-          };
-          loginSuccess(demoUser);
-          return;
-      }
-
-      // 4. FAILED
-      alert("❌ Invalid Email or Password.\nPlease try again or register a new account.");
+        // 4. FAILED
+        btn.disabled = false;
+        btn.innerHTML = '<span>Log In</span> <span class="material-symbols-outlined">arrow_forward</span>';
+        showToast('❌ Invalid Email or Password. Please try again.', 'error');
+      }, 600);
     });
 
     function loginSuccess(userObj) {
-        // Save Session
-        localStorage.setItem('zzz_user', JSON.stringify(userObj));
-        
-        // Redirect Logic
-        const params = new URLSearchParams(window.location.search);
-        const redirect = params.get('redirect');
-
-        if(redirect) {
-            window.location.href = redirect;
-        } else if (userObj.role === 'admin') {
-            window.location.href = 'AdminConsoleV2.html';
-        } else {
-            window.location.href = 'classifieds.html';
-        }
+      localStorage.setItem('zzz_user', JSON.stringify(userObj));
+      const redirect = new URLSearchParams(window.location.search).get('redirect');
+      if (redirect) {
+        window.location.href = redirect;
+      } else if (userObj.role === 'admin' || userObj.role === 'super_admin') {
+        window.location.href = 'AdminConsoleV2.html';
+      } else {
+        window.location.href = 'classifieds.html';
+      }
     }
 
-    // Toggle Password Visibility
     function togglePass() {
       const input = document.getElementById('password');
       const icon = document.getElementById('eyeIcon');
-      if (input.type === "password") {
-        input.type = "text";
-        icon.textContent = "visibility_off";
-      } else {
-        input.type = "password";
-        icon.textContent = "visibility";
-      }
+      input.type = input.type === 'password' ? 'text' : 'password';
+      icon.textContent = input.type === 'password' ? 'visibility' : 'visibility_off';
     }
   </script>
-
 </body>
 </html>

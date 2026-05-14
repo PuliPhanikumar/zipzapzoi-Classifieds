@@ -107,8 +107,35 @@
           <h3 class="font-bold text-gray-900 mb-3">Description</h3>
           <p id="detailDesc" class="text-gray-600 text-sm leading-relaxed whitespace-pre-line">No description.</p>
           <div id="dynamicFields" class="mt-4 grid grid-cols-2 gap-2 text-xs"></div>
+          
+          <div class="mt-6 pt-6 border-t border-gray-100 text-center">
+            <button onclick="openReportModal()" class="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors flex items-center justify-center gap-1 mx-auto">
+              <span class="material-symbols-outlined text-[14px]">flag</span> Report this listing
+            </button>
+          </div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+      <div class="bg-white w-full max-w-md rounded-3xl shadow-bouncy overflow-hidden transform scale-95 transition-all" id="reportModalContent">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+          <h3 class="font-bold text-xl text-gray-800">Report Listing</h3>
+          <button onclick="closeReportModal()" class="text-gray-400 hover:text-red-500"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="p-6 space-y-4 text-sm text-gray-600">
+          <p>Help us understand what's wrong with this listing:</p>
+          <select id="reportReason" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none">
+            <option value="spam">Spam or Duplicate</option>
+            <option value="scam">Fraud or Scam</option>
+            <option value="inappropriate">Inappropriate Content</option>
+            <option value="unavailable">Item no longer available</option>
+          </select>
+          <textarea id="reportDetails" rows="3" placeholder="Additional details..." class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none"></textarea>
+          <button onclick="submitReport()" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-lg transition-transform active:scale-95">Submit Report</button>
+        </div>
       </div>
     </div>
 
@@ -254,8 +281,57 @@
       window.location.href = "Seller Dashboard.html";
     }
 
-    function callSeller() { alert("Phone: +91 98XXX XXXXX"); }
+    function callSeller() { 
+        const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+        const seller = users.find(u => u.id === currentItem.userId);
+        if (seller && seller.phone) {
+            alert("Phone: " + seller.phone);
+        } else {
+            alert("This seller has not provided a public phone number. Please use Chat.");
+        }
+    }
+    
     function goToProfile() { if(currentItem.userId) window.location.href = `profile.html?sellerId=${currentItem.userId}`; }
+
+    // --- 5. REPORT LOGIC ---
+    function openReportModal() {
+        if(!currentUser) {
+            showToast("Please login to report listings", "error");
+            setTimeout(() => window.location.href = `Login Page.html?redirect=Listing Detail.html?id=${itemId}`, 1500);
+            return;
+        }
+        document.getElementById('reportModal').classList.remove('hidden');
+        setTimeout(() => document.getElementById('reportModalContent').classList.remove('scale-95'), 10);
+    }
+
+    function closeReportModal() {
+        document.getElementById('reportModalContent').classList.add('scale-95');
+        setTimeout(() => document.getElementById('reportModal').classList.add('hidden'), 200);
+    }
+
+    function submitReport() {
+        const reason = document.getElementById('reportReason').value;
+        const details = document.getElementById('reportDetails').value.trim();
+        
+        const newFlag = {
+            id: 'flag_' + Date.now(),
+            listingId: currentItem.id,
+            listingTitle: currentItem.title,
+            reportedBy: currentUser.id,
+            reportedByName: currentUser.name,
+            reason: reason,
+            details: details,
+            date: new Date().toISOString(),
+            status: 'pending'
+        };
+
+        const flags = JSON.parse(localStorage.getItem('zzz_flags') || '[]');
+        flags.push(newFlag);
+        localStorage.setItem('zzz_flags', JSON.stringify(flags));
+        
+        closeReportModal();
+        showToast("Report submitted successfully. Our team will review it shortly.");
+    }
 
     // FAVORITES
     window.toggleFav = () => {
@@ -274,5 +350,6 @@
 
     loadItem();
   </script>
+  <script src="js/utils.js"></script>
 </body>
 </html>

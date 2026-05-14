@@ -227,6 +227,108 @@
 
     // Initial Load
     renderFAQs();
+// ============================================
+// UNIVERSAL UTILITY FUNCTIONS (ADD TO ALL)
+// ============================================
+
+// CSRF Token Management
+function generateCsrfToken() {
+    return 'csrf_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+}
+
+function getCsrfToken() {
+    let token = sessionStorage.getItem('csrf_token');
+    if (!token) {
+        token = generateCsrfToken();
+        sessionStorage.setItem('csrf_token', token);
+    }
+    return token;
+}
+
+function setCsrfToken() {
+    const token = getCsrfToken();
+    const inputs = document.querySelectorAll('input[name="csrf_token"]');
+    inputs.forEach(input => input.value = token);
+}
+
+// Input Validation Functions
+function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function validatePhone(phone) {
+    const digits = phone.replace(/\D/g, '');
+    return digits.length === 10;
+}
+
+function validatePrice(price) {
+    const num = parseFloat(price);
+    return !isNaN(num) && num > 0 && num < 1000000;
+}
+
+function validatePassword(password) {
+    return password.length >= 8 &&
+           /[a-z]/.test(password) &&
+           /[A-Z]/.test(password) &&
+           /[0-9]/.test(password);
+}
+
+// Input Sanitization
+function sanitizeInput(input) {
+    const div = document.createElement('div');
+    div.textContent = input;
+    return div.innerHTML;
+}
+
+function sanitizeHTML(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent;
+}
+
+// Error/Success Messages
+function showError(message) {
+    let errorDiv = document.getElementById('errorMessage');
+    if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.id = 'errorMessage';
+        errorDiv.style.cssText = 'color: red; padding: 10px; margin: 10px 0; border: 1px solid red; border-radius: 4px; display: none;';
+        const form = document.querySelector('form');
+        if (form) form.parentElement.insertBefore(errorDiv, form);
+    }
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+    errorDiv.setAttribute('role', 'alert');
+}
+
+function showSuccess(message) {
+    let successDiv = document.getElementById('successMessage');
+    if (!successDiv) {
+        successDiv = document.createElement('div');
+        successDiv.id = 'successMessage';
+        successDiv.style.cssText = 'color: green; padding: 10px; margin: 10px 0; border: 1px solid green; border-radius: 4px; display: none;';
+        const form = document.querySelector('form');
+        if (form) form.parentElement.insertBefore(successDiv, form);
+    }
+    successDiv.textContent = message;
+    successDiv.style.display = 'block';
+    successDiv.setAttribute('role', 'status');
+}
+
+function hideError() {
+    const errorDiv = document.getElementById('errorMessage');
+    if (errorDiv) errorDiv.style.display = 'none';
+}
+
+function hideSuccess() {
+    const successDiv = document.getElementById('successMessage');
+    if (successDiv) successDiv.style.display = 'none';
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    setCsrfToken();
+});
 </script>
 </body>
 </html>

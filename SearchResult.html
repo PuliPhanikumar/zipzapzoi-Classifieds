@@ -1,54 +1,28 @@
 <!DOCTYPE html>
 <html class="light" lang="en">
 <head>
-  <script>
-  // --- AUTH CHECK (Optional for Search, but good for personalized header) ---
-  (function() {
-    const raw = localStorage.getItem('zzz_user');
-    // We don't force login here, just check for UI customization
-  })();
-  </script>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Search ZipZapZoi classifieds for items near you. Filter by category, price, and condition."/>
   <title>ZipZapZoi - Search Results</title>
-
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
-
   <script>
     tailwind.config = {
       theme: {
         extend: {
           fontFamily: { sans: ["Spline Sans", "sans-serif"] },
-          colors: {
-            "primary": "#019863",
-            "secondary": "#4D96A9",
-            "background-light": "#F7F9FC",
-          },
-          boxShadow: {
-            "bouncy": "0 10px 20px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-          }
+          colors: { "primary": "#019863", "secondary": "#4D96A9", "background-light": "#F7F9FC" },
+          boxShadow: { "bouncy": "0 10px 20px -5px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05)" }
         }
       }
     }
   </script>
   <style>
-    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-    /* Range Slider Styling */
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      height: 20px; width: 20px;
-      border-radius: 50%;
-      background: #019863;
-      margin-top: -8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    input[type=range]::-webkit-slider-runnable-track {
-      width: 100%; height: 4px;
-      background: #e5e7eb;
-      border-radius: 2px;
-    }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; height:20px; width:20px; border-radius:50%; background:#019863; margin-top:-8px; box-shadow:0 2px 4px rgba(0,0,0,.2); }
+    input[type=range]::-webkit-slider-runnable-track { width:100%; height:4px; background:#e5e7eb; border-radius:2px; }
   </style>
 </head>
 <body class="bg-background-light min-h-screen flex flex-col text-gray-800">
@@ -61,14 +35,12 @@
           <span class="font-bold text-xl tracking-tight hidden sm:block">ZipZapZoi</span>
         </a>
       </div>
-      
       <div class="hidden md:flex flex-1 max-w-lg mx-8 relative">
         <input type="text" id="headerSearch" placeholder="Search for anything..." class="w-full bg-gray-100 border-none rounded-full py-2.5 pl-5 pr-12 focus:ring-2 focus:ring-primary/50 outline-none transition-all">
         <button onclick="performSearch()" class="absolute right-2 top-1.5 p-1 bg-white rounded-full text-primary shadow-sm hover:scale-110 transition-transform">
           <span class="material-symbols-outlined text-lg">search</span>
         </button>
       </div>
-
       <div class="flex items-center gap-6">
         <a href="classifieds.html" class="text-sm font-bold text-gray-500 hover:text-primary transition-colors">Browse</a>
         <div class="h-9 w-9 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-md border-2 border-white" id="navAvatar">G</div>
@@ -77,26 +49,22 @@
   </header>
 
   <main class="flex-grow container mx-auto px-6 py-8">
-    
     <div class="md:hidden mb-6 relative">
-       <input type="text" id="mobileSearch" placeholder="Search..." class="w-full bg-white border border-gray-200 rounded-lg py-3 px-4 shadow-sm focus:ring-2 focus:ring-primary/50 outline-none">
-       <button onclick="performSearch('mobile')" class="absolute right-3 top-3 text-gray-400"><span class="material-symbols-outlined">search</span></button>
+      <input type="text" id="mobileSearch" placeholder="Search..." class="w-full bg-white border border-gray-200 rounded-lg py-3 px-4 shadow-sm focus:ring-2 focus:ring-primary/50 outline-none">
+      <button onclick="performSearch('mobile')" class="absolute right-3 top-3 text-gray-400"><span class="material-symbols-outlined">search</span></button>
     </div>
 
     <div class="flex flex-col lg:flex-row gap-8">
-      
       <aside class="w-full lg:w-64 flex-shrink-0 space-y-8">
-        
         <button class="lg:hidden w-full flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-gray-100 font-bold" onclick="document.getElementById('filterPanel').classList.toggle('hidden')">
           <span>Filters</span>
           <span class="material-symbols-outlined">filter_list</span>
         </button>
-
         <div id="filterPanel" class="hidden lg:block space-y-8">
-          
           <div>
             <h3 class="font-bold text-lg mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-secondary">category</span> Categories</h3>
             <div class="space-y-2 text-sm text-gray-600" id="categoryFilters">
+              <!-- Populated dynamically from schema -->
               <label class="flex items-center gap-2 cursor-pointer hover:text-primary"><input type="checkbox" class="rounded text-primary focus:ring-primary filter-cat" value="Electronics"> Electronics</label>
               <label class="flex items-center gap-2 cursor-pointer hover:text-primary"><input type="checkbox" class="rounded text-primary focus:ring-primary filter-cat" value="Vehicles"> Vehicles</label>
               <label class="flex items-center gap-2 cursor-pointer hover:text-primary"><input type="checkbox" class="rounded text-primary focus:ring-primary filter-cat" value="Real Estate"> Real Estate</label>
@@ -104,25 +72,14 @@
               <label class="flex items-center gap-2 cursor-pointer hover:text-primary"><input type="checkbox" class="rounded text-primary focus:ring-primary filter-cat" value="Services"> Services</label>
             </div>
           </div>
-
           <div>
             <h3 class="font-bold text-lg mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-green-600">payments</span> Price Range</h3>
-            <input type="range" min="0" max="100000" step="1000" value="100000" class="w-full appearance-none bg-gray-200 h-1 rounded-full cursor-pointer mb-2" id="priceRange" oninput="updatePriceLabel(this.value)">
+            <input type="range" min="0" max="500000" step="1000" value="500000" class="w-full appearance-none bg-gray-200 h-1 rounded-full cursor-pointer mb-2" id="priceRange" oninput="updatePriceLabel(this.value)">
             <div class="flex justify-between text-xs font-bold text-gray-500">
               <span>₹0</span>
-              <span id="priceLabel">₹1,00,000+</span>
+              <span id="priceLabel">₹5,00,000+</span>
             </div>
           </div>
-
-          <div>
-            <h3 class="font-bold text-lg mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-blue-500">near_me</span> Distance</h3>
-            <input type="range" min="1" max="100" step="1" value="100" class="w-full appearance-none bg-gray-200 h-1 rounded-full cursor-pointer mb-2" id="distanceRange" oninput="document.getElementById('distLabel').innerText = this.value + ' km'">
-            <div class="flex justify-between text-xs font-bold text-gray-500">
-              <span>1 km</span>
-              <span id="distLabel">100 km</span>
-            </div>
-          </div>
-
           <div>
             <h3 class="font-bold text-lg mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-purple-500">verified</span> Condition</h3>
             <div class="space-y-2 text-sm text-gray-600">
@@ -130,15 +87,11 @@
               <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded text-primary focus:ring-primary filter-cond" value="Used"> Used / Pre-owned</label>
             </div>
           </div>
-
-          <button onclick="applyFilters()" class="w-full bg-secondary hover:bg-cyan-700 text-white font-bold py-3 rounded-xl shadow-bouncy transition-transform active:scale-95">
-            Apply Filters
-          </button>
+          <button onclick="applyFilters()" class="w-full bg-secondary hover:bg-cyan-700 text-white font-bold py-3 rounded-xl shadow-bouncy transition-transform active:scale-95">Apply Filters</button>
         </div>
       </aside>
 
       <div class="flex-1">
-        
         <div class="flex justify-between items-center mb-6">
           <div>
             <h1 class="text-2xl font-bold text-gray-800">Search Results</h1>
@@ -150,152 +103,144 @@
             <option value="price_high">Price: High to Low</option>
           </select>
         </div>
-
-        <div id="resultsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          </div>
-
+        <div id="resultsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-dashed border-gray-200">
           <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-gray-300">
             <span class="material-symbols-outlined text-5xl">search_off</span>
           </div>
           <h3 class="text-xl font-bold text-gray-700">No results found</h3>
-          <p class="text-gray-500 max-w-sm mt-2">Try adjusting your search or filters to find what you're looking for.</p>
+          <p class="text-gray-500 max-w-sm mt-2">Try adjusting your search or filters.</p>
           <button onclick="clearFilters()" class="mt-6 text-primary font-bold hover:underline">Clear all filters</button>
         </div>
-
       </div>
     </div>
   </main>
 
   <footer class="bg-white border-t border-gray-200 py-8 mt-auto">
     <div class="container mx-auto px-6 text-center text-sm text-gray-500">
-      &copy; 2024 ZipZapZoi.
+      <span class="zzz-copyright">© 2026 ZipZapZoi. All Rights Reserved.</span>
     </div>
   </footer>
 
+  <script src="js/utils.js"></script>
   <script>
-    // --- 1. SETUP ---
+    // --- SETUP ---
     const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
-    if(currentUser && document.getElementById('navAvatar')) {
-        document.getElementById('navAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+    if (currentUser && document.getElementById('navAvatar')) {
+      document.getElementById('navAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
     }
 
-    // --- 2. DATA SOURCE ---
+    // Load categories dynamically from schema
+    (function() {
+      const schema = JSON.parse(localStorage.getItem('zzz_classifieds_schema') || 'null');
+      const container = document.getElementById('categoryFilters');
+      if (!schema || !container) return;
+      const cats = [...new Set(schema.map(f => f.category).filter(Boolean))];
+      if (cats.length > 0) {
+        container.innerHTML = cats.map(cat =>
+          `<label class="flex items-center gap-2 cursor-pointer hover:text-primary"><input type="checkbox" class="rounded text-primary focus:ring-primary filter-cat" value="${cat}"> ${cat}</label>`
+        ).join('');
+      }
+    })();
+
+    // --- DATA SOURCE ---
     const mockData = [
-        { id: '101', title: "iPhone 14 Pro - Deep Purple", category: "Electronics", price: 65000, image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=600&q=80", location: "Bengaluru", time: "2 hrs ago", condition: "Used", status: "active" },
-        { id: '102', title: "Royal Enfield Classic 350", category: "Vehicles", price: 145000, image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80", location: "Mumbai", time: "5 hrs ago", condition: "Used", status: "active" },
-        { id: '103', title: "2 BHK Apartment", category: "Real Estate", price: 25000, image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80", location: "Hyderabad", time: "Yesterday", condition: "New", status: "active" },
-        { id: '104', title: "Graphic Designer Job", category: "Jobs", price: 45000, image: "https://images.unsplash.com/photo-1626785774573-4b799314346d?auto=format&fit=crop&w=600&q=80", location: "Remote", time: "1 day ago", condition: "New", status: "active" },
-        { id: '105', title: "Golden Retriever Puppy", category: "Pets", price: 15000, image: "https://images.unsplash.com/photo-1629740032638-58bfd37eb74e?auto=format&fit=crop&w=600&q=80", location: "Delhi", time: "3 days ago", condition: "New", status: "active" },
-        { id: '106', title: "Sony Headphones", category: "Electronics", price: 22000, image: "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&w=600&q=80", location: "Chennai", time: "1 week ago", condition: "New", status: "active" }
+      { id: '101', title: "iPhone 14 Pro - Deep Purple", category: "Electronics", price: 65000, image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=600&q=80", location: "Bengaluru", time: "2 hrs ago", condition: "Used", status: "active" },
+      { id: '102', title: "Royal Enfield Classic 350", category: "Vehicles", price: 145000, image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80", location: "Mumbai", time: "5 hrs ago", condition: "Used", status: "active" },
+      { id: '103', title: "2 BHK Apartment - Rent", category: "Real Estate", price: 25000, image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80", location: "Hyderabad", time: "Yesterday", condition: "New", status: "active" },
+      { id: '104', title: "Graphic Designer Job", category: "Jobs", price: 45000, image: "https://images.unsplash.com/photo-1626785774573-4b799314346d?auto=format&fit=crop&w=600&q=80", location: "Remote", time: "1 day ago", condition: "New", status: "active" },
+      { id: '105', title: "Golden Retriever Puppy", category: "Pets", price: 15000, image: "https://images.unsplash.com/photo-1629740032638-58bfd37eb74e?auto=format&fit=crop&w=600&q=80", location: "Delhi", time: "3 days ago", condition: "New", status: "active" },
+      { id: '106', title: "Sony WH-1000XM5 Headphones", category: "Electronics", price: 22000, image: "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&w=600&q=80", location: "Chennai", time: "1 week ago", condition: "New", status: "active" }
     ];
 
     function getAllListings() {
-        const userPosts = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-        const normalizedUserPosts = userPosts.map(p => ({
-            ...p,
-            price: Number(p.price) 
-        }));
-        return [...normalizedUserPosts, ...mockData];
+      const userPosts = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+      const normalized = userPosts.map(p => ({ ...p, price: Number(p.price) }));
+      return [...normalized, ...mockData];
     }
 
-    // --- 3. FILTER LOGIC ---
+    // --- FILTER LOGIC ---
     function applyFilters() {
       const urlParams = new URLSearchParams(window.location.search);
       let query = urlParams.get('q') || '';
-      
-      // Override if typed in header
       const headerInput = document.getElementById('headerSearch').value;
-      if(headerInput) query = headerInput;
-
+      if (headerInput) query = headerInput;
       document.getElementById('queryText').textContent = query || "All Items";
-      document.getElementById('headerSearch').value = query; 
+      document.getElementById('headerSearch').value = query;
 
-      // Get Filter Values
       const selectedCats = Array.from(document.querySelectorAll('.filter-cat:checked')).map(cb => cb.value);
       const selectedConds = Array.from(document.querySelectorAll('.filter-cond:checked')).map(cb => cb.value);
       const maxPrice = Number(document.getElementById('priceRange').value);
       const sortVal = document.getElementById('sortBy').value;
 
-      let results = getAllListings();
+      let results = getAllListings().filter(item => item.status === 'active' || !item.status);
 
-      // 0. Filter out Sold/Banned Items (CRITICAL FIX)
-      results = results.filter(item => item.status === 'active' || !item.status);
-
-      // 1. Search Text (Title OR Category OR Location)
-      if(query) {
+      if (query) {
         const q = query.toLowerCase();
-        results = results.filter(item => 
-           (item.title && item.title.toLowerCase().includes(q)) || 
-           (item.category && item.category.toLowerCase().includes(q)) ||
-           (item.location && item.location.toLowerCase().includes(q))
+        results = results.filter(item =>
+          (item.title && item.title.toLowerCase().includes(q)) ||
+          (item.category && item.category.toLowerCase().includes(q)) ||
+          (item.location && item.location.toLowerCase().includes(q))
         );
       }
-
-      // 2. Categories
-      if(selectedCats.length > 0) {
-        results = results.filter(item => selectedCats.includes(item.category));
-      }
-
-      // 3. Condition
-      if(selectedConds.length > 0) {
-        results = results.filter(item => selectedConds.includes(item.condition));
-      }
-
-      // 4. Price
+      if (selectedCats.length > 0) results = results.filter(item => selectedCats.includes(item.category));
+      if (selectedConds.length > 0) results = results.filter(item => selectedConds.includes(item.condition));
       results = results.filter(item => item.price <= maxPrice);
 
-      // 5. Sorting
-      if(sortVal === 'price_low') results.sort((a,b) => a.price - b.price);
-      if(sortVal === 'price_high') results.sort((a,b) => b.price - a.price);
+      if (sortVal === 'price_low') results.sort((a, b) => a.price - b.price);
+      if (sortVal === 'price_high') results.sort((a, b) => b.price - a.price);
+
+      // Featured listings always on top
+      results.sort((a, b) => (b.isPremium ? 1 : 0) - (a.isPremium ? 1 : 0));
 
       renderResults(results);
     }
 
-    // --- 4. RENDER ---
+    // --- RENDER ---
     function renderResults(items) {
       const grid = document.getElementById('resultsGrid');
       const empty = document.getElementById('emptyState');
-      
       document.getElementById('resultCount').textContent = items.length;
 
-      if(items.length === 0) {
+      if (items.length === 0) {
         grid.classList.add('hidden');
         empty.classList.remove('hidden');
         empty.classList.add('flex');
         return;
       }
-
       grid.classList.remove('hidden');
       empty.classList.add('hidden');
       empty.classList.remove('flex');
 
-      grid.innerHTML = items.map(item => `
-        <a href="Listing Detail.html?id=${item.id}" class="group block bg-white rounded-2xl shadow-sm hover:shadow-bouncy border border-gray-100 overflow-hidden transition-all duration-300 transform hover:-translate-y-1">
-          <div class="relative h-48 bg-gray-100 overflow-hidden">
-            <img src="${item.image || 'https://via.placeholder.com/300'}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-            <span class="absolute top-2 left-2 bg-black/60 text-white text-[10px] uppercase font-bold px-2 py-1 rounded backdrop-blur-sm tracking-wide">${item.category}</span>
-            <button class="absolute top-2 right-2 p-2 bg-white/90 rounded-full text-gray-400 hover:text-red-500 shadow-sm transition-colors" title="Save" onclick="event.preventDefault(); toggleFavorite('${item.id}')">
-              <span class="material-symbols-outlined text-lg leading-none">favorite</span>
-            </button>
-          </div>
-          <div class="p-4">
-            <div class="flex justify-between items-start">
-               <h3 class="font-bold text-gray-800 line-clamp-2 leading-tight group-hover:text-primary transition-colors">${item.title}</h3>
+      grid.innerHTML = items.map(item => {
+        const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+        const isFav = favs.some(f => String(f.id) === String(item.id));
+        return `
+          <a href="Listing Detail.html?id=${item.id}" class="group block bg-white rounded-2xl shadow-sm hover:shadow-bouncy border ${item.isPremium ? 'border-yellow-400 ring-1 ring-yellow-300' : 'border-gray-100'} overflow-hidden transition-all duration-300 transform hover:-translate-y-1 relative">
+            ${item.isPremium ? '<span class="absolute top-2 left-2 z-10 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">⭐ Featured</span>' : ''}
+            <div class="relative h-48 bg-gray-100 overflow-hidden">
+              <img src="${item.image || 'https://via.placeholder.com/300'}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
+              <span class="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] uppercase font-bold px-2 py-1 rounded backdrop-blur-sm tracking-wide">${item.category}</span>
+              <button class="absolute top-2 right-2 p-2 bg-white/90 rounded-full shadow-sm transition-colors ${isFav ? 'text-red-500' : 'text-gray-400 hover:text-red-500'}" title="Save" onclick="event.preventDefault(); toggleFavorite('${item.id}', this)">
+                <span class="material-symbols-outlined text-lg leading-none" style="font-variation-settings:'FILL' ${isFav ? 1 : 0}">favorite</span>
+              </button>
             </div>
-            <p class="text-xl font-bold text-primary mt-2">₹ ${item.price.toLocaleString()}</p>
-            <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 text-xs text-gray-400">
-              <div class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">location_on</span> ${item.location}</div>
-              <span>${item.time}</span>
+            <div class="p-4">
+              <h3 class="font-bold text-gray-800 line-clamp-2 leading-tight group-hover:text-primary transition-colors">${item.title}</h3>
+              <p class="text-xl font-bold text-primary mt-2">₹ ${Number(item.price).toLocaleString('en-IN')}</p>
+              <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 text-xs text-gray-400">
+                <div class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">location_on</span> ${item.location || 'India'}</div>
+                <span>${item.time || ''}</span>
+              </div>
             </div>
-          </div>
-        </a>
-      `).join('');
+          </a>
+        `;
+      }).join('');
     }
 
-    // --- 5. HELPERS ---
+    // --- HELPERS ---
     function updatePriceLabel(val) {
-      document.getElementById('priceLabel').textContent = '₹ ' + Number(val).toLocaleString();
+      document.getElementById('priceLabel').textContent = '₹ ' + Number(val).toLocaleString('en-IN');
     }
 
     function performSearch(source) {
@@ -307,32 +252,44 @@
     }
 
     function clearFilters() {
-      // Reset inputs
       document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-      document.getElementById('priceRange').value = 100000;
-      updatePriceLabel(100000);
+      document.getElementById('priceRange').value = 500000;
+      updatePriceLabel(500000);
       document.getElementById('headerSearch').value = '';
-      
-      // Clear URL
       window.history.pushState({}, '', window.location.pathname);
-      
       applyFilters();
     }
-    
-    // Quick Favorite Toggle Logic for Search Results
-    window.toggleFavorite = (id) => {
-       // Just a stub to prevent errors if clicked. 
-       // Fully connected logic is in classifieds.html, but this prevents the link jump.
-       alert("Please login or view details to save favorites!");
+
+    // --- FAVORITE TOGGLE (real implementation) ---
+    window.toggleFavorite = (id, btn) => {
+      if (!currentUser) {
+        showToast('Please login to save favorites', 'error');
+        return;
+      }
+      const allListings = getAllListings();
+      const item = allListings.find(l => String(l.id) === String(id));
+      if (!item) return;
+      let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+      const exists = favs.some(f => String(f.id) === String(id));
+      if (exists) {
+        favs = favs.filter(f => String(f.id) !== String(id));
+        showToast('Removed from favorites');
+        if (btn) { btn.classList.remove('text-red-500'); btn.querySelector('span').style.fontVariationSettings = "'FILL' 0"; }
+      } else {
+        favs.push(item);
+        showToast('❤️ Saved to favorites!');
+        if (btn) { btn.classList.add('text-red-500'); btn.querySelector('span').style.fontVariationSettings = "'FILL' 1"; }
+      }
+      localStorage.setItem('zzz_favorites', JSON.stringify(favs));
     };
 
-    // Handle Enter Key
-    document.getElementById('headerSearch').addEventListener('keypress', (e) => { if(e.key === 'Enter') performSearch(); });
+    // Enter key handlers
+    document.getElementById('headerSearch').addEventListener('keypress', e => { if (e.key === 'Enter') performSearch(); });
     const mobileSearch = document.getElementById('mobileSearch');
-    if(mobileSearch) mobileSearch.addEventListener('keypress', (e) => { if(e.key === 'Enter') performSearch('mobile'); });
+    if (mobileSearch) mobileSearch.addEventListener('keypress', e => { if (e.key === 'Enter') performSearch('mobile'); });
 
     // Initial Load
     applyFilters();
-</script>
+  </script>
 </body>
 </html>

@@ -15,7 +15,7 @@
             colors: {
               primary: "#019863",
               secondary: "#4D96A9",
-              "background-light": "#f0f4f8", /* Slightly cooler grey for contrast */
+              "background-light": "#f0f4f8",
             },
             fontFamily: { display: "Spline Sans" },
             boxShadow: {
@@ -30,7 +30,7 @@
       
       /* --- BOUNCY 3D CARDS --- */
       .bouncy-card {
-        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); /* The "Spring" effect */
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
       }
       .bouncy-card:hover {
         transform: translateY(-10px) scale(1.05);
@@ -39,23 +39,17 @@
       /* The 3D Icon Bubble */
       .icon-3d {
         position: relative;
-        background: linear-gradient(135deg, var(--c-from), var(--c-to));
+        background: white;
         box-shadow: 
-          0 10px 15px -3px var(--c-shadow), 
-          0 4px 6px -2px var(--c-shadow),
-          inset 0 2px 4px rgba(255,255,255,0.4), /* Top highlight */
-          inset 0 -3px 6px rgba(0,0,0,0.2);      /* Bottom shading */
+          0 10px 15px -3px rgba(0,0,0,0.1), 
+          0 4px 6px -2px rgba(0,0,0,0.05),
+          inset 0 2px 4px rgba(255,255,255,0.4),
+          inset 0 -3px 6px rgba(0,0,0,0.05);
         transition: transform 0.3s ease;
       }
       
-      /* Icon Rotation on Hover */
       .bouncy-card:hover .icon-3d {
         transform: rotate(-5deg) scale(1.1);
-        box-shadow: 
-          0 20px 25px -5px var(--c-shadow), 
-          0 10px 10px -5px var(--c-shadow),
-          inset 0 2px 4px rgba(255,255,255,0.4),
-          inset 0 -3px 6px rgba(0,0,0,0.2);
       }
 
       /* Listing Cards */
@@ -163,110 +157,11 @@
         <div class="container mx-auto px-6">
           <div class="flex justify-between items-end mb-8">
             <h2 class="text-2xl font-black text-gray-800 tracking-tight">Browse Categories</h2>
-            <a href="#" class="text-sm font-bold text-secondary hover:text-primary transition-colors bg-white px-4 py-2 rounded-full shadow-sm">View All</a>
+            <a href="#" onclick="filterListings('All')" class="text-sm font-bold text-secondary hover:text-primary transition-colors bg-white px-4 py-2 rounded-full shadow-sm">View All</a>
           </div>
           
-          <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-6 justify-items-center">
-            
-            <div onclick="filterListings('Electronics')" class="bouncy-card group flex flex-col items-center cursor-pointer gap-3">
-              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center" style="--c-from: #22d3ee; --c-to: #0891b2; --c-shadow: rgba(8, 145, 178, 0.4);">
-                <span class="material-symbols-outlined text-4xl text-white drop-shadow-md">devices</span>
-              </div>
-              <p class="text-xs font-bold text-gray-600 group-hover:text-cyan-600 transition-colors">Electronics</p>
+          <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-6 justify-items-center" id="categoryGrid">
             </div>
-
-            <div onclick="filterListings('Vehicles')" class="bouncy-card group flex flex-col items-center cursor-pointer gap-3">
-              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center" style="--c-from: #818cf8; --c-to: #4f46e5; --c-shadow: rgba(79, 70, 229, 0.4);">
-                <span class="material-symbols-outlined text-4xl text-white drop-shadow-md">directions_car</span>
-              </div>
-              <p class="text-xs font-bold text-gray-600 group-hover:text-indigo-600 transition-colors">Vehicles</p>
-            </div>
-
-            <div onclick="filterListings('Home')" class="bouncy-card group flex flex-col items-center cursor-pointer gap-3">
-              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center" style="--c-from: #34d399; --c-to: #059669; --c-shadow: rgba(5, 150, 105, 0.4);">
-                <span class="material-symbols-outlined text-4xl text-white drop-shadow-md">yard</span>
-              </div>
-              <p class="text-xs font-bold text-gray-600 group-hover:text-emerald-600 transition-colors">Home</p>
-            </div>
-
-            <div onclick="filterListings('Clothing')" class="bouncy-card group flex flex-col items-center cursor-pointer gap-3">
-              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center" style="--c-from: #fb7185; --c-to: #e11d48; --c-shadow: rgba(225, 29, 72, 0.4);">
-                <span class="material-symbols-outlined text-4xl text-white drop-shadow-md">checkroom</span>
-              </div>
-              <p class="text-xs font-bold text-gray-600 group-hover:text-rose-600 transition-colors">Clothing</p>
-            </div>
-
-            <div onclick="filterListings('Real Estate')" class="bouncy-card group flex flex-col items-center cursor-pointer gap-3">
-              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center" style="--c-from: #a78bfa; --c-to: #7c3aed; --c-shadow: rgba(124, 58, 237, 0.4);">
-                <span class="material-symbols-outlined text-4xl text-white drop-shadow-md">real_estate_agent</span>
-              </div>
-              <p class="text-xs font-bold text-gray-600 group-hover:text-violet-600 transition-colors">Property</p>
-            </div>
-
-            <div onclick="filterListings('Jobs')" class="bouncy-card group flex flex-col items-center cursor-pointer gap-3">
-              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center" style="--c-from: #f87171; --c-to: #dc2626; --c-shadow: rgba(220, 38, 38, 0.4);">
-                <span class="material-symbols-outlined text-4xl text-white drop-shadow-md">work</span>
-              </div>
-              <p class="text-xs font-bold text-gray-600 group-hover:text-red-600 transition-colors">Jobs</p>
-            </div>
-
-            <div onclick="filterListings('Services')" class="bouncy-card group flex flex-col items-center cursor-pointer gap-3">
-              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center" style="--c-from: #fbbf24; --c-to: #d97706; --c-shadow: rgba(217, 119, 6, 0.4);">
-                <span class="material-symbols-outlined text-4xl text-white drop-shadow-md">handyman</span>
-              </div>
-              <p class="text-xs font-bold text-gray-600 group-hover:text-amber-600 transition-colors">Services</p>
-            </div>
-
-            <div onclick="filterListings('Sports')" class="bouncy-card group flex flex-col items-center cursor-pointer gap-3">
-              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center" style="--c-from: #2dd4bf; --c-to: #0d9488; --c-shadow: rgba(13, 148, 136, 0.4);">
-                <span class="material-symbols-outlined text-4xl text-white drop-shadow-md">sports_soccer</span>
-              </div>
-              <p class="text-xs font-bold text-gray-600 group-hover:text-teal-600 transition-colors">Sports</p>
-            </div>
-
-            <div onclick="filterListings('Pets')" class="bouncy-card group flex flex-col items-center cursor-pointer gap-3">
-              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center" style="--c-from: #facc15; --c-to: #ca8a04; --c-shadow: rgba(202, 138, 4, 0.4);">
-                <span class="material-symbols-outlined text-4xl text-white drop-shadow-md">pets</span>
-              </div>
-              <p class="text-xs font-bold text-gray-600 group-hover:text-yellow-600 transition-colors">Pets</p>
-            </div>
-
-            <div onclick="filterListings('Tourism')" class="bouncy-card group flex flex-col items-center cursor-pointer gap-3">
-              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center" style="--c-from: #38bdf8; --c-to: #0284c7; --c-shadow: rgba(2, 132, 199, 0.4);">
-                <span class="material-symbols-outlined text-4xl text-white drop-shadow-md">flight</span>
-              </div>
-              <p class="text-xs font-bold text-gray-600 group-hover:text-sky-600 transition-colors">Tourism</p>
-            </div>
-
-            <div onclick="filterListings('Doctors')" class="bouncy-card group flex flex-col items-center cursor-pointer gap-3">
-              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center" style="--c-from: #f87171; --c-to: #b91c1c; --c-shadow: rgba(185, 28, 28, 0.4);">
-                <span class="material-symbols-outlined text-4xl text-white drop-shadow-md">stethoscope</span>
-              </div>
-              <p class="text-xs font-bold text-gray-600 group-hover:text-red-700 transition-colors">Doctors</p>
-            </div>
-
-            <div onclick="filterListings('Charity')" class="bouncy-card group flex flex-col items-center cursor-pointer gap-3">
-              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center" style="--c-from: #a3e635; --c-to: #65a30d; --c-shadow: rgba(101, 163, 13, 0.4);">
-                <span class="material-symbols-outlined text-4xl text-white drop-shadow-md">volunteer_activism</span>
-              </div>
-              <p class="text-xs font-bold text-gray-600 group-hover:text-lime-600 transition-colors">Charity</p>
-            </div>
-
-            <div onclick="filterListings('Food')" class="bouncy-card group flex flex-col items-center cursor-pointer gap-3">
-              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center" style="--c-from: #fb923c; --c-to: #c2410c; --c-shadow: rgba(194, 65, 12, 0.4);">
-                <span class="material-symbols-outlined text-4xl text-white drop-shadow-md">restaurant</span>
-              </div>
-              <p class="text-xs font-bold text-gray-600 group-hover:text-orange-600 transition-colors">Food</p>
-            </div>
-
-            <div onclick="filterListings('Events')" class="bouncy-card group flex flex-col items-center cursor-pointer gap-3">
-              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center" style="--c-from: #e879f9; --c-to: #a21caf; --c-shadow: rgba(162, 28, 175, 0.4);">
-                <span class="material-symbols-outlined text-4xl text-white drop-shadow-md">celebration</span>
-              </div>
-              <p class="text-xs font-bold text-gray-600 group-hover:text-fuchsia-600 transition-colors">Events</p>
-            </div>
-
-          </div>
         </div>
       </section>
 
@@ -296,7 +191,39 @@
     </footer>
 
     <script>
-      // --- 1. DATA LOGIC ---
+      // --- 1. DYNAMIC CATEGORY RENDERER ---
+      function renderCategoriesFromBrain() {
+        const raw = localStorage.getItem('zzz_classifieds_schema');
+        const container = document.getElementById('categoryGrid');
+        
+        if(!raw || !container) {
+            // Fallback content if admin brain is empty
+            container.innerHTML = `<div class="col-span-full text-center p-4 bg-yellow-50 rounded-xl border border-yellow-200 text-yellow-800">
+               <strong>System Note:</strong> Categories not loaded. Please run "Factory Reset" in Admin Console.
+            </div>`;
+            return;
+        }
+        
+        const brain = JSON.parse(raw);
+        container.innerHTML = ''; // Clear hardcoded
+        
+        brain.categories.forEach(cat => {
+            const div = document.createElement('div');
+            div.className = "bouncy-card group flex flex-col items-center cursor-pointer gap-3";
+            div.onclick = () => filterListings(cat.label);
+            
+            // Note: color comes from brain as 'text-blue-600', etc.
+            div.innerHTML = `
+              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-white to-gray-50 border border-gray-100">
+                <span class="material-symbols-outlined text-4xl ${cat.color || 'text-primary'} drop-shadow-md">${cat.icon}</span>
+              </div>
+              <p class="text-xs font-bold text-gray-600 group-hover:text-primary transition-colors text-center leading-tight">${cat.label}</p>
+            `;
+            container.appendChild(div);
+        });
+      }
+
+      // --- 2. DATA LOGIC ---
       const mockListings = [
         { id: '101', title: "iPhone 14 Pro - Deep Purple", category: "Electronics", price: "65000", location: "Bengaluru", time: "2 hrs ago", image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=600&q=80", tag: "Verified" },
         { id: '102', title: "Royal Enfield Classic 350", category: "Vehicles", price: "145000", location: "Mumbai", time: "5 hrs ago", image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80" },
@@ -307,37 +234,51 @@
 
       function getAllListings() {
         const userPosts = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-        // Merge mock data + user posts
         const allData = [...userPosts, ...mockListings];
-        
-        // --- CRITICAL FILTER ---
         // Only return items that are 'active' or have no status (legacy mock data)
-        // This hides 'sold', 'banned', or 'pending' items from the main feed
         return allData.filter(item => {
             return item.status === 'active' || !item.status; 
         });
       }
 
-      // --- 2. RENDER LOGIC ---
-      // In classifieds.html -> renderListings()
-function renderListings(filter = 'All') {
-  const grid = document.getElementById('listingsGrid');
-  grid.innerHTML = '';
-  let data = getAllListings();
-  const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+      // --- 3. RENDER LOGIC ---
+      let currentFilter = 'All';
 
-  // --- NEW CODE START: Filter out banned/sold items ---
-  // Only show active items in the main feed
-  data = data.filter(item => item.status === 'active' || !item.status); 
-  // --- NEW CODE END ---
+      window.filterListings = (filter) => {
+        currentFilter = filter;
+        renderListings();
+      };
 
-        if (filter !== 'All') {
-          data = data.filter(item => item.category && item.category.includes(filter));
-          document.getElementById('gridTitle').textContent = `${filter} Listings`;
+      window.sortListings = () => {
+        renderListings();
+      };
+
+      function renderListings() {
+        const grid = document.getElementById('listingsGrid');
+        grid.innerHTML = '';
+        let data = getAllListings();
+        const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+        const sortVal = document.getElementById('sortBy').value;
+
+
+        if (currentFilter !== 'All') {
+          // Flexible matching for Category Label
+          data = data.filter(item => item.category && item.category.toLowerCase().includes(currentFilter.toLowerCase()));
+          document.getElementById('gridTitle').textContent = `${currentFilter} Listings`;
           document.getElementById('clearFilterBtn').classList.remove('hidden');
         } else {
           document.getElementById('gridTitle').textContent = "Fresh Recommendations";
           document.getElementById('clearFilterBtn').classList.add('hidden');
+        }
+
+        // Apply Sorting
+        if(sortVal === 'price-low') {
+            data.sort((a,b) => parseFloat(a.price) - parseFloat(b.price));
+        } else if(sortVal === 'price-high') {
+            data.sort((a,b) => parseFloat(b.price) - parseFloat(a.price));
+        } else {
+            // newest (default fallback for mock data is reverse order)
+            data.reverse(); 
         }
 
         if (data.length === 0) {
@@ -385,7 +326,7 @@ function renderListings(filter = 'All') {
         });
       }
 
-      // 3. FAVORITE LOGIC
+      // 4. FAVORITE LOGIC
       window.toggleFavorite = (e, id) => {
           e.stopPropagation();
           e.preventDefault();
@@ -413,7 +354,7 @@ function renderListings(filter = 'All') {
           localStorage.setItem('zzz_favorites', JSON.stringify(favs));
       };
 
-      // 4. SEARCH LOGIC
+      // 5. SEARCH LOGIC
       window.goToSearch = () => {
           const q = document.getElementById('searchQuery').value.trim();
           if(q) window.location.href = `SearchResult.html?q=${encodeURIComponent(q)}`;
@@ -421,15 +362,12 @@ function renderListings(filter = 'All') {
       
       document.getElementById('searchQuery').addEventListener('keypress', (e) => { if(e.key==='Enter') goToSearch(); });
 
-      // 5. EXPORT
-      window.filterListings = (cat) => {
-        renderListings(cat);
-        document.getElementById('listingsSection').scrollIntoView({ behavior: 'smooth' });
-      };
-
-      // INIT
+      // 6. EXPORT
+      // 6. INIT
       document.addEventListener('DOMContentLoaded', () => {
+        renderCategoriesFromBrain(); // Load Dynamic Categories
         renderListings();
+        
         const user = JSON.parse(sessionStorage.getItem('zzz_user') || localStorage.getItem('zzz_user'));
         
         if (user) {
@@ -457,6 +395,7 @@ function renderListings(filter = 'All') {
             });
         }
       });
+
     </script>
 </body>
 </html>

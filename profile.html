@@ -57,6 +57,65 @@
       <a href="favorites.html" class="text-sm font-bold text-gray-500 hover:text-primary">Favorites</a>
       <div id="navAvatar" class="h-9 w-9 rounded-full bg-primary text-white flex items-center justify-center font-bold">U</div>
     </div>
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ZipZapZoi - Seller Profile</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ["Spline Sans", "sans-serif"] },
+          colors: {
+            primary: "#019863",
+            secondary: "#4D96A9",
+            "background-light": "#F7F9FC"
+          },
+          boxShadow: {
+            bouncy: "0 10px 20px -5px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05)"
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;
+    }
+    .tab-active {
+      border-bottom: 3px solid #019863;
+      color: #019863;
+    }
+    .tab-inactive {
+      border-bottom: 3px solid transparent;
+      color: #6b7280;
+    }
+  </style>
+</head>
+
+<body class="bg-background-light min-h-screen flex flex-col text-gray-800">
+
+<header class="bg-white border-b sticky top-0 z-50 shadow-sm">
+  <div class="container mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="classifieds.html" class="flex items-center gap-2 text-primary font-bold text-xl">
+      <span class="material-symbols-outlined text-3xl">all_inclusive</span>
+      ZipZapZoi
+    </a>
+
+    <div class="flex items-center gap-6">
+      <a href="classifieds.html" class="text-sm font-bold text-gray-500 hover:text-primary">Browse</a>
+      <a href="favorites.html" class="text-sm font-bold text-gray-500 hover:text-primary">Favorites</a>
+      <div id="navAvatar" class="h-9 w-9 rounded-full bg-primary text-white flex items-center justify-center font-bold">U</div>
+    </div>
   </div>
 </header>
 
@@ -64,8 +123,8 @@
 
   <div class="bg-white rounded-3xl shadow-bouncy overflow-hidden mb-8">
     <div class="h-48 bg-gradient-to-r from-blue-400 to-secondary relative">
-      <button onclick="alert('User reported to admin')"
-        class="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white p-2 rounded-full">
+      <button onclick="openReportModal()"
+        class="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white p-2 rounded-full shadow-sm" title="Report User">
         <span class="material-symbols-outlined">flag</span>
       </button>
     </div>
@@ -131,22 +190,7 @@
 
   <div id="content-listings" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
-  <div id="content-reviews" class="hidden max-w-3xl space-y-4">
-    <div class="bg-white p-6 rounded-2xl border flex gap-4">
-        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold">A</div>
-        <div>
-            <div class="flex text-yellow-400 text-sm mb-1">⭐⭐⭐⭐⭐</div>
-            <p class="text-sm text-gray-600">Great seller! Item was exactly as described.</p>
-        </div>
-    </div>
-    <div class="bg-white p-6 rounded-2xl border flex gap-4">
-        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">B</div>
-        <div>
-            <div class="flex text-yellow-400 text-sm mb-1">⭐⭐⭐⭐</div>
-            <p class="text-sm text-gray-600">Smooth deal, highly recommended.</p>
-        </div>
-    </div>
-  </div>
+  <div id="content-reviews" class="hidden max-w-3xl space-y-4"></div>
 
   <div id="content-about" class="hidden bg-white p-8 rounded-2xl border">
     <h3 class="font-bold text-lg mb-2">About the Seller</h3>
@@ -158,10 +202,32 @@
 
 </main>
 
-<footer class="bg-white border-t py-6 text-center text-sm text-gray-500">
-  © 2024 ZipZapZoi
+<!-- Report User Modal -->
+<div id="reportModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+  <div class="bg-white w-full max-w-md rounded-3xl shadow-bouncy overflow-hidden transform scale-95 transition-all" id="reportModalContent">
+    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+      <h3 class="font-bold text-xl text-gray-800">Report User</h3>
+      <button onclick="closeReportModal()" class="text-gray-400 hover:text-red-500"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="p-6 space-y-4 text-sm text-gray-600">
+      <p>Help us understand what's wrong with this user:</p>
+      <select id="reportReason" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none">
+        <option value="scam">Fraud or Scam</option>
+        <option value="spam">Spamming Listings</option>
+        <option value="harassment">Harassment or Abuse</option>
+        <option value="fake_profile">Fake Profile</option>
+      </select>
+      <textarea id="reportDetails" rows="3" placeholder="Additional details..." class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none"></textarea>
+      <button onclick="submitReport()" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-lg transition-transform active:scale-95">Submit Report</button>
+    </div>
+  </div>
+</div>
+
+<footer class="bg-white border-t py-6 text-center text-sm text-gray-500 mt-auto">
+  <span class="zzz-copyright">© 2026 ZipZapZoi. All Rights Reserved.</span>
 </footer>
 
+<script src="js/utils.js"></script>
 <script>
 /* ---------- INIT ---------- */
 const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
@@ -249,6 +315,30 @@ function loadProfile() {
            <p>No active listings found for this seller.</p>
         </div>`;
   }
+  
+  // 5. Render Reviews Dynamically
+  const reviewContainer = document.getElementById('content-reviews');
+  const allReviews = JSON.parse(localStorage.getItem('zzz_reviews') || '[]');
+  const sellerReviews = allReviews.filter(r => r.sellerId === sellerId);
+  
+  if (sellerReviews.length > 0) {
+      reviewContainer.innerHTML = sellerReviews.map(r => `
+        <div class="bg-white p-6 rounded-2xl border flex gap-4">
+            <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-bold">${r.reviewerName ? r.reviewerName.charAt(0).toUpperCase() : 'U'}</div>
+            <div>
+                <div class="flex text-yellow-400 text-sm mb-1">${'⭐'.repeat(r.rating)}</div>
+                <p class="font-bold text-gray-800 text-sm">${r.reviewerName || 'User'}</p>
+                <p class="text-sm text-gray-600 mt-1">${r.text}</p>
+            </div>
+        </div>
+      `).join('');
+  } else {
+      reviewContainer.innerHTML = `
+        <div class="text-center py-8 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+           <span class="material-symbols-outlined text-4xl mb-2 opacity-50">star_half</span>
+           <p>No reviews yet for this user.</p>
+        </div>`;
+  }
 }
 
 /* ---------- TABS ---------- */
@@ -293,6 +383,46 @@ function shareProfile() {
   }).catch(() => {
      prompt("Copy this link:", url);
   });
+}
+
+/* ---------- REPORT USER ---------- */
+function openReportModal() {
+    if(!currentUser) {
+        showToast("Please login to report users", "error");
+        setTimeout(() => window.location.href = `Login Page.html?redirect=profile.html?sellerId=${sellerId}`, 1500);
+        return;
+    }
+    document.getElementById('reportModal').classList.remove('hidden');
+    setTimeout(() => document.getElementById('reportModalContent').classList.remove('scale-95'), 10);
+}
+
+function closeReportModal() {
+    document.getElementById('reportModalContent').classList.add('scale-95');
+    setTimeout(() => document.getElementById('reportModal').classList.add('hidden'), 200);
+}
+
+function submitReport() {
+    const reason = document.getElementById('reportReason').value;
+    const details = document.getElementById('reportDetails').value.trim();
+    
+    const newFlag = {
+        id: 'flag_' + Date.now(),
+        reportedUserId: sellerId,
+        reportedUserName: document.getElementById('profileName').textContent,
+        reportedBy: currentUser.id,
+        reportedByName: currentUser.name,
+        reason: reason,
+        details: details,
+        date: new Date().toISOString(),
+        status: 'pending'
+    };
+
+    const flags = JSON.parse(localStorage.getItem('zzz_flags') || '[]');
+    flags.push(newFlag);
+    localStorage.setItem('zzz_flags', JSON.stringify(flags));
+    
+    closeReportModal();
+    showToast("User reported successfully. Our team will investigate.");
 }
 
 // Run

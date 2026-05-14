@@ -36,8 +36,6 @@
     /* Smooth transition for showing/hiding fields */
     .fade-enter { opacity: 0; transform: translateY(-10px); }
     .fade-enter-active { opacity: 1; transform: translateY(0); transition: opacity 300ms, transform 300ms; }
-    .fade-exit { opacity: 1; transform: translateY(0); }
-    .fade-exit-active { opacity: 0; transform: translateY(-10px); transition: opacity 200ms, transform 200ms; }
     
     /* Custom Scrollbar for dropdowns */
     select::-webkit-scrollbar { width: 8px; }
@@ -154,15 +152,21 @@
             </select>
           </div>
           <div class="col-span-1 md:col-span-2">
-            <label class="block text-sm font-bold mb-2">Specific Area / Google Location</label>
-            <div class="relative">
-              <span class="material-symbols-outlined absolute left-3 top-3 text-gray-400">location_on</span>
-              <input type="text" id="specificLocation" class="w-full pl-10 rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4" placeholder="e.g. Indiranagar, Bengaluru or Paste Google Maps Link">
+            <label class="block text-sm font-bold mb-2">Specific Area / Location</label>
+            <div class="relative flex items-center">
+              <span class="material-symbols-outlined absolute left-3 text-gray-400">location_on</span>
+              
+              <input type="text" id="specificLocation" class="w-full pl-10 pr-32 rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4" placeholder="e.g. Indiranagar, Bengaluru">
+              
+              <button type="button" onclick="detectLocation()" class="absolute right-2 bg-secondary/10 hover:bg-secondary/20 text-secondary text-xs font-bold py-1.5 px-3 rounded-lg transition-colors flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">my_location</span>
+                Auto-Detect
+              </button>
             </div>
+            <p id="locationStatus" class="text-xs text-gray-500 mt-2 ml-1 hidden"></p>
           </div>
         </div>
       </div>
-
       <div class="bg-card-light dark:bg-card-dark rounded-2xl shadow-bouncy p-6 border border-border-light dark:border-border-dark" id="photoSection">
         <h3 class="text-xl font-bold mb-2">Upload Photos</h3>
         <p class="text-sm text-gray-500 mb-4" id="photoLimitText">Add up to 8 photos. First photo is your cover image.</p>
@@ -217,143 +221,45 @@
 (function() {
   
   // --- 1. DATA SCHEMA (The Brains) ---
-  const schema = {
-    'electronics': { 
-      label: 'Electronics', icon: 'devices', color: 'text-cyan-500', 
-      subs: ['Mobiles & Accessories', 'Computers & Laptops', 'Home Appliances', 'TVs - Audio & Video', 'Cameras & Photography', 'Gaming & Consoles', 'Wearables', 'Kitchen Electronics', 'Office Electronics', 'Other'],
-      fields: [
-        { id: 'brand', label: 'Brand Name', type: 'text', required: true },
-        { id: 'condition', label: 'Condition', type: 'select', options: ['New', 'Used - Good', 'Used - Fair', 'Refurbished'], required: true }
-      ]
-    },
-    'vehicles': { 
-      label: 'Vehicles', icon: 'directions_car', color: 'text-blue-600',
-      subs: ['Cars', 'Bikes & Scooters', 'Commercial Vehicles', 'Auto Rickshaws', 'EVs', 'Bicycles', 'Parts & Accessories', 'Boats'],
-      fields: [
-        { id: 'brand', label: 'Brand/Make', type: 'text', required: true },
-        { id: 'year', label: 'Year of Manufacture', type: 'number', required: true },
-        { id: 'fuel', label: 'Fuel Type', type: 'select', options: ['Petrol', 'Diesel', 'CNG', 'Electric', 'Hybrid', 'LPG'] },
-        { id: 'transmission', label: 'Transmission', type: 'select', options: ['Manual', 'Automatic'] },
-        { id: 'km_driven', label: 'KM Driven', type: 'number' },
-        { id: 'owners', label: 'No. of Owners', type: 'select', options: ['1st', '2nd', '3rd', '4th+'] }
-      ]
-    },
-    'home': { 
-      label: 'Home & Garden', icon: 'yard', color: 'text-green-600',
-      subs: ['Furniture', 'Home Decor', 'Kitchen & Dining', 'Plants & Garden', 'Tools & Hardware', 'Cleaning', 'Bedding', 'Others'],
-      fields: [
-         { id: 'furn_type', label: 'Item Type', type: 'text', required: true },
-         { id: 'condition', label: 'Condition', type: 'select', options: ['New', 'Used - Excellent', 'Used - Good', 'Used - Fair'] }
-      ]
-    },
-    'clothing': { 
-      label: 'Clothing', icon: 'checkroom', color: 'text-pink-500',
-      subs: ['Men Clothing', 'Women Clothing', 'Kids Clothing', 'Sports Wear', 'Foot Wear', 'Ethnic & Traditional', 'Accessories'],
-      fields: [
-        { id: 'cloth_type', label: 'Type', type: 'select', options: ['Men', 'Women', 'Kids', 'Unisex'], required: true },
-        { id: 'size', label: 'Size', type: 'text', placeholder: 'e.g. M, L, XL, 9, 10' },
-        { id: 'brand', label: 'Brand', type: 'text' }
-      ]
-    },
-    'real_estate': { 
-      label: 'Real Estate', icon: 'real_estate_agent', color: 'text-purple-600',
-      subs: ['Apartments', 'Independent Houses', 'Builder Floors', 'Plots/Land', 'Farmhouses', 'Commercial Office', 'Shops', 'Rental Houses', 'PG/Hostels'],
-      fields: [
-        { id: 'listing_type', label: 'Type', type: 'select', options: ['For Sale', 'For Rent/Lease'], required: true },
-        { id: 'listed_by', label: 'Listed By', type: 'select', options: ['Owner', 'Dealer', 'Builder'] },
-        { id: 'bhk', label: 'Bedrooms (BHK)', type: 'select', options: ['1 RK', '1 BHK', '2 BHK', '3 BHK', '4+ BHK'] },
-        { id: 'area', label: 'Area (sq ft)', type: 'number', required: true },
-        { id: 'furnishing', label: 'Furnishing', type: 'select', options: ['Fully Furnished', 'Semi-Furnished', 'Unfurnished'] },
-        { id: 'project', label: 'Project Name', type: 'text' }
-      ]
-    },
-    'jobs': { 
-      label: 'Jobs', icon: 'work', color: 'text-red-500',
-      subs: ['IT & Software', 'Sales & Marketing', 'Accounting', 'HR', 'BPO/Customer Service', 'Education', 'Healthcare', 'Engineering', 'Driver/Logistics', 'Part-time/Freelance'],
-      fields: [
-        { id: 'role', label: 'Role/Position', type: 'text', required: true },
-        { id: 'salary_min', label: 'Salary From (Monthly)', type: 'number' },
-        { id: 'salary_max', label: 'Salary To (Monthly)', type: 'number' },
-        { id: 'exp', label: 'Experience Required', type: 'select', options: ['Fresher', '0-1 Years', '1-3 Years', '3-5 Years', '5+ Years'] }
-      ],
-      priceLabel: 'Salary (Approx)'
-    },
-    'services': { 
-      label: 'Services', icon: 'handyman', color: 'text-orange-500',
-      subs: ['Home Services', 'Automotive', 'Health & Wellness', 'Beauty', 'Education/Tutors', 'Astrology', 'Others'],
-      fields: [
-        { id: 'service_type', label: 'Service Availability', type: 'select', options: ['At Home', 'At Center', 'Online/Remote'] }
-      ],
-      photoLimit: 4
-    },
-    'sports': { 
-      label: 'Sports', icon: 'sports_soccer', color: 'text-teal-500',
-      subs: ['Cricket', 'Football', 'Gym/Fitness', 'Indoor Games', 'Outdoor Adventure', 'Apparel', 'Other'],
-      fields: [
-        { id: 'equip_type', label: 'Equipment Type', type: 'text' },
-        { id: 'condition', label: 'Condition', type: 'select', options: ['New', 'Used'] }
-      ],
-      photoLimit: 4
-    },
-    'pets': { 
-      label: 'Pets', icon: 'pets', color: 'text-yellow-600',
-      subs: ['Dogs', 'Cats', 'Birds', 'Fish', 'Pet Accessories', 'Pet Food', 'Services'],
-      fields: [
-        { id: 'breed', label: 'Breed/Type', type: 'text' },
-        { id: 'age', label: 'Age', type: 'text' }
-      ],
-      photoLimit: 6
-    },
-    'tourism': { 
-      label: 'Tourism', icon: 'flight', color: 'text-sky-500',
-      subs: ['Packages', 'Transport', 'Hotels', 'Adventure', 'Visa Services'],
-      fields: [
-        { id: 'package_dur', label: 'Duration (Days)', type: 'number' },
-        { id: 'dest', label: 'Destination', type: 'text', required: true }
-      ],
-      photoLimit: 6
-    },
-    'doctors': { 
-      label: 'Doctors', icon: 'stethoscope', color: 'text-rose-600',
-      subs: ['General', 'Dentist', 'Cardiologist', 'Dermatologist', 'Pediatrician', 'Gynecologist', 'Orthopedic', 'Homeopathy', 'Ayurveda'],
-      fields: [
-        { id: 'qualification', label: 'Qualification', type: 'text', placeholder: 'e.g. MBBS, MD' },
-        { id: 'exp_yrs', label: 'Experience (Years)', type: 'number' },
-        { id: 'avail', label: 'Availability', type: 'text', placeholder: 'e.g. Mon-Sat 10am-6pm' }
-      ],
-      priceLabel: 'Consultancy Fee',
-      photoLimit: 4
-    },
-    'charity': { 
-      label: 'Charity', icon: 'volunteer_activism', color: 'text-green-500',
-      subs: ['Education', 'Medical', 'Food', 'Disaster Relief', 'Animal Welfare', 'Community'],
-      fields: [
-        { id: 'event_date', label: 'Event Date (if applicable)', type: 'date' },
-        { id: 'ngo_id', label: 'NGO Reg. No (Optional)', type: 'text' }
-      ],
-      hidePrice: true,
-      photoLimit: 2,
-      note: 'Note: Charity listings are free and expire in 10 days.'
-    },
-    'food': { 
-      label: 'Restaurant & Food', icon: 'restaurant', color: 'text-orange-600',
-      subs: ['Restaurant Sale', 'Catering', 'Home Chef', 'Street Food', 'Bakery', 'Organic'],
-      fields: [
-        { id: 'fssai', label: 'FSSAI License (Optional)', type: 'text' },
-        { id: 'veg_nonveg', label: 'Type', type: 'select', options: ['Veg', 'Non-Veg', 'Both'] }
-      ],
-      photoLimit: 6
-    },
-    'events': { 
-      label: 'Events', icon: 'celebration', color: 'text-purple-500',
-      subs: ['Weddings', 'Birthdays', 'Corporate', 'Concerts', 'Festivals'],
-      fields: [
-        { id: 'capacity', label: 'Capacity (Pax)', type: 'number' },
-        { id: 'booking_type', label: 'Booking', type: 'select', options: ['Ticketed', 'RSVP', 'Open Entry'] }
-      ],
-      photoLimit: 6
+  let schema = {};
+
+  function loadSchemaFromBrain() {
+    const rawData = localStorage.getItem('zzz_classifieds_schema');
+    
+    // Fallback if Admin Console hasn't been run yet
+    if (!rawData) {
+      alert("System Warning: Admin Schema not found. Defaulting to empty configuration. Please visit Admin Console and click 'Factory Reset' first.");
+      return;
     }
-  };
+
+    const brain = JSON.parse(rawData);
+    
+    // CONVERT Admin Relational Data -> Post Listing Nested Data for UI
+    brain.categories.forEach(cat => {
+      // 1. Create Category Object
+      schema[cat.id] = {
+        label: cat.label,
+        icon: cat.icon,
+        color: cat.color || 'text-gray-500',
+        priceLabel: cat.priceLabel, // Custom Price Label
+        hidePrice: cat.hidePrice,   // Charity logic
+        photoLimit: cat.photoLimit, // Photo limits
+        note: cat.note,             // Notes
+        subs: [],
+        fields: [] 
+      };
+
+      // 2. Find Subcategories
+      const mySubs = brain.subcategories.filter(s => s.categoryId === cat.id);
+      schema[cat.id].subs = mySubs.map(s => s.label);
+      
+      // 3. Store ID mapping for field retrieval later
+      schema[cat.id].subIds = mySubs; // Store objects {id, label}
+    });
+  }
+
+  // Load the brain immediately
+  loadSchemaFromBrain();
 
   // --- 2. MOCK DATA FOR INDIA LOCATIONS ---
   const indiaData = {
@@ -452,33 +358,10 @@
       subCategorySelect.appendChild(opt);
     });
 
-    // Populate Specific Fields
-    dynamicFieldsArea.innerHTML = '';
-    if (currentCategory.fields) {
-      currentCategory.fields.forEach(field => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'w-full';
-        
-        let inputHtml = '';
-        if (field.type === 'select') {
-          const options = field.options.map(o => `<option value="${o}">${o}</option>`).join('');
-          inputHtml = `<select name="${field.id}" id="dyn_${field.id}" class="w-full rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4 focus:ring-secondary"><option value="">Select...</option>${options}</select>`;
-        } else {
-          inputHtml = `<input type="${field.type}" name="${field.id}" id="dyn_${field.id}" class="w-full rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4 focus:ring-secondary" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}>`;
-        }
-
-        wrapper.innerHTML = `
-          <label class="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">${field.label}</label>
-          ${inputHtml}
-        `;
-        dynamicFieldsArea.appendChild(wrapper);
-      });
-    }
-
-    // Special Logic (Charity, Price Labels, Photo Limits)
+    // Handle Price & Photo Limits Logic immediately upon category selection
     if (currentCategory.hidePrice) {
       priceRow.classList.add('hidden');
-      // Add note for charity
+      dynamicFieldsArea.innerHTML = ''; 
       const note = document.createElement('p');
       note.className = "col-span-1 md:col-span-2 text-green-600 font-bold text-sm bg-green-100 p-2 rounded-lg";
       note.textContent = currentCategory.note || "This listing is free.";
@@ -486,11 +369,57 @@
     } else {
       priceRow.classList.remove('hidden');
       priceLabel.textContent = currentCategory.priceLabel ? `${currentCategory.priceLabel} (₹) *` : 'Price (₹) *';
+      dynamicFieldsArea.innerHTML = ''; // Clear notes
     }
 
-    // Photo Limits
     const limit = currentCategory.photoLimit || 8;
     photoLimitText.textContent = `Add up to ${limit} photos. First photo is cover.`;
+
+    // Setup Listener for Subcategory Change -> Populate Fields
+    subCategorySelect.onchange = (e) => {
+        const selectedSubLabel = e.target.value;
+        const brain = JSON.parse(localStorage.getItem('zzz_classifieds_schema'));
+        
+        // Find subcategory ID using the label
+        const subObj = currentCategory.subIds.find(s => s.label === selectedSubLabel);
+        
+        // Keep the note if present (for charity)
+        const existingNote = dynamicFieldsArea.querySelector('.bg-green-100');
+        dynamicFieldsArea.innerHTML = '';
+        if(existingNote) dynamicFieldsArea.appendChild(existingNote);
+
+        if (subObj) {
+            // Find fields specifically for this subcategory ID
+            const specificFields = brain.fields.filter(f => f.subcategoryId === subObj.id);
+            
+            specificFields.forEach(field => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'w-full fade-enter fade-enter-active';
+                
+                let inputHtml = '';
+                // Handle Options (comma separated string -> array)
+                let opts = [];
+                if(field.options && typeof field.options === 'string') {
+                    opts = field.options.split(',').map(s => s.trim());
+                } else if (Array.isArray(field.options)) {
+                    opts = field.options;
+                }
+
+                if (field.type === 'select') {
+                    const optionTags = opts.map(o => `<option value="${o}">${o}</option>`).join('');
+                    inputHtml = `<select id="dyn_${field.id}" class="w-full rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4 focus:ring-secondary"><option value="">Select...</option>${optionTags}</select>`;
+                } else {
+                    inputHtml = `<input type="${field.type}" id="dyn_${field.id}" class="w-full rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4 focus:ring-secondary" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}>`;
+                }
+
+                wrapper.innerHTML = `
+                  <label class="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">${field.label}</label>
+                  ${inputHtml}
+                `;
+                dynamicFieldsArea.appendChild(wrapper);
+            });
+        }
+    };
     
     window.scrollTo(0, 0);
   }
@@ -526,6 +455,106 @@
       reader.readAsDataURL(file);
     });
   });
+// File upload and validation
+function validateFile(file) {
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    
+    if (!allowedTypes.includes(file.type)) {
+        showError('Only JPG, PNG, and WebP images allowed');
+        return false;
+    }
+    if (file.size > maxSize) {
+        showError('File size must be under 5MB');
+        return false;
+    }
+    return true;
+}
+
+// Drag and drop handlers
+const dropZone = document.getElementById('imageDropZone');
+if (dropZone) {
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+    
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const files = Array.from(e.dataTransfer.files);
+        files.forEach(file => {
+            if (validateFile(file)) {
+                addImagePreview(file);
+            }
+        });
+    });
+}
+
+// Image preview
+function addImagePreview(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.maxWidth = '100px';
+        img.style.margin = '5px';
+        document.getElementById('imagePreviewContainer').appendChild(img);
+    };
+    reader.readAsDataURL(file);
+}
+
+// Populate categories
+function populateCategories() {
+    const categories = ['Electronics', 'Furniture', 'Clothing', 'Books', 'Toys', 'Sports', 'Home & Garden', 'Other'];
+    const select = document.getElementById('category');
+    categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.toLowerCase();
+        option.textContent = cat;
+        select.appendChild(option);
+    });
+}
+
+// Price validation
+document.getElementById('price').addEventListener('input', function() {
+    const price = parseFloat(this.value);
+    if (isNaN(price) || price < 0) {
+        showError('Please enter a valid price');
+    }
+});
+
+// Form submission
+function handlePostListing(e) {
+    e.preventDefault();
+    
+    if (!document.getElementById('title').value) {
+        showError('Title is required');
+        return;
+    }
+    if (!document.getElementById('category').value) {
+        showError('Please select a category');
+        return;
+    }
+    if (!document.getElementById('description').value) {
+        showError('Description is required');
+        return;
+    }
+    if (!document.getElementById('price').value) {
+        showError('Price is required');
+        return;
+    }
+    
+    showSuccess('Listing posted successfully!');
+    setTimeout(() => window.location.href = '/dashboard.html', 1500);
+}
+
+document.querySelector('form').addEventListener('submit', handlePostListing);
+populateCategories();
 
   // --- 6. PREVIEW & SUBMIT LOGIC ---
   const previewBtn = document.getElementById('previewBtn');
@@ -534,41 +563,99 @@
   const closePreview = document.getElementById('closePreview');
   const closePreviewBtn = document.getElementById('closePreviewBtn');
 
+  // --- RESTRUCTURED PREVIEW FUNCTION ---
   function generatePreview() {
     const title = document.getElementById('postTitle').value;
     const price = document.getElementById('postPrice').value;
     const desc = document.getElementById('postDescription').value;
-    const loc = `${document.getElementById('citySelect').value}, ${document.getElementById('stateSelect').value}`;
+    const state = document.getElementById('stateSelect').value;
+    const city = document.getElementById('citySelect').value;
     const sub = subCategorySelect.value;
+    const loc = (city && state) ? `${city}, ${state}` : "Location not selected";
+    
+    // 1. Get the Cover Image
+    const coverImage = uploadedImages.length > 0 ? uploadedImages[0] : 'https://via.placeholder.com/600x400?text=No+Photo+Uploaded';
 
-    let html = `
-      <div class="space-y-4">
-        <div class="flex justify-between items-start border-b pb-4 dark:border-gray-600">
-          <div>
-            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">${title || 'No Title'}</h2>
-            <p class="text-secondary font-semibold">${currentCategory ? currentCategory.label : ''} > ${sub || 'General'}</p>
-          </div>
-          <div class="text-right">
-             <span class="text-xl font-bold text-primary block">${currentCategory.hidePrice ? 'Free' : '₹ ' + (price || '0')}</span>
-          </div>
-        </div>
+    // 2. Gather Dynamic Fields (The "Specific Details")
+    // We loop through the inputs we created dynamically to show them in the preview
+    let detailsHtml = '';
+    const dynamicInputs = document.querySelectorAll('[id^="dyn_"]');
+    
+    if(dynamicInputs.length > 0) {
+        detailsHtml += `<div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-4 border border-gray-100 dark:border-gray-700">`;
+        detailsHtml += `<h4 class="text-xs font-bold text-gray-500 uppercase mb-3">Key Details</h4>`;
+        detailsHtml += `<div class="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">`;
         
-        <div class="grid grid-cols-2 gap-4 text-sm bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-          <div><span class="text-gray-500 block">Location</span> <span class="font-medium">${loc}</span></div>
-          <div><span class="text-gray-500 block">Date</span> <span class="font-medium">${new Date().toLocaleDateString()}</span></div>
+        dynamicInputs.forEach(input => {
+            // Find the label for this input (it's the previous sibling element)
+            const label = input.previousElementSibling ? input.previousElementSibling.textContent : 'Detail';
+            const value = input.value;
+            
+            if(value) {
+                detailsHtml += `
+                  <div class="flex flex-col">
+                    <span class="text-xs text-gray-400">${label}</span>
+                    <span class="font-bold text-gray-800 dark:text-gray-200">${value}</span>
+                  </div>`;
+            }
+        });
+        
+        detailsHtml += `</div></div>`;
+    }
+
+    // 3. Build the Structured HTML
+    let html = `
+      <div class="flex flex-col gap-5">
+        
+        <div class="w-full h-48 sm:h-64 bg-gray-100 rounded-xl overflow-hidden relative border border-gray-200">
+           <img src="${coverImage}" class="w-full h-full object-cover">
+           <span class="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">
+             ${currentCategory ? currentCategory.label : 'Category'}
+           </span>
         </div>
+
+        <div class="flex justify-between items-start gap-4">
+          <div class="flex-1">
+            <h2 class="text-2xl font-black text-gray-800 dark:text-white leading-tight">${title || 'Untitled Ad'}</h2>
+            <div class="flex items-center gap-2 mt-1 text-sm text-gray-500">
+               <span class="material-symbols-outlined text-sm">location_on</span>
+               <span>${loc}</span>
+               <span class="text-gray-300">|</span>
+               <span>${sub || 'General'}</span>
+            </div>
+          </div>
+          <div class="text-right shrink-0">
+             <span class="text-2xl font-black text-primary block">
+               ${currentCategory && currentCategory.hidePrice ? 'Free' : '₹ ' + (price || '0')}
+             </span>
+             ${document.querySelector('#priceRow input[type="checkbox"]').checked ? '<span class="text-[10px] font-bold text-secondary bg-secondary/10 px-1.5 py-0.5 rounded">Negotiable</span>' : ''}
+          </div>
+        </div>
+
+        ${detailsHtml}
 
         <div>
-          <h4 class="font-bold border-b mb-2 pb-1 dark:border-gray-600">Description</h4>
-          <p class="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">${desc || 'No description provided.'}</p>
+          <h4 class="font-bold text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 mb-3">Description</h4>
+          <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">${desc || 'No description provided.'}</p>
         </div>
+
+        <div class="flex items-center gap-3 mt-2 pt-4 border-t border-gray-100 dark:border-gray-700">
+           <div class="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-primary text-white flex items-center justify-center font-bold">
+             ${JSON.parse(localStorage.getItem('zzz_user') || '{"name":"User"}').name.charAt(0)}
+           </div>
+           <div>
+             <p class="text-xs text-gray-400 font-bold">Posted By</p>
+             <p class="text-sm font-bold text-gray-800 dark:text-gray-200">${JSON.parse(localStorage.getItem('zzz_user') || '{"name":"You"}').name}</p>
+           </div>
+        </div>
+
       </div>
     `;
+
     previewContent.innerHTML = html;
     previewModal.classList.remove('hidden');
     previewModal.classList.add('flex');
   }
-
   // --- 7. EDIT MODE LOGIC ---
   const urlParams = new URLSearchParams(window.location.search);
   const editId = urlParams.get('id');
@@ -590,14 +677,19 @@
                 stateSelect.dispatchEvent(new Event('change'));
                 document.getElementById('citySelect').value = item.city || '';
                 document.getElementById('subCategorySelect').value = item.subcategory || '';
+                // Trigger subcat change to load fields
+                subCategorySelect.dispatchEvent(new Event('change'));
+                
                 document.getElementById('specificLocation').value = item.specificLocation || '';
                 
                 // Load Dynamic Fields
                 if(item.dynamicData) {
-                    Object.keys(item.dynamicData).forEach(fieldId => {
-                        const el = document.getElementById('dyn_' + fieldId);
-                        if(el) el.value = item.dynamicData[fieldId];
-                    });
+                    setTimeout(() => { // Small delay for fields to render
+                        Object.keys(item.dynamicData).forEach(fieldId => {
+                            const el = document.getElementById('dyn_' + fieldId);
+                            if(el) el.value = item.dynamicData[fieldId];
+                        });
+                    }, 200);
                 }
                 
                 finalSubmitBtn.innerHTML = '<span>Update Listing</span><span class="material-symbols-outlined">save</span>';
@@ -613,17 +705,23 @@
     
     // Gather Dynamic Data
     const dynamicData = {};
-    if (currentCategory.fields) {
-        currentCategory.fields.forEach(f => {
+    const brain = JSON.parse(localStorage.getItem('zzz_classifieds_schema'));
+    
+    // Find fields for current selection to scrape data
+    const subLabel = subCategorySelect.value;
+    const subObj = currentCategory.subIds.find(s => s.label === subLabel);
+    if(subObj) {
+         const specificFields = brain.fields.filter(f => f.subcategoryId === subObj.id);
+         specificFields.forEach(f => {
             const el = document.getElementById('dyn_' + f.id);
             if(el) dynamicData[f.id] = el.value;
-        });
+         });
     }
 
     const newItem = {
         id: editId || 'item_' + Date.now(),
-        userId: currentUser.id,
-        userName: currentUser.name,
+        userId: currentUser ? currentUser.id : 'guest',
+        userName: currentUser ? currentUser.name : 'Guest User',
         category: schema[currentCategoryKey].label,
         subcategory: subCategorySelect.value,
         title: document.getElementById('postTitle').value,
@@ -668,8 +766,80 @@
 
   closePreview.onclick = hideModal;
   closePreviewBtn.onclick = hideModal;
+// --- LOCATION AUTO-DETECT LOGIC ---
+  window.detectLocation = function() {
+    const statusEl = document.getElementById('locationStatus');
+    const inputEl = document.getElementById('specificLocation');
+    
+    // 1. Show "Detecting..." status
+    statusEl.textContent = "📍 Detecting your location...";
+    statusEl.className = "text-xs text-secondary mt-2 ml-1 block font-bold";
+    statusEl.classList.remove('hidden');
 
+    if (!navigator.geolocation) {
+      statusEl.textContent = "❌ Geolocation is not supported by your browser.";
+      statusEl.className = "text-xs text-red-500 mt-2 ml-1 block";
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      // Success Callback
+      (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        
+        // 2. Use FREE OpenStreetMap API to convert Lat/Lon to Text
+        // (Note: For a real production app with millions of users, you might want a paid Google Maps API key, but this is free and great for now)
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+
+        fetch(url)
+          .then(response => response.json())
+          .then(data => {
+            if (data && data.display_name) {
+              // 3. Fill the input field
+              // We grab the "suburb" or "city" parts to keep it clean, or use display_name for full address
+              const addr = data.address;
+              const shortAddress = [
+                  addr.road || '', 
+                  addr.suburb || addr.neighbourhood || '', 
+                  addr.city || addr.town || addr.county || ''
+              ].filter(Boolean).join(', '); // Join parts that exist
+
+              inputEl.value = shortAddress || data.display_name;
+              
+              statusEl.textContent = "✅ Location detected!";
+              statusEl.className = "text-xs text-green-600 mt-2 ml-1 block font-bold";
+              
+              // Optional: Try to auto-select State/City if they match your dropdowns
+              // (This is basic string matching)
+              if(addr.state) {
+                 const stateOptions = Array.from(document.getElementById('stateSelect').options);
+                 const match = stateOptions.find(opt => opt.value.toLowerCase() === addr.state.toLowerCase());
+                 if(match) {
+                     document.getElementById('stateSelect').value = match.value;
+                     document.getElementById('stateSelect').dispatchEvent(new Event('change')); // Trigger city load
+                 }
+              }
+            } else {
+              throw new Error("Address not found");
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            statusEl.textContent = "⚠️ Found GPS, but couldn't find address name. Type manually.";
+            statusEl.className = "text-xs text-orange-500 mt-2 ml-1 block";
+            inputEl.value = `${lat.toFixed(5)}, ${lon.toFixed(5)}`; // Fallback to coords
+          });
+      },
+      // Error Callback
+      () => {
+        statusEl.textContent = "❌ Unable to retrieve location. Please allow location access.";
+        statusEl.className = "text-xs text-red-500 mt-2 ml-1 block";
+      }
+    );
+  };
 })();
-</script>
+  </script>
+  <script src="js/utils.js"></script>
 </body>
 </html>
