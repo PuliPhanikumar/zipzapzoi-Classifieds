@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>ZipZapZoi - Choose Your Plan</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300..700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#019863",
+            "secondary": "#4D96A9",
+            "brand": "#f47b25",
+            "brandDark": "#d6671c",
+            "background-light": "#F8F9FA",
+            "background-dark": "#1A1B1C",
+          },
+          fontFamily: { "display": ["Spline Sans", "sans-serif"] },
+          boxShadow: {
+            'bouncy': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Spline Sans', sans-serif; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    
+    .loading-spinner {
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 4px solid white;
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="bg-background-light text-gray-800 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-white shadow-sm border-b sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <a href="classifieds.html" class="flex items-center gap-2 text-primary font-bold text-xl transition-transform active:scale-95">
+        <span class="material-symbols-outlined text-3xl">all_inclusive</span> ZipZapZoi
+      </a>
+      <a href="Post Listing.html" class="text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors">Cancel & Return</a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-4xl mx-auto w-full px-4 py-12 flex flex-col items-center">
+    
+    <div class="text-center mb-10">
+      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3">Boost Your Ad</h1>
+      <p class="text-gray-500 max-w-lg mx-auto">Get maximum visibility for your listing. Choose a secure payment method to publish your ad immediately.</p>
+    </div>
+
+    <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+      
+      <!-- Order Summary Card -->
+      <div class="bg-white rounded-2xl shadow-bouncy p-6 border border-gray-100">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">receipt_long</span> Order Summary
+        </h2>
+        
+        <div class="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100">
+          <div class="flex items-center gap-3 mb-3">
+             <div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm text-gray-400">
+                <span class="material-symbols-outlined" id="summaryIcon">image</span>
+             </div>
+             <div class="flex-1 min-w-0">
+               <h3 class="font-bold text-gray-900 truncate" id="summaryTitle">Loading...</h3>
+               <p class="text-sm text-gray-500" id="summaryCategory">Category</p>
+             </div>
+          </div>
+        </div>
+
+        <div class="space-y-3 text-sm border-b pb-4 mb-4">
+           <div class="flex justify-between text-gray-600">
+             <span>Listing Duration</span>
+             <span class="font-semibold text-gray-900">30 Days</span>
+           </div>
+           <div class="flex justify-between text-gray-600">
+             <span>Category Fee</span>
+             <span class="font-semibold text-gray-900" id="summaryFee">₹0</span>
+           </div>
+           <div class="flex justify-between text-gray-600">
+             <span>GST (18%)</span>
+             <span class="font-semibold text-gray-900" id="summaryGst">₹0</span>
+           </div>
+        </div>
+
+        <div class="flex justify-between items-end">
+           <div>
+             <p class="text-sm text-gray-500">Total Amount</p>
+             <p class="text-xs text-gray-400">Secure Payment</p>
+           </div>
+           <p class="text-3xl font-black text-primary" id="summaryTotal">₹0</p>
+        </div>
+      </div>
+
+      <!-- Payment Method -->
+      <div class="bg-white rounded-2xl shadow-bouncy p-6 border border-gray-100">
+        <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+          <span class="material-symbols-outlined text-brand">lock</span> Secure Checkout
+        </h2>
+        
+        <div class="space-y-4 mb-8">
+           <label class="flex items-center p-4 border-2 border-brand bg-brand/5 rounded-xl cursor-pointer transition-all">
+             <input type="radio" name="payment" class="w-5 h-5 text-brand focus:ring-brand" checked>
+             <div class="ml-4 flex-1 flex justify-between items-center">
+                <span class="font-bold text-gray-900">Mock Razorpay</span>
+                <span class="material-symbols-outlined text-brand">credit_card</span>
+             </div>
+           </label>
+
+           <label class="flex items-center p-4 border-2 border-gray-200 hover:border-gray-300 rounded-xl cursor-pointer transition-all opacity-50">
+             <input type="radio" name="payment" class="w-5 h-5 text-gray-400" disabled>
+             <div class="ml-4 flex-1 flex justify-between items-center">
+                <span class="font-bold text-gray-500">UPI / QR Code (Coming Soon)</span>
+                <span class="material-symbols-outlined text-gray-400">qr_code_scanner</span>
+             </div>
+           </label>
+        </div>
+
+        <button id="payBtn" onclick="processMockPayment()" class="w-full bg-brand hover:bg-brandDark text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+          <span id="payBtnText">Pay Now</span>
+          <span class="material-symbols-outlined text-xl" id="payBtnIcon">arrow_forward</span>
+        </button>
+
+        <p class="text-center text-xs text-gray-400 mt-4 flex items-center justify-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">verified_user</span> Encrypted & Secure
+        </p>
+
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/utils.js"></script>
+  <script>
+    // 1. Load Pending Listing
+    const pendingJSON = sessionStorage.getItem('zzz_pending_listing');
+    let pendingListing = null;
+
+    if(!pendingJSON) {
+        // Redirect if directly accessed without pending listing
+        window.location.href = 'Post Listing.html';
+    } else {
+        pendingListing = JSON.parse(pendingJSON);
+        setupCheckout(pendingListing);
+    }
+
+    // 2. Setup Pricing Logic
+    function setupCheckout(listing) {
+        document.getElementById('summaryTitle').textContent = listing.title;
+        document.getElementById('summaryCategory').textContent = listing.category;
+
+        // Pricing Rules
+        let baseFee = 10;
+        if(listing.category === 'Real Estate' || listing.category === 'Vehicles') {
+            baseFee = 20;
+        }
+
+        const gst = parseFloat((baseFee * 0.18).toFixed(2));
+        const total = baseFee + gst;
+
+        document.getElementById('summaryFee').textContent = `₹${baseFee}`;
+        document.getElementById('summaryGst').textContent = `₹${gst}`;
+        document.getElementById('summaryTotal').textContent = `₹${total}`;
+        document.getElementById('payBtnText').textContent = `Pay ₹${total}`;
+
+        // Set Icon based on category
+        const icons = {
+            'Electronics': 'devices',
+            'Vehicles': 'directions_car',
+            'Real Estate': 'home',
+            'Jobs': 'work',
+            'Pets': 'pets',
+            'Fashion': 'checkroom',
+            'Furniture': 'chair'
+        };
+        document.getElementById('summaryIcon').textContent = icons[listing.category] || 'category';
+    }
+
+    // 3. Process Mock Payment
+    function processMockPayment() {
+        const btn = document.getElementById('payBtn');
+        const btnText = document.getElementById('payBtnText');
+        const btnIcon = document.getElementById('payBtnIcon');
+
+        // Loading State
+        btn.disabled = true;
+        btn.classList.add('opacity-80', 'cursor-not-allowed');
+        btnText.textContent = "Processing...";
+        btnIcon.className = "loading-spinner";
+
+        setTimeout(() => {
+            // Success State
+            btn.classList.remove('bg-brand', 'hover:bg-brandDark');
+            btn.classList.add('bg-green-500', 'hover:bg-green-600');
+            btnText.textContent = "Payment Successful!";
+            btnIcon.className = "material-symbols-outlined text-xl";
+            btnIcon.textContent = "check_circle";
+
+            saveListing();
+
+            setTimeout(() => {
+                window.location.href = 'Seller Dashboard.html';
+            }, 1500);
+
+        }, 2000);
+    }
+
+    // 4. Save to LocalStorage
+    function saveListing() {
+        if(!pendingListing) return;
+
+        // Finalize metadata
+        pendingListing.status = 'active';
+        pendingListing.datePosted = new Date().toISOString();
+        pendingListing.time = "Just now";
+
+        // Get existing listings
+        let allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+        
+        // Add new listing to front
+        allListings.unshift(pendingListing);
+        
+        // Save back
+        localStorage.setItem('zzz_listings', JSON.stringify(allListings));
+
+        // Clear session
+        sessionStorage.removeItem('zzz_pending_listing');
+    }
+
+  </script>
+</body>
+</html>

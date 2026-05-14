@@ -738,20 +738,20 @@ populateCategories();
         status: 'active'
     };
 
-    // Save to LocalStorage
-    const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-    
+    // --- REDIRECT TO MONETIZATION / PLANS PAGE ---
     if(editId) {
+        // If editing an existing ad, save directly and skip payment
+        const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
         const idx = listings.findIndex(l => l.id === editId);
         if(idx !== -1) listings[idx] = newItem;
+        localStorage.setItem('zzz_listings', JSON.stringify(listings));
+        alert("Listing Updated Successfully!");
+        window.location.href = 'Seller Dashboard.html';
     } else {
-        listings.unshift(newItem);
+        // If new ad, store in session and go to Plans page for checkout
+        sessionStorage.setItem('zzz_pending_listing', JSON.stringify(newItem));
+        window.location.href = 'Classifieds Plans.html';
     }
-    
-    localStorage.setItem('zzz_listings', JSON.stringify(listings));
-    
-    alert(editId ? "Listing Updated Successfully!" : "Listing Posted Successfully!");
-    window.location.href = 'Seller Dashboard.html';
   }
 
   // BIND EVENTS
