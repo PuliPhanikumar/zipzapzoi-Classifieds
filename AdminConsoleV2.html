@@ -12,14 +12,18 @@
 
   <script>
     tailwind.config = {
-      theme: {
+      darkMode: "class",
+        theme: {
         extend: {
           fontFamily: { sans: ["Spline Sans", "sans-serif"] },
           colors: { 
             brand: "#019863", 
             dark: "#0f172a",
             danger: "#ef4444",
-            warning: "#f59e0b"
+            warning: "#f59e0b",
+            "background-light": "#f0f4f8",
+            "background-dark": "#121212",
+            "card-dark": "#1e1e1e"
           }
         }
       }
@@ -33,74 +37,77 @@
     .active-list-item { border-left: 4px solid #019863; background-color: #f0fdf4; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden">
+<body class="h-screen flex overflow-hidden bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
 
-  <aside class="w-64 bg-white border-r border-slate-200 flex flex-col z-20 shadow-xl">
-    <div class="h-16 flex items-center px-6 border-b border-slate-100 bg-slate-50">
+  <aside class="w-64 bg-white dark:bg-card-dark border-r border-slate-200 dark:border-gray-700 flex flex-col z-20 shadow-xl">
+    <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-gray-800 bg-slate-50 dark:bg-gray-800/50">
       <span class="material-symbols-outlined text-brand text-3xl mr-2">admin_panel_settings</span>
       <h1 class="font-bold text-lg tracking-tight">Admin<span class="text-brand">OS</span></h1>
     </div>
 
     <nav class="flex-1 overflow-y-auto p-4 space-y-2">
-      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 mt-2">Operations</div>
+      <div class="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider mb-2 px-2 mt-2">Operations</div>
       
       <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-link active-nav flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm">
         <span class="material-symbols-outlined">dashboard</span> Dashboard
       </a>
       
-      <a href="#" onclick="switchTab('listings')" id="nav-listings" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all font-medium text-sm text-slate-600">
+      <a href="#" onclick="switchTab('listings')" id="nav-listings" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:bg-gray-800/50 transition-all font-medium text-sm text-slate-600 dark:text-gray-300">
         <span class="material-symbols-outlined">inventory_2</span> Listings
       </a>
 
-      <a href="#" onclick="switchTab('users')" id="nav-users" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all font-medium text-sm text-slate-600">
+      <a href="#" onclick="switchTab('users')" id="nav-users" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:bg-gray-800/50 transition-all font-medium text-sm text-slate-600 dark:text-gray-300">
         <span class="material-symbols-outlined">group</span> User Base
       </a>
       
-      <a href="#" onclick="switchTab('moderation')" id="nav-moderation" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all font-medium text-sm text-slate-600">
+      <a href="#" onclick="switchTab('moderation')" id="nav-moderation" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:bg-gray-800/50 transition-all font-medium text-sm text-slate-600 dark:text-gray-300">
         <span class="material-symbols-outlined text-red-500">gavel</span> Moderation
       </a>
 
-      <a href="#" onclick="switchTab('support')" id="nav-support" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all font-medium text-sm text-slate-600">
+      <a href="#" onclick="switchTab('support')" id="nav-support" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:bg-gray-800/50 transition-all font-medium text-sm text-slate-600 dark:text-gray-300">
         <span class="material-symbols-outlined">support_agent</span> Support Desk
       </a>
 
-      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-6 mb-2 px-2">System Core</div>
+      <div class="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider mt-6 mb-2 px-2">System Core</div>
 
-      <a href="#" onclick="switchTab('schema')" id="nav-schema" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all font-medium text-sm text-slate-600">
+      <a href="#" onclick="switchTab('schema')" id="nav-schema" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:bg-gray-800/50 transition-all font-medium text-sm text-slate-600 dark:text-gray-300">
         <span class="material-symbols-outlined text-purple-600">schema</span> Schema Manager
       </a>
 
-      <a href="#" onclick="switchTab('settings')" id="nav-settings" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all font-medium text-sm text-slate-600">
-        <span class="material-symbols-outlined text-slate-700">settings_applications</span> Global Settings
+      <a href="#" onclick="switchTab('settings')" id="nav-settings" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:bg-gray-800/50 transition-all font-medium text-sm text-slate-600 dark:text-gray-300">
+        <span class="material-symbols-outlined text-slate-700 dark:text-gray-200">settings_applications</span> Global Settings
       </a>
     </nav>
 
-    <div class="p-4 border-t border-slate-100 bg-slate-50">
+    <div class="p-4 border-t border-slate-100 dark:border-gray-800 bg-slate-50 dark:bg-gray-800/50">
       <div class="flex items-center gap-3 mb-4">
         <div class="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center font-bold shadow-md" id="adminAvatar">A</div>
         <div>
-          <p class="text-sm font-bold text-slate-800" id="adminName">Super Admin</p>
+          <p class="text-sm font-bold text-slate-800 dark:text-white" id="adminName">Super Admin</p>
           <p class="text-[10px] text-green-600 font-mono font-bold tracking-wide">● ONLINE</p>
         </div>
       </div>
-      <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-slate-600 py-2 rounded-lg text-sm font-bold transition-all shadow-sm">
+      <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 bg-white dark:bg-card-dark border border-slate-200 dark:border-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-slate-600 dark:text-gray-300 py-2 rounded-lg text-sm font-bold transition-all shadow-sm">
         <span class="material-symbols-outlined text-sm">logout</span> Logout
       </button>
     </div>
   </aside>
 
-  <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50">
+  <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50 dark:bg-gray-800/50">
     
-    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shadow-sm z-10">
-      <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+    <header class="h-16 bg-white dark:bg-card-dark border-b border-slate-200 dark:border-gray-700 flex items-center justify-between px-8 shadow-sm z-10">
+      <h2 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
         <span class="material-symbols-outlined text-brand" id="pageIcon">dashboard</span>
         <span id="pageTitle">Dashboard</span>
       </h2>
       <div class="flex items-center gap-4">
-        <button onclick="refreshData()" class="p-2 text-slate-400 hover:text-brand hover:bg-green-50 rounded-full transition-colors" title="Refresh Data">
+        <button onclick="toggleDarkMode()" class="p-2 text-slate-400 dark:text-gray-500 hover:text-brand hover:bg-green-50 rounded-full transition-colors" title="Toggle Dark Mode">
+          <span class="material-symbols-outlined">dark_mode</span>
+        </button>
+        <button onclick="refreshData()" class="p-2 text-slate-400 dark:text-gray-500 hover:text-brand hover:bg-green-50 rounded-full transition-colors" title="Refresh Data">
           <span class="material-symbols-outlined">refresh</span>
         </button>
-        <button onclick="window.open('classifieds.html', '_blank')" class="bg-slate-800 hover:bg-black text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg transition-transform active:scale-95 flex items-center gap-2">
+        <button onclick="window.open('classifieds.html', '_blank')" class="bg-slate-800 dark:bg-white hover:bg-black text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg transition-transform active:scale-95 flex items-center gap-2">
           Live Site <span class="material-symbols-outlined text-sm">open_in_new</span>
         </button>
       </div>
@@ -110,45 +117,45 @@
       
       <div id="tab-dashboard" class="tab-content block space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+          <div class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 hover:shadow-md transition-shadow">
             <div class="flex justify-between items-start">
-              <div><p class="text-xs font-bold text-slate-400 uppercase">Total Users</p><h3 class="text-3xl font-bold text-slate-800 mt-2" id="statUsers">0</h3></div>
+              <div><p class="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase">Total Users</p><h3 class="text-3xl font-bold text-slate-800 dark:text-white mt-2" id="statUsers">0</h3></div>
               <span class="material-symbols-outlined text-blue-500 bg-blue-50 p-2 rounded-lg">group</span>
             </div>
           </div>
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+          <div class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 hover:shadow-md transition-shadow">
             <div class="flex justify-between items-start">
-              <div><p class="text-xs font-bold text-slate-400 uppercase">Active Listings</p><h3 class="text-3xl font-bold text-slate-800 mt-2" id="statListings">0</h3></div>
+              <div><p class="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase">Active Listings</p><h3 class="text-3xl font-bold text-slate-800 dark:text-white mt-2" id="statListings">0</h3></div>
               <span class="material-symbols-outlined text-brand bg-green-50 p-2 rounded-lg">inventory_2</span>
             </div>
           </div>
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+          <div class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 hover:shadow-md transition-shadow">
             <div class="flex justify-between items-start">
-              <div><p class="text-xs font-bold text-slate-400 uppercase">Support Tickets</p><h3 class="text-3xl font-bold text-slate-800 mt-2" id="statTickets">0</h3></div>
+              <div><p class="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase">Support Tickets</p><h3 class="text-3xl font-bold text-slate-800 dark:text-white mt-2" id="statTickets">0</h3></div>
               <span class="material-symbols-outlined text-orange-500 bg-orange-50 p-2 rounded-lg">support_agent</span>
             </div>
           </div>
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+          <div class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 hover:shadow-md transition-shadow">
             <div class="flex justify-between items-start">
-              <div><p class="text-xs font-bold text-slate-400 uppercase">Pending Reports</p><h3 class="text-3xl font-bold text-slate-800 mt-2" id="statFlags">0</h3></div>
+              <div><p class="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase">Pending Reports</p><h3 class="text-3xl font-bold text-slate-800 dark:text-white mt-2" id="statFlags">0</h3></div>
               <span class="material-symbols-outlined text-red-500 bg-red-50 p-2 rounded-lg">flag</span>
             </div>
           </div>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <h3 class="font-bold text-slate-800 mb-4">Activity Overview</h3>
+        <div class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800">
+          <h3 class="font-bold text-slate-800 dark:text-white mb-4">Activity Overview</h3>
           <div class="h-64"><canvas id="activityChart"></canvas></div>
         </div>
       </div>
 
       <div id="tab-listings" class="tab-content hidden">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-             <h3 class="font-bold text-slate-700">Marketplace Database</h3>
-             <input type="text" placeholder="Search Listings..." class="bg-white border border-slate-200 rounded-lg px-4 py-2 text-sm w-64 focus:ring-2 focus:ring-brand">
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden">
+          <div class="p-4 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center bg-slate-50 dark:bg-gray-800/50/50">
+             <h3 class="font-bold text-slate-700 dark:text-gray-200">Marketplace Database</h3>
+             <input type="text" placeholder="Search Listings..." class="bg-white dark:bg-card-dark border border-slate-200 dark:border-gray-700 rounded-lg px-4 py-2 text-sm w-64 focus:ring-2 focus:ring-brand">
           </div>
           <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs">
+            <thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 dark:text-gray-400 font-bold uppercase text-xs">
               <tr><th class="px-6 py-4">Item</th><th class="px-6 py-4">Seller</th><th class="px-6 py-4">Category</th><th class="px-6 py-4">Price</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Actions</th></tr>
             </thead>
             <tbody id="listingsTableBody" class="divide-y divide-slate-100"></tbody>
@@ -157,15 +164,15 @@
       </div>
 
       <div id="tab-users" class="tab-content hidden">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-             <h3 class="font-bold text-slate-700">Registered Users</h3>
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden">
+          <div class="p-4 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center bg-slate-50 dark:bg-gray-800/50/50">
+             <h3 class="font-bold text-slate-700 dark:text-gray-200">Registered Users</h3>
              <button onclick="openAddUserModal()" class="bg-brand text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-green-700 flex items-center gap-2">
                <span class="material-symbols-outlined text-sm">person_add</span> Add New User
              </button>
           </div>
           <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs">
+            <thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 dark:text-gray-400 font-bold uppercase text-xs">
               <tr><th class="px-6 py-4">User</th><th class="px-6 py-4">Email</th><th class="px-6 py-4">Role</th><th class="px-6 py-4">Status</th><th class="px-6 py-4">Verified</th><th class="px-6 py-4 text-right">Actions</th></tr>
             </thead>
             <tbody id="usersTableBody" class="divide-y divide-slate-100"></tbody>
@@ -174,13 +181,13 @@
       </div>
 
       <div id="tab-moderation" class="tab-content hidden">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-             <h3 class="font-bold text-slate-700 flex items-center gap-2"><span class="material-symbols-outlined text-red-500">flag</span> Reported Items</h3>
-             <button onclick="clearReports()" class="text-xs font-bold text-slate-400 hover:text-red-500">Clear All</button>
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden">
+          <div class="p-4 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center bg-slate-50 dark:bg-gray-800/50/50">
+             <h3 class="font-bold text-slate-700 dark:text-gray-200 flex items-center gap-2"><span class="material-symbols-outlined text-red-500">flag</span> Reported Items</h3>
+             <button onclick="clearReports()" class="text-xs font-bold text-slate-400 dark:text-gray-500 hover:text-red-500">Clear All</button>
           </div>
           <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs">
+            <thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 dark:text-gray-400 font-bold uppercase text-xs">
               <tr><th class="px-6 py-4">Report Time</th><th class="px-6 py-4">Item Name</th><th class="px-6 py-4">Reason</th><th class="px-6 py-4 text-right">Action</th></tr>
             </thead>
             <tbody id="reportsTableBody" class="divide-y divide-slate-100"></tbody>
@@ -189,28 +196,28 @@
       </div>
 
       <div id="tab-settings" class="tab-content hidden space-y-8">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-          <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-6">
+          <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
             <span class="material-symbols-outlined text-warning">campaign</span> Global System Alerts
           </h3>
           <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
              <div class="flex gap-4 items-center">
                <input type="text" id="globalBannerInput" class="flex-1 border-yellow-300 rounded-lg px-4 py-2 text-sm focus:ring-warning" placeholder="System Alert Message...">
-               <label class="flex items-center gap-2 cursor-pointer font-bold text-sm text-slate-700">
+               <label class="flex items-center gap-2 cursor-pointer font-bold text-sm text-slate-700 dark:text-gray-200">
                  <input type="checkbox" id="bannerActive" class="rounded text-warning focus:ring-warning w-5 h-5"> Active
                </label>
              </div>
           </div>
-          <button onclick="saveGlobalSettings()" class="bg-slate-800 text-white px-6 py-2 rounded-lg font-bold hover:bg-black transition-colors">Save Settings</button>
+          <button onclick="saveGlobalSettings()" class="bg-slate-800 dark:bg-white text-white px-6 py-2 rounded-lg font-bold hover:bg-black transition-colors">Save Settings</button>
         </div>
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2"><span class="material-symbols-outlined text-slate-500">receipt_long</span> Audit Logs</h3>
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden">
+          <div class="p-4 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center bg-slate-50 dark:bg-gray-800/50/50">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="material-symbols-outlined text-slate-500 dark:text-gray-400">receipt_long</span> Audit Logs</h3>
             <button onclick="clearLogs()" class="text-red-500 text-xs font-bold hover:underline">Clear History</button>
           </div>
           <div class="max-h-96 overflow-y-auto">
             <table class="w-full text-left text-sm">
-              <thead class="bg-slate-50 text-slate-500 font-bold text-xs sticky top-0"><tr><th class="px-6 py-3">Timestamp</th><th class="px-6 py-3">Admin</th><th class="px-6 py-3">Action</th><th class="px-6 py-3">Details</th></tr></thead>
+              <thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 dark:text-gray-400 font-bold text-xs sticky top-0"><tr><th class="px-6 py-3">Timestamp</th><th class="px-6 py-3">Admin</th><th class="px-6 py-3">Action</th><th class="px-6 py-3">Details</th></tr></thead>
               <tbody id="logsTableBody" class="divide-y divide-slate-100 font-mono text-xs"></tbody>
             </table>
           </div>
@@ -219,33 +226,33 @@
 
       <div id="tab-schema" class="tab-content hidden h-full flex flex-col">
         <div class="flex justify-between items-center mb-6">
-          <div><h3 class="text-xl font-bold text-slate-800">Schema Architecture</h3><p class="text-sm text-slate-500">Manage Categories, Subcategories & Fields</p></div>
+          <div><h3 class="text-xl font-bold text-slate-800 dark:text-white">Schema Architecture</h3><p class="text-sm text-slate-500 dark:text-gray-400">Manage Categories, Subcategories & Fields</p></div>
           <div class="flex gap-3">
              <button onclick="resetToFactory()" class="px-4 py-2 text-sm font-bold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 shadow-sm border border-red-200">Factory Reset</button>
              <button onclick="saveSchemaToDB()" class="px-6 py-2 text-sm font-bold text-white bg-brand rounded-lg shadow-lg hover:bg-green-700 flex items-center gap-2"><span class="material-symbols-outlined text-sm">save</span> Save Changes</button>
           </div>
         </div>
         <div class="flex-1 grid grid-cols-12 gap-6 h-[550px]">
-          <div class="col-span-3 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
-            <div class="p-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center"><span class="text-xs font-bold uppercase">1. Categories</span><button onclick="addItem('category')" class="text-brand hover:bg-green-100 p-1 rounded"><span class="material-symbols-outlined text-sm">add</span></button></div>
+          <div class="col-span-3 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden">
+            <div class="p-3 bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center"><span class="text-xs font-bold uppercase">1. Categories</span><button onclick="addItem('category')" class="text-brand hover:bg-green-100 p-1 rounded"><span class="material-symbols-outlined text-sm">add</span></button></div>
             <div id="listCategories" class="overflow-y-auto flex-1 p-2 space-y-1"></div>
           </div>
-          <div class="col-span-4 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
-            <div class="p-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center"><span class="text-xs font-bold uppercase">2. Subcategories</span><button onclick="addItem('subcategory')" id="btnAddSub" class="text-brand hover:bg-green-100 p-1 rounded disabled:opacity-50" disabled><span class="material-symbols-outlined text-sm">add</span></button></div>
-            <div id="listSubcategories" class="overflow-y-auto flex-1 p-2 space-y-1"><div class="text-center text-slate-400 mt-10 text-xs">Select a Category</div></div>
+          <div class="col-span-4 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden">
+            <div class="p-3 bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center"><span class="text-xs font-bold uppercase">2. Subcategories</span><button onclick="addItem('subcategory')" id="btnAddSub" class="text-brand hover:bg-green-100 p-1 rounded disabled:opacity-50" disabled><span class="material-symbols-outlined text-sm">add</span></button></div>
+            <div id="listSubcategories" class="overflow-y-auto flex-1 p-2 space-y-1"><div class="text-center text-slate-400 dark:text-gray-500 mt-10 text-xs">Select a Category</div></div>
           </div>
-          <div class="col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
-            <div class="p-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center"><span class="text-xs font-bold uppercase">3. Fields</span><button onclick="addItem('field')" id="btnAddField" class="text-brand hover:bg-green-100 p-1 rounded disabled:opacity-50" disabled><span class="material-symbols-outlined text-sm">add</span></button></div>
-            <div id="listFields" class="overflow-y-auto flex-1 p-2 space-y-1"><div class="text-center text-slate-400 mt-10 text-xs">Select a Subcategory</div></div>
+          <div class="col-span-5 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden">
+            <div class="p-3 bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center"><span class="text-xs font-bold uppercase">3. Fields</span><button onclick="addItem('field')" id="btnAddField" class="text-brand hover:bg-green-100 p-1 rounded disabled:opacity-50" disabled><span class="material-symbols-outlined text-sm">add</span></button></div>
+            <div id="listFields" class="overflow-y-auto flex-1 p-2 space-y-1"><div class="text-center text-slate-400 dark:text-gray-500 mt-10 text-xs">Select a Subcategory</div></div>
           </div>
         </div>
       </div>
       
       <div id="tab-support" class="tab-content hidden">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-           <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50"><h3 class="font-bold text-slate-700">Support Tickets</h3></div>
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden">
+           <div class="p-4 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center bg-slate-50 dark:bg-gray-800/50/50"><h3 class="font-bold text-slate-700 dark:text-gray-200">Support Tickets</h3></div>
            <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs"><tr><th class="px-6 py-4">ID</th><th class="px-6 py-4">User</th><th class="px-6 py-4">Topic</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Action</th></tr></thead>
+            <thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 dark:text-gray-400 font-bold uppercase text-xs"><tr><th class="px-6 py-4">ID</th><th class="px-6 py-4">User</th><th class="px-6 py-4">Topic</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Action</th></tr></thead>
             <tbody id="supportTableBody"></tbody>
            </table>
         </div>
@@ -254,40 +261,40 @@
   </main>
 
   <div id="editModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
-      <div class="bg-brand p-4 flex justify-between items-center"><h3 class="text-white font-bold" id="modalTitle">Edit Item</h3><button onclick="closeModal('editModal')" class="text-white hover:bg-white/20 rounded-full p-1"><span class="material-symbols-outlined">close</span></button></div>
+    <div class="bg-white dark:bg-card-dark rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
+      <div class="bg-brand p-4 flex justify-between items-center"><h3 class="text-white font-bold" id="modalTitle">Edit Item</h3><button onclick="closeModal('editModal')" class="text-white hover:bg-white dark:bg-card-dark/20 rounded-full p-1"><span class="material-symbols-outlined">close</span></button></div>
       <div class="p-6 space-y-4">
-        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Label Name</label><input type="text" id="editLabel" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand"></div>
+        <div><label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">Label Name</label><input type="text" id="editLabel" class="w-full border border-slate-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand"></div>
         <div id="fieldExtras" class="hidden space-y-4">
           <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Input Type</label>
-            <select id="editType" onchange="toggleOptionsInput()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-slate-50">
+            <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">Input Type</label>
+            <select id="editType" onchange="toggleOptionsInput()" class="w-full border border-slate-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm bg-slate-50 dark:bg-gray-800/50">
               <option value="text">Text Box</option><option value="textarea">Long Text Area</option><option value="number">Number</option><option value="select">Dropdown (Select)</option><option value="date">Date Picker</option><option value="checkbox">Yes/No Checkbox</option>
             </select>
           </div>
           <div id="optionsContainer" class="hidden">
-            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Dropdown Options</label>
+            <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">Dropdown Options</label>
             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                <p class="text-[10px] text-yellow-800 mb-2 font-bold">Comma separated values:</p>
                <textarea id="editOptions" class="w-full border-yellow-300 rounded-md px-3 py-2 text-sm focus:ring-yellow-400" rows="3"></textarea>
             </div>
           </div>
         </div>
-        <div id="catExtras" class="hidden"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Icon Name</label><input type="text" id="editIcon" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></div>
+        <div id="catExtras" class="hidden"><label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">Icon Name</label><input type="text" id="editIcon" class="w-full border border-slate-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm"></div>
         <div class="pt-4 flex gap-3"><button onclick="saveItem()" class="flex-1 bg-brand text-white font-bold py-2 rounded-lg shadow-md hover:bg-green-700">Save</button><button onclick="deleteItem()" class="px-4 py-2 text-red-500 font-bold border border-red-200 rounded-lg hover:bg-red-50">Delete</button></div>
       </div>
     </div>
   </div>
 
   <div id="userModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-      <div class="bg-slate-800 p-4 flex justify-between items-center"><h3 class="text-white font-bold">Manage User</h3><button onclick="closeModal('userModal')" class="text-white hover:bg-white/20 rounded-full p-1"><span class="material-symbols-outlined">close</span></button></div>
+    <div class="bg-white dark:bg-card-dark rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+      <div class="bg-slate-800 dark:bg-white p-4 flex justify-between items-center"><h3 class="text-white font-bold">Manage User</h3><button onclick="closeModal('userModal')" class="text-white hover:bg-white dark:bg-card-dark/20 rounded-full p-1"><span class="material-symbols-outlined">close</span></button></div>
       <form onsubmit="handleUserSubmit(event)" class="p-6 space-y-4">
         <input type="hidden" id="editUserId">
-        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name</label><input type="text" id="newUserName" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></div>
-        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label><input type="email" id="newUserEmail" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></div>
-        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Password</label><input type="text" id="newUserPass" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></div>
-        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Role</label><select id="newUserRole" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"><option value="user">User</option><option value="admin">Admin</option></select></div>
+        <div><label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">Full Name</label><input type="text" id="newUserName" required class="w-full border border-slate-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm"></div>
+        <div><label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">Email</label><input type="email" id="newUserEmail" required class="w-full border border-slate-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm"></div>
+        <div><label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">Password</label><input type="text" id="newUserPass" required class="w-full border border-slate-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm"></div>
+        <div><label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">Role</label><select id="newUserRole" class="w-full border border-slate-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm"><option value="user">User</option><option value="admin">Admin</option></select></div>
         <button type="submit" class="w-full bg-brand text-white font-bold py-2 rounded-lg mt-4">Save User</button>
       </form>
     </div>
@@ -334,48 +341,136 @@
       { id: 'cameras', categoryId: 'electronics', label: 'Cameras & Photography' },
       { id: 'tv_audio', categoryId: 'electronics', label: 'TVs - Audio & Video' },
       { id: 'gaming', categoryId: 'electronics', label: 'Gaming & Consoles' },
+      { id: 'wearables', categoryId: 'electronics', label: 'Wearables & Smart Devices' },
+      { id: 'kitchen_elec', categoryId: 'electronics', label: 'Kitchen Electronics' },
+      { id: 'office_elec', categoryId: 'electronics', label: 'Office Electronics' },
+      { id: 'other_elec', categoryId: 'electronics', label: 'Other Electronics' },
       // VEHICLES
       { id: 'cars', categoryId: 'vehicles', label: 'Cars' },
       { id: 'bikes', categoryId: 'vehicles', label: 'Bikes & Scooters' },
       { id: 'commercial', categoryId: 'vehicles', label: 'Commercial Vehicles' },
+      { id: 'autos', categoryId: 'vehicles', label: 'Auto Rickshaws & Three-Wheelers' },
       { id: 'ev', categoryId: 'vehicles', label: 'Electric Vehicles' },
+      { id: 'bicycles', categoryId: 'vehicles', label: 'Bicycles' },
       { id: 'parts', categoryId: 'vehicles', label: 'Spare Parts' },
+      { id: 'boats', categoryId: 'vehicles', label: 'Boats & Other Vehicles' },
+      // HOME
+      { id: 'furniture', categoryId: 'home', label: 'Furniture' },
+      { id: 'decor', categoryId: 'home', label: 'Home Decor' },
+      { id: 'kitchen', categoryId: 'home', label: 'Kitchen & Dining' },
+      { id: 'garden', categoryId: 'home', label: 'Plants & Garden' },
+      { id: 'tools', categoryId: 'home', label: 'Tools & Hardware' },
+      { id: 'cleaning', categoryId: 'home', label: 'Cleaning & Household' },
+      { id: 'bedding', categoryId: 'home', label: 'Bedding & Bath' },
+      { id: 'home_other', categoryId: 'home', label: 'Others' },
+      // CLOTHING
+      { id: 'men', categoryId: 'clothing', label: 'Men Clothing' },
+      { id: 'women', categoryId: 'clothing', label: 'Women Clothing' },
+      { id: 'kids', categoryId: 'clothing', label: 'Kids Clothing' },
+      { id: 'sports_wear', categoryId: 'clothing', label: 'Sports Wear' },
+      { id: 'footwear', categoryId: 'clothing', label: 'Foot Wear' },
+      { id: 'ethnic', categoryId: 'clothing', label: 'Ethnic & Traditional' },
+      { id: 'cloth_acc', categoryId: 'clothing', label: 'Accessories & Others' },
       // REAL ESTATE
-      { id: 'apartments', categoryId: 'real_estate', label: 'Apartments' },
-      { id: 'houses', categoryId: 'real_estate', label: 'Independent Houses' },
-      { id: 'plots', categoryId: 'real_estate', label: 'Plots/Land' },
-      { id: 'rentals', categoryId: 'real_estate', label: 'Rental Houses' },
-      { id: 'pg', categoryId: 'real_estate', label: 'PG / Hostels' },
+      { id: 'residential', categoryId: 'real_estate', label: 'Residential Properties' },
+      { id: 'commercial_re', categoryId: 'real_estate', label: 'Commercial Properties' },
+      { id: 'rentals', categoryId: 'real_estate', label: 'Rental Listings' },
+      { id: 'plots', categoryId: 'real_estate', label: 'Land & Plots' },
+      { id: 'special_re', categoryId: 'real_estate', label: 'Special Categories' },
+      { id: 're_services', categoryId: 'real_estate', label: 'Real Estate Services' },
+      { id: 'pg', categoryId: 'real_estate', label: 'PG / Hostel' },
+      { id: 'timeshares', categoryId: 'real_estate', label: 'Timeshares' },
       // JOBS
       { id: 'it_jobs', categoryId: 'jobs', label: 'IT & Software' },
       { id: 'sales_jobs', categoryId: 'jobs', label: 'Sales & Marketing' },
-      { id: 'hr_jobs', categoryId: 'jobs', label: 'HR & Admin' },
       { id: 'finance', categoryId: 'jobs', label: 'Finance & Accounting' },
-      { id: 'driver', categoryId: 'jobs', label: 'Driver / Delivery' },
+      { id: 'hr_jobs', categoryId: 'jobs', label: 'HR & Admin' },
+      { id: 'bpo', categoryId: 'jobs', label: 'Customer Service / BPO' },
+      { id: 'education_jobs', categoryId: 'jobs', label: 'Education & Training' },
+      { id: 'health_jobs', categoryId: 'jobs', label: 'Healthcare' },
+      { id: 'eng_jobs', categoryId: 'jobs', label: 'Engineering' },
+      { id: 'construction', categoryId: 'jobs', label: 'Construction & Trades' },
+      { id: 'hospitality', categoryId: 'jobs', label: 'Hospitality & Travel' },
+      { id: 'retail', categoryId: 'jobs', label: 'Retail' },
+      { id: 'logistics', categoryId: 'jobs', label: 'Transport & Logistics' },
+      { id: 'media', categoryId: 'jobs', label: 'Media & Creative' },
+      { id: 'gov', categoryId: 'jobs', label: 'Government & Public Sector' },
+      { id: 'freelance', categoryId: 'jobs', label: 'Part-time / Freelance' },
       // SERVICES
       { id: 'home_svc', categoryId: 'services', label: 'Home Services' },
-      { id: 'tutors', categoryId: 'services', label: 'Education/Tutors' },
+      { id: 'auto_svc', categoryId: 'services', label: 'Automotive Services' },
+      { id: 'health_svc', categoryId: 'services', label: 'Health & Wellness' },
       { id: 'beauty', categoryId: 'services', label: 'Beauty & Salon' },
+      { id: 'tutors', categoryId: 'services', label: 'Education/Tutors' },
+      { id: 'astrology', categoryId: 'services', label: 'Astrology' },
+      { id: 'other_svc', categoryId: 'services', label: 'Others' },
+      // SPORTS
+      { id: 'sports_eq', categoryId: 'sports', label: 'Sports Equipment' },
+      { id: 'fitness', categoryId: 'sports', label: 'Fitness & Training' },
+      { id: 'outdoor', categoryId: 'sports', label: 'Outdoor & Adventure' },
+      { id: 'team_sports', categoryId: 'sports', label: 'Team Sports' },
+      { id: 'indoor', categoryId: 'sports', label: 'Indoor Games' },
+      { id: 'athletic', categoryId: 'sports', label: 'Athletic Apparel' },
+      { id: 'tickets', categoryId: 'sports', label: 'Tickets & Memberships' },
+      { id: 'coaching', categoryId: 'sports', label: 'Coaching & Training' },
+      { id: 'water', categoryId: 'sports', label: 'Water Sports' },
+      { id: 'winter', categoryId: 'sports', label: 'Winter Sports' },
+      // PETS
+      { id: 'pet_adopt', categoryId: 'pets', label: 'Pets / Adoption' },
+      { id: 'pet_acc', categoryId: 'pets', label: 'Pet Accessories' },
+      { id: 'pet_food', categoryId: 'pets', label: 'Pet Food & Nutrition' },
+      { id: 'pet_svc', categoryId: 'pets', label: 'Pet Services' },
+      { id: 'pet_health', categoryId: 'pets', label: 'Pet Health & Care' },
+      // TOURISM
+      { id: 'travel_pkg', categoryId: 'tourism', label: 'Travel Packages' },
+      { id: 'transport', categoryId: 'tourism', label: 'Transport Services' },
+      { id: 'accommodation', categoryId: 'tourism', label: 'Accommodation' },
+      { id: 'adventure', categoryId: 'tourism', label: 'Adventure & Activities' },
+      { id: 'local_exp', categoryId: 'tourism', label: 'Local Experiences' },
+      { id: 'holiday', categoryId: 'tourism', label: 'Holiday Essentials' },
+      { id: 'events_attr', categoryId: 'tourism', label: 'Events & Attractions' },
+      { id: 'visa', categoryId: 'tourism', label: 'Visa Services' },
       // DOCTORS
-      { id: 'dentist', categoryId: 'doctors', label: 'Dentist' },
-      { id: 'general', categoryId: 'doctors', label: 'General Physician' },
-      { id: 'cardio', categoryId: 'doctors', label: 'Cardiologist' },
-      { id: 'derma', categoryId: 'doctors', label: 'Dermatologist' },
+      { id: 'general', categoryId: 'doctors', label: 'General & Family Medicine' },
+      { id: 'specialists', categoryId: 'doctors', label: 'Specialists' },
+      { id: 'womens_health', categoryId: 'doctors', label: 'Women\'s Health' },
+      { id: 'child_health', categoryId: 'doctors', label: 'Children\'s Health' },
+      { id: 'dentist', categoryId: 'doctors', label: 'Dental Care' },
+      { id: 'mental_health', categoryId: 'doctors', label: 'Mental Health' },
+      { id: 'surgical', categoryId: 'doctors', label: 'Surgical Services' },
+      { id: 'alternative', categoryId: 'doctors', label: 'Alternative Care' },
+      { id: 'diagnostics', categoryId: 'doctors', label: 'Diagnostics & Support' },
       // CHARITY
-      { id: 'donation', categoryId: 'charity', label: 'Donation' },
-      { id: 'ngo', categoryId: 'charity', label: 'NGO Activities' },
-      { id: 'medical_aid', categoryId: 'charity', label: 'Medical Aid' },
+      { id: 'edu_aid', categoryId: 'charity', label: 'Education Aid' },
+      { id: 'medical_aid', categoryId: 'charity', label: 'Medical & Healthcare' },
+      { id: 'food_aid', categoryId: 'charity', label: 'Food & Essentials' },
+      { id: 'disaster', categoryId: 'charity', label: 'Disaster Relief' },
+      { id: 'animal_aid', categoryId: 'charity', label: 'Animal Welfare' },
+      { id: 'community', categoryId: 'charity', label: 'Community Development' },
+      { id: 'women_child', categoryId: 'charity', label: 'Women & Child Welfare' },
+      { id: 'environment', categoryId: 'charity', label: 'Environmental Causes' },
       // FOOD
-      { id: 'catering', categoryId: 'food', label: 'Catering' },
-      { id: 'homemade', categoryId: 'food', label: 'Home Chef' },
-      { id: 'bakery', categoryId: 'food', label: 'Bakery Items' },
+      { id: 'sale_lease', categoryId: 'food', label: 'Restaurants for Sale' },
+      { id: 'business', categoryId: 'food', label: 'Food Business Opps' },
+      { id: 'catering', categoryId: 'food', label: 'Catering Services' },
+      { id: 'homemade', categoryId: 'food', label: 'Home Chefs & Tiffin' },
+      { id: 'street_food', categoryId: 'food', label: 'Street Food & Local' },
+      { id: 'bakery', categoryId: 'food', label: 'Bakery & Confectionery' },
+      { id: 'organic', categoryId: 'food', label: 'Organic & Healthy' },
+      { id: 'supplies', categoryId: 'food', label: 'Food Supplies' },
+      { id: 'delivery', categoryId: 'food', label: 'Delivery & Takeaway' },
       // EVENTS
-      { id: 'weddings', categoryId: 'events', label: 'Weddings' },
-      { id: 'parties', categoryId: 'events', label: 'Birthdays & Parties' },
-      { id: 'corporate', categoryId: 'events', label: 'Corporate Events' }
+      { id: 'weddings', categoryId: 'events', label: 'Weddings & Engagements' },
+      { id: 'parties', categoryId: 'events', label: 'Birthday Parties' },
+      { id: 'festivals', categoryId: 'events', label: 'Festivals & Cultural' },
+      { id: 'corporate', categoryId: 'events', label: 'Corporate Events' },
+      { id: 'concerts', categoryId: 'events', label: 'Concerts & Entertainment' },
+      { id: 'gatherings', categoryId: 'events', label: 'Community Gatherings' },
+      { id: 'private', categoryId: 'events', label: 'Private Celebrations' },
+      { id: 'seasonal', categoryId: 'events', label: 'Seasonal Specials' }
     ],
     fields: [
-      // ELECTRONICS (Common fields mapped to main subs for ease)
+      // ELECTRONICS
       { id: 'brand_mob', subcategoryId: 'mobiles', label: 'Brand Name', type: 'text', required: true },
       { id: 'cond_mob', subcategoryId: 'mobiles', label: 'Condition', type: 'select', options: 'New, Used - Good, Used - Fair, Refurbished', required: true },
       { id: 'brand_lap', subcategoryId: 'laptops', label: 'Brand Name', type: 'text', required: true },
@@ -384,29 +479,33 @@
       
       // VEHICLES
       { id: 'v_brand', subcategoryId: 'cars', label: 'Brand/Make', type: 'text', required: true },
-      { id: 'v_year', subcategoryId: 'cars', label: 'Year', type: 'number', required: true },
+      { id: 'v_year', subcategoryId: 'cars', label: 'Year of Manufacture', type: 'number', required: true },
       { id: 'v_fuel', subcategoryId: 'cars', label: 'Fuel Type', type: 'select', options: 'Petrol, Diesel, CNG, Electric, Hybrid' },
       { id: 'v_trans', subcategoryId: 'cars', label: 'Transmission', type: 'select', options: 'Manual, Automatic' },
       { id: 'v_km', subcategoryId: 'cars', label: 'KM Driven', type: 'number' },
-      { id: 'v_owners', subcategoryId: 'cars', label: 'No. of Owners', type: 'select', options: '1st, 2nd, 3rd, 4th+' },
+      { id: 'v_owners', subcategoryId: 'cars', label: 'Type of Owner', type: 'select', options: '1st, 2nd, 3rd, 4th, 5th+' },
 
       // REAL ESTATE
-      { id: 're_type', subcategoryId: 'apartments', label: 'Listing Type', type: 'select', options: 'For Sale, For Rent' },
-      { id: 're_bhk', subcategoryId: 'apartments', label: 'BHK', type: 'select', options: '1 RK, 1 BHK, 2 BHK, 3 BHK, 4+ BHK' },
-      { id: 're_area', subcategoryId: 'apartments', label: 'Area (sq ft)', type: 'number', required: true },
-      { id: 're_furn', subcategoryId: 'apartments', label: 'Furnishing', type: 'select', options: 'Fully Furnished, Semi, Unfurnished' },
-      { id: 're_proj', subcategoryId: 'apartments', label: 'Project Name', type: 'text' },
+      { id: 're_type', subcategoryId: 'residential', label: 'Listing Type', type: 'select', options: 'For Sale, For Rent' },
+      { id: 're_listedby', subcategoryId: 'residential', label: 'Listed By', type: 'select', options: 'Builder, Dealer, Owner' },
+      { id: 're_area', subcategoryId: 'residential', label: 'Area Size (sq ft)', type: 'number', required: true },
+      { id: 're_len', subcategoryId: 'residential', label: 'Length', type: 'number' },
+      { id: 're_br', subcategoryId: 'residential', label: 'Breadth', type: 'number' },
+      { id: 're_face', subcategoryId: 'residential', label: 'Facing', type: 'select', options: 'East, West, North, South, North-East, North-West, South-East, South-West' },
+      { id: 're_proj', subcategoryId: 'residential', label: 'Project Name', type: 'text' },
 
       // JOBS
-      { id: 'j_role', subcategoryId: 'it_jobs', label: 'Role/Position', type: 'text', required: true },
-      { id: 'j_exp', subcategoryId: 'it_jobs', label: 'Experience', type: 'select', options: 'Fresher, 0-1 Years, 1-3 Years, 3-5 Years, 5+ Years' },
-      { id: 'j_sal_min', subcategoryId: 'it_jobs', label: 'Salary Min', type: 'number' },
-      { id: 'j_sal_max', subcategoryId: 'it_jobs', label: 'Salary Max', type: 'number' },
+      { id: 'j_role', subcategoryId: 'it_jobs', label: 'Position Type', type: 'select', options: 'Full-time, Part-time, Contract, Internship, Freelance' },
+      { id: 'j_sal_min', subcategoryId: 'it_jobs', label: 'Salary From', type: 'number' },
+      { id: 'j_sal_max', subcategoryId: 'it_jobs', label: 'Salary To', type: 'number' },
       
       // DOCTORS
-      { id: 'd_qual', subcategoryId: 'dentist', label: 'Qualification', type: 'text', placeholder: 'e.g. BDS, MDS' },
-      { id: 'd_exp', subcategoryId: 'dentist', label: 'Experience (Years)', type: 'number' },
-      { id: 'd_avail', subcategoryId: 'dentist', label: 'Availability', type: 'text', placeholder: 'Mon-Sat 10am-6pm' },
+      { id: 'd_qual', subcategoryId: 'general', label: 'Qualification', type: 'text', placeholder: 'e.g. MBBS, MD' },
+      { id: 'd_exp', subcategoryId: 'general', label: 'Experience (Years)', type: 'number' },
+      { id: 'd_avail', subcategoryId: 'general', label: 'Availability', type: 'text', placeholder: 'Mon-Sat 10am-6pm' },
+      
+      // CHARITY
+      { id: 'c_date', subcategoryId: 'edu_aid', label: 'Day / Date', type: 'text', placeholder: 'e.g. 2024-12-01' },
 
       // FOOD
       { id: 'f_fssai', subcategoryId: 'homemade', label: 'FSSAI License (Optional)', type: 'text' },
@@ -422,6 +521,7 @@
     let selectedCatId = null, selectedSubId = null, editingItem = null;
 
     document.addEventListener('DOMContentLoaded', () => {
+        if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
         loadData();
         loadSchema();
         loadSettings();
@@ -445,7 +545,7 @@
     function switchTab(id) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         document.getElementById('tab-' + id).classList.remove('hidden');
-        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active-nav', 'bg-slate-100'));
+        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active-nav', 'bg-slate-100 dark:bg-gray-800'));
         document.getElementById('nav-' + id).classList.add('active-nav');
         
         const titles = { dashboard: 'Dashboard', listings: 'Listings Manager', users: 'User Base', settings: 'Global Settings', schema: 'Schema Manager', support: 'Support Desk', moderation: 'Moderation Queue' };
@@ -475,15 +575,15 @@
         const list = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
         const tbody = document.getElementById('listingsTableBody');
         tbody.innerHTML = list.map(l => `
-            <tr class="hover:bg-slate-50 border-b border-slate-50">
-                <td class="px-6 py-4 font-bold text-slate-700">${l.title}</td>
-                <td class="px-6 py-4 text-xs text-slate-500">${l.userName}</td>
-                <td class="px-6 py-4 text-xs bg-slate-100 rounded">${l.category}</td>
+            <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/80 border-b border-slate-100 dark:border-gray-800">
+                <td class="px-6 py-4 font-bold text-slate-700 dark:text-gray-200">${l.title}</td>
+                <td class="px-6 py-4 text-xs text-slate-500 dark:text-gray-400">${l.userName}</td>
+                <td class="px-6 py-4 text-xs bg-slate-100 dark:bg-gray-800 rounded">${l.category}</td>
                 <td class="px-6 py-4 text-brand font-bold">₹${l.price}</td>
                 <td class="px-6 py-4"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs uppercase font-bold">${l.status}</span></td>
                 <td class="px-6 py-4 text-right flex gap-2 justify-end">
                     <button onclick="window.open('Listing Detail.html?id=${l.id}', '_blank')" class="text-blue-500 text-xs font-bold hover:underline">View</button>
-                    <button onclick="window.open('Post Listing.html?id=${l.id}', '_blank')" class="text-slate-500 text-xs font-bold hover:underline">Edit</button>
+                    <button onclick="window.open('Post Listing.html?id=${l.id}', '_blank')" class="text-slate-500 dark:text-gray-400 text-xs font-bold hover:underline">Edit</button>
                     <button onclick="deleteListing('${l.id}')" class="text-red-500 text-xs font-bold hover:underline">Delete</button>
                 </td>
             </tr>
@@ -500,14 +600,14 @@
             const isBanned = banned.includes(u.name);
             const isVerified = verified.includes(u.name);
             return `
-            <tr class="hover:bg-slate-50 border-b border-slate-50">
-                <td class="px-6 py-4 flex items-center gap-2"><div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold">${u.name.charAt(0)}</div> ${u.name}</td>
+            <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/80 border-b border-slate-100 dark:border-gray-800">
+                <td class="px-6 py-4 flex items-center gap-2"><div class="w-6 h-6 rounded-full bg-slate-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold">${u.name.charAt(0)}</div> ${u.name}</td>
                 <td class="px-6 py-4 text-xs font-mono">${u.email}</td>
                 <td class="px-6 py-4"><span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs uppercase font-bold">${u.role}</span></td>
                 <td class="px-6 py-4"><span class="${isBanned ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'} px-2 py-1 rounded text-xs uppercase font-bold">${isBanned ? 'Banned' : 'Active'}</span></td>
                 <td class="px-6 py-4">${isVerified ? '<span class="text-blue-500 material-symbols-outlined text-sm">verified</span>' : '<span class="text-slate-300 text-xs">No</span>'}</td>
                 <td class="px-6 py-4 text-right flex gap-2 justify-end">
-                    <button onclick="openEditUser('${u.id}')" class="text-slate-500 text-xs font-bold hover:underline">Edit</button>
+                    <button onclick="openEditUser('${u.id}')" class="text-slate-500 dark:text-gray-400 text-xs font-bold hover:underline">Edit</button>
                     <button onclick="toggleVerify('${u.name}')" class="text-blue-500 text-xs font-bold hover:underline">${isVerified ? 'Unverify' : 'Verify'}</button>
                     <button onclick="toggleBan('${u.name}')" class="text-${isBanned ? 'green' : 'red'}-500 text-xs font-bold hover:underline">${isBanned ? 'Unban' : 'Ban'}</button>
                 </td>
@@ -519,31 +619,44 @@
         const reports = JSON.parse(localStorage.getItem('zzz_flags') || '[]');
         const tbody = document.getElementById('reportsTableBody');
         if(reports.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-400">No reported items.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-400 dark:text-gray-500">No reported items.</td></tr>';
             return;
         }
-        tbody.innerHTML = reports.map(r => `
-            <tr class="hover:bg-slate-50 border-b border-slate-50">
-                <td class="px-6 py-4 text-xs text-slate-400">${new Date(r.time).toLocaleDateString()}</td>
-                <td class="px-6 py-4 font-bold text-slate-700">${r.title}</td>
+        tbody.innerHTML = reports.map(r => {
+            const isListing = !!r.listingId;
+            const title = r.listingTitle || r.reportedUserName || 'Unknown';
+            const date = r.date || r.time || Date.now();
+            const id = r.listingId || r.reportedUserId;
+            
+
+            return `
+            <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/80 border-b border-slate-100 dark:border-gray-800">
+                <td class="px-6 py-4 text-xs text-slate-400 dark:text-gray-500">${new Date(date).toLocaleDateString()}</td>
+                <td class="px-6 py-4 font-bold text-slate-700 dark:text-gray-200">${title} ${isListing ? '<span class="text-blue-500 text-[10px] bg-blue-50 px-1 rounded ml-1">ITEM</span>' : '<span class="text-purple-500 text-[10px] bg-purple-50 px-1 rounded ml-1">USER</span>'}</td>
                 <td class="px-6 py-4 text-red-500 text-xs font-bold">${r.reason}</td>
                 <td class="px-6 py-4 text-right flex gap-2 justify-end">
-                    <button onclick="window.open('Listing Detail.html?id=${r.itemId}', '_blank')" class="text-blue-500 text-xs font-bold hover:underline">Inspect</button>
-                    <button onclick="deleteListing('${r.itemId}')" class="text-red-500 text-xs font-bold hover:underline">Delete Item</button>
+                    ${isListing ? 
+                        '<button onclick="window.open(&quot;Listing Detail.html?id=' + id + '&quot;, &quot;_blank&quot;)" class="text-blue-500 text-xs font-bold hover:underline">Inspect</button>' +
+                        '<button onclick="deleteListing(&quot;' + id + '&quot;)" class="text-red-500 text-xs font-bold hover:underline">Delete Item</button>' 
+                        : 
+                        '<button onclick="window.open(&quot;profile.html?sellerId=' + id + '&quot;, &quot;_blank&quot;)" class="text-blue-500 text-xs font-bold hover:underline">Inspect User</button>' +
+                        '<button onclick="toggleBan(&quot;' + title + '&quot;)" class="text-red-500 text-xs font-bold hover:underline">Ban User</button>'
+                    }
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
     }
     
     function loadSupport() {
         const tickets = JSON.parse(localStorage.getItem('zzz_support_tickets') || '[]');
         const tbody = document.getElementById('supportTableBody');
         tbody.innerHTML = tickets.map(t => `
-            <tr class="hover:bg-slate-50 border-b border-slate-50">
-                <td class="px-6 py-4 text-xs text-slate-400 font-mono">${t.id}</td>
-                <td class="px-6 py-4 font-bold text-slate-700">${t.userName}</td>
+            <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/80 border-b border-slate-100 dark:border-gray-800">
+                <td class="px-6 py-4 text-xs text-slate-400 dark:text-gray-500 font-mono">${t.id}</td>
+                <td class="px-6 py-4 font-bold text-slate-700 dark:text-gray-200">${t.userName}</td>
                 <td class="px-6 py-4 text-brand font-bold">${t.topic}</td>
-                <td class="px-6 py-4"><span class="${t.status === 'Open' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'} px-2 py-1 rounded text-xs uppercase font-bold">${t.status}</span></td>
+                <td class="px-6 py-4"><span class="${t.status === 'Open' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'} px-2 py-1 rounded text-xs uppercase font-bold">${t.status}</span></td>
                 <td class="px-6 py-4 text-right">${t.status === 'Open' ? `<button onclick="resolveTicket('${t.id}')" class="text-green-600 font-bold text-xs">Resolve</button>` : ''}</td>
             </tr>
         `).join('');
@@ -562,7 +675,7 @@
         const tbody = document.getElementById('logsTableBody');
         if(!tbody) return;
         tbody.innerHTML = logs.map(l => `
-            <tr><td class="px-6 py-2 text-slate-400">${l.time}</td><td class="px-6 py-2 font-bold">${l.admin}</td><td class="px-6 py-2 text-brand">${l.action}</td><td class="px-6 py-2 text-slate-600">${l.detail}</td></tr>
+            <tr><td class="px-6 py-2 text-slate-400 dark:text-gray-500">${l.time}</td><td class="px-6 py-2 font-bold">${l.admin}</td><td class="px-6 py-2 text-brand">${l.action}</td><td class="px-6 py-2 text-slate-600 dark:text-gray-300">${l.detail}</td></tr>
         `).join('');
     }
 
@@ -703,7 +816,7 @@
     
     function renderCategories() {
         document.getElementById('listCategories').innerHTML = schema.categories.map(c => 
-            `<div onclick="selCat('${c.id}')" class="p-3 rounded hover:bg-slate-50 cursor-pointer flex items-center justify-between ${selectedCatId===c.id ? 'active-list-item':''}"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-slate-400 text-sm">${c.icon}</span> <span class="text-sm font-medium">${c.label}</span></div><button onclick="editItem(event,'category','${c.id}')" class="text-slate-300 hover:text-blue-500"><span class="material-symbols-outlined text-sm">edit</span></button></div>`
+            `<div onclick="selCat('${c.id}')" class="p-3 rounded hover:bg-slate-50 dark:bg-gray-800/50 cursor-pointer flex items-center justify-between ${selectedCatId===c.id ? 'active-list-item':''}"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-slate-400 dark:text-gray-500 text-sm">${c.icon}</span> <span class="text-sm font-medium">${c.label}</span></div><button onclick="editItem(event,'category','${c.id}')" class="text-slate-300 hover:text-blue-500"><span class="material-symbols-outlined text-sm">edit</span></button></div>`
         ).join('');
     }
     
@@ -711,16 +824,16 @@
         selectedCatId = id; selectedSubId = null;
         renderCategories();
         const subs = schema.subcategories.filter(s => s.categoryId === id);
-        document.getElementById('listSubcategories').innerHTML = subs.length ? subs.map(s => `<div onclick="selSub('${s.id}')" class="p-3 rounded hover:bg-slate-50 cursor-pointer flex justify-between ${selectedSubId===s.id ? 'active-list-item':''}"><span class="text-sm font-medium">${s.label}</span><button onclick="editItem(event,'subcategory','${s.id}')" class="text-slate-300 hover:text-blue-500"><span class="material-symbols-outlined text-sm">edit</span></button></div>`).join('') : '<div class="text-center text-xs text-slate-400 mt-4">No Subcategories</div>';
+        document.getElementById('listSubcategories').innerHTML = subs.length ? subs.map(s => `<div onclick="selSub('${s.id}')" class="p-3 rounded hover:bg-slate-50 dark:bg-gray-800/50 cursor-pointer flex justify-between ${selectedSubId===s.id ? 'active-list-item':''}"><span class="text-sm font-medium">${s.label}</span><button onclick="editItem(event,'subcategory','${s.id}')" class="text-slate-300 hover:text-blue-500"><span class="material-symbols-outlined text-sm">edit</span></button></div>`).join('') : '<div class="text-center text-xs text-slate-400 dark:text-gray-500 mt-4">No Subcategories</div>';
         document.getElementById('btnAddSub').disabled = false;
-        document.getElementById('listFields').innerHTML = '<div class="text-center text-xs text-slate-400 mt-10">Select a Subcategory</div>';
+        document.getElementById('listFields').innerHTML = '<div class="text-center text-xs text-slate-400 dark:text-gray-500 mt-10">Select a Subcategory</div>';
     }
 
     function selSub(id) {
         selectedSubId = id;
         selCat(selectedCatId); // re-render to highlight sub
         const fields = schema.fields.filter(f => f.subcategoryId === id);
-        document.getElementById('listFields').innerHTML = fields.length ? fields.map(f => `<div class="p-3 border border-slate-100 rounded mb-2 bg-white flex justify-between group"><div><p class="text-sm font-bold">${f.label}</p><span class="text-[10px] bg-slate-100 px-1 rounded uppercase">${f.type}</span></div><button onclick="editItem(event,'field','${f.id}')" class="text-slate-300 hover:text-blue-500 opacity-0 group-hover:opacity-100"><span class="material-symbols-outlined text-sm">edit</span></button></div>`).join('') : '<div class="text-center text-xs text-slate-400 mt-4">No Fields</div>';
+        document.getElementById('listFields').innerHTML = fields.length ? fields.map(f => `<div class="p-3 border border-slate-100 dark:border-gray-800 rounded mb-2 bg-white dark:bg-card-dark flex justify-between group"><div><p class="text-sm font-bold">${f.label}</p><span class="text-[10px] bg-slate-100 dark:bg-gray-800 px-1 rounded uppercase">${f.type}</span></div><button onclick="editItem(event,'field','${f.id}')" class="text-slate-300 hover:text-blue-500 opacity-0 group-hover:opacity-100"><span class="material-symbols-outlined text-sm">edit</span></button></div>`).join('') : '<div class="text-center text-xs text-slate-400 dark:text-gray-500 mt-4">No Fields</div>';
         document.getElementById('btnAddField').disabled = false;
     }
     
@@ -824,5 +937,6 @@
     function refreshData() { loadData(); alert("Data Refreshed"); }
 
   </script>
+  <script src="js/utils.js"></script>
 </body>
 </html>

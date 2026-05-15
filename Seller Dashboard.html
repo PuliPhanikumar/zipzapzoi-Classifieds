@@ -13,13 +13,16 @@
 
   <script>
     tailwind.config = {
-      theme: {
+      darkMode: "class",
+        theme: {
         extend: {
           colors: {
             brand: "#019863",
             accent: "#4D96A9",
             bgLight: "#F8F9FA",
-          },
+            "background-light": "#f0f4f8",
+            "background-dark": "#121212",
+            "card-dark": "#1e1e1e"},
           fontFamily: { sans: ["Spline Sans", "sans-serif"] },
           boxShadow: {
             soft: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
@@ -29,9 +32,9 @@
     }
   </script>
 </head>
-<body class="bg-bgLight text-gray-800 flex min-h-screen">
+<body class="bg-bgLight flex min-h-screen bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
 
-  <aside class="hidden md:flex w-64 bg-white border-r flex-col sticky top-0 h-screen">
+  <aside class="hidden md:flex w-64 bg-white dark:bg-card-dark border-r flex-col sticky top-0 h-screen">
     <div class="p-6 border-b flex items-center gap-2 text-brand font-bold text-xl">
       <span class="material-symbols-outlined text-3xl">all_inclusive</span> ZipZapZoi
     </div>
@@ -40,20 +43,20 @@
       <a href="#" class="flex items-center gap-3 px-4 py-3 bg-green-50 text-brand font-bold rounded-xl">
         <span class="material-symbols-outlined">dashboard</span> Overview
       </a>
-      <a href="classifieds.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-gray-900 font-medium rounded-xl transition-colors">
+      <a href="classifieds.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-800 hover:text-gray-900 dark:text-white font-medium rounded-xl transition-colors">
         <span class="material-symbols-outlined">storefront</span> Browse Market
       </a>
-      <a href="Inbox.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-gray-900 font-medium rounded-xl transition-colors">
+      <a href="Inbox.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-800 hover:text-gray-900 dark:text-white font-medium rounded-xl transition-colors">
         <span class="material-symbols-outlined">mail</span> Messages
         <span id="sideBadge" class="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden">0</span>
       </a>
-      <a href="Post Listing.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-gray-900 font-medium rounded-xl transition-colors">
+      <a href="Post Listing.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-800 hover:text-gray-900 dark:text-white font-medium rounded-xl transition-colors">
         <span class="material-symbols-outlined">add_circle</span> Post New Ad
       </a>
       <a href="#" onclick="requestVerification()" class="flex items-center gap-3 px-4 py-3 text-blue-500 hover:bg-blue-50 font-bold rounded-xl transition-colors" id="navVerifyBtn">
         <span class="material-symbols-outlined">verified</span> Get Verified
       </a>
-      <a href="profile.html?sellerId=me" onclick="this.href='profile.html?sellerId='+currentUser.id" class="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-gray-900 font-medium rounded-xl transition-colors">
+      <a href="profile.html?sellerId=me" onclick="this.href='profile.html?sellerId='+currentUser.id" class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-800 hover:text-gray-900 dark:text-white font-medium rounded-xl transition-colors">
         <span class="material-symbols-outlined">person</span> Public Profile
       </a>
     </nav>
@@ -67,19 +70,19 @@
 
   <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
     
-    <header class="md:hidden bg-white border-b h-16 flex items-center justify-between px-4 sticky top-0 z-20">
+    <header class="md:hidden bg-white dark:bg-card-dark border-b h-16 flex items-center justify-between px-4 sticky top-0 z-20">
       <div class="flex items-center gap-2 text-brand font-bold text-lg">
         <span class="material-symbols-outlined text-2xl">all_inclusive</span> Dashboard
       </div>
-      <button onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="p-2 text-gray-600">
+      <button onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="p-2 text-gray-600 dark:text-gray-300">
         <span class="material-symbols-outlined">menu</span>
       </button>
     </header>
 
-    <div id="mobileMenu" class="hidden md:hidden bg-white border-b shadow-lg absolute top-16 left-0 right-0 z-10 p-4 space-y-2">
-      <a href="classifieds.html" class="block p-3 hover:bg-gray-50 rounded-lg">Browse Market</a>
-      <a href="Inbox.html" class="block p-3 hover:bg-gray-50 rounded-lg">Messages</a>
-      <a href="Post Listing.html" class="block p-3 hover:bg-gray-50 rounded-lg text-brand font-bold">Post New Ad</a>
+    <div id="mobileMenu" class="hidden md:hidden bg-white dark:bg-card-dark border-b shadow-lg absolute top-16 left-0 right-0 z-10 p-4 space-y-2">
+      <a href="classifieds.html" class="block p-3 hover:bg-gray-50 dark:bg-gray-800 rounded-lg">Browse Market</a>
+      <a href="Inbox.html" class="block p-3 hover:bg-gray-50 dark:bg-gray-800 rounded-lg">Messages</a>
+      <a href="Post Listing.html" class="block p-3 hover:bg-gray-50 dark:bg-gray-800 rounded-lg text-brand font-bold">Post New Ad</a>
       <button onclick="handleLogout()" class="block w-full text-left p-3 text-red-500 font-bold">Log Out</button>
     </div>
 
@@ -87,8 +90,8 @@
       
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">Hello, <span id="userName">User</span>! 👋</h1>
-          <p class="text-gray-500 text-sm">Here is what's happening with your listings today.</p>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Hello, <span id="userName">User</span>! 👋</h1>
+          <p class="text-gray-500 dark:text-gray-400 text-sm">Here is what's happening with your listings today.</p>
         </div>
         <a href="Post Listing.html" class="bg-brand hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-brand/20 transition-all active:scale-95 flex items-center justify-center gap-2">
           <span class="material-symbols-outlined">add</span> Post New Ad
@@ -96,45 +99,45 @@
       </div>
 
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white p-5 rounded-2xl shadow-soft border border-gray-100">
+        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-800">
           <div class="flex justify-between items-start mb-2">
             <div class="p-2 bg-blue-50 text-blue-600 rounded-lg"><span class="material-symbols-outlined">visibility</span></div>
             <span class="text-xs font-bold text-green-500 bg-green-50 px-2 py-1 rounded">+12%</span>
           </div>
-          <h3 class="text-2xl font-bold text-gray-900" id="statViews">0</h3>
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white" id="statViews">0</h3>
           <p class="text-xs text-gray-400 font-bold">TOTAL VIEWS</p>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-soft border border-gray-100">
+        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-800">
           <div class="flex justify-between items-start mb-2">
             <div class="p-2 bg-purple-50 text-purple-600 rounded-lg"><span class="material-symbols-outlined">inventory_2</span></div>
           </div>
-          <h3 class="text-2xl font-bold text-gray-900" id="statActive">0</h3>
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white" id="statActive">0</h3>
           <p class="text-xs text-gray-400 font-bold">ACTIVE LISTINGS</p>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-soft border border-gray-100">
+        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-800">
           <div class="flex justify-between items-start mb-2">
             <div class="p-2 bg-orange-50 text-orange-600 rounded-lg"><span class="material-symbols-outlined">mail</span></div>
             <span id="msgBadge" class="hidden text-xs font-bold text-white bg-red-500 px-2 py-1 rounded-full">New</span>
           </div>
-          <h3 class="text-2xl font-bold text-gray-900" id="statMsgs">0</h3>
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white" id="statMsgs">0</h3>
           <p class="text-xs text-gray-400 font-bold">MESSAGES</p>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-soft border border-gray-100">
+        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-800">
           <div class="flex justify-between items-start mb-2">
             <div class="p-2 bg-green-50 text-green-600 rounded-lg"><span class="material-symbols-outlined">monetization_on</span></div>
           </div>
-          <h3 class="text-2xl font-bold text-gray-900" id="statSold">0</h3>
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white" id="statSold">0</h3>
           <p class="text-xs text-gray-400 font-bold">ITEMS SOLD</p>
         </div>
       </div>
 
-      <div class="bg-white p-6 rounded-3xl shadow-soft border border-gray-100 mb-8">
+      <div class="bg-white dark:bg-card-dark p-6 rounded-3xl shadow-soft border border-gray-100 dark:border-gray-800 mb-8">
         <div class="flex items-center justify-between mb-6">
-          <h3 class="font-bold text-gray-800">Performance Overview</h3>
-          <select class="text-xs bg-gray-50 border-none rounded-lg p-2 font-bold text-gray-500 outline-none">
+          <h3 class="font-bold text-gray-800 dark:text-white">Performance Overview</h3>
+          <select class="text-xs bg-gray-50 dark:bg-gray-800 border-none rounded-lg p-2 font-bold text-gray-500 dark:text-gray-400 outline-none">
             <option>Last 7 Days</option>
             <option>This Month</option>
           </select>
@@ -144,9 +147,9 @@
         </div>
       </div>
 
-      <h3 class="font-bold text-gray-800 text-lg mb-4">Your Listings</h3>
+      <h3 class="font-bold text-gray-800 dark:text-white text-lg mb-4">Your Listings</h3>
       <div id="listingsList" class="space-y-4">
-        <div class="text-center py-12 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-300">
+        <div class="text-center py-12 text-gray-400 bg-white dark:bg-card-dark rounded-2xl border border-dashed border-gray-300">
           <span class="material-symbols-outlined text-4xl mb-2">post_add</span>
           <p>You haven't posted anything yet.</p>
         </div>
@@ -159,17 +162,17 @@
 
   <!-- Mark Sold Modal -->
   <div id="soldModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-bouncy transform transition-all scale-95" id="soldModalContent">
-      <h3 class="font-bold text-xl text-gray-900 mb-2">Mark as Sold</h3>
-      <p class="text-sm text-gray-500 mb-4">Congrats on the sale! Help us keep track of who bought this item to enable reviews.</p>
+    <div class="bg-white dark:bg-card-dark w-full max-w-sm rounded-3xl p-6 shadow-bouncy transform transition-all scale-95" id="soldModalContent">
+      <h3 class="font-bold text-xl text-gray-900 dark:text-white mb-2">Mark as Sold</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Congrats on the sale! Help us keep track of who bought this item to enable reviews.</p>
       
       <div class="mb-4">
-        <label class="block text-sm font-bold text-gray-700 mb-1">Buyer's Email (Optional)</label>
-        <input type="email" id="buyerEmail" placeholder="buyer@example.com" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-brand/20 outline-none">
+        <label class="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1">Buyer's Email (Optional)</label>
+        <input type="email" id="buyerEmail" placeholder="buyer@example.com" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-brand/20 outline-none">
       </div>
       
       <div class="flex gap-3 mt-6">
-        <button onclick="closeSoldModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition-colors">Cancel</button>
+        <button onclick="closeSoldModal()" class="flex-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold py-3 rounded-xl transition-colors">Cancel</button>
         <button onclick="confirmSold()" class="flex-1 bg-brand hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg transition-transform active:scale-95">Confirm Sale</button>
       </div>
     </div>
@@ -180,8 +183,16 @@
     const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
     
     if (!currentUser) {
-      window.location.href = 'Login Page.html';
+      window.location.href = 'Login Page.html?redirect=Seller Dashboard.html';
+      throw new Error("Unauthenticated user, redirecting...");
     } else {
+      const bannedUsers = JSON.parse(localStorage.getItem('zzz_banned_users') || '[]');
+      if (bannedUsers.includes(currentUser.name)) {
+          localStorage.removeItem('zzz_user');
+          alert("Your account has been suspended by an Administrator.");
+          window.location.href = 'Login Page.html';
+          throw new Error("Banned user, redirecting...");
+      }
       document.getElementById('userName').textContent = currentUser.name.split(' ')[0];
     }
 
@@ -220,13 +231,13 @@
       if(items.length === 0) return; // Keep default empty state
 
       container.innerHTML = items.map(item => `
-        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+        <div class="bg-white dark:bg-card-dark p-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col md:flex-row gap-4 items-center">
           
-          <img src="${item.image || 'https://via.placeholder.com/150'}" class="w-full md:w-24 h-24 object-cover rounded-xl bg-gray-100">
+          <img src="${item.image || 'https://via.placeholder.com/150'}" class="w-full md:w-24 h-24 object-cover rounded-xl bg-gray-100 dark:bg-gray-800">
           
           <div class="flex-1 text-center md:text-left">
             <div class="flex items-center justify-center md:justify-start gap-2 mb-1">
-              <h4 class="font-bold text-gray-900">${item.title}</h4>
+              <h4 class="font-bold text-gray-900 dark:text-white">${item.title}</h4>
               ${item.status === 'sold' 
                 ? '<span class="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">SOLD</span>' 
                 : '<span class="bg-green-100 text-green-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">ACTIVE</span>'}
@@ -483,6 +494,35 @@ function hideSuccess() {
 document.addEventListener('DOMContentLoaded', function() {
     setCsrfToken();
 });
+
+// Toast Notification System
+function showToast(message, type = 'success') {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'fixed bottom-4 right-4 z-50 flex flex-col gap-2';
+        document.body.appendChild(container);
+    }
+    
+    const toast = document.createElement('div');
+    const isError = type === 'error';
+    toast.className = `flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 text-white font-bold text-sm ${isError ? 'bg-red-500' : 'bg-brand'}`;
+    toast.innerHTML = `<span class="material-symbols-outlined">${isError ? 'error' : 'check_circle'}</span> ${message}`;
+    
+    container.appendChild(toast);
+    
+    // Animate In
+    requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-10', 'opacity-0');
+    });
+    
+    // Animate Out & Remove
+    setTimeout(() => {
+        toast.classList.add('translate-y-10', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
 
   </script>
   <script src="js/utils.js"></script>

@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ZipZapZoi - Buy, Sell, Connect</title>
+  <meta name="description" content="ZipZapZoi is the safest way to buy, sell and connect with your local community. No fees, no hassle."/>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
@@ -11,6 +12,7 @@
 
   <script>
     tailwind.config = {
+      darkMode: "class",
       theme: {
         extend: {
           fontFamily: { sans: ["Spline Sans", "sans-serif"] },
@@ -18,8 +20,9 @@
             "primary": "#019863",
             "secondary": "#4D96A9",
             "accent": "#FFD166",
-            "dark": "#1A202C",
-            "light": "#F7F9FC",
+            "background-light": "#f0f4f8",
+            "background-dark": "#121212",
+            "card-dark": "#1e1e1e"
           },
           boxShadow: {
             "bouncy": "0 10px 20px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
@@ -50,33 +53,39 @@
       background-size: 30px 30px;
       opacity: 0.05;
     }
+    .how-card { background: #f0f4f8; }
+    .dark .how-card { background: #1e1e1e; }
   </style>
 </head>
-<body class="bg-light text-dark font-sans overflow-x-hidden">
+<body class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 font-sans overflow-x-hidden transition-colors duration-300">
 
-  <nav class="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all duration-300" id="navbar">
+  <!-- NAV -->
+  <nav class="fixed w-full z-50 bg-white/80 dark:bg-card-dark/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 transition-all duration-300" id="navbar">
     <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
       <div class="flex items-center gap-2">
         <span class="material-symbols-outlined text-primary text-4xl">all_inclusive</span>
-        <span class="text-2xl font-bold tracking-tight text-gray-800">ZipZapZoi</span>
+        <span class="text-2xl font-bold tracking-tight text-gray-800 dark:text-white">ZipZapZoi</span>
       </div>
-      
-      <div class="hidden md:flex items-center gap-8 font-medium text-gray-600">
+
+      <div class="hidden md:flex items-center gap-8 font-medium text-gray-600 dark:text-gray-300">
         <a href="classifieds.html" class="hover:text-primary transition-colors">Browse</a>
         <a href="help.html" class="hover:text-primary transition-colors">Help</a>
-        <div class="h-6 w-px bg-gray-200"></div>
+        <div class="h-6 w-px bg-gray-200 dark:bg-gray-700"></div>
+        <button onclick="toggleDarkMode()" class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Toggle Dark Mode">
+          <span class="material-symbols-outlined text-xl" id="themeIcon">dark_mode</span>
+        </button>
         <a href="Login Page.html" class="hover:text-primary transition-colors" id="loginLink">Log In</a>
         <a href="User Registration.html" class="bg-primary hover:bg-green-700 text-white px-6 py-2.5 rounded-full font-bold shadow-bouncy transition-transform hover:-translate-y-0.5" id="signupBtn">
           Get Started
         </a>
       </div>
 
-      <button id="mobileMenuBtn" class="md:hidden text-gray-600"><span class="material-symbols-outlined text-3xl">menu</span></button>
+      <button id="mobileMenuBtn" class="md:hidden text-gray-600 dark:text-gray-300"><span class="material-symbols-outlined text-3xl">menu</span></button>
     </div>
 
     <!-- Mobile Menu -->
-    <div id="mobileMenu" class="md:hidden hidden bg-white border-t border-gray-100 absolute w-full px-6 py-4 shadow-bouncy">
-      <div class="flex flex-col gap-4 font-medium text-gray-600">
+    <div id="mobileMenu" class="md:hidden hidden bg-white dark:bg-card-dark border-t border-gray-100 dark:border-gray-800 absolute w-full px-6 py-4 shadow-bouncy">
+      <div class="flex flex-col gap-4 font-medium text-gray-700 dark:text-gray-200">
         <a href="classifieds.html" class="hover:text-primary transition-colors py-2">Browse</a>
         <a href="help.html" class="hover:text-primary transition-colors py-2">Help</a>
         <a href="Login Page.html" class="hover:text-primary transition-colors py-2" id="mobileLoginLink">Log In</a>
@@ -85,62 +94,63 @@
     </div>
   </nav>
 
+  <!-- HERO -->
   <header class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
     <div class="absolute inset-0 hero-bg z-0 pointer-events-none"></div>
-    
+
     <div class="max-w-7xl mx-auto px-6 relative z-10 grid lg:grid-cols-2 gap-12 items-center">
-      
+
       <div class="text-center lg:text-left space-y-6 opacity-0 animate-fade-up" style="animation-delay: 0.1s;">
-        <div class="inline-flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm font-bold border border-green-100">
+        <div class="inline-flex items-center gap-2 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-4 py-2 rounded-full text-sm font-bold border border-green-100 dark:border-green-800">
           <span class="material-symbols-outlined text-sm">rocket_launch</span> The Future of Classifieds
         </div>
-        <h1 class="text-5xl lg:text-7xl font-bold leading-tight text-gray-900">
-          Buy, Sell, & <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Connect.</span>
+        <h1 class="text-5xl lg:text-7xl font-bold leading-tight text-gray-900 dark:text-white">
+          Buy, Sell, &amp; <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Connect.</span>
         </h1>
-        <p class="text-lg text-gray-500 max-w-xl mx-auto lg:mx-0">
+        <p class="text-lg text-gray-500 dark:text-gray-400 max-w-xl mx-auto lg:mx-0">
           ZipZapZoi is the safest way to find great deals, sell unused items, and connect with your local community. No fees, no hassle.
         </p>
-        
+
         <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
           <a href="classifieds.html" class="bg-primary hover:bg-green-700 text-white text-lg px-8 py-4 rounded-full font-bold shadow-glow transition-transform hover:-translate-y-1 flex items-center justify-center gap-2">
             Start Browsing <span class="material-symbols-outlined">arrow_forward</span>
           </a>
-          <a href="Post Listing.html" class="bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 text-lg px-8 py-4 rounded-full font-bold shadow-sm transition-transform hover:-translate-y-1 flex items-center justify-center gap-2">
+          <a href="Post Listing.html" class="bg-white dark:bg-card-dark hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 text-lg px-8 py-4 rounded-full font-bold shadow-sm transition-transform hover:-translate-y-1 flex items-center justify-center gap-2">
             <span class="material-symbols-outlined">add_circle</span> Post an Ad
           </a>
         </div>
 
-        <div class="pt-8 flex items-center justify-center lg:justify-start gap-8 text-gray-400 grayscale opacity-70">
-           <div class="flex items-center gap-2"><span class="font-bold text-2xl text-gray-800">12k+</span> Users</div>
-           <div class="w-px h-8 bg-gray-200"></div>
-           <div class="flex items-center gap-2"><span class="font-bold text-2xl text-gray-800">8.5k</span> Listings</div>
-           <div class="w-px h-8 bg-gray-200"></div>
-           <div class="flex items-center gap-2"><span class="font-bold text-2xl text-gray-800">4.9</span> Rating</div>
+        <div class="pt-8 flex items-center justify-center lg:justify-start gap-8 opacity-70">
+           <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400"><span class="font-bold text-2xl text-gray-800 dark:text-white">12k+</span> Users</div>
+           <div class="w-px h-8 bg-gray-200 dark:bg-gray-700"></div>
+           <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400"><span class="font-bold text-2xl text-gray-800 dark:text-white">8.5k</span> Listings</div>
+           <div class="w-px h-8 bg-gray-200 dark:bg-gray-700"></div>
+           <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400"><span class="font-bold text-2xl text-gray-800 dark:text-white">4.9</span> Rating</div>
         </div>
       </div>
 
       <div class="relative hidden lg:block opacity-0 animate-fade-up" style="animation-delay: 0.3s;">
         <div class="absolute top-0 right-10 w-64 h-64 bg-secondary/10 rounded-full blur-3xl animate-float"></div>
         <div class="absolute bottom-0 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
-        
-        <div class="relative bg-white p-4 rounded-3xl shadow-2xl border border-gray-100 transform rotate-[-2deg] hover:rotate-0 transition-transform duration-500 w-[400px] mx-auto animate-float">
-          <div class="h-48 bg-gray-100 rounded-2xl bg-cover bg-center mb-4 relative" style="background-image: url('https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80');">
-             <span class="absolute top-3 left-3 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold shadow-sm">Vehicles</span>
+
+        <div class="relative bg-white dark:bg-card-dark p-4 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800 transform rotate-[-2deg] hover:rotate-0 transition-transform duration-500 w-[400px] mx-auto animate-float">
+          <div class="h-48 bg-gray-100 dark:bg-gray-800 rounded-2xl bg-cover bg-center mb-4 relative" style="background-image: url('https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80');">
+             <span class="absolute top-3 left-3 bg-white/90 dark:bg-card-dark/90 text-gray-800 dark:text-white backdrop-blur px-3 py-1 rounded-full text-xs font-bold shadow-sm">Vehicles</span>
           </div>
           <div class="space-y-2">
-            <div class="h-6 bg-gray-100 rounded w-3/4"></div>
-            <div class="h-4 bg-gray-50 rounded w-1/2"></div>
+            <div class="h-6 bg-gray-100 dark:bg-gray-800 rounded w-3/4"></div>
+            <div class="h-4 bg-gray-50 dark:bg-gray-700 rounded w-1/2"></div>
             <div class="flex justify-between items-center pt-2">
-              <div class="h-8 w-24 bg-green-100 rounded-full"></div>
+              <div class="h-8 w-24 bg-green-100 dark:bg-green-900/40 rounded-full"></div>
               <div class="h-10 w-10 bg-primary rounded-full flex items-center justify-center text-white shadow-lg">
                 <span class="material-symbols-outlined">chat</span>
               </div>
             </div>
           </div>
-          
-          <div class="absolute -right-6 top-10 bg-white p-3 rounded-2xl shadow-xl flex items-center gap-3 animate-bounce" style="animation-duration: 3s;">
-             <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600"><span class="material-symbols-outlined">verified</span></div>
-             <div><p class="text-xs text-gray-500">Status</p><p class="font-bold text-sm">Sold!</p></div>
+
+          <div class="absolute -right-6 top-10 bg-white dark:bg-card-dark p-3 rounded-2xl shadow-xl flex items-center gap-3 animate-bounce" style="animation-duration: 3s;">
+             <div class="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center text-green-600"><span class="material-symbols-outlined">verified</span></div>
+             <div><p class="text-xs text-gray-500 dark:text-gray-400">Status</p><p class="font-bold text-sm text-gray-800 dark:text-white">Sold!</p></div>
           </div>
         </div>
       </div>
@@ -148,262 +158,157 @@
     </div>
   </header>
 
-  <section class="py-24 bg-white">
+  <!-- HOW IT WORKS -->
+  <section class="py-24 bg-white dark:bg-card-dark">
     <div class="max-w-7xl mx-auto px-6">
       <div class="text-center max-w-2xl mx-auto mb-16">
-        <h2 class="text-3xl font-bold text-gray-900 mb-4">How it Works</h2>
-        <p class="text-gray-500">Buying and selling has never been this simple. We built ZipZapZoi to be fast, secure, and user-friendly.</p>
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">How it Works</h2>
+        <p class="text-gray-500 dark:text-gray-400">Buying and selling has never been this simple. We built ZipZapZoi to be fast, secure, and user-friendly.</p>
       </div>
-
       <div class="grid md:grid-cols-3 gap-10">
-        <div class="p-8 rounded-3xl bg-light border border-gray-100 text-center hover:shadow-bouncy transition-shadow group">
-          <div class="w-16 h-16 mx-auto bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+        <div class="how-card p-8 rounded-3xl border border-gray-100 dark:border-gray-700 text-center hover:shadow-bouncy transition-shadow group">
+          <div class="w-16 h-16 mx-auto bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
             <span class="material-symbols-outlined text-3xl">add_a_photo</span>
           </div>
-          <h3 class="text-xl font-bold mb-2">1. Post a Listing</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">Snap a photo, add a description, and set your price. Your ad goes live instantly.</p>
+          <h3 class="text-xl font-bold mb-2 text-gray-800 dark:text-white">1. Post a Listing</h3>
+          <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Snap a photo, add a description, and set your price. Your ad goes live instantly.</p>
         </div>
-
-        <div class="p-8 rounded-3xl bg-light border border-gray-100 text-center hover:shadow-bouncy transition-shadow group">
-          <div class="w-16 h-16 mx-auto bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+        <div class="how-card p-8 rounded-3xl border border-gray-100 dark:border-gray-700 text-center hover:shadow-bouncy transition-shadow group">
+          <div class="w-16 h-16 mx-auto bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
             <span class="material-symbols-outlined text-3xl">chat</span>
           </div>
-          <h3 class="text-xl font-bold mb-2">2. Chat & Negotiate</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">Connect with buyers securely through our built-in chat. No need to share personal info.</p>
+          <h3 class="text-xl font-bold mb-2 text-gray-800 dark:text-white">2. Chat &amp; Negotiate</h3>
+          <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Connect with buyers securely through our built-in chat. No need to share personal info.</p>
         </div>
-
-        <div class="p-8 rounded-3xl bg-light border border-gray-100 text-center hover:shadow-bouncy transition-shadow group">
-          <div class="w-16 h-16 mx-auto bg-green-100 text-green-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+        <div class="how-card p-8 rounded-3xl border border-gray-100 dark:border-gray-700 text-center hover:shadow-bouncy transition-shadow group">
+          <div class="w-16 h-16 mx-auto bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
             <span class="material-symbols-outlined text-3xl">handshake</span>
           </div>
-          <h3 class="text-xl font-bold mb-2">3. Seal the Deal</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">Meet up, inspect the item, and get paid. Mark your item as sold and celebrate!</p>
+          <h3 class="text-xl font-bold mb-2 text-gray-800 dark:text-white">3. Seal the Deal</h3>
+          <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Meet up, inspect the item, and get paid. Mark your item as sold and celebrate!</p>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="py-24 bg-gray-50">
+  <!-- CATEGORIES -->
+  <section class="py-24 bg-gray-50 dark:bg-background-dark">
     <div class="max-w-7xl mx-auto px-6">
       <div class="flex justify-between items-end mb-10">
-        <h2 class="text-3xl font-bold text-gray-900">Explore Categories</h2>
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Explore Categories</h2>
         <a href="classifieds.html" class="text-primary font-bold hover:underline flex items-center gap-1">View All <span class="material-symbols-outlined">arrow_forward</span></a>
       </div>
-
       <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <a href="classifieds.html" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
+        <a href="classifieds.html" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
           <span class="material-symbols-outlined text-4xl text-cyan-500 group-hover:-translate-y-1 transition-transform">devices</span>
-          <span class="font-bold text-gray-700 text-sm">Electronics</span>
+          <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">Electronics</span>
         </a>
-        <a href="classifieds.html" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
+        <a href="classifieds.html" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
           <span class="material-symbols-outlined text-4xl text-blue-500 group-hover:-translate-y-1 transition-transform">directions_car</span>
-          <span class="font-bold text-gray-700 text-sm">Vehicles</span>
+          <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">Vehicles</span>
         </a>
-        <a href="classifieds.html" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
+        <a href="classifieds.html" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
           <span class="material-symbols-outlined text-4xl text-green-500 group-hover:-translate-y-1 transition-transform">yard</span>
-          <span class="font-bold text-gray-700 text-sm">Home</span>
+          <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">Home</span>
         </a>
-        <a href="classifieds.html" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
+        <a href="classifieds.html" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
           <span class="material-symbols-outlined text-4xl text-pink-500 group-hover:-translate-y-1 transition-transform">checkroom</span>
-          <span class="font-bold text-gray-700 text-sm">Fashion</span>
+          <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">Fashion</span>
         </a>
-        <a href="classifieds.html" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
+        <a href="classifieds.html" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
           <span class="material-symbols-outlined text-4xl text-purple-500 group-hover:-translate-y-1 transition-transform">real_estate_agent</span>
-          <span class="font-bold text-gray-700 text-sm">Real Estate</span>
+          <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">Real Estate</span>
         </a>
-        <a href="classifieds.html" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
+        <a href="classifieds.html" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
           <span class="material-symbols-outlined text-4xl text-orange-500 group-hover:-translate-y-1 transition-transform">handyman</span>
-          <span class="font-bold text-gray-700 text-sm">Services</span>
+          <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">Services</span>
         </a>
       </div>
     </div>
   </section>
 
+  <!-- CTA -->
   <section class="py-20 px-6">
     <div class="max-w-5xl mx-auto bg-gradient-to-r from-primary to-secondary rounded-[3rem] p-12 text-center text-white relative overflow-hidden">
       <div class="relative z-10">
         <h2 class="text-4xl font-bold mb-4">Ready to start selling?</h2>
         <p class="text-lg opacity-90 mb-8 max-w-xl mx-auto">Join thousands of people who are decluttering their homes and making extra cash today.</p>
-        <a href="User Registration.html" class="bg-white text-primary text-lg px-10 py-4 rounded-full font-bold shadow-lg hover:bg-gray-100 transition-transform hover:scale-105 inline-block">Create Free Account</a>
+        <a href="User Registration.html" class="bg-white dark:bg-card-dark text-primary text-lg px-10 py-4 rounded-full font-bold shadow-lg hover:bg-gray-100 transition-transform hover:scale-105 inline-block">Create Free Account</a>
       </div>
-      <div class="absolute top-0 left-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-      <div class="absolute bottom-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+      <div class="absolute top-0 left-0 w-64 h-64 bg-white dark:bg-card-dark opacity-10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+      <div class="absolute bottom-0 right-0 w-64 h-64 bg-white dark:bg-card-dark opacity-10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
     </div>
   </section>
 
-  <footer class="bg-white border-t border-gray-200 pt-16 pb-8">
+  <!-- FOOTER -->
+  <footer class="bg-white dark:bg-card-dark border-t border-gray-200 dark:border-gray-700 pt-16 pb-8">
     <div class="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
       <div class="col-span-2 md:col-span-1">
-        <div class="flex items-center gap-2 mb-4 text-gray-800">
+        <div class="flex items-center gap-2 mb-4">
           <span class="material-symbols-outlined text-primary text-3xl">all_inclusive</span>
-          <span class="font-bold text-xl">ZipZapZoi</span>
+          <span class="font-bold text-xl text-gray-800 dark:text-white">ZipZapZoi</span>
         </div>
-        <p class="text-sm text-gray-500">The smart way to buy and sell locally. Safe, fast, and free.</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">The smart way to buy and sell locally. Safe, fast, and free.</p>
       </div>
-      
       <div>
-        <h4 class="font-bold text-gray-900 mb-4">Marketplace</h4>
-        <ul class="space-y-2 text-sm text-gray-500">
-          <li><a href="classifieds.html" class="hover:text-primary">Browse All</a></li>
-          <li><a href="Post Listing.html" class="hover:text-primary">Sell Item</a></li>
-          <li><a href="SearchResult.html" class="hover:text-primary">Search</a></li>
+        <h4 class="font-bold text-gray-900 dark:text-white mb-4">Marketplace</h4>
+        <ul class="space-y-2 text-sm text-gray-500 dark:text-gray-400">
+          <li><a href="classifieds.html" class="hover:text-primary transition-colors">Browse Listings</a></li>
+          <li><a href="Post Listing.html" class="hover:text-primary transition-colors">Post an Ad</a></li>
+          <li><a href="Seller Dashboard.html" class="hover:text-primary transition-colors">Seller Dashboard</a></li>
         </ul>
       </div>
-
       <div>
-        <h4 class="font-bold text-gray-900 mb-4">Account</h4>
-        <ul class="space-y-2 text-sm text-gray-500">
-          <li><a href="Seller Dashboard.html" class="hover:text-primary">My Dashboard</a></li>
-          <li><a href="Inbox.html" class="hover:text-primary">Messages</a></li>
-          <li><a href="favorites.html" class="hover:text-primary">Favorites</a></li>
+        <h4 class="font-bold text-gray-900 dark:text-white mb-4">Company</h4>
+        <ul class="space-y-2 text-sm text-gray-500 dark:text-gray-400">
+          <li><a href="help.html" class="hover:text-primary transition-colors">Help Center</a></li>
+          <li><a href="legal.html" class="hover:text-primary transition-colors">Terms &amp; Privacy</a></li>
+          <li><a href="AdminConsoleV2.html" class="hover:text-primary transition-colors">Admin</a></li>
         </ul>
       </div>
-
       <div>
-        <h4 class="font-bold text-gray-900 mb-4">Support</h4>
-        <ul class="space-y-2 text-sm text-gray-500">
-          <li><a href="help.html" class="hover:text-primary">Help Center</a></li>
-          <li><a href="legal.html" class="hover:text-primary">Terms of Service</a></li>
-          <li><a href="legal.html" class="hover:text-primary">Privacy Policy</a></li>
+        <h4 class="font-bold text-gray-900 dark:text-white mb-4">Account</h4>
+        <ul class="space-y-2 text-sm text-gray-500 dark:text-gray-400">
+          <li><a href="Login Page.html" class="hover:text-primary transition-colors">Log In</a></li>
+          <li><a href="User Registration.html" class="hover:text-primary transition-colors">Sign Up</a></li>
+          <li><a href="favorites.html" class="hover:text-primary transition-colors">Favorites</a></li>
         </ul>
       </div>
     </div>
-    
-    <div class="max-w-7xl mx-auto px-6 pt-8 border-t border-gray-100 text-center text-sm text-gray-400">
-      &copy; 2024 ZipZapZoi Inc. All rights reserved.
+    <div class="max-w-7xl mx-auto px-6 pt-8 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <p class="text-sm text-gray-400">© 2026 ZipZapZoi. All Rights Reserved.</p>
+      <div class="flex gap-4 text-sm text-gray-400">
+        <a href="legal.html" class="hover:text-primary transition-colors">Privacy Policy</a>
+        <a href="legal.html" class="hover:text-primary transition-colors">Terms of Service</a>
+      </div>
     </div>
   </footer>
 
+  <script src="js/utils.js"></script>
   <script>
-    // Check Auth State to update Navbar
-    (function(){
-      const user = JSON.parse(localStorage.getItem('zzz_user'));
-      if(user) {
-        document.getElementById('loginLink').classList.add('hidden');
-        document.getElementById('signupBtn').textContent = 'Dashboard';
-        document.getElementById('signupBtn').href = 'Seller Dashboard.html';
-        
-        const mLogin = document.getElementById('mobileLoginLink');
-        const mSignup = document.getElementById('mobileSignupBtn');
-        if (mLogin) mLogin.classList.add('hidden');
-        if (mSignup) {
-            mSignup.textContent = 'Dashboard';
-            mSignup.href = 'Seller Dashboard.html';
-        }
+    // Mobile menu toggle
+    document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+      document.getElementById('mobileMenu').classList.toggle('hidden');
+    });
+
+    // Sync dark mode icon on load
+    if (document.documentElement.classList.contains('dark')) {
+      document.getElementById('themeIcon').textContent = 'light_mode';
+    }
+
+    // Auth-aware nav
+    const user = JSON.parse(localStorage.getItem('zzz_user'));
+    if (user) {
+      document.getElementById('loginLink').textContent = user.name.split(' ')[0];
+      document.getElementById('loginLink').href = 'Seller Dashboard.html';
+      document.getElementById('signupBtn').textContent = 'Dashboard';
+      document.getElementById('signupBtn').href = 'Seller Dashboard.html';
+      if (document.getElementById('mobileLoginLink')) {
+        document.getElementById('mobileLoginLink').textContent = user.name.split(' ')[0];
+        document.getElementById('mobileSignupBtn').textContent = 'Dashboard';
+        document.getElementById('mobileSignupBtn').href = 'Seller Dashboard.html';
       }
-
-      // Mobile Menu Toggle
-      const mobileBtn = document.getElementById('mobileMenuBtn');
-      const mobileMenu = document.getElementById('mobileMenu');
-      if (mobileBtn && mobileMenu) {
-        mobileBtn.addEventListener('click', () => {
-          mobileMenu.classList.toggle('hidden');
-        });
-      }
-    })();
-  // ============================================
-// UNIVERSAL UTILITY FUNCTIONS (ADD TO ALL)
-// ============================================
-
-// CSRF Token Management
-function generateCsrfToken() {
-    return 'csrf_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-}
-
-function getCsrfToken() {
-    let token = sessionStorage.getItem('csrf_token');
-    if (!token) {
-        token = generateCsrfToken();
-        sessionStorage.setItem('csrf_token', token);
     }
-    return token;
-}
-
-function setCsrfToken() {
-    const token = getCsrfToken();
-    const inputs = document.querySelectorAll('input[name="csrf_token"]');
-    inputs.forEach(input => input.value = token);
-}
-
-// Input Validation Functions
-function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function validatePhone(phone) {
-    const digits = phone.replace(/\D/g, '');
-    return digits.length === 10;
-}
-
-function validatePrice(price) {
-    const num = parseFloat(price);
-    return !isNaN(num) && num > 0 && num < 1000000;
-}
-
-function validatePassword(password) {
-    return password.length >= 8 &&
-           /[a-z]/.test(password) &&
-           /[A-Z]/.test(password) &&
-           /[0-9]/.test(password);
-}
-
-// Input Sanitization
-function sanitizeInput(input) {
-    const div = document.createElement('div');
-    div.textContent = input;
-    return div.innerHTML;
-}
-
-function sanitizeHTML(html) {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div.textContent;
-}
-
-// Error/Success Messages
-function showError(message) {
-    let errorDiv = document.getElementById('errorMessage');
-    if (!errorDiv) {
-        errorDiv = document.createElement('div');
-        errorDiv.id = 'errorMessage';
-        errorDiv.style.cssText = 'color: red; padding: 10px; margin: 10px 0; border: 1px solid red; border-radius: 4px; display: none;';
-        const form = document.querySelector('form');
-        if (form) form.parentElement.insertBefore(errorDiv, form);
-    }
-    errorDiv.textContent = message;
-    errorDiv.style.display = 'block';
-    errorDiv.setAttribute('role', 'alert');
-}
-
-function showSuccess(message) {
-    let successDiv = document.getElementById('successMessage');
-    if (!successDiv) {
-        successDiv = document.createElement('div');
-        successDiv.id = 'successMessage';
-        successDiv.style.cssText = 'color: green; padding: 10px; margin: 10px 0; border: 1px solid green; border-radius: 4px; display: none;';
-        const form = document.querySelector('form');
-        if (form) form.parentElement.insertBefore(successDiv, form);
-    }
-    successDiv.textContent = message;
-    successDiv.style.display = 'block';
-    successDiv.setAttribute('role', 'status');
-}
-
-function hideError() {
-    const errorDiv = document.getElementById('errorMessage');
-    if (errorDiv) errorDiv.style.display = 'none';
-}
-
-function hideSuccess() {
-    const successDiv = document.getElementById('successMessage');
-    if (successDiv) successDiv.style.display = 'none';
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    setCsrfToken();
-});
-
   </script>
 </body>
 </html>

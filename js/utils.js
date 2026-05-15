@@ -4,6 +4,31 @@
  */
 
 // ============================================
+// Global Dark Mode Initializer
+// ============================================
+(function() {
+    const theme = localStorage.getItem('zzz_theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (theme === 'dark' || (!theme && prefersDark)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+})();
+
+window.toggleDarkMode = () => {
+    const html = document.documentElement;
+    const isDark = html.classList.toggle('dark');
+    localStorage.setItem('zzz_theme', isDark ? 'dark' : 'light');
+    
+    // Update theme icon if it exists on the page
+    const themeIcon = document.getElementById('themeIcon');
+    if (themeIcon) {
+        themeIcon.textContent = isDark ? 'light_mode' : 'dark_mode';
+    }
+};
+
+// ============================================
 // CSRF Token Management
 // ============================================
 function generateCsrfToken() {

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -19,7 +19,7 @@
             "brandDark": "#d6671c",
             "background-light": "#F8F9FA",
             "background-dark": "#1A1B1C",
-          },
+            "card-dark": "#1e1e1e"},
           fontFamily: { "display": ["Spline Sans", "sans-serif"] },
           boxShadow: {
             'bouncy': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
@@ -43,15 +43,15 @@
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
-<body class="bg-background-light text-gray-800 min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
 
   <!-- Header -->
-  <header class="bg-white shadow-sm border-b sticky top-0 z-50">
+  <header class="bg-white dark:bg-card-dark shadow-sm border-b sticky top-0 z-50">
     <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
       <a href="classifieds.html" class="flex items-center gap-2 text-primary font-bold text-xl transition-transform active:scale-95">
         <span class="material-symbols-outlined text-3xl">all_inclusive</span> ZipZapZoi
       </a>
-      <a href="Post Listing.html" class="text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors">Cancel & Return</a>
+      <a href="Post Listing.html" class="text-sm font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:text-white transition-colors">Cancel & Return</a>
     </div>
   </header>
 
@@ -59,48 +59,48 @@
   <main class="flex-1 max-w-4xl mx-auto w-full px-4 py-12 flex flex-col items-center">
     
     <div class="text-center mb-10">
-      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3">Boost Your Ad</h1>
-      <p class="text-gray-500 max-w-lg mx-auto">Get maximum visibility for your listing. Choose a secure payment method to publish your ad immediately.</p>
+      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">Boost Your Ad</h1>
+      <p class="text-gray-500 dark:text-gray-400 max-w-lg mx-auto">Get maximum visibility for your listing. Choose a secure payment method to publish your ad immediately.</p>
     </div>
 
     <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
       
       <!-- Order Summary Card -->
-      <div class="bg-white rounded-2xl shadow-bouncy p-6 border border-gray-100">
+      <div class="bg-white dark:bg-card-dark rounded-2xl shadow-bouncy p-6 border border-gray-100 dark:border-gray-800">
         <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
           <span class="material-symbols-outlined text-primary">receipt_long</span> Order Summary
         </h2>
         
-        <div class="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100">
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-6 border border-gray-100 dark:border-gray-800">
           <div class="flex items-center gap-3 mb-3">
-             <div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm text-gray-400">
+             <div class="w-12 h-12 bg-white dark:bg-card-dark rounded-lg flex items-center justify-center shadow-sm text-gray-400">
                 <span class="material-symbols-outlined" id="summaryIcon">image</span>
              </div>
              <div class="flex-1 min-w-0">
-               <h3 class="font-bold text-gray-900 truncate" id="summaryTitle">Loading...</h3>
-               <p class="text-sm text-gray-500" id="summaryCategory">Category</p>
+               <h3 class="font-bold text-gray-900 dark:text-white truncate" id="summaryTitle">Loading...</h3>
+               <p class="text-sm text-gray-500 dark:text-gray-400" id="summaryCategory">Category</p>
              </div>
           </div>
         </div>
 
         <div class="space-y-3 text-sm border-b pb-4 mb-4">
-           <div class="flex justify-between text-gray-600">
+           <div class="flex justify-between text-gray-600 dark:text-gray-300">
              <span>Listing Duration</span>
-             <span class="font-semibold text-gray-900">30 Days</span>
+             <span class="font-semibold text-gray-900 dark:text-white">30 Days</span>
            </div>
-           <div class="flex justify-between text-gray-600">
+           <div class="flex justify-between text-gray-600 dark:text-gray-300">
              <span>Category Fee</span>
-             <span class="font-semibold text-gray-900" id="summaryFee">₹0</span>
+             <span class="font-semibold text-gray-900 dark:text-white" id="summaryFee">₹0</span>
            </div>
-           <div class="flex justify-between text-gray-600">
+           <div class="flex justify-between text-gray-600 dark:text-gray-300">
              <span>GST (18%)</span>
-             <span class="font-semibold text-gray-900" id="summaryGst">₹0</span>
+             <span class="font-semibold text-gray-900 dark:text-white" id="summaryGst">₹0</span>
            </div>
         </div>
 
         <div class="flex justify-between items-end">
            <div>
-             <p class="text-sm text-gray-500">Total Amount</p>
+             <p class="text-sm text-gray-500 dark:text-gray-400">Total Amount</p>
              <p class="text-xs text-gray-400">Secure Payment</p>
            </div>
            <p class="text-3xl font-black text-primary" id="summaryTotal">₹0</p>
@@ -108,7 +108,7 @@
       </div>
 
       <!-- Payment Method -->
-      <div class="bg-white rounded-2xl shadow-bouncy p-6 border border-gray-100">
+      <div class="bg-white dark:bg-card-dark rounded-2xl shadow-bouncy p-6 border border-gray-100 dark:border-gray-800">
         <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
           <span class="material-symbols-outlined text-brand">lock</span> Secure Checkout
         </h2>
@@ -117,15 +117,15 @@
            <label class="flex items-center p-4 border-2 border-brand bg-brand/5 rounded-xl cursor-pointer transition-all">
              <input type="radio" name="payment" class="w-5 h-5 text-brand focus:ring-brand" checked>
              <div class="ml-4 flex-1 flex justify-between items-center">
-                <span class="font-bold text-gray-900">Mock Razorpay</span>
+                <span class="font-bold text-gray-900 dark:text-white">Mock Razorpay</span>
                 <span class="material-symbols-outlined text-brand">credit_card</span>
              </div>
            </label>
 
-           <label class="flex items-center p-4 border-2 border-gray-200 hover:border-gray-300 rounded-xl cursor-pointer transition-all opacity-50">
+           <label class="flex items-center p-4 border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 rounded-xl cursor-pointer transition-all opacity-50">
              <input type="radio" name="payment" class="w-5 h-5 text-gray-400" disabled>
              <div class="ml-4 flex-1 flex justify-between items-center">
-                <span class="font-bold text-gray-500">UPI / QR Code (Coming Soon)</span>
+                <span class="font-bold text-gray-500 dark:text-gray-400">UPI / QR Code (Coming Soon)</span>
                 <span class="material-symbols-outlined text-gray-400">qr_code_scanner</span>
              </div>
            </label>

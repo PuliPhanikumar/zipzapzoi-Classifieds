@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html lang="en">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -15,7 +15,9 @@
             colors: {
               primary: "#019863",
               secondary: "#4D96A9",
-              "background-light": "#f0f4f8",
+            "background-light": "#f0f4f8",
+            "background-dark": "#121212",
+            "card-dark": "#1e1e1e"
             },
             fontFamily: { display: "Spline Sans" },
             boxShadow: {
@@ -24,6 +26,11 @@
           }
         }
       };
+      
+      // Dark Mode Init
+      if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
     </script>
     <style>
       .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24 }
@@ -72,11 +79,15 @@
       .fav-btn:hover { background: rgba(0,0,0,0.4); transform: scale(1.15); }
       .fav-btn.active .material-symbols-outlined { color: #ef4444; font-variation-settings: 'FILL' 1; }
       .fav-btn.active { background: white; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); }
+      
+      /* Hide Scrollbar */
+      .hide-scrollbar::-webkit-scrollbar { display: none; }
+      .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="font-display bg-background-light text-gray-800 min-h-screen flex flex-col selection:bg-primary/30">
+<body class="font-display min-h-screen flex flex-col selection:bg-primary/30 bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
     
-    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-white/20 shadow-sm">
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-card-dark/80 backdrop-blur-xl border-b border-white/20 dark:border-gray-800 shadow-sm">
       <div class="container mx-auto px-6 py-3">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
@@ -84,31 +95,34 @@
             <h2 class="text-2xl font-black bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent">ZipZapZoi</h2>
           </div>
           
-          <div class="flex items-center gap-6" id="headerAuthArea">
+          <div class="flex items-center gap-4 md:gap-6" id="headerAuthArea">
+            <button onclick="toggleDarkMode()" aria-label="Toggle Dark Mode" class="p-2 rounded-full hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 transition-colors flex items-center justify-center text-gray-600 dark:text-gray-300">
+               <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+            </button>
             <div data-auth-hide class="flex items-center gap-4">
-              <a href="Login Page.html?redirect=classifieds.html" class="text-sm font-bold text-gray-600 hover:text-primary transition-colors">Log In</a>
+              <a href="Login Page.html?redirect=classifieds.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Log In</a>
               <a href="User Registration.html" class="text-sm font-bold bg-primary text-white py-2.5 px-6 rounded-full shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all">Sign Up</a>
             </div>
 
             <div data-auth-show class="hidden flex items-center gap-4">
-              <div class="hidden md:flex items-center gap-2 text-sm font-medium bg-gray-50 p-1.5 rounded-full border border-gray-200 shadow-inner">
+              <div class="hidden md:flex items-center gap-2 text-sm font-medium bg-gray-50 dark:bg-gray-800 p-1.5 rounded-full border border-gray-200 dark:border-gray-700 shadow-inner">
                 
-                <a href="Post Listing.html" class="flex items-center gap-2 py-1.5 px-4 rounded-full hover:bg-white hover:shadow-md transition-all text-gray-600">
+                <a href="Post Listing.html" class="flex items-center gap-2 py-1.5 px-4 rounded-full hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 hover:shadow-md transition-all text-gray-600 dark:text-gray-300">
                   <span class="material-symbols-outlined text-lg text-secondary">add_circle</span>
                   <span>Post</span>
                 </a>
                 
-                <a href="Seller Dashboard.html" class="flex items-center gap-2 py-1.5 px-4 rounded-full hover:bg-white hover:shadow-md transition-all text-gray-600">
+                <a href="Seller Dashboard.html" class="flex items-center gap-2 py-1.5 px-4 rounded-full hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 hover:shadow-md transition-all text-gray-600 dark:text-gray-300">
                   <span class="material-symbols-outlined text-lg text-secondary">dashboard</span>
                   <span>Dashboard</span>
                 </a>
 
-                <a href="favorites.html" class="flex items-center gap-2 py-1.5 px-4 rounded-full hover:bg-white hover:shadow-md transition-all text-gray-600">
+                <a href="favorites.html" class="flex items-center gap-2 py-1.5 px-4 rounded-full hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 hover:shadow-md transition-all text-gray-600 dark:text-gray-300">
                   <span class="material-symbols-outlined text-lg text-secondary">favorite</span>
                   <span>Favorites</span>
                 </a>
 
-                <a href="Inbox.html" class="flex items-center gap-2 py-1.5 px-4 rounded-full hover:bg-white hover:shadow-md transition-all text-gray-600 relative">
+                <a href="Inbox.html" class="flex items-center gap-2 py-1.5 px-4 rounded-full hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 hover:shadow-md transition-all text-gray-600 dark:text-gray-300 relative">
                   <span class="material-symbols-outlined text-lg text-secondary">inbox</span>
                   <span>Messages</span>
                   <span id="headerMsgBadge" class="absolute top-1 right-2 flex h-2.5 w-2.5 rounded-full bg-red-500 shadow-sm hidden"></span>
@@ -131,18 +145,20 @@
       
       <section class="pt-10 pb-8 px-6">
         <div class="max-w-4xl mx-auto text-center">
-          <h1 class="text-4xl md:text-5xl font-black text-gray-800 mb-8 tracking-tight">Find it. Love it. <span class="text-primary">Buy it.</span></h1>
+          <h1 class="text-4xl md:text-5xl font-black text-gray-800 dark:text-white mb-8 tracking-tight">Find it. Love it. <span class="text-primary">Buy it.</span></h1>
           
-          <div class="bg-white/70 backdrop-blur-md p-2 rounded-[2rem] shadow-glass flex flex-col md:flex-row gap-2 max-w-3xl mx-auto transform hover:scale-[1.01] transition-transform border border-white">
+          <div class="bg-white/70 dark:bg-card-dark/70 backdrop-blur-md p-2 rounded-[2rem] shadow-glass flex flex-col md:flex-row gap-2 max-w-3xl mx-auto transform hover:scale-[1.01] transition-transform border border-white dark:border-gray-800">
             
-            <div class="flex-1 flex items-center bg-white rounded-[1.5rem] px-6 h-14 shadow-sm border border-gray-100 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+            <div class="flex-1 flex items-center bg-white dark:bg-card-dark rounded-[1.5rem] px-6 h-14 shadow-sm border border-gray-100 dark:border-gray-800 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
               <span class="material-symbols-outlined text-gray-400">search</span>
-              <input id="searchQuery" class="w-full bg-transparent border-none focus:ring-0 text-lg ml-2 placeholder-gray-400 font-medium text-gray-700" placeholder="Search anything..." type="text" />
+              <input id="searchQuery" class="w-full bg-transparent border-none focus:ring-0 text-lg ml-2 placeholder-gray-400 font-medium text-gray-700 dark:text-gray-100" placeholder="Search anything..." type="text" />
             </div>
             
-            <div class="md:w-1/3 flex items-center bg-white rounded-[1.5rem] px-6 h-14 shadow-sm border border-gray-100 focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary/20 transition-all">
-              <span class="material-symbols-outlined text-gray-400">location_on</span>
-              <input id="filterCity" class="w-full bg-transparent border-none focus:ring-0 text-base ml-2 placeholder-gray-400 font-medium text-gray-700" placeholder="City" type="text" />
+            <div class="md:w-1/3 flex items-center bg-white dark:bg-card-dark rounded-[1.5rem] px-6 h-14 shadow-sm border border-gray-100 dark:border-gray-800 focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary/20 transition-all">
+              <button onclick="detectLocation()" type="button" class="text-gray-400 hover:text-secondary transition-colors cursor-pointer outline-none" title="Auto-detect Location">
+                <span class="material-symbols-outlined">my_location</span>
+              </button>
+              <input id="filterCity" class="w-full bg-transparent border-none focus:ring-0 text-base ml-2 placeholder-gray-400 font-medium text-gray-700 dark:text-gray-100" placeholder="City" type="text" />
             </div>
             
             <button onclick="goToSearch()" class="h-14 px-8 bg-primary hover:bg-green-700 text-white font-bold rounded-[1.5rem] shadow-lg shadow-primary/30 transition-all active:scale-95 text-lg">
@@ -156,8 +172,8 @@
       <section class="py-8">
         <div class="container mx-auto px-6">
           <div class="flex justify-between items-end mb-8">
-            <h2 class="text-2xl font-black text-gray-800 tracking-tight">Browse Categories</h2>
-            <a href="#" onclick="filterListings('All')" class="text-sm font-bold text-secondary hover:text-primary transition-colors bg-white px-4 py-2 rounded-full shadow-sm">View All</a>
+            <h2 class="text-2xl font-black text-gray-800 dark:text-white tracking-tight">Browse Categories</h2>
+            <a href="#" onclick="filterListings('All')" class="text-sm font-bold text-secondary hover:text-primary transition-colors bg-white dark:bg-card-dark px-4 py-2 rounded-full shadow-sm">View All</a>
           </div>
           
           <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-6 justify-items-center" id="categoryGrid">
@@ -165,27 +181,129 @@
         </div>
       </section>
 
-      <section class="py-8" id="listingsSection">
+      <section class="py-8 bg-gradient-to-b from-transparent to-primary/5 dark:to-primary/10">
         <div class="container mx-auto px-6">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-black text-gray-800 tracking-tight" id="gridTitle">Fresh Recommendations</h2>
-            <button onclick="filterListings('All')" id="clearFilterBtn" class="hidden text-sm font-bold text-red-500 hover:underline bg-white px-3 py-1 rounded-lg shadow-sm">Clear Filters</button>
-            <select id="sortBy" onchange="sortListings(this.value)" class="bg-white border-none rounded-xl text-sm font-bold py-2.5 px-4 focus:ring-0 cursor-pointer text-gray-600 shadow-sm">
-              <option value="newest">Newest first</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-            </select>
+          <h2 class="text-2xl font-black text-gray-800 dark:text-white tracking-tight mb-6 flex items-center gap-2">
+            <span class="material-symbols-outlined text-red-500">local_fire_department</span> Trending Now
+          </h2>
+          <div class="flex gap-6 overflow-x-auto pb-4 snap-x hide-scrollbar" id="trendingCarousel">
+            <!-- Populated via JS -->
           </div>
+        </div>
+      </section>
+
+      <section class="py-8" id="listingsSection">
+        <div class="container mx-auto px-6 flex flex-col md:flex-row gap-8">
           
-          <div id="listingsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Advanced Filtering Sidebar -->
+          <aside class="w-full md:w-72 shrink-0 space-y-6">
+            <div class="bg-white dark:bg-card-dark p-6 rounded-[2rem] shadow-glass border border-gray-100 dark:border-gray-800 bouncy-card">
+               <h3 class="font-black text-xl text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                 <span class="material-symbols-outlined text-secondary">tune</span> Filters
+               </h3>
+               
+               <!-- Price Filter -->
+               <div class="mb-6">
+                 <label class="block text-sm font-bold text-gray-600 dark:text-gray-300 mb-2">Price Range (₹)</label>
+                 <div class="flex gap-2">
+                   <input type="number" id="minPrice" placeholder="Min" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl focus:ring-primary text-sm p-3 dark:text-white" onchange="applyFilters()">
+                   <input type="number" id="maxPrice" placeholder="Max" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl focus:ring-primary text-sm p-3 dark:text-white" onchange="applyFilters()">
+                 </div>
+               </div>
+
+               <!-- Condition Filter -->
+               <div class="mb-6">
+                 <label class="block text-sm font-bold text-gray-600 dark:text-gray-300 mb-2">Condition</label>
+                 <select id="conditionFilter" onchange="applyFilters()" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl focus:ring-primary text-sm p-3 dark:text-white">
+                   <option value="all">Any Condition</option>
+                   <option value="new">Brand New</option>
+                   <option value="used">Used / Refurbished</option>
+                 </select>
+               </div>
+
+               <!-- Verified Only -->
+               <div class="mb-6 flex items-center gap-3">
+                 <input type="checkbox" id="verifiedOnly" onchange="applyFilters()" class="w-5 h-5 rounded text-primary focus:ring-primary bg-gray-50 dark:bg-gray-800 border-none">
+                 <label for="verifiedOnly" class="text-sm font-bold text-gray-600 dark:text-gray-300 flex items-center gap-1">
+                    Verified Sellers <span class="material-symbols-outlined text-blue-500 text-sm">verified</span>
+                 </label>
+               </div>
+
+               <button onclick="clearAllFilters()" class="w-full py-3 bg-red-50 dark:bg-red-900/30 text-red-500 font-bold rounded-xl hover:bg-red-100 transition-colors">Clear All Filters</button>
             </div>
+          </aside>
+
+          <!-- Main Grid -->
+          <div class="flex-1">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+              <h2 class="text-2xl font-black text-gray-800 dark:text-white tracking-tight" id="gridTitle">Fresh Recommendations</h2>
+              <div class="flex items-center gap-3">
+                <button onclick="filterListings('All')" id="clearFilterBtn" class="hidden text-sm font-bold text-red-500 hover:underline bg-white dark:bg-card-dark px-4 py-2 rounded-xl shadow-sm">Clear Category</button>
+                <select id="sortBy" onchange="sortListings(this.value)" class="bg-white dark:bg-card-dark dark:text-white border-none rounded-xl text-sm font-bold py-2.5 px-4 focus:ring-primary cursor-pointer shadow-sm">
+                  <option value="newest">Newest first</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                </select>
+              </div>
+            </div>
+            
+            <div id="listingsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
         </div>
       </section>
 
     </main>
 
-    <footer class="bg-white border-t border-gray-100 mt-auto">
-      <div class="container mx-auto px-6 py-6 text-center text-sm font-medium text-gray-500">
+    <!-- QUICK VIEW MODAL -->
+    <div id="quickViewModal" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+      <div class="bg-white dark:bg-card-dark rounded-[2rem] w-full max-w-4xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col md:flex-row max-h-[90vh]">
+        
+        <!-- Image Area -->
+        <div class="md:w-1/2 bg-gray-100 dark:bg-gray-900 relative">
+          <img id="qvImage" src="" class="w-full h-64 md:h-full object-cover">
+          <button onclick="closeQuickView()" class="absolute top-4 left-4 bg-white/80 dark:bg-black/50 p-2 rounded-full text-gray-800 dark:text-white hover:bg-white transition md:hidden z-10">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <!-- Details Area -->
+        <div class="md:w-1/2 p-8 overflow-y-auto flex flex-col">
+          <div class="flex justify-between items-start mb-4">
+             <div>
+               <span id="qvCategory" class="text-xs font-bold text-secondary uppercase tracking-wider"></span>
+               <h2 id="qvTitle" class="text-3xl font-black text-gray-800 dark:text-white mt-1"></h2>
+             </div>
+             <button onclick="closeQuickView()" class="hidden md:block text-gray-400 hover:text-red-500 transition-colors">
+               <span class="material-symbols-outlined text-3xl">cancel</span>
+             </button>
+          </div>
+          
+          <div class="text-3xl font-black text-primary mb-6" id="qvPrice"></div>
+          
+          <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 font-bold mb-6">
+            <span class="material-symbols-outlined text-base">location_on</span>
+            <span id="qvLocation"></span>
+            <span>&bull;</span>
+            <span id="qvTime"></span>
+          </div>
+
+          <p id="qvDescription" class="text-gray-600 dark:text-gray-300 mb-8 leading-relaxed whitespace-pre-wrap flex-grow">
+          </p>
+
+          <div class="mt-auto space-y-3">
+             <a id="qvFullBtn" href="#" class="block w-full text-center py-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 font-bold hover:border-secondary hover:text-secondary transition-colors dark:text-white">View Full Details</a>
+             <a id="qvChatBtn" href="#" class="block w-full text-center py-4 rounded-xl bg-gradient-to-r from-secondary to-primary text-white font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
+               <span class="material-symbols-outlined">chat</span> Chat with Seller
+             </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="bg-white dark:bg-card-dark border-t border-gray-100 dark:border-gray-800 mt-auto">
+      <div class="container mx-auto px-6 py-6 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
         © 2024 ZipZapZoi. Designed for Speed & Joy.
       </div>
     </footer>
@@ -214,10 +332,10 @@
             
             // Note: color comes from brain as 'text-blue-600', etc.
             div.innerHTML = `
-              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-white to-gray-50 border border-gray-100">
+              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border border-gray-100 dark:border-gray-700">
                 <span class="material-symbols-outlined text-4xl ${cat.color || 'text-primary'} drop-shadow-md">${cat.icon}</span>
               </div>
-              <p class="text-xs font-bold text-gray-600 group-hover:text-primary transition-colors text-center leading-tight">${cat.label}</p>
+              <p class="text-xs font-bold text-gray-600 dark:text-gray-300 group-hover:text-primary transition-colors text-center leading-tight">${cat.label}</p>
             `;
             container.appendChild(div);
         });
@@ -249,8 +367,15 @@
         renderListings();
       };
 
-      window.sortListings = () => {
-        renderListings();
+      window.sortListings = () => renderListings();
+      window.applyFilters = () => renderListings();
+      
+      window.clearAllFilters = () => {
+         document.getElementById('minPrice').value = '';
+         document.getElementById('maxPrice').value = '';
+         document.getElementById('conditionFilter').value = 'all';
+         document.getElementById('verifiedOnly').checked = false;
+         renderListings();
       };
 
       function renderListings() {
@@ -258,11 +383,9 @@
         grid.innerHTML = '';
         let data = getAllListings();
         const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-        const sortVal = document.getElementById('sortBy').value;
-
-
+        
+        // --- 1. Category Filter ---
         if (currentFilter !== 'All') {
-          // Flexible matching for Category Label
           data = data.filter(item => item.category && item.category.toLowerCase().includes(currentFilter.toLowerCase()));
           document.getElementById('gridTitle').textContent = `${currentFilter} Listings`;
           document.getElementById('clearFilterBtn').classList.remove('hidden');
@@ -271,18 +394,39 @@
           document.getElementById('clearFilterBtn').classList.add('hidden');
         }
 
-        // Apply Sorting
+        // --- 2. Advanced Filters ---
+        const minP = parseFloat(document.getElementById('minPrice').value);
+        const maxP = parseFloat(document.getElementById('maxPrice').value);
+        const cond = document.getElementById('conditionFilter').value;
+        const reqVerified = document.getElementById('verifiedOnly').checked;
+
+        if(!isNaN(minP)) data = data.filter(i => parseFloat(i.price) >= minP);
+        if(!isNaN(maxP)) data = data.filter(i => parseFloat(i.price) <= maxP);
+        if(cond !== 'all') {
+            // Very simple condition logic (if available in schema)
+            data = data.filter(i => {
+                if(!i.dynamicData || !i.dynamicData.cond_mob) return true; // Show if no condition field
+                if(cond === 'new') return i.dynamicData.cond_mob.toLowerCase().includes('new');
+                return !i.dynamicData.cond_mob.toLowerCase().includes('new');
+            });
+        }
+        if(reqVerified) {
+            // Verified filter based on tag
+            data = data.filter(i => i.tag && i.tag.toLowerCase() === 'verified');
+        }
+
+        // --- 3. Apply Sorting ---
+        const sortVal = document.getElementById('sortBy').value;
         if(sortVal === 'price-low') {
             data.sort((a,b) => parseFloat(a.price) - parseFloat(b.price));
         } else if(sortVal === 'price-high') {
             data.sort((a,b) => parseFloat(b.price) - parseFloat(a.price));
         } else {
-            // newest (default fallback for mock data is reverse order)
             data.reverse(); 
         }
 
         if (data.length === 0) {
-          grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10 font-bold bg-white/50 rounded-2xl">No listings found in this category.</div>';
+          grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10 font-bold bg-white/50 dark:bg-card-dark/50 rounded-2xl">No listings found matching these filters.</div>';
           return;
         }
 
@@ -291,31 +435,36 @@
           const heartClass = isFav ? 'active' : '';
           
           const card = document.createElement('div');
-          card.className = "listing-card rounded-[1.5rem] overflow-hidden flex flex-col relative group";
+          card.className = "listing-card rounded-[1.5rem] overflow-hidden flex flex-col relative group bouncy-card bg-white dark:bg-card-dark border border-gray-100 dark:border-gray-800";
           
           card.innerHTML = `
-            <div class="relative h-56 overflow-hidden bg-gray-200 cursor-pointer" onclick="window.location.href='Listing Detail.html?id=${item.id}'">
+            <div class="relative h-56 overflow-hidden bg-gray-200 dark:bg-gray-800 cursor-pointer" onclick="window.location.href='Listing Detail.html?id=${item.id}'">
               <img src="${item.image || 'https://via.placeholder.com/400x300?text=No+Image'}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out">
               
               <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60"></div>
 
-              <span class="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-gray-800 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full shadow-sm tracking-wide z-10">${item.category}</span>
+              <span class="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur-md text-gray-800 dark:text-gray-200 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full shadow-sm tracking-wide z-10">${item.category}</span>
               
               ${item.tag ? `<span class="absolute bottom-3 left-3 bg-secondary text-white text-[10px] font-bold px-2.5 py-1 rounded shadow-md z-10">${item.tag}</span>` : ''}
               
-              <button onclick="toggleFavorite(event, '${item.id}')" class="fav-btn ${heartClass} absolute top-3 right-3 p-2 rounded-full shadow-lg z-20 flex items-center justify-center">
+              <button onclick="toggleFavorite(event, '${item.id}')" class="fav-btn ${heartClass} absolute top-3 right-3 p-2 rounded-full shadow-lg z-20 flex items-center justify-center" aria-label="Toggle Favorite">
                 <span class="material-symbols-outlined text-white text-xl drop-shadow-md">favorite</span>
               </button>
+
+              <!-- Quick View Overlay -->
+              <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
+                 <button onclick="event.stopPropagation(); openQuickView('${item.id}')" class="bg-white/90 dark:bg-card-dark/90 backdrop-blur text-primary font-bold py-2 px-6 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">Quick View</button>
+              </div>
             </div>
             
             <a href="Listing Detail.html?id=${item.id}" class="p-5 flex flex-col flex-grow">
               <div class="flex justify-between items-start mb-2">
-                 <h3 class="font-bold text-gray-800 line-clamp-2 leading-snug group-hover:text-primary transition-colors text-lg">${item.title}</h3>
+                 <h3 class="font-bold text-gray-800 dark:text-white line-clamp-2 leading-snug group-hover:text-primary transition-colors text-lg">${item.title}</h3>
               </div>
               
-              <div class="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between">
-                <p class="text-xl font-black text-gray-900">₹ ${item.price}</p>
-                <div class="flex flex-col items-end text-xs text-gray-500 font-medium">
+              <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                <p class="text-xl font-black text-gray-900 dark:text-gray-100">₹ ${item.price}</p>
+                <div class="flex flex-col items-end text-xs text-gray-500 dark:text-gray-400 font-medium">
                   <div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> <span class="truncate max-w-[80px]">${item.location}</span></div>
                   <span class="mt-0.5 text-[10px]">${item.time}</span>
                 </div>
@@ -324,6 +473,32 @@
           `;
           grid.appendChild(card);
         });
+      }
+
+      function renderTrending() {
+          const trendingContainer = document.getElementById('trendingCarousel');
+          if(!trendingContainer) return;
+          trendingContainer.innerHTML = '';
+          // Mock some trending items by taking first 5 items
+          const trendingData = getAllListings().slice(0, 5);
+          
+          trendingData.forEach(item => {
+              const card = document.createElement('div');
+              card.className = "min-w-[280px] sm:min-w-[320px] bg-white dark:bg-card-dark rounded-2xl shadow-glass border border-gray-100 dark:border-gray-800 flex overflow-hidden cursor-pointer bouncy-card snap-center";
+              card.onclick = () => window.location.href = `Listing Detail.html?id=${item.id}`;
+              
+              card.innerHTML = `
+                <div class="w-1/3 h-full relative bg-gray-200">
+                   <img src="${item.image}" class="w-full h-full object-cover">
+                   <span class="absolute top-2 left-2 bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded shadow">HOT</span>
+                </div>
+                <div class="p-4 w-2/3 flex flex-col justify-center">
+                   <h4 class="font-bold text-gray-800 dark:text-white text-sm line-clamp-2">${item.title}</h4>
+                   <p class="text-primary font-black mt-2">₹ ${item.price}</p>
+                </div>
+              `;
+              trendingContainer.appendChild(card);
+          });
       }
 
       // 4. FAVORITE LOGIC
@@ -362,40 +537,107 @@
       
       document.getElementById('searchQuery').addEventListener('keypress', (e) => { if(e.key==='Enter') goToSearch(); });
 
-      // 6. EXPORT
-      // 6. INIT
-      document.addEventListener('DOMContentLoaded', () => {
-        renderCategoriesFromBrain(); // Load Dynamic Categories
-        renderListings();
+      // --- AUTO DETECT LOCATION ---
+      window.detectLocation = function() {
+        const inputEl = document.getElementById('filterCity');
+        inputEl.placeholder = "Detecting...";
         
-        const user = JSON.parse(sessionStorage.getItem('zzz_user') || localStorage.getItem('zzz_user'));
-        
-        if (user) {
-           document.querySelectorAll('[data-auth-hide]').forEach(el => el.classList.add('hidden'));
-           document.querySelectorAll('[data-auth-show]').forEach(el => el.classList.remove('hidden'));
-           
-           if (document.getElementById('zzzUserName')) document.getElementById('zzzUserName').textContent = user.name.split(' ')[0];
-           if (document.getElementById('userInit')) document.getElementById('userInit').textContent = user.name.charAt(0).toUpperCase();
-           
-           // Badge Update
-           const msgs = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
-           const unread = msgs.filter(m => m.toUserId === user.id && !m.read).length;
-           if(unread > 0) {
-               const b = document.getElementById('headerMsgBadge');
-               b.classList.remove('hidden');
-           }
+        if (!navigator.geolocation) {
+          inputEl.placeholder = "Geolocation not supported";
+          return;
         }
-        
-        const logoutBtn = document.getElementById('zzzLogoutBtn');
-        if(logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                localStorage.removeItem('zzz_user');
-                sessionStorage.removeItem('zzz_user');
-                window.location.reload();
-            });
-        }
-      });
 
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+            
+            fetch(url).then(res => res.json()).then(data => {
+                if (data && data.address) {
+                    inputEl.value = data.address.city || data.address.town || data.address.county || data.address.state_district || '';
+                    inputEl.placeholder = "City";
+                } else {
+                    inputEl.placeholder = "City not found";
+                }
+            }).catch(() => { inputEl.placeholder = "City"; });
+          },
+          () => { inputEl.placeholder = "Permission denied"; }
+        );
+      };
+
+      // 6. QUICK VIEW & UI LOGIC
+      window.openQuickView = (id) => {
+          const item = getAllListings().find(l => l.id === id);
+          if(!item) return;
+
+          document.getElementById('qvImage').src = item.image;
+          document.getElementById('qvCategory').textContent = item.category;
+          document.getElementById('qvTitle').textContent = item.title;
+          document.getElementById('qvPrice').textContent = `₹ ${item.price}`;
+          document.getElementById('qvLocation').textContent = item.location;
+          document.getElementById('qvTime').textContent = item.time;
+          document.getElementById('qvDescription').textContent = item.description || "No description provided for this listing.";
+          
+          document.getElementById('qvFullBtn').href = `Listing Detail.html?id=${item.id}`;
+          document.getElementById('qvChatBtn').href = `Inbox.html`;
+
+          const modal = document.getElementById('quickViewModal');
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+          setTimeout(() => {
+              modal.classList.remove('opacity-0');
+              modal.children[0].classList.remove('scale-95');
+              modal.children[0].classList.add('scale-100');
+          }, 10);
+      };
+
+      window.closeQuickView = () => {
+          const modal = document.getElementById('quickViewModal');
+          modal.classList.add('opacity-0');
+          modal.children[0].classList.remove('scale-100');
+          modal.children[0].classList.add('scale-95');
+          setTimeout(() => {
+              modal.classList.add('hidden');
+              modal.classList.remove('flex');
+          }, 300);
+      };
+
+      // 7. INIT
+      document.addEventListener('DOMContentLoaded', () => {
+        const alertMsg = localStorage.getItem('zzz_global_alert');
+        if(alertMsg) {
+            const banner = document.createElement('div');
+            banner.className = 'w-full bg-yellow-50 border-b border-yellow-200 p-3 text-center text-yellow-800 text-sm font-bold flex justify-center items-center gap-2 z-[60]';
+            banner.innerHTML = `<span class="material-symbols-outlined">campaign</span> ${alertMsg}`;
+            document.body.insertBefore(banner, document.body.firstChild);
+        }
+
+        const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
+        if(currentUser) {
+            document.querySelector('[data-auth-hide]').classList.add('hidden');
+            document.querySelector('[data-auth-show]').classList.remove('hidden');
+            document.getElementById('userInit').textContent = currentUser.name.charAt(0).toUpperCase();
+            
+            const msgs = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
+            const unread = msgs.some(m => m.receiverId === currentUser.id && m.status === 'delivered');
+            if(unread) document.getElementById('headerMsgBadge').classList.remove('hidden');
+        }
+
+        document.getElementById('zzzLogoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('zzz_user');
+            window.location.reload();
+        });
+
+        if(document.documentElement.classList.contains('dark')) {
+            document.getElementById('themeIcon').textContent = 'light_mode';
+        }
+
+        renderCategoriesFromBrain();
+        renderTrending();
+        renderListings();
+      });
     </script>
+    <script src="js/utils.js"></script>
 </body>
 </html>

@@ -14,11 +14,12 @@ tailwind.config = {
     extend: {
       colors: {
         primary: "#F97316",
-        "background-light": "#F8FAFC",
-        "background-dark": "#1E293B",
+            "background-light": "#F8FAFC",
+            "background-dark": "#1E293B",
         "text-light": "#1E293B",
         "text-dark": "#F8FAFC"
-      },
+      ,
+            "card-dark": "#1e1e1e"},
       fontFamily: { display: ["Poppins", "sans-serif"] },
       borderRadius: { DEFAULT: "1.5rem", "2xl": "2rem", "3xl": "2.5rem" },
     },
@@ -82,9 +83,9 @@ video { width: 100%; max-height: 100vh; object-fit: contain; outline: none; }
 <script src="js/data-manager.js"></script>
 </head>
 
-<body class="bg-background-light dark:bg-background-dark font-display text-text-light dark:text-text-dark transition-colors duration-300">
+<body class="font-display text-text-light dark:text-text-dark bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
 
-<nav class="w-full flex justify-between items-center px-6 py-4 bg-white/80 dark:bg-background-dark/80 backdrop-blur-lg shadow-bouncy sticky top-0 z-50">
+<nav class="w-full flex justify-between items-center px-6 py-4 bg-white/80 dark:bg-card-dark/80 dark:bg-background-dark/80 backdrop-blur-lg shadow-bouncy sticky top-0 z-50">
   <div class="flex items-center gap-2">
     <span class="material-icons text-primary text-4xl animate-logo-bounce">bolt</span>
     <h1 class="text-2xl font-bold text-dark-charcoal dark:text-white tracking-tight">ZipZapZoi</h1>
@@ -98,7 +99,7 @@ video { width: 100%; max-height: 100vh; object-fit: contain; outline: none; }
   <main class="flex-grow flex flex-col items-center justify-center w-full max-w-6xl mx-auto px-4">
     <div class="text-center mb-8 animate-slide-in-up">
       <h1 id="welcomeTitle" class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Welcome!</h1>
-      <p class="text-base text-gray-600 dark:text-gray-400">What's your next adventure?</p>
+      <p class="text-base text-gray-600 dark:text-gray-300 dark:text-gray-400">What's your next adventure?</p>
     </div>
 
     <div class="grid grid-cols-2 lg:grid-cols-3 gap-6 w-full">
@@ -205,7 +206,7 @@ video { width: 100%; max-height: 100vh; object-fit: contain; outline: none; }
 
     navArea.innerHTML = `
       <div class="flex items-center gap-3">
-        <a href="${dashboardLink}" class="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+        <a href="${dashboardLink}" class="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:bg-gray-800 transition-colors">
           <div class="bg-primary/10 rounded-full w-8 h-8 flex items-center justify-center text-primary font-bold shadow-sm">
             ${userData.name.charAt(0).toUpperCase()}
           </div>
@@ -226,7 +227,7 @@ video { width: 100%; max-height: 100vh; object-fit: contain; outline: none; }
   } else {
     // GUEST STATE
     navArea.innerHTML = `
-      <a href="Login Page.html?redirect=dashboard.html" class="px-4 py-2 text-sm font-bold text-gray-600 hover:text-primary transition-colors">Log In</a>
+      <a href="Login Page.html?redirect=dashboard.html" class="px-4 py-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Log In</a>
       <a href="User Registration.html" class="px-5 py-2 bg-primary text-white rounded-full text-sm font-bold shadow hover:bg-orange-600 hover:-translate-y-0.5 transition-all">Sign Up</a>
     `;
     document.getElementById('welcomeTitle').textContent = 'Welcome to ZipZapZoi!';
@@ -385,10 +386,21 @@ function hideSuccess() {
 }
 
 // Initialize on page load
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     setCsrfToken();
+    
+    // --- GLOBAL ALERT CHECK ---
+    const alertObj = JSON.parse(localStorage.getItem('zzz_global_alert') || '{}');
+    if (alertObj.active && alertObj.text) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'bg-yellow-400 text-yellow-900 px-4 py-2 text-center font-bold text-sm z-[100] relative shadow-sm';
+        alertDiv.innerHTML = `<span class="material-symbols-outlined align-middle text-[18px] mr-1">campaign</span> ${alertObj.text}`;
+        document.body.insertBefore(alertDiv, document.body.firstChild);
+    }
 });
 </script>
 
+  <script src="js/utils.js"></script>
 </body>
 </html>

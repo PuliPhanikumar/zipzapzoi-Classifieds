@@ -3,198 +3,265 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Join ZipZapZoi</title>
-
+  <title>ZipZapZoi – Create Account</title>
+  <meta name="description" content="Create a free ZipZapZoi account to buy, sell, and connect with your local community."/>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
-  <script src="https://cdn.tailwindcss.com"></script>
-
   <script>
     tailwind.config = {
+      darkMode: "class",
       theme: {
         extend: {
-          colors: {
-            brand: "#019863",
-            brandDark: "#017a50",
-            accent: "#4D96A9",
-          },
           fontFamily: { sans: ["Spline Sans", "sans-serif"] },
-          animation: {
-            'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
-          },
-          keyframes: {
-            fadeInUp: {
-              '0%': { opacity: '0', transform: 'translateY(10px)' },
-              '100%': { opacity: '1', transform: 'translateY(0)' },
-            }
+          colors: {
+            "primary": "#019863",
+            "secondary": "#4D96A9",
+            "background-light": "#f0f4f8",
+            "background-dark": "#0d0d0d",
+            "card-dark": "#1a1a1a"
           }
         }
       }
     }
+    // Init dark mode BEFORE render to prevent flash
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!localStorage.getItem('zzz_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
   </script>
-</head>
-<body class="bg-gray-50 min-h-screen flex">
+  <style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24; }
+    .input-field {
+      width: 100%; padding: 0.75rem 1rem 0.75rem 2.75rem;
+      border-radius: 0.75rem; border: 1.5px solid #e5e7eb;
+      background: #f9fafb; outline: none; transition: all 0.2s;
+      font-family: inherit; font-size: 0.95rem; color: #1f2937;
+    }
+    .dark .input-field { background: #252525; border-color: #3f3f3f; color: #f3f4f6; }
+    .input-field:focus { border-color: #019863; box-shadow: 0 0 0 3px rgba(1,152,99,0.15); }
+    .input-field::placeholder { color: #9ca3af; }
+    .btn-primary {
+      width: 100%; padding: 0.9rem; border-radius: 0.75rem;
+      background: #019863; color: white; font-weight: 700; font-size: 1rem;
+      border: none; cursor: pointer; transition: all 0.2s; display: flex;
+      align-items: center; justify-content: center; gap: 0.5rem;
+      box-shadow: 0 4px 15px rgba(1,152,99,0.35);
+    }
+    .btn-primary:hover { background: #017a50; transform: translateY(-1px); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
 
-  <div class="hidden lg:flex w-1/2 bg-brand relative overflow-hidden items-center justify-center text-white p-12">
-    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 20px 20px;"></div>
+    @keyframes slideUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+    .animate-in { animation: slideUp 0.5s ease-out forwards; }
+
+    #toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+  </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 font-sans transition-colors duration-300 min-h-screen flex items-center justify-center p-4">
+
+<div id="toast-container"></div>
+
+<!-- Dark Mode Toggle -->
+<button onclick="toggleDarkMode()" class="fixed top-4 right-4 z-50 p-2.5 rounded-full bg-white dark:bg-card-dark shadow-lg border border-gray-100 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors">
+  <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+</button>
+
+<!-- Card -->
+<div class="w-full max-w-5xl bg-white dark:bg-card-dark rounded-3xl shadow-2xl overflow-hidden flex animate-in" style="min-height: 600px;">
+
+  <!-- LEFT PANEL -->
+  <div class="hidden lg:flex w-5/12 relative overflow-hidden flex-col justify-between p-10" style="background: linear-gradient(135deg, #019863 0%, #4D96A9 100%);">
+    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 24px 24px;"></div>
     
-    <div class="relative z-10 max-w-lg">
-      <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-8 border border-white/30 shadow-xl">
-        <span class="material-symbols-outlined text-4xl">all_inclusive</span>
+    <a href="Classifieds LandingPage.html" class="relative z-10 flex items-center gap-2 text-white font-bold text-xl">
+      <span class="material-symbols-outlined text-3xl">all_inclusive</span> ZipZapZoi
+    </a>
+
+    <div class="relative z-10 mt-8">
+      <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6 border border-white/30 shadow-xl">
+        <span class="material-symbols-outlined text-4xl text-white">storefront</span>
       </div>
-      <h1 class="text-5xl font-bold mb-6 leading-tight">Turn your clutter into <span class="text-yellow-300">cash.</span></h1>
-      <p class="text-lg text-green-50 opacity-90 mb-8 leading-relaxed">Join thousands of people buying and selling locally. It's safe, fast, and 100% free to start.</p>
+      <h2 class="text-4xl font-bold text-white mb-4 leading-tight">Turn clutter into <span class="text-yellow-300">cash.</span></h2>
+      <p class="text-green-50 opacity-90 leading-relaxed mb-8">Join thousands of people buying and selling locally. It's safe, fast, and 100% free to start.</p>
       
-      <div class="flex gap-4">
+      <div class="flex items-center gap-4 bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
         <div class="flex -space-x-3">
-           <img class="w-10 h-10 rounded-full border-2 border-brand" src="https://i.pravatar.cc/100?img=1">
-           <img class="w-10 h-10 rounded-full border-2 border-brand" src="https://i.pravatar.cc/100?img=5">
-           <img class="w-10 h-10 rounded-full border-2 border-brand" src="https://i.pravatar.cc/100?img=8">
+           <img class="w-10 h-10 rounded-full border-2 border-primary" src="https://i.pravatar.cc/100?img=1" alt="User">
+           <img class="w-10 h-10 rounded-full border-2 border-primary" src="https://i.pravatar.cc/100?img=5" alt="User">
+           <img class="w-10 h-10 rounded-full border-2 border-primary" src="https://i.pravatar.cc/100?img=8" alt="User">
         </div>
-        <p class="flex items-center text-sm font-medium"><span class="font-bold text-yellow-300 mr-1">4.9/5</span> from verified users</p>
+        <div class="text-white">
+          <p class="text-sm font-medium"><span class="font-bold text-yellow-300">4.9/5</span> Rating</p>
+          <p class="text-xs opacity-75">from verified users</p>
+        </div>
       </div>
     </div>
+
+    <p class="relative z-10 text-green-100 text-xs opacity-70 mt-8">© 2026 ZipZapZoi. All Rights Reserved.</p>
   </div>
 
-  <div class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-white">
-    <div class="w-full max-w-md animate-fade-in-up">
+  <!-- RIGHT PANEL -->
+  <div class="w-full lg:w-7/12 p-8 md:p-12 flex flex-col justify-center bg-white dark:bg-card-dark">
+
+    <!-- Mobile logo -->
+    <a href="Classifieds LandingPage.html" class="lg:hidden flex items-center gap-2 text-primary font-bold text-xl mb-6">
+      <span class="material-symbols-outlined text-3xl">all_inclusive</span> ZipZapZoi
+    </a>
+
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">Create Account</h1>
+      <p class="text-gray-500 dark:text-gray-400">Start your journey with us today.</p>
+    </div>
+
+    <form id="regForm" class="space-y-5" novalidate>
       
-      <div class="lg:hidden flex items-center gap-2 text-brand font-bold text-xl mb-8">
-        <span class="material-symbols-outlined text-3xl">all_inclusive</span> ZipZapZoi
-      </div>
-
-      <h2 class="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
-      <p class="text-gray-500 mb-8">Start your journey with us today.</p>
-
-      <form id="regForm" class="space-y-5">
-        
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
-          <label class="block text-sm font-bold text-gray-700 mb-1.5">Full Name</label>
+          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="fullName">Full Name</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">person</span>
-            <input type="text" id="fullName" required placeholder="John Doe" 
-                   class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition-all font-medium">
+            <input type="text" id="fullName" class="input-field" placeholder="John Doe" required autocomplete="name"/>
           </div>
         </div>
 
         <div>
-          <label class="block text-sm font-bold text-gray-700 mb-1.5">Email Address</label>
-          <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">mail</span>
-            <input type="email" id="email" required placeholder="name@example.com" 
-                   class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition-all font-medium">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-bold text-gray-700 mb-1.5">Phone Number</label>
+          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="phone">Phone Number</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">phone</span>
-            <input type="tel" id="phone" required placeholder="10-digit mobile number" 
-                   class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition-all font-medium" maxlength="10">
+            <input type="tel" id="phone" class="input-field" placeholder="10-digit number" required maxlength="10" autocomplete="tel"/>
           </div>
         </div>
+      </div>
 
-        <div>
-          <label class="block text-sm font-bold text-gray-700 mb-1.5">Password</label>
-          <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">lock</span>
-            <input type="password" id="password" required placeholder="Create a strong password" 
-                   class="w-full pl-10 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition-all font-medium">
-            <button type="button" onclick="togglePass()" class="absolute right-3 top-3.5 text-gray-400 hover:text-brand transition-colors">
-              <span id="eyeIcon" class="material-symbols-outlined text-[20px]">visibility</span>
-            </button>
-          </div>
-          <p class="text-xs text-gray-400 mt-1.5 ml-1">Must be at least 6 characters</p>
+      <div>
+        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="email">Email Address</label>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">mail</span>
+          <input type="email" id="email" class="input-field" placeholder="name@example.com" required autocomplete="email"/>
         </div>
+      </div>
 
-        <div class="flex items-start gap-3 mt-2">
-          <input type="checkbox" id="terms" class="mt-1 w-4 h-4 text-brand rounded border-gray-300 focus:ring-brand">
-          <label for="terms" class="text-sm text-gray-500">
-            I agree to the <a href="legal.html" class="text-brand font-bold hover:underline">Terms of Service</a> and <a href="legal.html" class="text-brand font-bold hover:underline">Privacy Policy</a>.
-          </label>
+      <div>
+        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="password">Password</label>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">lock</span>
+          <input type="password" id="password" class="input-field" placeholder="Create a strong password" required autocomplete="new-password"/>
+          <button type="button" onclick="togglePass()" class="absolute right-3 top-3.5 text-gray-400 hover:text-primary transition-colors">
+            <span id="eyeIcon" class="material-symbols-outlined text-[20px]">visibility</span>
+          </button>
         </div>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1.5 ml-1">Must be at least 6 characters</p>
+      </div>
 
-        <button type="submit" class="w-full bg-brand hover:bg-brandDark text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-4">
-          <span>Create Account</span>
-          <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
-        </button>
+      <div class="flex items-start gap-3 mt-2 pt-2">
+        <input type="checkbox" id="terms" class="mt-1 w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary dark:focus:ring-primary dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer">
+        <label for="terms" class="text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none">
+          I agree to the <a href="legal.html" class="text-primary font-bold hover:underline" onclick="event.stopPropagation()">Terms of Service</a> and <a href="legal.html" class="text-primary font-bold hover:underline" onclick="event.stopPropagation()">Privacy Policy</a>.
+        </label>
+      </div>
 
-      </form>
+      <button type="submit" id="regBtn" class="btn-primary mt-4">
+        <span id="btnText">Create Account</span>
+        <span class="material-symbols-outlined text-[20px]" id="btnIcon">arrow_forward</span>
+      </button>
 
-      <p class="text-center text-gray-500 mt-8 font-medium">
-        Already have an account? <a href="Login Page.html" class="text-brand font-bold hover:underline">Log In</a>
+    </form>
+
+    <div class="mt-8 text-center pt-6 border-t border-gray-100 dark:border-gray-800">
+      <p class="text-gray-500 dark:text-gray-400 font-medium">
+        Already have an account? <a href="Login Page.html" class="text-primary font-bold hover:underline ml-1">Log In</a>
       </p>
-
     </div>
+
   </div>
+</div>
 
-  <script src="js/utils.js"></script>
-  <script>
-    document.getElementById('regForm').addEventListener('submit', function(e) {
-      e.preventDefault();
+<script src="js/utils.js"></script>
+<script>
+  // Sync icon
+  if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
 
-      const name = document.getElementById('fullName').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const phone = document.getElementById('phone').value.trim();
-      const password = document.getElementById('password').value;
-      const terms = document.getElementById('terms').checked;
+  function showToast(msg, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    const isErr = type === 'error';
+    toast.className = `flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-white text-sm font-semibold translate-y-8 opacity-0 transition-all duration-300 ${isErr ? 'bg-red-500' : 'bg-primary'}`;
+    toast.innerHTML = `<span class="material-symbols-outlined text-base">${isErr ? 'error' : 'check_circle'}</span><span>${msg}</span>`;
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.remove('translate-y-8', 'opacity-0'));
+    setTimeout(() => { toast.classList.add('translate-y-8', 'opacity-0'); setTimeout(() => toast.remove(), 400); }, 3500);
+  }
 
-      // VALIDATION
-      if(!terms) { showToast("Please agree to the Terms & Conditions.", "error"); return; }
-      if(password.length < 6) { showToast("Password must be at least 6 characters.", "error"); return; }
-      if(!validatePhone(phone)) { showToast("Please enter a valid 10-digit phone number.", "error"); return; }
+  document.getElementById('regForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('fullName').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const email = document.getElementById('email').value.trim().toLowerCase();
+    const password = document.getElementById('password').value;
+    const terms = document.getElementById('terms').checked;
+    const btn = document.getElementById('regBtn');
+    const btnText = document.getElementById('btnText');
+    const btnIcon = document.getElementById('btnIcon');
 
-      // CHECK EXISTING
-      const existingUsers = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-      if(existingUsers.some(u => u.email === email)) {
-        showToast("This email is already registered. Please Login.", "error");
-        setTimeout(() => window.location.href = 'Login Page.html', 1500);
+    // Validation
+    if (!name || !phone || !email || !password) { showToast('Please fill in all fields.', 'error'); return; }
+    if (!/^\d{10}$/.test(phone)) { showToast('Please enter a valid 10-digit phone number.', 'error'); return; }
+    if (password.length < 6) { showToast('Password must be at least 6 characters.', 'error'); return; }
+    if (!terms) { showToast('Please agree to the Terms & Conditions.', 'error'); return; }
+
+    btn.disabled = true;
+    btnText.textContent = 'Creating Account...';
+    btnIcon.className = 'material-symbols-outlined text-[20px] animate-spin';
+    btnIcon.textContent = 'refresh';
+
+    setTimeout(() => {
+      // Check existing
+      const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+      if (users.some(u => u.email.toLowerCase() === email)) {
+        btn.disabled = false;
+        btnText.textContent = 'Create Account';
+        btnIcon.className = 'material-symbols-outlined text-[20px]';
+        btnIcon.textContent = 'arrow_forward';
+        showToast("This email is already registered. Please login.", "error");
+        setTimeout(() => window.location.href = 'Login Page.html', 2000);
         return;
       }
 
-      // CREATE USER
+      // Create new user
       const role = email.includes('admin') ? 'admin' : 'user';
       const newUser = {
         id: 'user_' + Date.now(),
         name: name,
         email: email,
         phone: phone,
-        password: password, // Note: In production, hash this!
+        password: password, // Note: In production, hash this
         role: role,
-        avatar: `https://ui-avatars.com/api/?name=${name}&background=019863&color=fff`,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=019863&color=fff`,
         joined: new Date().toISOString()
       };
 
-      // SAVE
-      existingUsers.push(newUser);
-      localStorage.setItem('zzz_users', JSON.stringify(existingUsers));
+      users.push(newUser);
+      localStorage.setItem('zzz_users', JSON.stringify(users));
       
-      // AUTO LOGIN
+      // Auto login
       localStorage.setItem('zzz_user', JSON.stringify(newUser));
 
-      // SUCCESS ANIMATION
-      const btn = this.querySelector('button');
-      btn.innerHTML = `<span class="material-symbols-outlined animate-spin">refresh</span> Creating...`;
-      btn.classList.add('opacity-75', 'cursor-not-allowed');
+      showToast('Account created successfully! 🎉');
       
       setTimeout(() => {
-        window.location.href = 'classifieds.html';
+        window.location.href = role === 'admin' ? 'AdminConsoleV2.html' : 'classifieds.html';
       }, 1000);
-    });
 
-    function togglePass() {
-      const input = document.getElementById('password');
-      const icon = document.getElementById('eyeIcon');
-      if (input.type === "password") {
-        input.type = "text";
-        icon.textContent = "visibility_off";
-      } else {
-        input.type = "password";
-        icon.textContent = "visibility";
-      }
-    }
-  </script>
+    }, 800);
+  });
 
+  function togglePass() {
+    const input = document.getElementById('password');
+    const icon = document.getElementById('eyeIcon');
+    input.type = input.type === 'password' ? 'text' : 'password';
+    icon.textContent = input.type === 'password' ? 'visibility' : 'visibility_off';
+  }
+</script>
 </body>
 </html>

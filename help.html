@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -11,14 +11,16 @@
 
   <script>
     tailwind.config = {
-      theme: {
+      darkMode: "class",
+        theme: {
         extend: {
           fontFamily: { sans: ["Spline Sans", "sans-serif"] },
           colors: {
             "primary": "#019863",
             "secondary": "#4D96A9",
             "background-light": "#F7F9FC",
-          },
+            "background-dark": "#121212",
+            "card-dark": "#1e1e1e"},
           boxShadow: {
             "bouncy": "0 10px 20px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
           }
@@ -34,9 +36,9 @@
     .faq-open .icon-rotate { transform: rotate(180deg); }
   </style>
 </head>
-<body class="bg-background-light min-h-screen flex flex-col text-gray-800">
+<body class="min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
 
-  <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+  <header class="bg-white dark:bg-card-dark border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 shadow-sm">
     <div class="container mx-auto px-6 h-16 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <a href="classifieds.html" class="flex items-center gap-2 text-primary hover:text-green-700 transition-colors">
@@ -45,7 +47,7 @@
         </a>
       </div>
       <div class="flex items-center gap-6">
-        <a href="classifieds.html" class="text-sm font-bold text-gray-500 hover:text-primary transition-colors">Back to Home</a>
+        <a href="classifieds.html" class="text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-primary transition-colors">Back to Home</a>
         <div class="h-9 w-9 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-md border-2 border-white" id="userAvatar">U</div>
       </div>
     </div>
@@ -58,7 +60,7 @@
       <div class="relative">
         <span class="material-symbols-outlined absolute left-4 top-3.5 text-gray-400">search</span>
         <input type="text" id="searchInput" placeholder="Search for answers (e.g., 'payment', 'scam', 'password')" 
-               class="w-full pl-12 pr-4 py-3 rounded-full text-gray-800 focus:ring-4 focus:ring-green-400/50 outline-none shadow-lg transition-shadow">
+               class="w-full pl-12 pr-4 py-3 rounded-full text-gray-800 dark:text-white focus:ring-4 focus:ring-green-400/50 outline-none shadow-lg transition-shadow">
       </div>
     </div>
   </section>
@@ -66,28 +68,28 @@
   <main class="flex-grow container mx-auto px-6 py-12 max-w-5xl">
     
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-      <button onclick="filterCategory('Buying')" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-bouncy hover:-translate-y-1 transition-all text-center group">
+      <button onclick="filterCategory('Buying')" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-bouncy hover:-translate-y-1 transition-all text-center group">
         <span class="material-symbols-outlined text-4xl text-blue-500 mb-2 group-hover:scale-110 transition-transform">shopping_bag</span>
-        <h3 class="font-bold text-gray-700">Buying</h3>
+        <h3 class="font-bold text-gray-700 dark:text-gray-200">Buying</h3>
       </button>
-      <button onclick="filterCategory('Selling')" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-bouncy hover:-translate-y-1 transition-all text-center group">
+      <button onclick="filterCategory('Selling')" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-bouncy hover:-translate-y-1 transition-all text-center group">
         <span class="material-symbols-outlined text-4xl text-green-500 mb-2 group-hover:scale-110 transition-transform">storefront</span>
-        <h3 class="font-bold text-gray-700">Selling</h3>
+        <h3 class="font-bold text-gray-700 dark:text-gray-200">Selling</h3>
       </button>
-      <button onclick="filterCategory('Account')" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-bouncy hover:-translate-y-1 transition-all text-center group">
+      <button onclick="filterCategory('Account')" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-bouncy hover:-translate-y-1 transition-all text-center group">
         <span class="material-symbols-outlined text-4xl text-purple-500 mb-2 group-hover:scale-110 transition-transform">manage_accounts</span>
-        <h3 class="font-bold text-gray-700">Account</h3>
+        <h3 class="font-bold text-gray-700 dark:text-gray-200">Account</h3>
       </button>
-      <button onclick="filterCategory('Safety')" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-bouncy hover:-translate-y-1 transition-all text-center group">
+      <button onclick="filterCategory('Safety')" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-bouncy hover:-translate-y-1 transition-all text-center group">
         <span class="material-symbols-outlined text-4xl text-red-500 mb-2 group-hover:scale-110 transition-transform">shield</span>
-        <h3 class="font-bold text-gray-700">Safety</h3>
+        <h3 class="font-bold text-gray-700 dark:text-gray-200">Safety</h3>
       </button>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
       
       <div class="lg:col-span-2">
-        <h2 class="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
+        <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white flex items-center gap-2">
           <span class="material-symbols-outlined text-primary">quiz</span> Frequently Asked Questions
         </h2>
         
@@ -96,14 +98,14 @@
       </div>
 
       <div class="lg:col-span-1">
-        <div class="bg-white p-6 rounded-2xl shadow-bouncy sticky top-24">
+        <div class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-bouncy sticky top-24">
           <h2 class="text-xl font-bold mb-4">Still need help?</h2>
-          <p class="text-sm text-gray-500 mb-6">Our support team usually responds within 24 hours.</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Our support team usually responds within 24 hours.</p>
           
           <form id="contactForm" class="space-y-4">
             <div>
-              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Topic</label>
-              <select id="ticketTopic" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none">
+              <label class="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-1">Topic</label>
+              <select id="ticketTopic" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none">
                 <option>Report a Bug</option>
                 <option>Report a User/Ad</option>
                 <option>Account Issue</option>
@@ -111,8 +113,8 @@
               </select>
             </div>
             <div>
-              <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Message</label>
-              <textarea id="ticketMsg" rows="4" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="Describe your issue..." required></textarea>
+              <label class="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-1">Message</label>
+              <textarea id="ticketMsg" rows="4" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="Describe your issue..." required></textarea>
             </div>
             <button type="submit" class="w-full bg-secondary hover:bg-cyan-700 text-white font-bold py-3 rounded-xl transition-colors shadow-lg">
               Send Request
@@ -124,8 +126,8 @@
     </div>
   </main>
 
-  <footer class="bg-white border-t border-gray-200 py-8 mt-auto">
-    <div class="container mx-auto px-6 text-center text-sm text-gray-500">
+  <footer class="bg-white dark:bg-card-dark border-t border-gray-200 dark:border-gray-700 py-8 mt-auto">
+    <div class="container mx-auto px-6 text-center text-sm text-gray-500 dark:text-gray-400">
       &copy; 2024 ZipZapZoi. All Rights Reserved.
     </div>
   </footer>
@@ -167,16 +169,16 @@
 
       filtered.forEach((item, index) => {
         const div = document.createElement('div');
-        div.className = "bg-white border border-gray-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-sm transition-shadow";
+        div.className = "bg-white dark:bg-card-dark border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden cursor-pointer hover:shadow-sm transition-shadow";
         div.onclick = () => toggleAccordion(index);
         div.id = `faq-wrapper-${index}`;
         div.innerHTML = `
-          <div class="p-4 flex justify-between items-center bg-gray-50/50">
-            <h3 class="font-bold text-gray-800 text-sm md:text-base">${item.q}</h3>
+          <div class="p-4 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
+            <h3 class="font-bold text-gray-800 dark:text-white text-sm md:text-base">${item.q}</h3>
             <span class="material-symbols-outlined text-gray-400 transition-transform duration-300 icon-rotate" id="icon-${index}">expand_more</span>
           </div>
-          <div class="faq-content bg-white px-4 text-gray-600 text-sm leading-relaxed" id="content-${index}">
-            <div class="py-4 border-t border-gray-100">${item.a}</div>
+          <div class="faq-content bg-white dark:bg-card-dark px-4 text-gray-600 dark:text-gray-300 text-sm leading-relaxed" id="content-${index}">
+            <div class="py-4 border-t border-gray-100 dark:border-gray-800">${item.a}</div>
           </div>
         `;
         faqContainer.appendChild(div);
@@ -330,5 +332,6 @@ document.addEventListener('DOMContentLoaded', function() {
     setCsrfToken();
 });
 </script>
+  <script src="js/utils.js"></script>
 </body>
 </html>

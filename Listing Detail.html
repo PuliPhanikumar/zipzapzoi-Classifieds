@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -17,7 +17,9 @@
             "primary": "#019863",
             "secondary": "#4D96A9",
             "background-light": "#F7F9FC"
-          },
+          ,
+            "background-dark": "#121212",
+            "card-dark": "#1e1e1e"},
           fontFamily: { "display": ["Spline Sans", "sans-serif"] },
           boxShadow: { "bouncy": "0 10px 20px -5px rgba(0,0,0,.1)" }
         }
@@ -30,16 +32,16 @@
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="font-display bg-background-light text-gray-800 min-h-screen flex flex-col">
+<body class="font-display min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
 
-  <header class="bg-white border-b sticky top-0 z-50">
+  <header class="bg-white dark:bg-card-dark border-b sticky top-0 z-50">
     <div class="container mx-auto px-6 h-16 flex items-center justify-between">
       <a href="classifieds.html" class="flex items-center gap-2 text-primary font-bold text-xl">
         <span class="material-symbols-outlined text-3xl">all_inclusive</span>
         ZipZapZoi
       </a>
       <div class="flex items-center gap-4">
-   <button onclick="history.back()" class="hidden md:flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-bold text-xs transition-colors">
+   <button onclick="history.back()" class="hidden md:flex items-center gap-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-full font-bold text-xs transition-colors">
       <span class="material-symbols-outlined text-sm">arrow_back</span> Back
    </button>
    
@@ -53,13 +55,13 @@
     <div class="text-sm text-gray-400 mb-6 flex items-center gap-2">
       <a href="classifieds.html" class="hover:text-primary">Home</a> <span class="material-symbols-outlined text-xs">chevron_right</span>
       <span id="crumbCat">Category</span> <span class="material-symbols-outlined text-xs">chevron_right</span>
-      <span id="crumbTitle" class="text-gray-800 font-bold truncate max-w-[200px]">Item</span>
+      <span id="crumbTitle" class="text-gray-800 dark:text-white font-bold truncate max-w-[200px]">Item</span>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       
       <div class="lg:col-span-2 space-y-4">
-        <div class="bg-white rounded-3xl shadow-sm border overflow-hidden h-[400px] md:h-[500px] relative group bg-gray-100 flex items-center justify-center">
+        <div class="bg-white dark:bg-card-dark rounded-3xl shadow-sm border overflow-hidden h-[400px] md:h-[500px] relative group bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
            <img id="mainImage" src="https://via.placeholder.com/800" class="w-full h-full object-contain transition-opacity duration-300">
            <span id="statusBadge" class="hidden absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold uppercase shadow-lg z-10">SOLD</span>
         </div>
@@ -69,19 +71,19 @@
       </div>
 
       <div class="space-y-6">
-        <div class="bg-white p-6 rounded-3xl shadow-bouncy border border-gray-100">
+        <div class="bg-white dark:bg-card-dark p-6 rounded-3xl shadow-bouncy border border-gray-100 dark:border-gray-800">
            <div class="flex justify-between items-start">
              <div>
                <p id="detailCat" class="text-xs font-bold text-primary uppercase tracking-wider mb-1">CATEGORY</p>
-               <h1 id="detailTitle" class="text-2xl font-bold text-gray-900 leading-tight">Loading Title...</h1>
+               <h1 id="detailTitle" class="text-2xl font-bold text-gray-900 dark:text-white leading-tight">Loading Title...</h1>
              </div>
-             <button onclick="toggleFav()" class="p-2 bg-gray-50 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors">
+             <button onclick="toggleFav()" class="p-2 bg-gray-50 dark:bg-gray-800 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors">
                <span id="favIcon" class="material-symbols-outlined">favorite</span>
              </button>
            </div>
            
-           <div class="mt-4 pb-6 border-b border-gray-100">
-             <h2 id="detailPrice" class="text-4xl font-black text-gray-900">₹ 0</h2>
+           <div class="mt-4 pb-6 border-b border-gray-100 dark:border-gray-800">
+             <h2 id="detailPrice" class="text-4xl font-black text-gray-900 dark:text-white">₹ 0</h2>
              <p class="text-gray-400 text-sm mt-1 flex items-center gap-1">
                <span class="material-symbols-outlined text-sm">location_on</span> <span id="detailLoc">Location</span>
                <span class="mx-1">•</span> <span id="detailTime">Just now</span>
@@ -91,24 +93,27 @@
            <div id="actionArea" class="mt-6 flex flex-col gap-3"></div>
         </div>
 
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-shadow" onclick="goToProfile()">
+        <div class="bg-white dark:bg-card-dark p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 cursor-pointer hover:shadow-md transition-shadow" onclick="goToProfile()">
           <h3 class="font-bold text-gray-400 text-xs uppercase mb-4">Sold By</h3>
           <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold text-gray-500" id="sellerInit">?</div>
+            <div class="w-12 h-12 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center text-xl font-bold text-gray-500 dark:text-gray-400" id="sellerInit">?</div>
             <div>
-              <p id="sellerName" class="font-bold text-gray-900">Seller Name</p>
+              <p class="font-bold text-gray-900 dark:text-white flex items-center gap-1">
+                <span id="sellerName">Seller Name</span>
+                <span id="verifiedBadge" class="material-symbols-outlined text-blue-500 text-[16px] hidden" title="Verified User">verified</span>
+              </p>
               <p class="text-xs text-primary font-bold">View Profile</p>
             </div>
             <span class="material-symbols-outlined ml-auto text-gray-300">chevron_right</span>
           </div>
         </div>
 
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-          <h3 class="font-bold text-gray-900 mb-3">Description</h3>
-          <p id="detailDesc" class="text-gray-600 text-sm leading-relaxed whitespace-pre-line">No description.</p>
+        <div class="bg-white dark:bg-card-dark p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800">
+          <h3 class="font-bold text-gray-900 dark:text-white mb-3">Description</h3>
+          <p id="detailDesc" class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-line">No description.</p>
           <div id="dynamicFields" class="mt-4 grid grid-cols-2 gap-2 text-xs"></div>
           
-          <div class="mt-6 pt-6 border-t border-gray-100 text-center">
+          <div class="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800 text-center">
             <button onclick="openReportModal()" class="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors flex items-center justify-center gap-1 mx-auto">
               <span class="material-symbols-outlined text-[14px]">flag</span> Report this listing
             </button>
@@ -120,20 +125,20 @@
 
     <!-- Report Modal -->
     <div id="reportModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-      <div class="bg-white w-full max-w-md rounded-3xl shadow-bouncy overflow-hidden transform scale-95 transition-all" id="reportModalContent">
-        <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-          <h3 class="font-bold text-xl text-gray-800">Report Listing</h3>
+      <div class="bg-white dark:bg-card-dark w-full max-w-md rounded-3xl shadow-bouncy overflow-hidden transform scale-95 transition-all" id="reportModalContent">
+        <div class="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+          <h3 class="font-bold text-xl text-gray-800 dark:text-white">Report Listing</h3>
           <button onclick="closeReportModal()" class="text-gray-400 hover:text-red-500"><span class="material-symbols-outlined">close</span></button>
         </div>
-        <div class="p-6 space-y-4 text-sm text-gray-600">
+        <div class="p-6 space-y-4 text-sm text-gray-600 dark:text-gray-300">
           <p>Help us understand what's wrong with this listing:</p>
-          <select id="reportReason" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none">
+          <select id="reportReason" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none">
             <option value="spam">Spam or Duplicate</option>
             <option value="scam">Fraud or Scam</option>
             <option value="inappropriate">Inappropriate Content</option>
             <option value="unavailable">Item no longer available</option>
           </select>
-          <textarea id="reportDetails" rows="3" placeholder="Additional details..." class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none"></textarea>
+          <textarea id="reportDetails" rows="3" placeholder="Additional details..." class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none"></textarea>
           <button onclick="submitReport()" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-lg transition-transform active:scale-95">Submit Report</button>
         </div>
       </div>
@@ -141,7 +146,7 @@
 
   </main>
 
-  <footer class="bg-white border-t py-6 text-center text-sm text-gray-500 mt-auto">
+  <footer class="bg-white dark:bg-card-dark border-t py-6 text-center text-sm text-gray-500 dark:text-gray-400 mt-auto">
     &copy; 2024 ZipZapZoi
   </footer>
 
@@ -170,7 +175,7 @@
       if(!currentItem) {
         document.body.innerHTML = `<div class="h-screen flex flex-col items-center justify-center text-center p-4">
           <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">search_off</span>
-          <h1 class="text-2xl font-bold text-gray-700">Listing Not Found</h1>
+          <h1 class="text-2xl font-bold text-gray-700 dark:text-gray-200">Listing Not Found</h1>
           <a href="classifieds.html" class="mt-4 bg-primary text-white px-6 py-2 rounded-full font-bold">Back to Classifieds</a>
         </div>`;
         return;
@@ -189,6 +194,12 @@
       
       document.getElementById('sellerName').textContent = currentItem.userName || "User";
       document.getElementById('sellerInit').textContent = (currentItem.userName || "U").charAt(0).toUpperCase();
+
+      // Verified check
+      const verifiedUsers = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
+      if (verifiedUsers.includes(currentItem.userId) || verifiedUsers.includes(currentItem.userName)) {
+          document.getElementById('verifiedBadge').classList.remove('hidden');
+      }
 
       if(currentItem.status === 'sold') {
           document.getElementById('statusBadge').classList.remove('hidden');
@@ -245,7 +256,7 @@
           <button onclick="editItem()" class="w-full bg-gray-800 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-black transition-transform active:scale-95 flex items-center justify-center gap-2">
             <span class="material-symbols-outlined">edit_square</span> Edit Listing
           </button>
-          <button onclick="deleteItem()" class="w-full bg-white text-red-500 border border-red-100 font-bold py-3.5 rounded-xl hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
+          <button onclick="deleteItem()" class="w-full bg-white dark:bg-card-dark text-red-500 border border-red-100 font-bold py-3.5 rounded-xl hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
             <span class="material-symbols-outlined">delete</span> Delete
           </button>
         `;
@@ -255,7 +266,7 @@
           <button onclick="startChat()" ${isSold ? 'disabled' : ''} class="w-full bg-secondary text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-cyan-700 transition-transform active:scale-95 flex items-center justify-center gap-2 ${isSold ? 'opacity-50 cursor-not-allowed' : ''}">
             <span class="material-symbols-outlined">chat</span> ${isSold ? 'Item Sold' : 'Chat with Seller'}
           </button>
-          <button onclick="callSeller()" class="w-full bg-white text-primary border border-green-100 font-bold py-3.5 rounded-xl hover:bg-green-50 transition-colors flex items-center justify-center gap-2">
+          <button onclick="callSeller()" class="w-full bg-white dark:bg-card-dark text-primary border border-green-100 font-bold py-3.5 rounded-xl hover:bg-green-50 transition-colors flex items-center justify-center gap-2">
             <span class="material-symbols-outlined">call</span> Show Phone Number
           </button>
         `;
@@ -282,6 +293,21 @@
     }
 
     function callSeller() { 
+        if(!currentUser) {
+            alert("Please login to view phone number");
+            window.location.href = `Login Page.html?redirect=Listing Detail.html?id=${itemId}`;
+            return;
+        }
+
+        // Masked Contact Flow Check
+        const messages = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
+        const sellerReplied = messages.some(m => m.listingId === itemId && m.senderId === currentItem.userId && m.receiverId === currentUser.id);
+
+        if (!sellerReplied) {
+            alert("Phone number is hidden to prevent spam. Please Chat with the seller first. The number will unlock when they reply.");
+            return;
+        }
+
         const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
         const seller = users.find(u => u.id === currentItem.userId);
         if (seller && seller.phone) {

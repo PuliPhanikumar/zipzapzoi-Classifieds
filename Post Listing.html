@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -43,7 +43,7 @@
     select::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
   </style>
 </head>
-<body class="font-display bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark antialiased transition-colors duration-300">
+<body class="font-display text-text-light dark:text-text-dark antialiased bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
 
 <header class="sticky top-0 z-50 bg-card-light/90 dark:bg-card-dark/90 backdrop-blur-md border-b border-border-light dark:border-border-dark">
   <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -63,7 +63,7 @@
       <span class="text-gray-400" id="stepIndicator">Step 2: Details</span>
       <span class="text-gray-400">Step 3: Review</span>
     </div>
-    <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+    <div class="h-2 bg-gray-200 dark:bg-gray-800 dark:bg-gray-700 rounded-full overflow-hidden">
       <div id="progressBar" class="h-full bg-secondary w-1/3 transition-all duration-500"></div>
     </div>
   </div>
@@ -110,14 +110,14 @@
           <div>
             <label class="block text-sm font-bold mb-2">Ad Title *</label>
             <input type="text" id="postTitle" class="w-full rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4" placeholder="e.g. iPhone 14 Pro Max 256GB - Brand New" required>
-            <p class="text-xs text-gray-500 mt-1">Mention key features like Brand, Model, Type</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Mention key features like Brand, Model, Type</p>
           </div>
 
           <div id="priceRow" class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label id="priceLabel" class="block text-sm font-bold mb-2">Price (₹) *</label>
               <div class="relative">
-                <span class="absolute left-4 top-3.5 text-gray-500">₹</span>
+                <span class="absolute left-4 top-3.5 text-gray-500 dark:text-gray-400">₹</span>
                 <input type="number" id="postPrice" class="w-full pl-8 rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4" placeholder="0">
               </div>
             </div>
@@ -163,15 +163,15 @@
                 Auto-Detect
               </button>
             </div>
-            <p id="locationStatus" class="text-xs text-gray-500 mt-2 ml-1 hidden"></p>
+            <p id="locationStatus" class="text-xs text-gray-500 dark:text-gray-400 mt-2 ml-1 hidden"></p>
           </div>
         </div>
       </div>
       <div class="bg-card-light dark:bg-card-dark rounded-2xl shadow-bouncy p-6 border border-border-light dark:border-border-dark" id="photoSection">
         <h3 class="text-xl font-bold mb-2">Upload Photos</h3>
-        <p class="text-sm text-gray-500 mb-4" id="photoLimitText">Add up to 8 photos. First photo is your cover image.</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4" id="photoLimitText">Add up to 8 photos. First photo is your cover image.</p>
         
-        <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer relative">
+        <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-800 transition-colors cursor-pointer relative">
           <input type="file" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" id="fileInput">
           <span class="material-symbols-outlined text-4xl text-gray-400 mb-2">add_a_photo</span>
           <p class="font-medium text-secondary">Click to upload or drag & drop</p>
@@ -189,7 +189,7 @@
       </div>
 
       <div class="flex flex-col sm:flex-row gap-4 pt-4">
-        <button type="button" id="previewBtn" class="flex-1 py-4 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 text-text-light dark:text-text-dark font-bold rounded-xl transition-all">
+        <button type="button" id="previewBtn" class="flex-1 py-4 bg-gray-200 dark:bg-gray-800 dark:bg-gray-700 hover:bg-gray-300 dark:bg-gray-700 text-text-light dark:text-text-dark font-bold rounded-xl transition-all">
           Preview Listing
         </button>
         <button type="submit" id="finalSubmitBtn" class="flex-[2] py-4 bg-secondary hover:bg-primary text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-1 flex justify-center items-center gap-2">
@@ -219,8 +219,12 @@
 
 <script>
 (function() {
-  
-  // --- 1. DATA SCHEMA (The Brains) ---
+  const currentUserAuth = JSON.parse(localStorage.getItem('zzz_user'));
+  if (!currentUserAuth) {
+    window.location.href = 'Login Page.html?redirect=Post Listing.html';
+    return;
+  }
+
   let schema = {};
 
   function loadSchemaFromBrain() {
@@ -240,7 +244,7 @@
       schema[cat.id] = {
         label: cat.label,
         icon: cat.icon,
-        color: cat.color || 'text-gray-500',
+        color: cat.color || 'text-gray-500 dark:text-gray-400',
         priceLabel: cat.priceLabel, // Custom Price Label
         hidePrice: cat.hidePrice,   // Charity logic
         photoLimit: cat.photoLimit, // Photo limits
@@ -302,7 +306,7 @@
   Object.keys(schema).forEach(key => {
     const cat = schema[key];
     const div = document.createElement('div');
-    div.className = `cursor-pointer flex flex-col items-center justify-center p-4 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-gray-800 hover:border-secondary hover:bg-white dark:hover:bg-gray-700 transition-all gap-2 group`;
+    div.className = `cursor-pointer flex flex-col items-center justify-center p-4 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-gray-800 hover:border-secondary hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 transition-all gap-2 group`;
     div.innerHTML = `
       <span class="material-symbols-outlined text-4xl ${cat.color} group-hover:scale-110 transition-transform">${cat.icon}</span>
       <span class="text-sm font-bold text-center">${cat.label}</span>
@@ -455,106 +459,7 @@
       reader.readAsDataURL(file);
     });
   });
-// File upload and validation
-function validateFile(file) {
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    
-    if (!allowedTypes.includes(file.type)) {
-        showError('Only JPG, PNG, and WebP images allowed');
-        return false;
-    }
-    if (file.size > maxSize) {
-        showError('File size must be under 5MB');
-        return false;
-    }
-    return true;
-}
 
-// Drag and drop handlers
-const dropZone = document.getElementById('imageDropZone');
-if (dropZone) {
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('dragover');
-    });
-    
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('dragover');
-    });
-    
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-        const files = Array.from(e.dataTransfer.files);
-        files.forEach(file => {
-            if (validateFile(file)) {
-                addImagePreview(file);
-            }
-        });
-    });
-}
-
-// Image preview
-function addImagePreview(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const img = document.createElement('img');
-        img.src = e.target.result;
-        img.style.maxWidth = '100px';
-        img.style.margin = '5px';
-        document.getElementById('imagePreviewContainer').appendChild(img);
-    };
-    reader.readAsDataURL(file);
-}
-
-// Populate categories
-function populateCategories() {
-    const categories = ['Electronics', 'Furniture', 'Clothing', 'Books', 'Toys', 'Sports', 'Home & Garden', 'Other'];
-    const select = document.getElementById('category');
-    categories.forEach(cat => {
-        const option = document.createElement('option');
-        option.value = cat.toLowerCase();
-        option.textContent = cat;
-        select.appendChild(option);
-    });
-}
-
-// Price validation
-document.getElementById('price').addEventListener('input', function() {
-    const price = parseFloat(this.value);
-    if (isNaN(price) || price < 0) {
-        showError('Please enter a valid price');
-    }
-});
-
-// Form submission
-function handlePostListing(e) {
-    e.preventDefault();
-    
-    if (!document.getElementById('title').value) {
-        showError('Title is required');
-        return;
-    }
-    if (!document.getElementById('category').value) {
-        showError('Please select a category');
-        return;
-    }
-    if (!document.getElementById('description').value) {
-        showError('Description is required');
-        return;
-    }
-    if (!document.getElementById('price').value) {
-        showError('Price is required');
-        return;
-    }
-    
-    showSuccess('Listing posted successfully!');
-    setTimeout(() => window.location.href = '/dashboard.html', 1500);
-}
-
-document.querySelector('form').addEventListener('submit', handlePostListing);
-populateCategories();
 
   // --- 6. PREVIEW & SUBMIT LOGIC ---
   const previewBtn = document.getElementById('previewBtn');
@@ -582,8 +487,8 @@ populateCategories();
     const dynamicInputs = document.querySelectorAll('[id^="dyn_"]');
     
     if(dynamicInputs.length > 0) {
-        detailsHtml += `<div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-4 border border-gray-100 dark:border-gray-700">`;
-        detailsHtml += `<h4 class="text-xs font-bold text-gray-500 uppercase mb-3">Key Details</h4>`;
+        detailsHtml += `<div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-4 border border-gray-100 dark:border-gray-800 dark:border-gray-700">`;
+        detailsHtml += `<h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Key Details</h4>`;
         detailsHtml += `<div class="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">`;
         
         dynamicInputs.forEach(input => {
@@ -595,7 +500,7 @@ populateCategories();
                 detailsHtml += `
                   <div class="flex flex-col">
                     <span class="text-xs text-gray-400">${label}</span>
-                    <span class="font-bold text-gray-800 dark:text-gray-200">${value}</span>
+                    <span class="font-bold text-gray-800 dark:text-white dark:text-gray-200">${value}</span>
                   </div>`;
             }
         });
@@ -607,7 +512,7 @@ populateCategories();
     let html = `
       <div class="flex flex-col gap-5">
         
-        <div class="w-full h-48 sm:h-64 bg-gray-100 rounded-xl overflow-hidden relative border border-gray-200">
+        <div class="w-full h-48 sm:h-64 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden relative border border-gray-200 dark:border-gray-700">
            <img src="${coverImage}" class="w-full h-full object-cover">
            <span class="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">
              ${currentCategory ? currentCategory.label : 'Category'}
@@ -617,7 +522,7 @@ populateCategories();
         <div class="flex justify-between items-start gap-4">
           <div class="flex-1">
             <h2 class="text-2xl font-black text-gray-800 dark:text-white leading-tight">${title || 'Untitled Ad'}</h2>
-            <div class="flex items-center gap-2 mt-1 text-sm text-gray-500">
+            <div class="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
                <span class="material-symbols-outlined text-sm">location_on</span>
                <span>${loc}</span>
                <span class="text-gray-300">|</span>
@@ -639,13 +544,13 @@ populateCategories();
           <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">${desc || 'No description provided.'}</p>
         </div>
 
-        <div class="flex items-center gap-3 mt-2 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <div class="flex items-center gap-3 mt-2 pt-4 border-t border-gray-100 dark:border-gray-800 dark:border-gray-700">
            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-primary text-white flex items-center justify-center font-bold">
              ${JSON.parse(localStorage.getItem('zzz_user') || '{"name":"User"}').name.charAt(0)}
            </div>
            <div>
              <p class="text-xs text-gray-400 font-bold">Posted By</p>
-             <p class="text-sm font-bold text-gray-800 dark:text-gray-200">${JSON.parse(localStorage.getItem('zzz_user') || '{"name":"You"}').name}</p>
+             <p class="text-sm font-bold text-gray-800 dark:text-white dark:text-gray-200">${JSON.parse(localStorage.getItem('zzz_user') || '{"name":"You"}').name}</p>
            </div>
         </div>
 

@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html lang="en">
 <head>
   <script>
   // --- AUTH CHECK ---
   (function() {
     const raw = localStorage.getItem('zzz_user');
     if (!raw) {
-      // Redirect to login if not authenticated
       window.location.href = 'Login Page.html?redirect=favorites.html';
     }
   })();
@@ -21,13 +20,16 @@
 
   <script>
     tailwind.config = {
-      theme: {
+      darkMode: "class",
+        theme: {
         extend: {
           fontFamily: { sans: ["Spline Sans", "sans-serif"] },
           colors: {
             "primary": "#019863",
             "secondary": "#4D96A9",
             "background-light": "#F7F9FC",
+            "background-dark": "#121212",
+            "card-dark": "#1e1e1e",
           },
           boxShadow: {
             "bouncy": "0 10px 20px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
@@ -42,9 +44,9 @@
     @keyframes fadeOut { to { opacity: 0; transform: scale(0.9); } }
   </style>
 </head>
-<body class="bg-background-light min-h-screen flex flex-col text-gray-800">
+<body class="min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
 
-  <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+  <header class="bg-white dark:bg-card-dark border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 shadow-sm">
     <div class="container mx-auto px-6 h-16 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <a href="classifieds.html" class="flex items-center gap-2 text-primary hover:text-green-700 transition-colors">
@@ -54,11 +56,11 @@
       </div>
       
       <div class="flex items-center gap-6">
-        <a href="classifieds.html" class="text-sm font-bold text-gray-500 hover:text-primary transition-colors">Browse</a>
-        <a href="Inbox.html" class="text-sm font-bold text-gray-500 hover:text-primary transition-colors">Messages</a>
+        <a href="classifieds.html" class="text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-primary transition-colors">Browse</a>
+        <a href="Inbox.html" class="text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-primary transition-colors">Messages</a>
         
-        <div class="flex items-center gap-3 pl-6 border-l border-gray-200">
-          <a href="Seller Dashboard.html" class="hidden md:flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-primary transition-colors">
+        <div class="flex items-center gap-3 pl-6 border-l border-gray-200 dark:border-gray-700">
+          <a href="Seller Dashboard.html" class="hidden md:flex items-center gap-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
             <span class="material-symbols-outlined text-lg">dashboard</span> Dashboard
           </a>
           <div class="h-9 w-9 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-md border-2 border-white" id="userAvatar">U</div>
@@ -69,82 +71,48 @@
 
   <main class="flex-grow container mx-auto px-6 py-8">
     
-    <div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-8 border-b border-gray-200 pb-4 gap-4">
+    <div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-8 border-b border-gray-200 dark:border-gray-700 pb-4 gap-4">
       <div>
-        <h1 class="text-3xl font-bold text-gray-800">My Favorites</h1>
-        <p class="text-gray-500 mt-1">Items you've saved for later.</p>
+        <h1 class="text-3xl font-bold text-gray-800 dark:text-white">My Favorites</h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Items you've saved for later.</p>
       </div>
-      <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
-        <span class="text-sm font-bold text-gray-600">Saved Items:</span>
+      <div class="flex items-center gap-2 bg-white dark:bg-card-dark px-4 py-2 rounded-full shadow-sm border border-gray-100 dark:border-gray-800">
+        <span class="text-sm font-bold text-gray-600 dark:text-gray-300">Saved Items:</span>
         <span class="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full" id="favCount">0</span>
       </div>
     </div>
 
     <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-center">
-      <div class="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+      <div class="w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
         <span class="material-symbols-outlined text-gray-400 text-6xl">heart_broken</span>
       </div>
-      <h2 class="text-2xl font-bold text-gray-700 mb-2">Your wishlist is empty</h2>
-      <p class="text-gray-500 max-w-md mb-8">It looks like you haven't saved any listings yet. Browse categories to find something you love!</p>
+      <h2 class="text-2xl font-bold text-gray-700 dark:text-white mb-2">Your wishlist is empty</h2>
+      <p class="text-gray-500 dark:text-gray-400 max-w-md mb-8">It looks like you haven't saved any listings yet. Browse categories to find something you love!</p>
       <a href="classifieds.html" class="bg-primary hover:bg-green-700 text-white px-8 py-3 rounded-full font-bold shadow-bouncy transition-transform hover:-translate-y-1">
         Start Exploring
       </a>
     </div>
 
     <div id="favGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      </div>
+    </div>
 
   </main>
 
-  <footer class="bg-white border-t border-gray-200 py-8 mt-auto">
-    <div class="container mx-auto px-6 text-center text-sm text-gray-500">
-      &copy; 2024 ZipZapZoi. All Rights Reserved.
+  <footer class="bg-white dark:bg-card-dark border-t border-gray-200 dark:border-gray-700 py-8 mt-auto">
+    <div class="container mx-auto px-6 text-center text-sm text-gray-500 dark:text-gray-400">
+      &copy; <script>document.write(new Date().getFullYear())</script> ZipZapZoi. All Rights Reserved.
     </div>
   </footer>
 
+  <script src="js/utils.js"></script>
   <script>
     // --- 1. SETUP & AUTH ---
     const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
     document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
     const STORAGE_KEY = 'zzz_favorites';
 
-    // --- 2. SEED DATA (Auto-fill for Demo) ---
-    function seedFavorites() {
-      const existing = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      if (existing.length > 0) return;
-
-      const samples = [
-        {
-          id: '101',
-          title: "Apple iPhone 14 Pro - Deep Purple",
-          price: "65,000",
-          category: "Electronics",
-          image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=600&q=80",
-          location: "Indiranagar, Bengaluru"
-        },
-        {
-          id: '103',
-          title: "Modern 3-Seater Sofa Set",
-          price: "25,000",
-          category: "Home & Garden",
-          image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80",
-          location: "Gachibowli, Hyderabad"
-        },
-        {
-          id: '102',
-          title: "Royal Enfield Classic 350",
-          price: "1,45,000",
-          category: "Vehicles",
-          image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80",
-          location: "Bandra, Mumbai"
-        }
-      ];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(samples));
-    }
-
     // --- 3. RENDER FAVORITES ---
     function loadFavorites() {
-      seedFavorites(); // Ensure data exists for demo
       const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       
       const grid = document.getElementById('favGrid');
@@ -166,28 +134,28 @@
       grid.classList.remove('hidden');
 
       grid.innerHTML = items.map(item => `
-        <div id="card-${item.id}" class="group bg-white rounded-2xl shadow-sm hover:shadow-bouncy border border-gray-100 overflow-hidden transition-all duration-300">
+        <div id="card-${item.id}" class="group bg-white dark:bg-card-dark rounded-2xl shadow-sm hover:shadow-bouncy border border-gray-100 dark:border-gray-800 overflow-hidden transition-all duration-300">
           
-          <div class="relative h-48 bg-gray-100 overflow-hidden">
+          <div class="relative h-48 bg-gray-100 dark:bg-gray-800 overflow-hidden">
             <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
             <span class="absolute top-2 left-2 bg-black/60 text-white text-[10px] uppercase font-bold px-2 py-1 rounded backdrop-blur-sm tracking-wide">${item.category}</span>
             
-            <button onclick="removeFavorite('${item.id}')" class="absolute top-2 right-2 p-2 bg-white/90 rounded-full text-red-500 hover:bg-red-500 hover:text-white shadow-sm transition-all hover:scale-110" title="Remove from Favorites">
+            <button onclick="removeFavorite('${item.id}')" class="absolute top-2 right-2 p-2 bg-white/90 dark:bg-card-dark/90 rounded-full text-red-500 hover:bg-red-500 hover:text-white shadow-sm transition-all hover:scale-110" title="Remove from Favorites">
               <span class="material-symbols-outlined text-lg leading-none">delete</span>
             </button>
           </div>
 
           <div class="p-4 flex flex-col gap-2">
-            <a href="Listing Detail.html?id=${item.id}" class="font-bold text-gray-800 line-clamp-1 hover:text-primary transition-colors">${item.title}</a>
+            <a href="Listing Detail.html?id=${item.id}" class="font-bold text-gray-800 dark:text-white line-clamp-1 hover:text-primary transition-colors">${item.title}</a>
             <p class="text-xl font-bold text-primary">₹ ${item.price}</p>
             
-            <div class="flex items-center gap-1 text-xs text-gray-400 pb-3 border-b border-gray-100">
+            <div class="flex items-center gap-1 text-xs text-gray-400 pb-3 border-b border-gray-100 dark:border-gray-800">
               <span class="material-symbols-outlined text-sm">location_on</span>
-              <span class="truncate">${item.location}</span>
+              <span class="truncate">${item.city || item.location || 'India'}</span>
             </div>
 
             <div class="flex gap-2 pt-2">
-              <a href="Listing Detail.html?id=${item.id}" class="flex-1 py-2 text-center text-sm font-bold text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">View Details</a>
+              <a href="Listing Detail.html?id=${item.id}" class="flex-1 py-2 text-center text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:bg-gray-800 transition-colors">View Details</a>
               <a href="Listing Detail.html?id=${item.id}" class="flex-1 py-2 text-center text-sm font-bold text-white bg-secondary rounded-lg hover:bg-cyan-700 transition-colors shadow-sm">Chat Now</a>
             </div>
           </div>
@@ -201,15 +169,11 @@
 
       const card = document.getElementById(`card-${id}`);
       if(card) {
-        // Animation
         card.classList.add('fade-out');
         setTimeout(() => {
-          // Logic
           let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-          items = items.filter(i => i.id !== id);
+          items = items.filter(i => i.id != id); // Use != to cast if id is string/num
           localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-          
-          // Re-render
           loadFavorites();
         }, 300);
       }
@@ -217,7 +181,6 @@
 
     // Initialize
     loadFavorites();
-
   </script>
 </body>
 </html>
