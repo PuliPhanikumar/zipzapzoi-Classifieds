@@ -15,19 +15,20 @@
             colors: {
               primary: "#019863",
               secondary: "#4D96A9",
-            "background-light": "#f0f4f8",
-            "background-dark": "#121212",
-            "card-dark": "#1e1e1e"
+              "background-light": "#f0f4f8",
+              "background-dark": "#0d0d0d",
+              "card-dark": "#1a1a1a"
             },
             fontFamily: { display: "Spline Sans" },
             boxShadow: {
               'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+              '3d': '0 20px 40px -10px rgba(0,0,0,0.15)',
+              '3d-dark': '0 20px 40px -10px rgba(0,0,0,0.6)'
             }
           }
         }
       };
       
-      // Dark Mode Init
       if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
       }
@@ -35,133 +36,110 @@
     <style>
       .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24 }
       
-      /* --- BOUNCY 3D CARDS --- */
-      .bouncy-card {
-        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      /* --- 3D PERSPECTIVE ENGINE --- */
+      body { perspective: 1000px; }
+      
+      .card-3d {
+        transform-style: preserve-3d;
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       }
-      .bouncy-card:hover {
-        transform: translateY(-10px) scale(1.05);
+      .card-3d:hover {
+        transform: translateY(-8px) scale(1.02) rotateX(2deg) rotateY(-2deg);
+        box-shadow: 0 30px 50px -15px rgba(0,0,0,0.2);
+        z-index: 10;
+      }
+      .dark .card-3d:hover {
+        box-shadow: 0 30px 50px -15px rgba(0,0,0,0.8);
       }
       
-      /* The 3D Icon Bubble */
-      .icon-3d {
-        position: relative;
-        background: white;
-        box-shadow: 
-          0 10px 15px -3px rgba(0,0,0,0.1), 
-          0 4px 6px -2px rgba(0,0,0,0.05),
-          inset 0 2px 4px rgba(255,255,255,0.4),
-          inset 0 -3px 6px rgba(0,0,0,0.05);
-        transition: transform 0.3s ease;
+      .card-image-wrap {
+        transition: transform 0.5s ease;
       }
+      .card-3d:hover .card-image-wrap {
+        transform: translateZ(20px);
+      }
+
+      /* Airbnb Style Category Pill Carousel */
+      .cat-carousel {
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 1rem;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .cat-carousel::-webkit-scrollbar { display: none; }
       
-      .bouncy-card:hover .icon-3d {
-        transform: rotate(-5deg) scale(1.1);
+      .cat-pill {
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+        transition: all 0.3s;
+      }
+      .cat-pill:hover { transform: translateY(-3px); }
+      .cat-pill.active {
+        border-bottom: 3px solid #019863;
+        color: #019863;
+        opacity: 1;
       }
 
-      /* Listing Cards */
-      .listing-card {
-        transition: all 0.3s ease;
-        background: #ffffff;
-        border: 1px solid rgba(0,0,0,0.05);
-      }
-      .listing-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1);
-      }
-
-      /* Favorite Heart Animation */
+      /* Favorite Heart */
       .fav-btn {
-        background: rgba(0, 0, 0, 0.2);
+        background: rgba(255, 255, 255, 0.8);
         backdrop-filter: blur(4px);
         transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        color: #9ca3af;
       }
-      .fav-btn:hover { background: rgba(0,0,0,0.4); transform: scale(1.15); }
-      .fav-btn.active .material-symbols-outlined { color: #ef4444; font-variation-settings: 'FILL' 1; }
-      .fav-btn.active { background: white; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); }
-      
-      /* Hide Scrollbar */
-      .hide-scrollbar::-webkit-scrollbar { display: none; }
-      .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      .dark .fav-btn { background: rgba(0,0,0,0.5); }
+      .fav-btn:hover { transform: scale(1.15); color: #ef4444; }
+      .fav-btn.active { color: #ef4444; }
+      .fav-btn.active .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+
+      /* Animations */
+      @keyframes popIn { from { opacity:0; transform: scale(0.9) translateY(20px); } to { opacity:1; transform: scale(1) translateY(0); } }
+      .animate-pop { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     </style>
 </head>
-<body class="font-display min-h-screen flex flex-col selection:bg-primary/30 bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
+<body class="font-display min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
     
-    <header class="sticky top-0 z-50 bg-white/80 dark:bg-card-dark/80 backdrop-blur-xl border-b border-white/20 dark:border-gray-800 shadow-sm">
-      <div class="container mx-auto px-6 py-3">
+    <!-- HEADER -->
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-card-dark/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 shadow-sm transition-colors duration-300">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-secondary text-4xl drop-shadow-sm">all_inclusive</span>
-            <h2 class="text-2xl font-black bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent">ZipZapZoi</h2>
-          </div>
           
-          <div class="flex items-center gap-4 md:gap-6" id="headerAuthArea">
-            <button onclick="toggleDarkMode()" aria-label="Toggle Dark Mode" class="p-2 rounded-full hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 transition-colors flex items-center justify-center text-gray-600 dark:text-gray-300">
+          <a href="dashboard.html" class="flex items-center gap-2 group cursor-pointer">
+            <span class="material-symbols-outlined text-primary text-3xl group-hover:rotate-12 transition-transform">all_inclusive</span>
+            <h2 class="text-2xl font-black bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent tracking-tight">ZipZapZoi</h2>
+          </a>
+          
+          <div class="flex items-center gap-4" id="headerAuthArea">
+            <button onclick="toggleDarkMode()" aria-label="Toggle Dark Mode" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center text-gray-600 dark:text-gray-400">
                <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
             </button>
-            <div data-auth-hide class="flex items-center gap-4">
-              <a href="Login Page.html?redirect=classifieds.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Log In</a>
-              <a href="User Registration.html" class="text-sm font-bold bg-primary text-white py-2.5 px-6 rounded-full shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all">Sign Up</a>
-            </div>
-
-            <div data-auth-show class="hidden flex items-center gap-4">
-              <div class="hidden md:flex items-center gap-2 text-sm font-medium bg-gray-50 dark:bg-gray-800 p-1.5 rounded-full border border-gray-200 dark:border-gray-700 shadow-inner">
-                
-                <a href="Post Listing.html" class="flex items-center gap-2 py-1.5 px-4 rounded-full hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 hover:shadow-md transition-all text-gray-600 dark:text-gray-300">
-                  <span class="material-symbols-outlined text-lg text-secondary">add_circle</span>
-                  <span>Post</span>
-                </a>
-                
-                <a href="Seller Dashboard.html" class="flex items-center gap-2 py-1.5 px-4 rounded-full hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 hover:shadow-md transition-all text-gray-600 dark:text-gray-300">
-                  <span class="material-symbols-outlined text-lg text-secondary">dashboard</span>
-                  <span>Dashboard</span>
-                </a>
-
-                <a href="favorites.html" class="flex items-center gap-2 py-1.5 px-4 rounded-full hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 hover:shadow-md transition-all text-gray-600 dark:text-gray-300">
-                  <span class="material-symbols-outlined text-lg text-secondary">favorite</span>
-                  <span>Favorites</span>
-                </a>
-
-                <a href="Inbox.html" class="flex items-center gap-2 py-1.5 px-4 rounded-full hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 hover:shadow-md transition-all text-gray-600 dark:text-gray-300 relative">
-                  <span class="material-symbols-outlined text-lg text-secondary">inbox</span>
-                  <span>Messages</span>
-                  <span id="headerMsgBadge" class="absolute top-1 right-2 flex h-2.5 w-2.5 rounded-full bg-red-500 shadow-sm hidden"></span>
-                </a>
-              </div>
-              
-              <div class="flex items-center gap-3 pl-2">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-primary flex items-center justify-center text-white font-bold shadow-lg border-2 border-white text-sm">
-                   <span id="userInit">U</span>
-                </div>
-                <button id="zzzLogoutBtn" class="text-xs font-bold text-gray-500 hover:text-red-500 transition-colors uppercase tracking-wide">Logout</button>
-              </div>
-            </div>
+            <!-- Injected via JS -->
           </div>
         </div>
       </div>
     </header>
 
-    <main class="flex-grow pb-20">
+    <main class="flex-grow flex flex-col">
       
-      <section class="pt-10 pb-8 px-6">
-        <div class="max-w-4xl mx-auto text-center">
-          <h1 class="text-4xl md:text-5xl font-black text-gray-800 dark:text-white mb-8 tracking-tight">Find it. Love it. <span class="text-primary">Buy it.</span></h1>
-          
-          <div class="bg-white/70 dark:bg-card-dark/70 backdrop-blur-md p-2 rounded-[2rem] shadow-glass flex flex-col md:flex-row gap-2 max-w-3xl mx-auto transform hover:scale-[1.01] transition-transform border border-white dark:border-gray-800">
+      <!-- HERO SEARCH BAR -->
+      <section class="pt-8 pb-4 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto">
+          <div class="bg-white dark:bg-card-dark p-2 rounded-full shadow-lg border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row items-center gap-2 transform-style-3d hover:shadow-xl transition-shadow">
             
-            <div class="flex-1 flex items-center bg-white dark:bg-card-dark rounded-[1.5rem] px-6 h-14 shadow-sm border border-gray-100 dark:border-gray-800 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+            <div class="flex-1 w-full flex items-center px-6 h-12 border-b sm:border-b-0 sm:border-r border-gray-100 dark:border-gray-800">
               <span class="material-symbols-outlined text-gray-400">search</span>
-              <input id="searchQuery" class="w-full bg-transparent border-none focus:ring-0 text-lg ml-2 placeholder-gray-400 font-medium text-gray-700 dark:text-gray-100" placeholder="Search anything..." type="text" />
+              <input id="searchQuery" class="w-full bg-transparent border-none focus:ring-0 text-base ml-2 placeholder-gray-400 font-bold dark:text-white" placeholder="What are you looking for?" type="text" onkeypress="if(event.key === 'Enter') executeSearch()"/>
             </div>
             
-            <div class="md:w-1/3 flex items-center bg-white dark:bg-card-dark rounded-[1.5rem] px-6 h-14 shadow-sm border border-gray-100 dark:border-gray-800 focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary/20 transition-all">
-              <button onclick="detectLocation()" type="button" class="text-gray-400 hover:text-secondary transition-colors cursor-pointer outline-none" title="Auto-detect Location">
-                <span class="material-symbols-outlined">my_location</span>
-              </button>
-              <input id="filterCity" class="w-full bg-transparent border-none focus:ring-0 text-base ml-2 placeholder-gray-400 font-medium text-gray-700 dark:text-gray-100" placeholder="City" type="text" />
+            <div class="sm:w-1/3 w-full flex items-center px-6 h-12">
+              <span class="material-symbols-outlined text-gray-400 cursor-pointer hover:text-primary transition-colors" onclick="alert('Detecting location...')">my_location</span>
+              <input id="searchLoc" class="w-full bg-transparent border-none focus:ring-0 text-sm ml-2 placeholder-gray-400 font-bold dark:text-white" placeholder="City or Zip" type="text" onkeypress="if(event.key === 'Enter') executeSearch()"/>
             </div>
             
-            <button onclick="goToSearch()" class="h-14 px-8 bg-primary hover:bg-green-700 text-white font-bold rounded-[1.5rem] shadow-lg shadow-primary/30 transition-all active:scale-95 text-lg">
+            <button onclick="executeSearch()" class="w-full sm:w-auto h-12 px-8 bg-primary hover:bg-green-700 text-white font-bold rounded-full shadow-md hover:shadow-lg transition-transform active:scale-95">
               Search
             </button>
           
@@ -169,475 +147,269 @@
         </div>
       </section>
 
-      <section class="py-8">
-        <div class="container mx-auto px-6">
-          <div class="flex justify-between items-end mb-8">
-            <h2 class="text-2xl font-black text-gray-800 dark:text-white tracking-tight">Browse Categories</h2>
-            <a href="#" onclick="filterListings('All')" class="text-sm font-bold text-secondary hover:text-primary transition-colors bg-white dark:bg-card-dark px-4 py-2 rounded-full shadow-sm">View All</a>
-          </div>
-          
-          <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-6 justify-items-center" id="categoryGrid">
-            </div>
-        </div>
-      </section>
-
-      <section class="py-8 bg-gradient-to-b from-transparent to-primary/5 dark:to-primary/10">
-        <div class="container mx-auto px-6">
-          <h2 class="text-2xl font-black text-gray-800 dark:text-white tracking-tight mb-6 flex items-center gap-2">
-            <span class="material-symbols-outlined text-red-500">local_fire_department</span> Trending Now
-          </h2>
-          <div class="flex gap-6 overflow-x-auto pb-4 snap-x hide-scrollbar" id="trendingCarousel">
-            <!-- Populated via JS -->
+      <!-- CATEGORY PILL CAROUSEL (Airbnb style) -->
+      <section class="border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-card-dark/50 backdrop-blur-md sticky top-[73px] z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <div class="cat-carousel" id="categoryCarousel">
+            <!-- Rendered via JS -->
           </div>
         </div>
       </section>
 
-      <section class="py-8" id="listingsSection">
-        <div class="container mx-auto px-6 flex flex-col md:flex-row gap-8">
-          
-          <!-- Advanced Filtering Sidebar -->
-          <aside class="w-full md:w-72 shrink-0 space-y-6">
-            <div class="bg-white dark:bg-card-dark p-6 rounded-[2rem] shadow-glass border border-gray-100 dark:border-gray-800 bouncy-card">
-               <h3 class="font-black text-xl text-gray-800 dark:text-white mb-6 flex items-center gap-2">
-                 <span class="material-symbols-outlined text-secondary">tune</span> Filters
-               </h3>
-               
-               <!-- Price Filter -->
-               <div class="mb-6">
-                 <label class="block text-sm font-bold text-gray-600 dark:text-gray-300 mb-2">Price Range (₹)</label>
-                 <div class="flex gap-2">
-                   <input type="number" id="minPrice" placeholder="Min" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl focus:ring-primary text-sm p-3 dark:text-white" onchange="applyFilters()">
-                   <input type="number" id="maxPrice" placeholder="Max" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl focus:ring-primary text-sm p-3 dark:text-white" onchange="applyFilters()">
-                 </div>
-               </div>
+      <!-- MAIN CONTENT -->
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex flex-col lg:flex-row gap-8">
+        
+        <!-- SIDEBAR FILTERS (Sticky) -->
+        <aside class="w-full lg:w-64 shrink-0">
+          <div class="sticky top-[150px] bg-white dark:bg-card-dark p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
+            <h3 class="font-bold text-lg text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+              <span class="material-symbols-outlined">tune</span> Filters
+            </h3>
+            
+            <div class="space-y-6">
+              <div>
+                <label class="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Price Range</label>
+                <div class="flex items-center gap-2">
+                  <input type="number" id="minPrice" placeholder="Min ₹" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold focus:ring-primary dark:text-white" onchange="renderGrid()">
+                  <span class="text-gray-400">-</span>
+                  <input type="number" id="maxPrice" placeholder="Max ₹" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold focus:ring-primary dark:text-white" onchange="renderGrid()">
+                </div>
+              </div>
 
-               <!-- Condition Filter -->
-               <div class="mb-6">
-                 <label class="block text-sm font-bold text-gray-600 dark:text-gray-300 mb-2">Condition</label>
-                 <select id="conditionFilter" onchange="applyFilters()" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl focus:ring-primary text-sm p-3 dark:text-white">
-                   <option value="all">Any Condition</option>
-                   <option value="new">Brand New</option>
-                   <option value="used">Used / Refurbished</option>
-                 </select>
-               </div>
-
-               <!-- Verified Only -->
-               <div class="mb-6 flex items-center gap-3">
-                 <input type="checkbox" id="verifiedOnly" onchange="applyFilters()" class="w-5 h-5 rounded text-primary focus:ring-primary bg-gray-50 dark:bg-gray-800 border-none">
-                 <label for="verifiedOnly" class="text-sm font-bold text-gray-600 dark:text-gray-300 flex items-center gap-1">
-                    Verified Sellers <span class="material-symbols-outlined text-blue-500 text-sm">verified</span>
-                 </label>
-               </div>
-
-               <button onclick="clearAllFilters()" class="w-full py-3 bg-red-50 dark:bg-red-900/30 text-red-500 font-bold rounded-xl hover:bg-red-100 transition-colors">Clear All Filters</button>
-            </div>
-          </aside>
-
-          <!-- Main Grid -->
-          <div class="flex-1">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-              <h2 class="text-2xl font-black text-gray-800 dark:text-white tracking-tight" id="gridTitle">Fresh Recommendations</h2>
-              <div class="flex items-center gap-3">
-                <button onclick="filterListings('All')" id="clearFilterBtn" class="hidden text-sm font-bold text-red-500 hover:underline bg-white dark:bg-card-dark px-4 py-2 rounded-xl shadow-sm">Clear Category</button>
-                <select id="sortBy" onchange="sortListings(this.value)" class="bg-white dark:bg-card-dark dark:text-white border-none rounded-xl text-sm font-bold py-2.5 px-4 focus:ring-primary cursor-pointer shadow-sm">
-                  <option value="newest">Newest first</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
+              <div>
+                <label class="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Condition</label>
+                <select id="conditionFilter" onchange="renderGrid()" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold focus:ring-primary dark:text-white cursor-pointer">
+                  <option value="all">Any Condition</option>
+                  <option value="new">Brand New</option>
+                  <option value="used">Used</option>
                 </select>
               </div>
-            </div>
-            
-            <div id="listingsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              <!-- Rendered via JS -->
+
+              <div class="pt-4 border-t border-gray-100 dark:border-gray-800">
+                <button onclick="clearFilters()" class="w-full py-2.5 bg-red-50 dark:bg-red-900/20 text-red-500 font-bold rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors text-sm">Clear Filters</button>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </aside>
 
+        <!-- 3D GRID -->
+        <div class="flex-1 min-w-0">
+          <div class="flex justify-between items-center mb-6">
+            <h2 id="gridTitle" class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Fresh Recommendations</h2>
+            <select id="sortFilter" onchange="renderGrid()" class="bg-transparent text-sm font-bold text-gray-600 dark:text-gray-300 border-none focus:ring-0 cursor-pointer">
+              <option value="newest">Newest First</option>
+              <option value="price_low">Price: Low to High</option>
+              <option value="price_high">Price: High to Low</option>
+            </select>
+          </div>
+
+          <div id="listingsGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            <!-- 3D Cards rendered here via JS -->
+          </div>
+        </div>
+
+      </section>
     </main>
 
-    <!-- QUICK VIEW MODAL -->
-    <div id="quickViewModal" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-      <div class="bg-white dark:bg-card-dark rounded-[2rem] w-full max-w-4xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col md:flex-row max-h-[90vh]">
-        
-        <!-- Image Area -->
-        <div class="md:w-1/2 bg-gray-100 dark:bg-gray-900 relative">
-          <img id="qvImage" src="" class="w-full h-64 md:h-full object-cover">
-          <button onclick="closeQuickView()" class="absolute top-4 left-4 bg-white/80 dark:bg-black/50 p-2 rounded-full text-gray-800 dark:text-white hover:bg-white transition md:hidden z-10">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-
-        <!-- Details Area -->
-        <div class="md:w-1/2 p-8 overflow-y-auto flex flex-col">
-          <div class="flex justify-between items-start mb-4">
-             <div>
-               <span id="qvCategory" class="text-xs font-bold text-secondary uppercase tracking-wider"></span>
-               <h2 id="qvTitle" class="text-3xl font-black text-gray-800 dark:text-white mt-1"></h2>
-             </div>
-             <button onclick="closeQuickView()" class="hidden md:block text-gray-400 hover:text-red-500 transition-colors">
-               <span class="material-symbols-outlined text-3xl">cancel</span>
-             </button>
-          </div>
-          
-          <div class="text-3xl font-black text-primary mb-6" id="qvPrice"></div>
-          
-          <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 font-bold mb-6">
-            <span class="material-symbols-outlined text-base">location_on</span>
-            <span id="qvLocation"></span>
-            <span>&bull;</span>
-            <span id="qvTime"></span>
-          </div>
-
-          <p id="qvDescription" class="text-gray-600 dark:text-gray-300 mb-8 leading-relaxed whitespace-pre-wrap flex-grow">
-          </p>
-
-          <div class="mt-auto space-y-3">
-             <a id="qvFullBtn" href="#" class="block w-full text-center py-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 font-bold hover:border-secondary hover:text-secondary transition-colors dark:text-white">View Full Details</a>
-             <a id="qvChatBtn" href="#" class="block w-full text-center py-4 rounded-xl bg-gradient-to-r from-secondary to-primary text-white font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
-               <span class="material-symbols-outlined">chat</span> Chat with Seller
-             </a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <footer class="bg-white dark:bg-card-dark border-t border-gray-100 dark:border-gray-800 mt-auto">
-      <div class="container mx-auto px-6 py-6 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
-        © 2024 ZipZapZoi. Designed for Speed & Joy.
-      </div>
-    </footer>
-
+    <script src="js/utils.js"></script>
     <script>
-      // --- 1. DYNAMIC CATEGORY RENDERER ---
-      function renderCategoriesFromBrain() {
-        const raw = localStorage.getItem('zzz_classifieds_schema');
-        const container = document.getElementById('categoryGrid');
-        
-        if(!raw || !container) {
-            // Fallback content if admin brain is empty
-            container.innerHTML = `<div class="col-span-full text-center p-4 bg-yellow-50 rounded-xl border border-yellow-200 text-yellow-800">
-               <strong>System Note:</strong> Categories not loaded. Please run "Factory Reset" in Admin Console.
-            </div>`;
-            return;
-        }
-        
-        const brain = JSON.parse(raw);
-        container.innerHTML = ''; // Clear hardcoded
-        
-        brain.categories.forEach(cat => {
-            const div = document.createElement('div');
-            div.className = "bouncy-card group flex flex-col items-center cursor-pointer gap-3";
-            div.onclick = () => filterListings(cat.label);
-            
-            // Note: color comes from brain as 'text-blue-600', etc.
-            div.innerHTML = `
-              <div class="icon-3d w-20 h-20 rounded-[2rem] flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border border-gray-100 dark:border-gray-700">
-                <span class="material-symbols-outlined text-4xl ${cat.color || 'text-primary'} drop-shadow-md">${cat.icon}</span>
-              </div>
-              <p class="text-xs font-bold text-gray-600 dark:text-gray-300 group-hover:text-primary transition-colors text-center leading-tight">${cat.label}</p>
-            `;
-            container.appendChild(div);
-        });
-      }
-
-      // --- 2. DATA LOGIC ---
-      const mockListings = [
-        { id: '101', title: "iPhone 14 Pro - Deep Purple", category: "Electronics", price: "65000", location: "Bengaluru", time: "2 hrs ago", image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=600&q=80", tag: "Verified" },
-        { id: '102', title: "Royal Enfield Classic 350", category: "Vehicles", price: "145000", location: "Mumbai", time: "5 hrs ago", image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80" },
-        { id: '103', title: "2 BHK Apartment", category: "Real Estate", price: "25000", location: "Hyderabad", time: "Yesterday", image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80" },
-        { id: '104', title: "Graphic Designer", category: "Jobs", price: "45000", location: "Remote", time: "1 day ago", image: "https://images.unsplash.com/photo-1626785774573-4b799314346d?auto=format&fit=crop&w=600&q=80", tag: "Hiring" },
-        { id: '105', title: "Golden Retriever", category: "Pets", price: "15000", location: "Delhi", time: "3 days ago", image: "https://images.unsplash.com/photo-1629740032638-58bfd37eb74e?auto=format&fit=crop&w=600&q=80" }
+      // =====================================
+      // 1. DATA & STATE
+      // =====================================
+      const categories = [
+        { id: 'All', icon: 'explore', label: 'Explore' },
+        { id: 'Vehicles', icon: 'directions_car', label: 'Vehicles' },
+        { id: 'Electronics', icon: 'smartphone', label: 'Electronics' },
+        { id: 'Furniture', icon: 'chair', label: 'Furniture' },
+        { id: 'Real Estate', icon: 'real_estate_agent', label: 'Properties' },
+        { id: 'Fashion', icon: 'checkroom', label: 'Fashion' },
+        { id: 'Jobs', icon: 'work', label: 'Jobs' },
+        { id: 'Services', icon: 'handyman', label: 'Services' }
       ];
 
-      function getAllListings() {
-        const userPosts = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-        const allData = [...userPosts, ...mockListings];
-        // Only return items that are 'active' or have no status (legacy mock data)
-        return allData.filter(item => {
-            return item.status === 'active' || !item.status; 
-        });
-      }
+      let activeCategory = 'All';
+      let allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+      const currentUser = JSON.parse(localStorage.getItem('zzz_user') || 'null');
 
-      // --- 3. RENDER LOGIC ---
-      let currentFilter = 'All';
-
-      window.filterListings = (filter) => {
-        currentFilter = filter;
-        renderListings();
-      };
-
-      window.sortListings = () => renderListings();
-      window.applyFilters = () => renderListings();
-      
-      window.clearAllFilters = () => {
-         document.getElementById('minPrice').value = '';
-         document.getElementById('maxPrice').value = '';
-         document.getElementById('conditionFilter').value = 'all';
-         document.getElementById('verifiedOnly').checked = false;
-         renderListings();
-      };
-
-      function renderListings() {
-        const grid = document.getElementById('listingsGrid');
-        grid.innerHTML = '';
-        let data = getAllListings();
-        const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-        
-        // --- 1. Category Filter ---
-        if (currentFilter !== 'All') {
-          data = data.filter(item => item.category && item.category.toLowerCase().includes(currentFilter.toLowerCase()));
-          document.getElementById('gridTitle').textContent = `${currentFilter} Listings`;
-          document.getElementById('clearFilterBtn').classList.remove('hidden');
-        } else {
-          document.getElementById('gridTitle').textContent = "Fresh Recommendations";
-          document.getElementById('clearFilterBtn').classList.add('hidden');
-        }
-
-        // --- 2. Advanced Filters ---
-        const minP = parseFloat(document.getElementById('minPrice').value);
-        const maxP = parseFloat(document.getElementById('maxPrice').value);
-        const cond = document.getElementById('conditionFilter').value;
-        const reqVerified = document.getElementById('verifiedOnly').checked;
-
-        if(!isNaN(minP)) data = data.filter(i => parseFloat(i.price) >= minP);
-        if(!isNaN(maxP)) data = data.filter(i => parseFloat(i.price) <= maxP);
-        if(cond !== 'all') {
-            // Very simple condition logic (if available in schema)
-            data = data.filter(i => {
-                if(!i.dynamicData || !i.dynamicData.cond_mob) return true; // Show if no condition field
-                if(cond === 'new') return i.dynamicData.cond_mob.toLowerCase().includes('new');
-                return !i.dynamicData.cond_mob.toLowerCase().includes('new');
-            });
-        }
-        if(reqVerified) {
-            // Verified filter based on tag
-            data = data.filter(i => i.tag && i.tag.toLowerCase() === 'verified');
-        }
-
-        // --- 3. Apply Sorting ---
-        const sortVal = document.getElementById('sortBy').value;
-        if(sortVal === 'price-low') {
-            data.sort((a,b) => parseFloat(a.price) - parseFloat(b.price));
-        } else if(sortVal === 'price-high') {
-            data.sort((a,b) => parseFloat(b.price) - parseFloat(a.price));
-        } else {
-            data.reverse(); 
-        }
-
-        if (data.length === 0) {
-          grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10 font-bold bg-white/50 dark:bg-card-dark/50 rounded-2xl">No listings found matching these filters.</div>';
-          return;
-        }
-
-        data.forEach(item => {
-          const isFav = favs.find(f => f.id == item.id);
-          const heartClass = isFav ? 'active' : '';
-          
-          const card = document.createElement('div');
-          card.className = "listing-card rounded-[1.5rem] overflow-hidden flex flex-col relative group bouncy-card bg-white dark:bg-card-dark border border-gray-100 dark:border-gray-800";
-          
-          card.innerHTML = `
-            <div class="relative h-56 overflow-hidden bg-gray-200 dark:bg-gray-800 cursor-pointer" onclick="window.location.href='Listing Detail.html?id=${item.id}'">
-              <img src="${item.image || 'https://via.placeholder.com/400x300?text=No+Image'}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out">
-              
-              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60"></div>
-
-              <span class="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur-md text-gray-800 dark:text-gray-200 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full shadow-sm tracking-wide z-10">${item.category}</span>
-              
-              ${item.tag ? `<span class="absolute bottom-3 left-3 bg-secondary text-white text-[10px] font-bold px-2.5 py-1 rounded shadow-md z-10">${item.tag}</span>` : ''}
-              
-              <button onclick="toggleFavorite(event, '${item.id}')" class="fav-btn ${heartClass} absolute top-3 right-3 p-2 rounded-full shadow-lg z-20 flex items-center justify-center" aria-label="Toggle Favorite">
-                <span class="material-symbols-outlined text-white text-xl drop-shadow-md">favorite</span>
-              </button>
-
-              <!-- Quick View Overlay -->
-              <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
-                 <button onclick="event.stopPropagation(); openQuickView('${item.id}')" class="bg-white/90 dark:bg-card-dark/90 backdrop-blur text-primary font-bold py-2 px-6 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">Quick View</button>
-              </div>
-            </div>
-            
-            <a href="Listing Detail.html?id=${item.id}" class="p-5 flex flex-col flex-grow">
-              <div class="flex justify-between items-start mb-2">
-                 <h3 class="font-bold text-gray-800 dark:text-white line-clamp-2 leading-snug group-hover:text-primary transition-colors text-lg">${item.title}</h3>
-              </div>
-              
-              <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                <p class="text-xl font-black text-gray-900 dark:text-gray-100">₹ ${item.price}</p>
-                <div class="flex flex-col items-end text-xs text-gray-500 dark:text-gray-400 font-medium">
-                  <div class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> <span class="truncate max-w-[80px]">${item.location}</span></div>
-                  <span class="mt-0.5 text-[10px]">${item.time}</span>
-                </div>
-              </div>
-            </a>
-          `;
-          grid.appendChild(card);
-        });
-      }
-
-      function renderTrending() {
-          const trendingContainer = document.getElementById('trendingCarousel');
-          if(!trendingContainer) return;
-          trendingContainer.innerHTML = '';
-          // Mock some trending items by taking first 5 items
-          const trendingData = getAllListings().slice(0, 5);
-          
-          trendingData.forEach(item => {
-              const card = document.createElement('div');
-              card.className = "min-w-[280px] sm:min-w-[320px] bg-white dark:bg-card-dark rounded-2xl shadow-glass border border-gray-100 dark:border-gray-800 flex overflow-hidden cursor-pointer bouncy-card snap-center";
-              card.onclick = () => window.location.href = `Listing Detail.html?id=${item.id}`;
-              
-              card.innerHTML = `
-                <div class="w-1/3 h-full relative bg-gray-200">
-                   <img src="${item.image}" class="w-full h-full object-cover">
-                   <span class="absolute top-2 left-2 bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded shadow">HOT</span>
-                </div>
-                <div class="p-4 w-2/3 flex flex-col justify-center">
-                   <h4 class="font-bold text-gray-800 dark:text-white text-sm line-clamp-2">${item.title}</h4>
-                   <p class="text-primary font-black mt-2">₹ ${item.price}</p>
-                </div>
-              `;
-              trendingContainer.appendChild(card);
-          });
-      }
-
-      // 4. FAVORITE LOGIC
-      window.toggleFavorite = (e, id) => {
-          e.stopPropagation();
-          e.preventDefault();
-          const btn = e.currentTarget;
-          
-          if (!JSON.parse(localStorage.getItem('zzz_user'))) {
-              window.location.href = 'Login Page.html?redirect=classifieds.html';
-              return;
-          }
-
-          const allItems = getAllListings();
-          const item = allItems.find(i => i.id == id);
-          if(!item) return;
-
-          let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-          const exists = favs.find(f => f.id == id);
-
-          if(exists) {
-              favs = favs.filter(f => f.id != id);
-              btn.classList.remove('active');
-          } else {
-              favs.push(item);
-              btn.classList.add('active');
-          }
-          localStorage.setItem('zzz_favorites', JSON.stringify(favs));
-      };
-
-      // 5. SEARCH LOGIC
-      window.goToSearch = () => {
-          const q = document.getElementById('searchQuery').value.trim();
-          if(q) window.location.href = `SearchResult.html?q=${encodeURIComponent(q)}`;
-      };
-      
-      document.getElementById('searchQuery').addEventListener('keypress', (e) => { if(e.key==='Enter') goToSearch(); });
-
-      // --- AUTO DETECT LOCATION ---
-      window.detectLocation = function() {
-        const inputEl = document.getElementById('filterCity');
-        inputEl.placeholder = "Detecting...";
-        
-        if (!navigator.geolocation) {
-          inputEl.placeholder = "Geolocation not supported";
-          return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
-            
-            fetch(url).then(res => res.json()).then(data => {
-                if (data && data.address) {
-                    inputEl.value = data.address.city || data.address.town || data.address.county || data.address.state_district || '';
-                    inputEl.placeholder = "City";
-                } else {
-                    inputEl.placeholder = "City not found";
-                }
-            }).catch(() => { inputEl.placeholder = "City"; });
-          },
-          () => { inputEl.placeholder = "Permission denied"; }
-        );
-      };
-
-      // 6. QUICK VIEW & UI LOGIC
-      window.openQuickView = (id) => {
-          const item = getAllListings().find(l => l.id === id);
-          if(!item) return;
-
-          document.getElementById('qvImage').src = item.image;
-          document.getElementById('qvCategory').textContent = item.category;
-          document.getElementById('qvTitle').textContent = item.title;
-          document.getElementById('qvPrice').textContent = `₹ ${item.price}`;
-          document.getElementById('qvLocation').textContent = item.location;
-          document.getElementById('qvTime').textContent = item.time;
-          document.getElementById('qvDescription').textContent = item.description || "No description provided for this listing.";
-          
-          document.getElementById('qvFullBtn').href = `Listing Detail.html?id=${item.id}`;
-          document.getElementById('qvChatBtn').href = `Inbox.html`;
-
-          const modal = document.getElementById('quickViewModal');
-          modal.classList.remove('hidden');
-          modal.classList.add('flex');
-          setTimeout(() => {
-              modal.classList.remove('opacity-0');
-              modal.children[0].classList.remove('scale-95');
-              modal.children[0].classList.add('scale-100');
-          }, 10);
-      };
-
-      window.closeQuickView = () => {
-          const modal = document.getElementById('quickViewModal');
-          modal.classList.add('opacity-0');
-          modal.children[0].classList.remove('scale-100');
-          modal.children[0].classList.add('scale-95');
-          setTimeout(() => {
-              modal.classList.add('hidden');
-              modal.classList.remove('flex');
-          }, 300);
-      };
-
-      // 7. INIT
+      // =====================================
+      // 2. INITIALIZATION
+      // =====================================
       document.addEventListener('DOMContentLoaded', () => {
-        const alertMsg = localStorage.getItem('zzz_global_alert');
-        if(alertMsg) {
-            const banner = document.createElement('div');
-            banner.className = 'w-full bg-yellow-50 border-b border-yellow-200 p-3 text-center text-yellow-800 text-sm font-bold flex justify-center items-center gap-2 z-[60]';
-            banner.innerHTML = `<span class="material-symbols-outlined">campaign</span> ${alertMsg}`;
-            document.body.insertBefore(banner, document.body.firstChild);
-        }
-
-        const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
-        if(currentUser) {
-            document.querySelector('[data-auth-hide]').classList.add('hidden');
-            document.querySelector('[data-auth-show]').classList.remove('hidden');
-            document.getElementById('userInit').textContent = currentUser.name.charAt(0).toUpperCase();
-            
-            const msgs = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
-            const unread = msgs.some(m => m.receiverId === currentUser.id && m.status === 'delivered');
-            if(unread) document.getElementById('headerMsgBadge').classList.remove('hidden');
-        }
-
-        document.getElementById('zzzLogoutBtn').addEventListener('click', () => {
-            localStorage.removeItem('zzz_user');
-            window.location.reload();
-        });
-
-        if(document.documentElement.classList.contains('dark')) {
-            document.getElementById('themeIcon').textContent = 'light_mode';
-        }
-
-        renderCategoriesFromBrain();
-        renderTrending();
-        renderListings();
+        if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
+        renderAuth();
+        renderCategories();
+        renderGrid();
       });
+
+      // =====================================
+      // 3. AUTH RENDER
+      // =====================================
+      function renderAuth() {
+        const authArea = document.getElementById('headerAuthArea');
+        if(currentUser) {
+          authArea.innerHTML = `
+            <a href="Post Listing.html" class="hidden md:flex items-center gap-2 py-2 px-4 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white font-bold text-sm transition-colors">
+              <span class="material-symbols-outlined text-lg">add_circle</span> Post Ad
+            </a>
+            <div class="flex items-center gap-2">
+              <a href="favorites.html" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors relative" title="Favorites">
+                <span class="material-symbols-outlined">favorite</span>
+              </a>
+              <a href="Inbox.html" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors relative" title="Messages">
+                <span class="material-symbols-outlined">chat</span>
+              </a>
+              <a href="Seller Dashboard.html" class="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-primary text-white flex items-center justify-center font-bold shadow-md cursor-pointer border-2 border-transparent hover:border-white transition-all ml-2">
+                ${currentUser.name.charAt(0).toUpperCase()}
+              </a>
+            </div>
+          `;
+        } else {
+          authArea.innerHTML = `
+            <a href="Login Page.html?redirect=classifieds.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Log In</a>
+            <a href="User Registration.html" class="text-sm font-bold bg-primary text-white py-2.5 px-6 rounded-full shadow-lg hover:shadow-primary/30 transition-transform active:scale-95 ml-2">Sign Up</a>
+          `;
+        }
+      }
+
+      // =====================================
+      // 4. CATEGORY CAROUSEL
+      // =====================================
+      function renderCategories() {
+        const carousel = document.getElementById('categoryCarousel');
+        carousel.innerHTML = categories.map(c => `
+          <div onclick="setCategory('${c.id}')" class="cat-pill cursor-pointer flex flex-col items-center gap-2 min-w-[80px] pb-2 ${c.id === activeCategory ? 'active' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 opacity-60 hover:opacity-100'}">
+            <span class="material-symbols-outlined text-2xl">${c.icon}</span>
+            <span class="text-xs font-bold whitespace-nowrap">${c.label}</span>
+          </div>
+        `).join('');
+      }
+
+      function setCategory(cat) {
+        activeCategory = cat;
+        document.getElementById('gridTitle').textContent = cat === 'All' ? 'Fresh Recommendations' : `${cat} Listings`;
+        renderCategories();
+        renderGrid();
+      }
+
+      // =====================================
+      // 5. 3D GRID RENDER
+      // =====================================
+      function renderGrid() {
+        const grid = document.getElementById('listingsGrid');
+        
+        // 1. Filter Category
+        let filtered = activeCategory === 'All' ? allListings : allListings.filter(l => l.category === activeCategory);
+        
+        // 2. Filter Search Box (for instant filtering if implemented)
+        const q = document.getElementById('searchQuery').value.toLowerCase();
+        if(q) filtered = filtered.filter(l => l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q));
+
+        // 3. Filter Sidebar
+        const minP = document.getElementById('minPrice').value;
+        const maxP = document.getElementById('maxPrice').value;
+        const cond = document.getElementById('conditionFilter').value;
+
+        if(minP) filtered = filtered.filter(l => l.price >= parseFloat(minP));
+        if(maxP) filtered = filtered.filter(l => l.price <= parseFloat(maxP));
+        if(cond !== 'all') filtered = filtered.filter(l => (l.condition || 'used').toLowerCase() === cond);
+
+        // 4. Sort
+        const sort = document.getElementById('sortFilter').value;
+        if(sort === 'price_low') filtered.sort((a,b) => a.price - b.price);
+        if(sort === 'price_high') filtered.sort((a,b) => b.price - a.price);
+        if(sort === 'newest') filtered.reverse(); // Simplified newest
+
+        // 5. Render
+        if(filtered.length === 0) {
+          grid.innerHTML = `
+            <div class="col-span-full flex flex-col items-center justify-center py-20 text-center animate-pop">
+              <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">search_off</span>
+              <h3 class="text-xl font-bold text-gray-800 dark:text-white">No results found</h3>
+              <p class="text-gray-500 dark:text-gray-400 mt-2">Try adjusting your filters or search query.</p>
+              <button onclick="clearFilters()" class="mt-6 font-bold text-primary hover:underline">Clear Filters</button>
+            </div>
+          `;
+          return;
+        }
+
+        const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+
+        grid.innerHTML = filtered.map((l, index) => {
+          const isFav = favs.includes(l.id);
+          const timeDelay = index * 0.05; // Cascade animation
+
+          return `
+            <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer relative group opacity-0 animate-pop" style="animation-delay: ${timeDelay}s" onclick="window.location.href='Listing Detail.html?id=${l.id}'">
+              
+              <!-- Image Area -->
+              <div class="relative h-56 overflow-hidden bg-gray-100 dark:bg-gray-900">
+                <img src="${l.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                
+                <!-- Category Badge -->
+                <div class="absolute top-4 left-4 bg-white/90 dark:bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-gray-800 dark:text-white uppercase tracking-wider card-image-wrap">
+                  ${l.category}
+                </div>
+
+                <!-- Favorite Button (Stop Propagation to prevent navigation) -->
+                <button onclick="event.stopPropagation(); toggleFav('${l.id}', this)" class="fav-btn absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center card-image-wrap ${isFav ? 'active' : ''}">
+                  <span class="material-symbols-outlined text-xl">favorite</span>
+                </button>
+              </div>
+
+              <!-- Details Area -->
+              <div class="p-6">
+                <div class="flex justify-between items-start mb-2">
+                  <h3 class="text-lg font-bold text-gray-900 dark:text-white truncate pr-4">${l.title}</h3>
+                  <p class="text-xl font-black text-primary">₹${l.price.toLocaleString()}</p>
+                </div>
+                
+                <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4">${l.description}</p>
+                
+                <div class="flex items-center gap-4 text-xs font-bold text-gray-400 dark:text-gray-500 pt-4 border-t border-gray-100 dark:border-gray-800">
+                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">location_on</span> ${l.location || 'Local'}</span>
+                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> ${l.date || 'Just now'}</span>
+                </div>
+              </div>
+
+            </div>
+          `;
+        }).join('');
+      }
+
+      // =====================================
+      // 6. ACTIONS
+      // =====================================
+      function executeSearch() {
+        const q = document.getElementById('searchQuery').value;
+        const loc = document.getElementById('searchLoc').value;
+        if(q || loc) {
+          window.location.href = `SearchResult.html?q=${encodeURIComponent(q)}&loc=${encodeURIComponent(loc)}`;
+        }
+      }
+
+      function clearFilters() {
+        document.getElementById('minPrice').value = '';
+        document.getElementById('maxPrice').value = '';
+        document.getElementById('conditionFilter').value = 'all';
+        document.getElementById('searchQuery').value = '';
+        renderGrid();
+      }
+
+      function toggleFav(id, btn) {
+        if(!currentUser) {
+          window.location.href = `Login Page.html?redirect=classifieds.html`;
+          return;
+        }
+        let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+        if(favs.includes(id)) {
+          favs = favs.filter(f => f !== id);
+          btn.classList.remove('active');
+        } else {
+          favs.push(id);
+          btn.classList.add('active');
+        }
+        localStorage.setItem('zzz_favorites', JSON.stringify(favs));
+      }
     </script>
-    <script src="js/utils.js"></script>
 </body>
 </html>

@@ -1,298 +1,279 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="Search ZipZapZoi classifieds for items near you. Filter by category, price, and condition."/>
-  <title>ZipZapZoi - Search Results</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
-  <script>
-    tailwind.config = {
-      darkMode: "class",
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>ZipZapZoi - Search Results</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
         theme: {
-        extend: {
-          fontFamily: { sans: ["Spline Sans", "sans-serif"] },
-          colors: { "primary": "#019863", "secondary": "#4D96A9", "background-light": "#F7F9FC" ,
-            "background-dark": "#121212",
-            "card-dark": "#1e1e1e"},
-          boxShadow: { "bouncy": "0 10px 20px -5px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05)" }
+          extend: {
+            colors: {
+              primary: "#019863",
+              secondary: "#4D96A9",
+              "background-light": "#f0f4f8",
+              "background-dark": "#0d0d0d",
+              "card-dark": "#1a1a1a"
+            },
+            fontFamily: { display: "Spline Sans" }
+          }
         }
+      };
+      
+      if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
       }
-    }
-  </script>
-  <style>
-    .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
-    input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; height:20px; width:20px; border-radius:50%; background:#019863; margin-top:-8px; box-shadow:0 2px 4px rgba(0,0,0,.2); }
-    input[type=range]::-webkit-slider-runnable-track { width:100%; height:4px; background:#e5e7eb; border-radius:2px; }
-  </style>
+    </script>
+    <style>
+      .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24 }
+      
+      body { perspective: 1000px; }
+      
+      .card-3d {
+        transform-style: preserve-3d;
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      .card-3d:hover {
+        transform: translateY(-8px) scale(1.02) rotateX(2deg) rotateY(-2deg);
+        box-shadow: 0 30px 50px -15px rgba(0,0,0,0.2);
+        z-index: 10;
+      }
+      .dark .card-3d:hover { box-shadow: 0 30px 50px -15px rgba(0,0,0,0.8); }
+      
+      .card-image-wrap { transition: transform 0.5s ease; }
+      .card-3d:hover .card-image-wrap { transform: translateZ(20px); }
+
+      .fav-btn {
+        background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(4px);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); color: #9ca3af;
+      }
+      .dark .fav-btn { background: rgba(0,0,0,0.5); }
+      .fav-btn:hover { transform: scale(1.15); color: #ef4444; }
+      .fav-btn.active { color: #ef4444; }
+      .fav-btn.active .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+
+      @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+      .animate-float { animation: float 4s ease-in-out infinite; }
+      
+      @keyframes popIn { from { opacity:0; transform: scale(0.9) translateY(20px); } to { opacity:1; transform: scale(1) translateY(0); } }
+      .animate-pop { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    </style>
 </head>
-<body class="min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
-
-  <header class="bg-white dark:bg-card-dark border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 shadow-sm">
-    <div class="container mx-auto px-6 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <a href="classifieds.html" class="flex items-center gap-2 text-primary hover:text-green-700 transition-colors">
-          <span class="material-symbols-outlined text-3xl">all_inclusive</span>
-          <span class="font-bold text-xl tracking-tight hidden sm:block">ZipZapZoi</span>
-        </a>
-      </div>
-      <div class="hidden md:flex flex-1 max-w-lg mx-8 relative">
-        <input type="text" id="headerSearch" placeholder="Search for anything..." class="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-full py-2.5 pl-5 pr-12 focus:ring-2 focus:ring-primary/50 outline-none transition-all">
-        <button onclick="performSearch()" class="absolute right-2 top-1.5 p-1 bg-white dark:bg-card-dark rounded-full text-primary shadow-sm hover:scale-110 transition-transform">
-          <span class="material-symbols-outlined text-lg">search</span>
-        </button>
-      </div>
-      <div class="flex items-center gap-6">
-        <a href="classifieds.html" class="text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-primary transition-colors">Browse</a>
-        <div class="h-9 w-9 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-md border-2 border-white" id="navAvatar">G</div>
-      </div>
-    </div>
-  </header>
-
-  <main class="flex-grow container mx-auto px-6 py-8">
-    <div class="md:hidden mb-6 relative">
-      <input type="text" id="mobileSearch" placeholder="Search..." class="w-full bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-lg py-3 px-4 shadow-sm focus:ring-2 focus:ring-primary/50 outline-none">
-      <button onclick="performSearch('mobile')" class="absolute right-3 top-3 text-gray-400"><span class="material-symbols-outlined">search</span></button>
-    </div>
-
-    <div class="flex flex-col lg:flex-row gap-8">
-      <aside class="w-full lg:w-64 flex-shrink-0 space-y-8">
-        <button class="lg:hidden w-full flex items-center justify-between bg-white dark:bg-card-dark p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 font-bold" onclick="document.getElementById('filterPanel').classList.toggle('hidden')">
-          <span>Filters</span>
-          <span class="material-symbols-outlined">filter_list</span>
-        </button>
-        <div id="filterPanel" class="hidden lg:block space-y-8">
-          <div>
-            <h3 class="font-bold text-lg mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-secondary">category</span> Categories</h3>
-            <div class="space-y-2 text-sm text-gray-600 dark:text-gray-300" id="categoryFilters">
-              <!-- Populated dynamically from schema -->
-              <label class="flex items-center gap-2 cursor-pointer hover:text-primary"><input type="checkbox" class="rounded text-primary focus:ring-primary filter-cat" value="Electronics"> Electronics</label>
-              <label class="flex items-center gap-2 cursor-pointer hover:text-primary"><input type="checkbox" class="rounded text-primary focus:ring-primary filter-cat" value="Vehicles"> Vehicles</label>
-              <label class="flex items-center gap-2 cursor-pointer hover:text-primary"><input type="checkbox" class="rounded text-primary focus:ring-primary filter-cat" value="Real Estate"> Real Estate</label>
-              <label class="flex items-center gap-2 cursor-pointer hover:text-primary"><input type="checkbox" class="rounded text-primary focus:ring-primary filter-cat" value="Jobs"> Jobs</label>
-              <label class="flex items-center gap-2 cursor-pointer hover:text-primary"><input type="checkbox" class="rounded text-primary focus:ring-primary filter-cat" value="Services"> Services</label>
-            </div>
+<body class="font-display min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
+    
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-card-dark/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 shadow-sm transition-colors duration-300">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div class="flex items-center justify-between">
+          <a href="classifieds.html" class="flex items-center gap-2 group cursor-pointer text-gray-500 hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-2xl">arrow_back</span>
+            <span class="font-bold hidden sm:block">Back to Explore</span>
+          </a>
+          
+          <div class="flex items-center gap-4">
+            <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400">
+               <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+            </button>
           </div>
-          <div>
-            <h3 class="font-bold text-lg mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-green-600">payments</span> Price Range</h3>
-            <input type="range" min="0" max="500000" step="1000" value="500000" class="w-full appearance-none bg-gray-200 dark:bg-gray-800 h-1 rounded-full cursor-pointer mb-2" id="priceRange" oninput="updatePriceLabel(this.value)">
-            <div class="flex justify-between text-xs font-bold text-gray-500 dark:text-gray-400">
-              <span>₹0</span>
-              <span id="priceLabel">₹5,00,000+</span>
-            </div>
-          </div>
-          <div>
-            <h3 class="font-bold text-lg mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-purple-500">verified</span> Condition</h3>
-            <div class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded text-primary focus:ring-primary filter-cond" value="New"> Brand New</label>
-              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded text-primary focus:ring-primary filter-cond" value="Used"> Used / Pre-owned</label>
-            </div>
-          </div>
-          <button onclick="applyFilters()" class="w-full bg-secondary hover:bg-cyan-700 text-white font-bold py-3 rounded-xl shadow-bouncy transition-transform active:scale-95">Apply Filters</button>
-        </div>
-      </aside>
-
-      <div class="flex-1">
-        <div class="flex justify-between items-center mb-6">
-          <div>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Search Results</h1>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Showing <span id="resultCount" class="font-bold">0</span> items for "<span id="queryText" class="italic text-primary">all</span>"</p>
-          </div>
-          <select id="sortBy" onchange="applyFilters()" class="bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 text-sm rounded-lg px-3 py-2 focus:ring-primary focus:border-primary outline-none shadow-sm">
-            <option value="newest">Newest First</option>
-            <option value="price_low">Price: Low to High</option>
-            <option value="price_high">Price: High to Low</option>
-          </select>
-        </div>
-        <div id="resultsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-        <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-center bg-white dark:bg-card-dark rounded-3xl border border-dashed border-gray-200 dark:border-gray-700">
-          <div class="w-24 h-24 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4 text-gray-300">
-            <span class="material-symbols-outlined text-5xl">search_off</span>
-          </div>
-          <h3 class="text-xl font-bold text-gray-700 dark:text-gray-200">No results found</h3>
-          <p class="text-gray-500 dark:text-gray-400 max-w-sm mt-2">Try adjusting your search or filters.</p>
-          <button onclick="clearFilters()" class="mt-6 text-primary font-bold hover:underline">Clear all filters</button>
         </div>
       </div>
-    </div>
-  </main>
+    </header>
 
-  <footer class="bg-white dark:bg-card-dark border-t border-gray-200 dark:border-gray-700 py-8 mt-auto">
-    <div class="container mx-auto px-6 text-center text-sm text-gray-500 dark:text-gray-400">
-      <span class="zzz-copyright">© 2026 ZipZapZoi. All Rights Reserved.</span>
-    </div>
-  </footer>
-
-  <script src="js/utils.js"></script>
-  <script>
-    // --- SETUP ---
-    const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
-    if (currentUser && document.getElementById('navAvatar')) {
-      document.getElementById('navAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
-    }
-
-    // Load categories dynamically from schema
-    (function() {
-      const schema = JSON.parse(localStorage.getItem('zzz_classifieds_schema') || 'null');
-      const container = document.getElementById('categoryFilters');
-      if (!schema || !container) return;
-      const cats = [...new Set(schema.map(f => f.category).filter(Boolean))];
-      if (cats.length > 0) {
-        container.innerHTML = cats.map(cat =>
-          `<label class="flex items-center gap-2 cursor-pointer hover:text-primary"><input type="checkbox" class="rounded text-primary focus:ring-primary filter-cat" value="${cat}"> ${cat}</label>`
-        ).join('');
-      }
-    })();
-
-    // --- DATA SOURCE ---
-    const mockData = [
-      { id: '101', title: "iPhone 14 Pro - Deep Purple", category: "Electronics", price: 65000, image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=600&q=80", location: "Bengaluru", time: "2 hrs ago", condition: "Used", status: "active" },
-      { id: '102', title: "Royal Enfield Classic 350", category: "Vehicles", price: 145000, image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80", location: "Mumbai", time: "5 hrs ago", condition: "Used", status: "active" },
-      { id: '103', title: "2 BHK Apartment - Rent", category: "Real Estate", price: 25000, image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80", location: "Hyderabad", time: "Yesterday", condition: "New", status: "active" },
-      { id: '104', title: "Graphic Designer Job", category: "Jobs", price: 45000, image: "https://images.unsplash.com/photo-1626785774573-4b799314346d?auto=format&fit=crop&w=600&q=80", location: "Remote", time: "1 day ago", condition: "New", status: "active" },
-      { id: '105', title: "Golden Retriever Puppy", category: "Pets", price: 15000, image: "https://images.unsplash.com/photo-1629740032638-58bfd37eb74e?auto=format&fit=crop&w=600&q=80", location: "Delhi", time: "3 days ago", condition: "New", status: "active" },
-      { id: '106', title: "Sony WH-1000XM5 Headphones", category: "Electronics", price: 22000, image: "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&w=600&q=80", location: "Chennai", time: "1 week ago", condition: "New", status: "active" }
-    ];
-
-    function getAllListings() {
-      const userPosts = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-      const normalized = userPosts.map(p => ({ ...p, price: Number(p.price) }));
-      return [...normalized, ...mockData];
-    }
-
-    // --- FILTER LOGIC ---
-    function applyFilters() {
-      const urlParams = new URLSearchParams(window.location.search);
-      let query = urlParams.get('q') || '';
-      const headerInput = document.getElementById('headerSearch').value;
-      if (headerInput) query = headerInput;
-      document.getElementById('queryText').textContent = query || "All Items";
-      document.getElementById('headerSearch').value = query;
-
-      const selectedCats = Array.from(document.querySelectorAll('.filter-cat:checked')).map(cb => cb.value);
-      const selectedConds = Array.from(document.querySelectorAll('.filter-cond:checked')).map(cb => cb.value);
-      const maxPrice = Number(document.getElementById('priceRange').value);
-      const sortVal = document.getElementById('sortBy').value;
-
-      let results = getAllListings().filter(item => item.status === 'active' || !item.status);
-
-      if (query) {
-        const q = query.toLowerCase();
-        results = results.filter(item =>
-          (item.title && item.title.toLowerCase().includes(q)) ||
-          (item.category && item.category.toLowerCase().includes(q)) ||
-          (item.location && item.location.toLowerCase().includes(q))
-        );
-      }
-      if (selectedCats.length > 0) results = results.filter(item => selectedCats.includes(item.category));
-      if (selectedConds.length > 0) results = results.filter(item => selectedConds.includes(item.condition));
-      results = results.filter(item => item.price <= maxPrice);
-
-      if (sortVal === 'price_low') results.sort((a, b) => a.price - b.price);
-      if (sortVal === 'price_high') results.sort((a, b) => b.price - a.price);
-
-      // Featured listings always on top
-      results.sort((a, b) => (b.isPremium ? 1 : 0) - (a.isPremium ? 1 : 0));
-
-      renderResults(results);
-    }
-
-    // --- RENDER ---
-    function renderResults(items) {
-      const grid = document.getElementById('resultsGrid');
-      const empty = document.getElementById('emptyState');
-      document.getElementById('resultCount').textContent = items.length;
-
-      if (items.length === 0) {
-        grid.classList.add('hidden');
-        empty.classList.remove('hidden');
-        empty.classList.add('flex');
-        return;
-      }
-      grid.classList.remove('hidden');
-      empty.classList.add('hidden');
-      empty.classList.remove('flex');
-
-      grid.innerHTML = items.map(item => {
-        const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-        const isFav = favs.some(f => String(f.id) === String(item.id));
-        return `
-          <a href="Listing Detail.html?id=${item.id}" class="group block bg-white dark:bg-card-dark rounded-2xl shadow-sm hover:shadow-bouncy border ${item.isPremium ? 'border-yellow-400 ring-1 ring-yellow-300' : 'border-gray-100 dark:border-gray-800'} overflow-hidden transition-all duration-300 transform hover:-translate-y-1 relative">
-            ${item.isPremium ? '<span class="absolute top-2 left-2 z-10 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">⭐ Featured</span>' : ''}
-            <div class="relative h-48 bg-gray-100 dark:bg-gray-800 overflow-hidden">
-              <img src="${item.image || 'https://via.placeholder.com/300'}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
-              <span class="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] uppercase font-bold px-2 py-1 rounded backdrop-blur-sm tracking-wide">${item.category}</span>
-              <button class="absolute top-2 right-2 p-2 bg-white/90 dark:bg-card-dark/90 rounded-full shadow-sm transition-colors ${isFav ? 'text-red-500' : 'text-gray-400 hover:text-red-500'}" title="Save" onclick="event.preventDefault(); toggleFavorite('${item.id}', this)">
-                <span class="material-symbols-outlined text-lg leading-none" style="font-variation-settings:'FILL' ${isFav ? 1 : 0}">favorite</span>
-              </button>
+    <main class="flex-grow flex flex-col">
+      
+      <!-- INLINE SEARCH BAR -->
+      <section class="bg-white dark:bg-card-dark border-b border-gray-200 dark:border-gray-800 py-6">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex-1 flex items-center bg-gray-50 dark:bg-gray-900 rounded-2xl px-6 h-14 border border-gray-200 dark:border-gray-700 focus-within:border-primary transition-colors">
+              <span class="material-symbols-outlined text-gray-400">search</span>
+              <input id="searchQuery" class="w-full bg-transparent border-none focus:ring-0 text-base ml-2 font-bold dark:text-white" placeholder="Search..." type="text" onkeypress="if(event.key === 'Enter') updateSearch()"/>
             </div>
-            <div class="p-4">
-              <h3 class="font-bold text-gray-800 dark:text-white line-clamp-2 leading-tight group-hover:text-primary transition-colors">${item.title}</h3>
-              <p class="text-xl font-bold text-primary mt-2">₹ ${Number(item.price).toLocaleString('en-IN')}</p>
-              <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400">
-                <div class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">location_on</span> ${item.location || 'India'}</div>
-                <span>${item.time || ''}</span>
+            <button onclick="updateSearch()" class="h-14 px-8 bg-primary hover:bg-green-700 text-white font-bold rounded-2xl shadow-lg transition-transform active:scale-95">
+              Update Search
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex flex-col lg:flex-row gap-8">
+        
+        <!-- SIDEBAR FILTERS -->
+        <aside class="w-full lg:w-64 shrink-0 hidden lg:block">
+          <div class="sticky top-[120px] bg-white dark:bg-card-dark p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
+            <h3 class="font-bold text-lg text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+              <span class="material-symbols-outlined">filter_list</span> Refine Results
+            </h3>
+            <div class="space-y-6">
+              <div>
+                <label class="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Category</label>
+                <select id="catFilter" onchange="renderResults()" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold focus:ring-primary dark:text-white cursor-pointer">
+                  <option value="all">All Categories</option>
+                  <option value="Vehicles">Vehicles</option>
+                  <option value="Electronics">Electronics</option>
+                  <option value="Furniture">Furniture</option>
+                  <option value="Real Estate">Real Estate</option>
+                  <option value="Fashion">Fashion</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Sort By</label>
+                <select id="sortFilter" onchange="renderResults()" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold focus:ring-primary dark:text-white cursor-pointer">
+                  <option value="newest">Newest First</option>
+                  <option value="price_low">Price: Low to High</option>
+                  <option value="price_high">Price: High to Low</option>
+                </select>
               </div>
             </div>
-          </a>
-        `;
-      }).join('');
-    }
+          </div>
+        </aside>
 
-    // --- HELPERS ---
-    function updatePriceLabel(val) {
-      document.getElementById('priceLabel').textContent = '₹ ' + Number(val).toLocaleString('en-IN');
-    }
+        <!-- RESULTS AREA -->
+        <div class="flex-1 min-w-0">
+          <div class="mb-6">
+            <h2 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Search Results</h2>
+            <p class="text-gray-500 dark:text-gray-400 font-bold mt-1" id="resultCount">Searching...</p>
+          </div>
 
-    function performSearch(source) {
-      const val = source === 'mobile' ? document.getElementById('mobileSearch').value : document.getElementById('headerSearch').value;
-      const url = new URL(window.location);
-      url.searchParams.set('q', val);
-      window.history.pushState({}, '', url);
-      applyFilters();
-    }
+          <div id="resultsGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            <!-- 3D Cards rendered here via JS -->
+          </div>
 
-    function clearFilters() {
-      document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-      document.getElementById('priceRange').value = 500000;
-      updatePriceLabel(500000);
-      document.getElementById('headerSearch').value = '';
-      window.history.pushState({}, '', window.location.pathname);
-      applyFilters();
-    }
+          <!-- 3D EMPTY STATE -->
+          <div id="emptyState" class="hidden flex-col items-center justify-center py-16 text-center animate-pop">
+             <div class="animate-float mb-8">
+                 <div class="w-32 h-32 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center shadow-2xl border-4 border-white dark:border-card-dark">
+                     <span class="material-symbols-outlined text-6xl text-blue-500">search_off</span>
+                 </div>
+             </div>
+             <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-2">No matches found</h2>
+             <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">We couldn't find anything matching your search. Try adjusting your keywords or clearing your filters to see more listings.</p>
+             <button onclick="clearSearch()" class="bg-primary hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all transform active:scale-95">
+                 Clear Search
+             </button>
+          </div>
 
-    // --- FAVORITE TOGGLE (real implementation) ---
-    window.toggleFavorite = (id, btn) => {
-      if (!currentUser) {
-        showToast('Please login to save favorites', 'error');
-        return;
+        </div>
+      </section>
+    </main>
+
+    <script src="js/utils.js"></script>
+    <script>
+      let currentQuery = '';
+      let allListings = [];
+
+      document.addEventListener('DOMContentLoaded', () => {
+        if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
+        
+        allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+        
+        const params = new URLSearchParams(window.location.search);
+        currentQuery = params.get('q') || '';
+        document.getElementById('searchQuery').value = currentQuery;
+        
+        renderResults();
+      });
+
+      function updateSearch() {
+        currentQuery = document.getElementById('searchQuery').value;
+        const newUrl = window.location.pathname + '?q=' + encodeURIComponent(currentQuery);
+        window.history.pushState({path:newUrl}, '', newUrl);
+        renderResults();
       }
-      const allListings = getAllListings();
-      const item = allListings.find(l => String(l.id) === String(id));
-      if (!item) return;
-      let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-      const exists = favs.some(f => String(f.id) === String(id));
-      if (exists) {
-        favs = favs.filter(f => String(f.id) !== String(id));
-        showToast('Removed from favorites');
-        if (btn) { btn.classList.remove('text-red-500'); btn.querySelector('span').style.fontVariationSettings = "'FILL' 0"; }
-      } else {
-        favs.push(item);
-        showToast('❤️ Saved to favorites!');
-        if (btn) { btn.classList.add('text-red-500'); btn.querySelector('span').style.fontVariationSettings = "'FILL' 1"; }
+
+      function clearSearch() {
+        document.getElementById('searchQuery').value = '';
+        document.getElementById('catFilter').value = 'all';
+        updateSearch();
       }
-      localStorage.setItem('zzz_favorites', JSON.stringify(favs));
-    };
 
-    // Enter key handlers
-    document.getElementById('headerSearch').addEventListener('keypress', e => { if (e.key === 'Enter') performSearch(); });
-    const mobileSearch = document.getElementById('mobileSearch');
-    if (mobileSearch) mobileSearch.addEventListener('keypress', e => { if (e.key === 'Enter') performSearch('mobile'); });
+      function renderResults() {
+        const grid = document.getElementById('resultsGrid');
+        const empty = document.getElementById('emptyState');
+        const count = document.getElementById('resultCount');
 
-    // Initial Load
-    applyFilters();
-  </script>
+        const q = currentQuery.toLowerCase();
+        const cat = document.getElementById('catFilter').value;
+        const sort = document.getElementById('sortFilter').value;
+
+        // Filter
+        let filtered = allListings.filter(l => {
+            const matchesQuery = !q || l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q);
+            const matchesCat = cat === 'all' || l.category === cat;
+            return matchesQuery && matchesCat;
+        });
+
+        // Sort
+        if(sort === 'price_low') filtered.sort((a,b) => a.price - b.price);
+        if(sort === 'price_high') filtered.sort((a,b) => b.price - a.price);
+        if(sort === 'newest') filtered.reverse();
+
+        count.textContent = `Showing ${filtered.length} result${filtered.length === 1 ? '' : 's'} for "${currentQuery || 'All'}"`;
+
+        if(filtered.length === 0) {
+            grid.classList.add('hidden');
+            empty.classList.remove('hidden');
+            empty.classList.add('flex');
+            return;
+        }
+
+        grid.classList.remove('hidden');
+        empty.classList.add('hidden');
+        empty.classList.remove('flex');
+
+        const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+
+        grid.innerHTML = filtered.map((l, index) => {
+          const isFav = favs.includes(l.id);
+          const timeDelay = index * 0.05;
+          return `
+            <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer relative group opacity-0 animate-pop" style="animation-delay: ${timeDelay}s" onclick="window.location.href='Listing Detail.html?id=${l.id}'">
+              
+              <div class="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-900">
+                <img src="${l.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                
+                <div class="absolute top-4 left-4 bg-white/90 dark:bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-gray-800 dark:text-white uppercase tracking-wider card-image-wrap">
+                  ${l.category}
+                </div>
+
+                <button onclick="event.stopPropagation(); toggleFav('${l.id}', this)" class="fav-btn absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center card-image-wrap ${isFav ? 'active' : ''}">
+                  <span class="material-symbols-outlined text-xl">favorite</span>
+                </button>
+              </div>
+
+              <div class="p-5">
+                <div class="flex justify-between items-start mb-1">
+                  <h3 class="text-base font-bold text-gray-900 dark:text-white truncate pr-2">${l.title}</h3>
+                  <p class="text-lg font-black text-primary">₹${l.price.toLocaleString()}</p>
+                </div>
+                <div class="flex items-center gap-3 text-xs font-bold text-gray-400 dark:text-gray-500 mt-3">
+                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> ${l.location || 'Local'}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function toggleFav(id, btn) {
+        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if(!user) {
+          window.location.href = `Login Page.html?redirect=SearchResult.html?q=${currentQuery}`;
+          return;
+        }
+        let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+        if(favs.includes(id)) {
+          favs = favs.filter(f => f !== id);
+          btn.classList.remove('active');
+        } else {
+          favs.push(id);
+          btn.classList.add('active');
+        }
+        localStorage.setItem('zzz_favorites', JSON.stringify(favs));
+      }
+    </script>
 </body>
 </html>

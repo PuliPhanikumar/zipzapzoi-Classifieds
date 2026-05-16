@@ -1,186 +1,222 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>
-  // --- AUTH CHECK ---
-  (function() {
-    const raw = localStorage.getItem('zzz_user');
-    if (!raw) {
-      window.location.href = 'Login Page.html?redirect=favorites.html';
-    }
-  })();
-  </script>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ZipZapZoi - My Favorites</title>
-
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
-
-  <script>
-    tailwind.config = {
-      darkMode: "class",
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>ZipZapZoi - My Favorites</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
         theme: {
-        extend: {
-          fontFamily: { sans: ["Spline Sans", "sans-serif"] },
-          colors: {
-            "primary": "#019863",
-            "secondary": "#4D96A9",
-            "background-light": "#F7F9FC",
-            "background-dark": "#121212",
-            "card-dark": "#1e1e1e",
-          },
-          boxShadow: {
-            "bouncy": "0 10px 20px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+          extend: {
+            colors: {
+              primary: "#019863",
+              secondary: "#4D96A9",
+              "background-light": "#f0f4f8",
+              "background-dark": "#0d0d0d",
+              "card-dark": "#1a1a1a"
+            },
+            fontFamily: { display: "Spline Sans" }
           }
         }
+      };
+      
+      if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
       }
-    }
-  </script>
-  <style>
-    .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-    .fade-out { animation: fadeOut 0.3s ease-out forwards; }
-    @keyframes fadeOut { to { opacity: 0; transform: scale(0.9); } }
-  </style>
+    </script>
+    <style>
+      .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24 }
+      
+      body { perspective: 1000px; }
+      
+      .card-3d {
+        transform-style: preserve-3d;
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      .card-3d:hover {
+        transform: translateY(-8px) scale(1.02) rotateX(2deg) rotateY(-2deg);
+        box-shadow: 0 30px 50px -15px rgba(0,0,0,0.2);
+        z-index: 10;
+      }
+      .dark .card-3d:hover {
+        box-shadow: 0 30px 50px -15px rgba(0,0,0,0.8);
+      }
+      
+      .card-image-wrap { transition: transform 0.5s ease; }
+      .card-3d:hover .card-image-wrap { transform: translateZ(20px); }
+
+      .fav-btn {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(4px);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        color: #ef4444; /* active by default in favorites */
+      }
+      .dark .fav-btn { background: rgba(0,0,0,0.7); }
+      .fav-btn:hover { transform: scale(1.15); }
+
+      /* Animation for dissolving card */
+      @keyframes dissolve {
+        0% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(0.8) translateY(20px); }
+      }
+      .dissolving { animation: dissolve 0.4s ease forwards; pointer-events: none; }
+      
+      @keyframes popIn { from { opacity:0; transform: scale(0.9) translateY(20px); } to { opacity:1; transform: scale(1) translateY(0); } }
+      .animate-pop { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    </style>
 </head>
-<body class="min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
-
-  <header class="bg-white dark:bg-card-dark border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 shadow-sm">
-    <div class="container mx-auto px-6 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <a href="classifieds.html" class="flex items-center gap-2 text-primary hover:text-green-700 transition-colors">
-          <span class="material-symbols-outlined text-3xl">all_inclusive</span>
-          <span class="font-bold text-xl tracking-tight hidden sm:block">ZipZapZoi</span>
-        </a>
-      </div>
-      
-      <div class="flex items-center gap-6">
-        <a href="classifieds.html" class="text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-primary transition-colors">Browse</a>
-        <a href="Inbox.html" class="text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-primary transition-colors">Messages</a>
-        
-        <div class="flex items-center gap-3 pl-6 border-l border-gray-200 dark:border-gray-700">
-          <a href="Seller Dashboard.html" class="hidden md:flex items-center gap-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
-            <span class="material-symbols-outlined text-lg">dashboard</span> Dashboard
-          </a>
-          <div class="h-9 w-9 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-md border-2 border-white" id="userAvatar">U</div>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <main class="flex-grow container mx-auto px-6 py-8">
+<body class="font-display min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
     
-    <div class="flex flex-col md:flex-row justify-between items-end md:items-center mb-8 border-b border-gray-200 dark:border-gray-700 pb-4 gap-4">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-800 dark:text-white">My Favorites</h1>
-        <p class="text-gray-500 dark:text-gray-400 mt-1">Items you've saved for later.</p>
-      </div>
-      <div class="flex items-center gap-2 bg-white dark:bg-card-dark px-4 py-2 rounded-full shadow-sm border border-gray-100 dark:border-gray-800">
-        <span class="text-sm font-bold text-gray-600 dark:text-gray-300">Saved Items:</span>
-        <span class="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full" id="favCount">0</span>
-      </div>
-    </div>
-
-    <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-center">
-      <div class="w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
-        <span class="material-symbols-outlined text-gray-400 text-6xl">heart_broken</span>
-      </div>
-      <h2 class="text-2xl font-bold text-gray-700 dark:text-white mb-2">Your wishlist is empty</h2>
-      <p class="text-gray-500 dark:text-gray-400 max-w-md mb-8">It looks like you haven't saved any listings yet. Browse categories to find something you love!</p>
-      <a href="classifieds.html" class="bg-primary hover:bg-green-700 text-white px-8 py-3 rounded-full font-bold shadow-bouncy transition-transform hover:-translate-y-1">
-        Start Exploring
-      </a>
-    </div>
-
-    <div id="favGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-    </div>
-
-  </main>
-
-  <footer class="bg-white dark:bg-card-dark border-t border-gray-200 dark:border-gray-700 py-8 mt-auto">
-    <div class="container mx-auto px-6 text-center text-sm text-gray-500 dark:text-gray-400">
-      &copy; <script>document.write(new Date().getFullYear())</script> ZipZapZoi. All Rights Reserved.
-    </div>
-  </footer>
-
-  <script src="js/utils.js"></script>
-  <script>
-    // --- 1. SETUP & AUTH ---
-    const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
-    document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
-    const STORAGE_KEY = 'zzz_favorites';
-
-    // --- 3. RENDER FAVORITES ---
-    function loadFavorites() {
-      const items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      
-      const grid = document.getElementById('favGrid');
-      const empty = document.getElementById('emptyState');
-      const count = document.getElementById('favCount');
-
-      count.textContent = items.length;
-
-      if (items.length === 0) {
-        grid.innerHTML = '';
-        grid.classList.add('hidden');
-        empty.classList.remove('hidden');
-        empty.classList.add('flex');
-        return;
-      }
-
-      empty.classList.add('hidden');
-      empty.classList.remove('flex');
-      grid.classList.remove('hidden');
-
-      grid.innerHTML = items.map(item => `
-        <div id="card-${item.id}" class="group bg-white dark:bg-card-dark rounded-2xl shadow-sm hover:shadow-bouncy border border-gray-100 dark:border-gray-800 overflow-hidden transition-all duration-300">
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-card-dark/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 shadow-sm transition-colors duration-300">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div class="flex items-center justify-between">
+          <a href="classifieds.html" class="flex items-center gap-2 group cursor-pointer text-gray-500 hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-2xl">arrow_back</span>
+            <span class="font-bold hidden sm:block">Back to Feed</span>
+          </a>
           
-          <div class="relative h-48 bg-gray-100 dark:bg-gray-800 overflow-hidden">
-            <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-            <span class="absolute top-2 left-2 bg-black/60 text-white text-[10px] uppercase font-bold px-2 py-1 rounded backdrop-blur-sm tracking-wide">${item.category}</span>
-            
-            <button onclick="removeFavorite('${item.id}')" class="absolute top-2 right-2 p-2 bg-white/90 dark:bg-card-dark/90 rounded-full text-red-500 hover:bg-red-500 hover:text-white shadow-sm transition-all hover:scale-110" title="Remove from Favorites">
-              <span class="material-symbols-outlined text-lg leading-none">delete</span>
+          <div class="flex items-center gap-4">
+            <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400">
+               <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
             </button>
           </div>
-
-          <div class="p-4 flex flex-col gap-2">
-            <a href="Listing Detail.html?id=${item.id}" class="font-bold text-gray-800 dark:text-white line-clamp-1 hover:text-primary transition-colors">${item.title}</a>
-            <p class="text-xl font-bold text-primary">₹ ${item.price}</p>
-            
-            <div class="flex items-center gap-1 text-xs text-gray-400 pb-3 border-b border-gray-100 dark:border-gray-800">
-              <span class="material-symbols-outlined text-sm">location_on</span>
-              <span class="truncate">${item.city || item.location || 'India'}</span>
-            </div>
-
-            <div class="flex gap-2 pt-2">
-              <a href="Listing Detail.html?id=${item.id}" class="flex-1 py-2 text-center text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:bg-gray-800 transition-colors">View Details</a>
-              <a href="Listing Detail.html?id=${item.id}" class="flex-1 py-2 text-center text-sm font-bold text-white bg-secondary rounded-lg hover:bg-cyan-700 transition-colors shadow-sm">Chat Now</a>
-            </div>
-          </div>
         </div>
-      `).join('');
-    }
+      </div>
+    </header>
 
-    // --- 4. ACTIONS ---
-    window.removeFavorite = (id) => {
-      if(!confirm("Remove from favorites?")) return;
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      
+      <div class="flex items-end justify-between mb-8 border-b border-gray-200 dark:border-gray-800 pb-4">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
+                <span class="material-symbols-outlined text-red-500 text-4xl">favorite</span> Saved Items
+            </h1>
+            <p class="text-gray-500 dark:text-gray-400 font-bold mt-1" id="favCount">0 items saved</p>
+        </div>
+      </div>
 
-      const card = document.getElementById(`card-${id}`);
-      if(card) {
-        card.classList.add('fade-out');
-        setTimeout(() => {
-          let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-          items = items.filter(i => i.id != id); // Use != to cast if id is string/num
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-          loadFavorites();
-        }, 300);
+      <div id="favoritesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="hidden flex-col items-center justify-center py-20 text-center animate-pop">
+         <div class="relative w-32 h-32 mb-6">
+             <div class="absolute inset-0 bg-red-100 dark:bg-red-900/30 rounded-full animate-ping opacity-75"></div>
+             <div class="relative w-full h-full bg-red-50 dark:bg-red-900/50 rounded-full flex items-center justify-center">
+                 <span class="material-symbols-outlined text-6xl text-red-400">favorite_border</span>
+             </div>
+         </div>
+         <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-2">No favorites yet</h2>
+         <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md">Items you heart will magically appear here. Start exploring the marketplace to find things you love!</p>
+         <a href="classifieds.html" class="bg-primary hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all transform active:scale-95">
+             Explore Marketplace
+         </a>
+      </div>
+
+    </main>
+
+    <script src="js/utils.js"></script>
+    <script>
+      let favIds = [];
+      let allListings = [];
+
+      document.addEventListener('DOMContentLoaded', () => {
+        if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
+        
+        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if(!user) {
+            window.location.href = 'Login Page.html?redirect=favorites.html';
+            return;
+        }
+
+        favIds = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+        allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+        
+        renderFavorites();
+      });
+
+      function renderFavorites() {
+        const grid = document.getElementById('favoritesGrid');
+        const empty = document.getElementById('emptyState');
+        const count = document.getElementById('favCount');
+
+        const favListings = allListings.filter(l => favIds.includes(l.id));
+        count.textContent = `${favListings.length} item${favListings.length === 1 ? '' : 's'} saved`;
+
+        if(favListings.length === 0) {
+            grid.classList.add('hidden');
+            empty.classList.remove('hidden');
+            empty.classList.add('flex');
+            return;
+        }
+
+        grid.classList.remove('hidden');
+        empty.classList.add('hidden');
+        empty.classList.remove('flex');
+
+        grid.innerHTML = favListings.map((l, index) => {
+          const timeDelay = index * 0.05;
+          return `
+            <div id="card-${l.id}" class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer relative group opacity-0 animate-pop" style="animation-delay: ${timeDelay}s" onclick="window.location.href='Listing Detail.html?id=${l.id}'">
+              
+              <div class="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-900">
+                <img src="${l.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                
+                <div class="absolute top-4 left-4 bg-white/90 dark:bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-gray-800 dark:text-white uppercase tracking-wider card-image-wrap">
+                  ${l.category}
+                </div>
+
+                <!-- Unfavorite Button -->
+                <button onclick="event.stopPropagation(); removeFav('${l.id}')" class="fav-btn absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center card-image-wrap" title="Remove from favorites">
+                  <span class="material-symbols-outlined text-xl">favorite</span>
+                </button>
+              </div>
+
+              <div class="p-5">
+                <div class="flex justify-between items-start mb-1">
+                  <h3 class="text-base font-bold text-gray-900 dark:text-white truncate pr-2">${l.title}</h3>
+                  <p class="text-lg font-black text-primary">₹${l.price.toLocaleString()}</p>
+                </div>
+                <div class="flex items-center gap-3 text-xs font-bold text-gray-400 dark:text-gray-500 mt-3">
+                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> ${l.location || 'Local'}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
       }
-    };
 
-    // Initialize
-    loadFavorites();
-  </script>
+      function removeFav(id) {
+        // 1. Update localStorage immediately
+        favIds = favIds.filter(f => f !== id);
+        localStorage.setItem('zzz_favorites', JSON.stringify(favIds));
+        
+        // 2. Animate DOM removal without full re-render
+        const card = document.getElementById(`card-${id}`);
+        if(card) {
+            card.classList.add('dissolving');
+            setTimeout(() => {
+                card.remove();
+                
+                // Update count
+                const currentCount = favIds.length;
+                document.getElementById('favCount').textContent = `${currentCount} item${currentCount === 1 ? '' : 's'} saved`;
+                
+                // Show empty state if needed
+                if(currentCount === 0) {
+                    document.getElementById('favoritesGrid').classList.add('hidden');
+                    const empty = document.getElementById('emptyState');
+                    empty.classList.remove('hidden');
+                    empty.classList.add('flex');
+                }
+            }, 400); // Wait for dissolve animation to finish
+        }
+      }
+    </script>
 </body>
 </html>

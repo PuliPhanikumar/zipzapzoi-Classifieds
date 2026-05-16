@@ -1,381 +1,334 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>ZipZapZoi - Listing Details</title>
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
-  
-  <script>
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            "primary": "#019863",
-            "secondary": "#4D96A9",
-            "background-light": "#F7F9FC"
-          ,
-            "background-dark": "#121212",
-            "card-dark": "#1e1e1e"},
-          fontFamily: { "display": ["Spline Sans", "sans-serif"] },
-          boxShadow: { "bouncy": "0 10px 20px -5px rgba(0,0,0,.1)" }
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>ZipZapZoi - Listing Details</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#019863",
+              secondary: "#4D96A9",
+              "background-light": "#f0f4f8",
+              "background-dark": "#0d0d0d",
+              "card-dark": "#1a1a1a"
+            },
+            fontFamily: { display: "Spline Sans" }
+          }
         }
+      };
+      
+      if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
       }
-    }
-  </script>
-  <style>
-    /* Hide scrollbar for gallery */
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-  </style>
+    </script>
+    <style>
+      .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24 }
+      
+      /* Modern Image Gallery (Airbnb Style) */
+      .gallery-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        grid-template-rows: repeat(2, 250px);
+        gap: 0.5rem;
+        border-radius: 1.5rem;
+        overflow: hidden;
+      }
+      @media (max-width: 768px) {
+        .gallery-grid { grid-template-columns: 1fr; grid-template-rows: 300px; }
+        .gallery-item:not(:first-child) { display: none; }
+      }
+      .gallery-item {
+        width: 100%; height: 100%; object-fit: cover;
+        transition: transform 0.5s ease, filter 0.3s;
+        cursor: pointer;
+      }
+      .gallery-item:hover {
+        transform: scale(1.05);
+        filter: brightness(1.1);
+      }
+      .gallery-grid:hover .gallery-item:not(:hover) {
+        filter: brightness(0.8);
+      }
+      .main-img { grid-row: span 2; }
+
+      /* Sticky Action Box */
+      .sticky-box {
+        position: sticky;
+        top: 100px;
+        transform-style: preserve-3d;
+        perspective: 1000px;
+      }
+      .action-card {
+        transition: transform 0.3s;
+      }
+      .action-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      }
+      .dark .action-card:hover {
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);
+      }
+
+      /* Micro Animations */
+      @keyframes slideUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+      .animate-in { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
 </head>
 <body class="font-display min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
-
-  <header class="bg-white dark:bg-card-dark border-b sticky top-0 z-50">
-    <div class="container mx-auto px-6 h-16 flex items-center justify-between">
-      <a href="classifieds.html" class="flex items-center gap-2 text-primary font-bold text-xl">
-        <span class="material-symbols-outlined text-3xl">all_inclusive</span>
-        ZipZapZoi
-      </a>
-      <div class="flex items-center gap-4">
-   <button onclick="history.back()" class="hidden md:flex items-center gap-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-full font-bold text-xs transition-colors">
-      <span class="material-symbols-outlined text-sm">arrow_back</span> Back
-   </button>
-   
-   <div id="navAvatar" class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold">U</div>
-</div>
-    </div>
-  </header>
-
-  <main class="flex-grow container mx-auto px-4 py-8">
     
-    <div class="text-sm text-gray-400 mb-6 flex items-center gap-2">
-      <a href="classifieds.html" class="hover:text-primary">Home</a> <span class="material-symbols-outlined text-xs">chevron_right</span>
-      <span id="crumbCat">Category</span> <span class="material-symbols-outlined text-xs">chevron_right</span>
-      <span id="crumbTitle" class="text-gray-800 dark:text-white font-bold truncate max-w-[200px]">Item</span>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      
-      <div class="lg:col-span-2 space-y-4">
-        <div class="bg-white dark:bg-card-dark rounded-3xl shadow-sm border overflow-hidden h-[400px] md:h-[500px] relative group bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-           <img id="mainImage" src="https://via.placeholder.com/800" class="w-full h-full object-contain transition-opacity duration-300">
-           <span id="statusBadge" class="hidden absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold uppercase shadow-lg z-10">SOLD</span>
-        </div>
-
-        <div id="imageGallery" class="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-           </div>
-      </div>
-
-      <div class="space-y-6">
-        <div class="bg-white dark:bg-card-dark p-6 rounded-3xl shadow-bouncy border border-gray-100 dark:border-gray-800">
-           <div class="flex justify-between items-start">
-             <div>
-               <p id="detailCat" class="text-xs font-bold text-primary uppercase tracking-wider mb-1">CATEGORY</p>
-               <h1 id="detailTitle" class="text-2xl font-bold text-gray-900 dark:text-white leading-tight">Loading Title...</h1>
-             </div>
-             <button onclick="toggleFav()" class="p-2 bg-gray-50 dark:bg-gray-800 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors">
-               <span id="favIcon" class="material-symbols-outlined">favorite</span>
-             </button>
-           </div>
-           
-           <div class="mt-4 pb-6 border-b border-gray-100 dark:border-gray-800">
-             <h2 id="detailPrice" class="text-4xl font-black text-gray-900 dark:text-white">₹ 0</h2>
-             <p class="text-gray-400 text-sm mt-1 flex items-center gap-1">
-               <span class="material-symbols-outlined text-sm">location_on</span> <span id="detailLoc">Location</span>
-               <span class="mx-1">•</span> <span id="detailTime">Just now</span>
-             </p>
-           </div>
-
-           <div id="actionArea" class="mt-6 flex flex-col gap-3"></div>
-        </div>
-
-        <div class="bg-white dark:bg-card-dark p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 cursor-pointer hover:shadow-md transition-shadow" onclick="goToProfile()">
-          <h3 class="font-bold text-gray-400 text-xs uppercase mb-4">Sold By</h3>
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center text-xl font-bold text-gray-500 dark:text-gray-400" id="sellerInit">?</div>
-            <div>
-              <p class="font-bold text-gray-900 dark:text-white flex items-center gap-1">
-                <span id="sellerName">Seller Name</span>
-                <span id="verifiedBadge" class="material-symbols-outlined text-blue-500 text-[16px] hidden" title="Verified User">verified</span>
-              </p>
-              <p class="text-xs text-primary font-bold">View Profile</p>
-            </div>
-            <span class="material-symbols-outlined ml-auto text-gray-300">chevron_right</span>
-          </div>
-        </div>
-
-        <div class="bg-white dark:bg-card-dark p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800">
-          <h3 class="font-bold text-gray-900 dark:text-white mb-3">Description</h3>
-          <p id="detailDesc" class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-line">No description.</p>
-          <div id="dynamicFields" class="mt-4 grid grid-cols-2 gap-2 text-xs"></div>
+    <!-- HEADER -->
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-card-dark/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div class="flex items-center justify-between">
+          <a href="classifieds.html" class="flex items-center gap-2 group cursor-pointer text-gray-500 hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-2xl">arrow_back</span>
+            <span class="font-bold hidden sm:block">Back to Search</span>
+          </a>
           
-          <div class="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800 text-center">
-            <button onclick="openReportModal()" class="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors flex items-center justify-center gap-1 mx-auto">
-              <span class="material-symbols-outlined text-[14px]">flag</span> Report this listing
+          <div class="flex items-center gap-4">
+            <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400">
+               <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+            </button>
+            <button onclick="shareListing()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400" title="Share">
+               <span class="material-symbols-outlined">ios_share</span>
+            </button>
+            <button onclick="toggleFav()" id="favBtnHeader" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400" title="Save">
+               <span class="material-symbols-outlined">favorite</span>
             </button>
           </div>
         </div>
-
       </div>
-    </div>
+    </header>
 
-    <!-- Report Modal -->
-    <div id="reportModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-      <div class="bg-white dark:bg-card-dark w-full max-w-md rounded-3xl shadow-bouncy overflow-hidden transform scale-95 transition-all" id="reportModalContent">
-        <div class="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
-          <h3 class="font-bold text-xl text-gray-800 dark:text-white">Report Listing</h3>
-          <button onclick="closeReportModal()" class="text-gray-400 hover:text-red-500"><span class="material-symbols-outlined">close</span></button>
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in" id="contentArea" style="opacity: 0;">
+      
+      <!-- IMAGE GALLERY -->
+      <section class="mb-10">
+        <div class="gallery-grid" id="imageGallery">
+          <!-- Rendered via JS -->
+          <div class="bg-gray-200 dark:bg-gray-800 w-full h-full animate-pulse rounded-2xl main-img"></div>
+          <div class="bg-gray-200 dark:bg-gray-800 w-full h-full animate-pulse rounded-2xl"></div>
+          <div class="bg-gray-200 dark:bg-gray-800 w-full h-full animate-pulse rounded-2xl"></div>
         </div>
-        <div class="p-6 space-y-4 text-sm text-gray-600 dark:text-gray-300">
-          <p>Help us understand what's wrong with this listing:</p>
-          <select id="reportReason" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none">
-            <option value="spam">Spam or Duplicate</option>
-            <option value="scam">Fraud or Scam</option>
-            <option value="inappropriate">Inappropriate Content</option>
-            <option value="unavailable">Item no longer available</option>
-          </select>
-          <textarea id="reportDetails" rows="3" placeholder="Additional details..." class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 outline-none"></textarea>
-          <button onclick="submitReport()" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-lg transition-transform active:scale-95">Submit Report</button>
+      </section>
+
+      <!-- CONTENT GRID -->
+      <section class="flex flex-col lg:flex-row gap-10 relative">
+        
+        <!-- Left: Details -->
+        <div class="w-full lg:w-2/3">
+          <div class="mb-6 flex justify-between items-start">
+            <div>
+              <span id="detailCategory" class="text-xs font-bold bg-primary/10 text-primary px-3 py-1 rounded-full uppercase tracking-wider mb-3 inline-block">Category</span>
+              <h1 id="detailTitle" class="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white leading-tight mb-2">Loading...</h1>
+              <div class="flex flex-wrap items-center gap-4 text-sm font-bold text-gray-500 dark:text-gray-400">
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">location_on</span> <span id="detailLocation">Location</span></span>
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">schedule</span> <span id="detailTime">Time</span></span>
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">visibility</span> <span id="detailViews">0</span> views</span>
+              </div>
+            </div>
+          </div>
+
+          <hr class="border-gray-200 dark:border-gray-800 my-8">
+
+          <!-- Description -->
+          <div class="mb-8">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Description</h2>
+            <div id="detailDescription" class="prose dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap font-medium">
+              Loading description...
+            </div>
+          </div>
+
+          <hr class="border-gray-200 dark:border-gray-800 my-8">
+
+          <!-- Attributes Area (if any) -->
+          <div class="mb-8" id="attributesSection" style="display: none;">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Specific Details</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="attributesGrid">
+               <!-- Injected -->
+            </div>
+          </div>
+
         </div>
-      </div>
-    </div>
 
-  </main>
+        <!-- Right: Sticky Action Box -->
+        <div class="w-full lg:w-1/3">
+          <div class="sticky-box">
+            <div class="action-card bg-white dark:bg-card-dark rounded-3xl p-6 border border-gray-100 dark:border-gray-800 shadow-xl relative overflow-hidden">
+              <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-secondary to-primary"></div>
+              
+              <div class="mb-6">
+                <p class="text-gray-500 dark:text-gray-400 font-bold text-sm uppercase tracking-wider mb-1">Asking Price</p>
+                <h2 id="detailPrice" class="text-4xl font-black text-gray-900 dark:text-white">₹0</h2>
+                <p id="conditionBadge" class="text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-1 rounded mt-2 inline-block">Used</p>
+              </div>
 
-  <footer class="bg-white dark:bg-card-dark border-t py-6 text-center text-sm text-gray-500 dark:text-gray-400 mt-auto">
-    &copy; 2024 ZipZapZoi
-  </footer>
+              <!-- Seller Info -->
+              <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl mb-6 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" onclick="alert('View Profile feature coming soon!')">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl shadow-inner">
+                    <span id="sellerInit">S</span>
+                  </div>
+                  <div>
+                    <p id="sellerName" class="font-bold text-gray-900 dark:text-white">Seller Name</p>
+                    <p class="text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-blue-500">verified</span> Verified Member</p>
+                  </div>
+                </div>
+                <span class="material-symbols-outlined text-gray-400">chevron_right</span>
+              </div>
 
-  <script>
-    // --- 1. DATA SOURCE ---
-    const mockListings = [
-        { id: '101', title: "iPhone 14 Pro", category: "Electronics", price: "65000", location: "Bengaluru", time: "2 hrs ago", image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=600&q=80", images: ["https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=600&q=80"], userId: 'user_bob', userName: 'Bob Builder' },
-        { id: '102', title: "Royal Enfield 350", category: "Vehicles", price: "145000", location: "Mumbai", time: "5 hrs ago", image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80", userId: 'user_alice', userName: 'Alice W' },
-    ];
+              <div class="space-y-3">
+                <button onclick="initiateChat()" class="w-full py-4 rounded-xl bg-primary hover:bg-green-700 text-white font-bold shadow-lg shadow-primary/30 transition-transform active:scale-95 flex items-center justify-center gap-2">
+                  <span class="material-symbols-outlined">chat</span> Chat with Seller
+                </button>
+                <button onclick="alert('Make Offer coming soon!')" class="w-full py-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 font-bold text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary dark:hover:border-primary dark:hover:text-primary transition-colors">
+                  Make Offer
+                </button>
+              </div>
 
-    // --- 2. INIT ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const itemId = urlParams.get('id');
-    const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
-    let currentItem = null;
+              <div class="mt-6 flex items-center justify-center gap-2 text-xs font-bold text-gray-400 dark:text-gray-500">
+                <span class="material-symbols-outlined text-[16px]">security</span> Protected by ZipZapZoi Secure
+              </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+              <button onclick="alert('Report submitted.')" class="text-xs font-bold text-red-400 hover:text-red-600 transition-colors flex items-center justify-center gap-1 mx-auto">
+                <span class="material-symbols-outlined text-[14px]">flag</span> Report this listing
+              </button>
+            </div>
 
-    if(currentUser) document.getElementById('navAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+          </div>
+        </div>
 
-    function loadItem() {
-      // MERGE DATA
-      const userPosts = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-      const allListings = [...userPosts, ...mockListings];
-      
-      currentItem = allListings.find(i => i.id === itemId);
+      </section>
+    </main>
 
-      if(!currentItem) {
-        document.body.innerHTML = `<div class="h-screen flex flex-col items-center justify-center text-center p-4">
-          <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">search_off</span>
-          <h1 class="text-2xl font-bold text-gray-700 dark:text-gray-200">Listing Not Found</h1>
-          <a href="classifieds.html" class="mt-4 bg-primary text-white px-6 py-2 rounded-full font-bold">Back to Classifieds</a>
-        </div>`;
-        return;
-      }
+    <script src="js/utils.js"></script>
+    <script>
+      let currentListing = null;
+      let isFavorite = false;
 
-      // TEXT DETAILS
-      document.title = currentItem.title;
-      document.getElementById('crumbTitle').textContent = currentItem.title;
-      document.getElementById('crumbCat').textContent = currentItem.category;
-      
-      document.getElementById('detailCat').textContent = currentItem.category;
-      document.getElementById('detailTitle').textContent = currentItem.title;
-      document.getElementById('detailPrice').textContent = "₹ " + currentItem.price;
-      document.getElementById('detailLoc').textContent = currentItem.city || currentItem.location;
-      document.getElementById('detailDesc').textContent = currentItem.description || "No description provided.";
-      
-      document.getElementById('sellerName').textContent = currentItem.userName || "User";
-      document.getElementById('sellerInit').textContent = (currentItem.userName || "U").charAt(0).toUpperCase();
-
-      // Verified check
-      const verifiedUsers = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
-      if (verifiedUsers.includes(currentItem.userId) || verifiedUsers.includes(currentItem.userName)) {
-          document.getElementById('verifiedBadge').classList.remove('hidden');
-      }
-
-      if(currentItem.status === 'sold') {
-          document.getElementById('statusBadge').classList.remove('hidden');
-          document.getElementById('mainImage').classList.add('grayscale');
-      }
-
-      // --- 3. GALLERY LOGIC ---
-      const mainImg = document.getElementById('mainImage');
-      const gallery = document.getElementById('imageGallery');
-      
-      // Default to main image
-      mainImg.src = currentItem.image || 'https://via.placeholder.com/800';
-
-      // Check for array of images
-      const imgList = (currentItem.images && currentItem.images.length > 0) 
-                      ? currentItem.images 
-                      : [currentItem.image || 'https://via.placeholder.com/800'];
-
-      // Generate Thumbnails
-      if (imgList.length > 1) {
-          gallery.innerHTML = imgList.map((src, index) => `
-              <img src="${src}" onclick="swapImage(this)" 
-                   class="w-20 h-20 rounded-xl object-cover cursor-pointer border-2 ${index === 0 ? 'border-primary' : 'border-transparent'} hover:border-primary transition-all opacity-80 hover:opacity-100 flex-shrink-0"
-                   data-src="${src}">
-          `).join('');
-      } else {
-          gallery.classList.add('hidden'); // Hide strip if only 1 photo
-      }
-
-      renderActionButtons();
-    }
-
-    // Function to swap main image
-    window.swapImage = (el) => {
-        const main = document.getElementById('mainImage');
-        // Reset all borders
-        document.querySelectorAll('#imageGallery img').forEach(img => img.classList.replace('border-primary', 'border-transparent'));
-        // Set active border
-        el.classList.replace('border-transparent', 'border-primary');
-        // Fade effect
-        main.style.opacity = '0.5';
-        setTimeout(() => {
-            main.src = el.dataset.src;
-            main.style.opacity = '1';
-        }, 150);
-    }
-
-    // --- 4. BUTTONS ---
-    function renderActionButtons() {
-      const area = document.getElementById('actionArea');
-      
-      if(currentUser && currentItem.userId === currentUser.id) {
-        area.innerHTML = `
-          <button onclick="editItem()" class="w-full bg-gray-800 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-black transition-transform active:scale-95 flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined">edit_square</span> Edit Listing
-          </button>
-          <button onclick="deleteItem()" class="w-full bg-white dark:bg-card-dark text-red-500 border border-red-100 font-bold py-3.5 rounded-xl hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined">delete</span> Delete
-          </button>
-        `;
-      } else {
-        const isSold = currentItem.status === 'sold';
-        area.innerHTML = `
-          <button onclick="startChat()" ${isSold ? 'disabled' : ''} class="w-full bg-secondary text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-cyan-700 transition-transform active:scale-95 flex items-center justify-center gap-2 ${isSold ? 'opacity-50 cursor-not-allowed' : ''}">
-            <span class="material-symbols-outlined">chat</span> ${isSold ? 'Item Sold' : 'Chat with Seller'}
-          </button>
-          <button onclick="callSeller()" class="w-full bg-white dark:bg-card-dark text-primary border border-green-100 font-bold py-3.5 rounded-xl hover:bg-green-50 transition-colors flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined">call</span> Show Phone Number
-          </button>
-        `;
-      }
-    }
-
-    // --- ACTIONS ---
-    function startChat() {
-      if(!currentUser) return window.location.href = `Login Page.html?redirect=Listing Detail.html?id=${itemId}`;
-      const intent = { action: 'start_chat', partnerId: currentItem.userId, partnerName: currentItem.userName, listingId: currentItem.id, listingTitle: currentItem.title };
-      localStorage.setItem('zzz_chat_intent', JSON.stringify(intent));
-      window.location.href = "Inbox.html";
-    }
-
-    function editItem() { window.location.href = `Post Listing.html?id=${itemId}`; }
-
-    function deleteItem() {
-      if(!confirm("Delete this listing?")) return;
-      let list = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-      list = list.filter(i => i.id !== itemId);
-      localStorage.setItem('zzz_listings', JSON.stringify(list));
-      alert("Deleted.");
-      window.location.href = "Seller Dashboard.html";
-    }
-
-    function callSeller() { 
-        if(!currentUser) {
-            alert("Please login to view phone number");
-            window.location.href = `Login Page.html?redirect=Listing Detail.html?id=${itemId}`;
+      document.addEventListener('DOMContentLoaded', () => {
+        if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
+        
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+        if(!id) {
+            alert('Listing not found');
+            window.location.href = 'classifieds.html';
             return;
         }
 
-        // Masked Contact Flow Check
-        const messages = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
-        const sellerReplied = messages.some(m => m.listingId === itemId && m.senderId === currentItem.userId && m.receiverId === currentUser.id);
+        const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+        currentListing = listings.find(l => l.id === id);
 
-        if (!sellerReplied) {
-            alert("Phone number is hidden to prevent spam. Please Chat with the seller first. The number will unlock when they reply.");
+        if(!currentListing) {
+            alert('Listing not found or deleted');
+            window.location.href = 'classifieds.html';
             return;
         }
 
-        const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-        const seller = users.find(u => u.id === currentItem.userId);
-        if (seller && seller.phone) {
-            alert("Phone: " + seller.phone);
+        // Simulate Views
+        currentListing.views = (currentListing.views || 0) + 1;
+        localStorage.setItem('zzz_listings', JSON.stringify(listings));
+
+        renderData();
+      });
+
+      function renderData() {
+        document.getElementById('detailTitle').textContent = currentListing.title;
+        document.getElementById('detailCategory').textContent = currentListing.category;
+        document.getElementById('detailPrice').textContent = `₹${parseFloat(currentListing.price).toLocaleString()}`;
+        document.getElementById('detailLocation').textContent = currentListing.location || 'Local';
+        document.getElementById('detailTime').textContent = currentListing.date || 'Just now';
+        document.getElementById('detailViews').textContent = currentListing.views || 1;
+        document.getElementById('detailDescription').textContent = currentListing.description;
+        
+        document.getElementById('sellerName').textContent = currentListing.userName || 'Anonymous Seller';
+        document.getElementById('sellerInit').textContent = (currentListing.userName || 'A').charAt(0).toUpperCase();
+
+        if(currentListing.condition) {
+           document.getElementById('conditionBadge').textContent = currentListing.condition.toUpperCase();
         } else {
-            alert("This seller has not provided a public phone number. Please use Chat.");
+           document.getElementById('conditionBadge').style.display = 'none';
         }
-    }
-    
-    function goToProfile() { if(currentItem.userId) window.location.href = `profile.html?sellerId=${currentItem.userId}`; }
 
-    // --- 5. REPORT LOGIC ---
-    function openReportModal() {
-        if(!currentUser) {
-            showToast("Please login to report listings", "error");
-            setTimeout(() => window.location.href = `Login Page.html?redirect=Listing Detail.html?id=${itemId}`, 1500);
+        // Gallery
+        const images = currentListing.images || [];
+        const gallery = document.getElementById('imageGallery');
+        if(images.length > 0) {
+            gallery.innerHTML = images.map((img, i) => `
+               <img src="${img}" class="gallery-item ${i === 0 ? 'main-img' : ''}" onclick="window.open('${img}', '_blank')">
+            `).join('');
+        } else {
+            gallery.innerHTML = `<img src="https://via.placeholder.com/800x600?text=No+Images+Provided" class="gallery-item main-img">`;
+        }
+
+        // Check Fav
+        const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+        isFavorite = favs.includes(currentListing.id);
+        updateFavIcon();
+      }
+
+      function updateFavIcon() {
+        const btn = document.getElementById('favBtnHeader');
+        if(isFavorite) {
+            btn.classList.add('text-red-500');
+            btn.classList.remove('text-gray-600', 'dark:text-gray-400');
+            btn.querySelector('span').style.fontVariationSettings = "'FILL' 1";
+        } else {
+            btn.classList.remove('text-red-500');
+            btn.classList.add('text-gray-600', 'dark:text-gray-400');
+            btn.querySelector('span').style.fontVariationSettings = "'FILL' 0";
+        }
+      }
+
+      function toggleFav() {
+        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if(!user) {
+            window.location.href = 'Login Page.html?redirect=Listing Detail.html?id=' + currentListing.id;
             return;
         }
-        document.getElementById('reportModal').classList.remove('hidden');
-        setTimeout(() => document.getElementById('reportModalContent').classList.remove('scale-95'), 10);
-    }
 
-    function closeReportModal() {
-        document.getElementById('reportModalContent').classList.add('scale-95');
-        setTimeout(() => document.getElementById('reportModal').classList.add('hidden'), 200);
-    }
-
-    function submitReport() {
-        const reason = document.getElementById('reportReason').value;
-        const details = document.getElementById('reportDetails').value.trim();
-        
-        const newFlag = {
-            id: 'flag_' + Date.now(),
-            listingId: currentItem.id,
-            listingTitle: currentItem.title,
-            reportedBy: currentUser.id,
-            reportedByName: currentUser.name,
-            reason: reason,
-            details: details,
-            date: new Date().toISOString(),
-            status: 'pending'
-        };
-
-        const flags = JSON.parse(localStorage.getItem('zzz_flags') || '[]');
-        flags.push(newFlag);
-        localStorage.setItem('zzz_flags', JSON.stringify(flags));
-        
-        closeReportModal();
-        showToast("Report submitted successfully. Our team will review it shortly.");
-    }
-
-    // FAVORITES
-    window.toggleFav = () => {
-        const icon = document.getElementById('favIcon');
         let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-        const exists = favs.find(f => f.id === itemId);
-        if(exists) {
-            favs = favs.filter(f => f.id !== itemId);
-            icon.classList.remove('text-red-500'); icon.style.fontVariationSettings = "'FILL' 0";
+        if(isFavorite) {
+            favs = favs.filter(f => f !== currentListing.id);
+            isFavorite = false;
         } else {
-            favs.push(currentItem);
-            icon.classList.add('text-red-500'); icon.style.fontVariationSettings = "'FILL' 1";
+            favs.push(currentListing.id);
+            isFavorite = true;
         }
         localStorage.setItem('zzz_favorites', JSON.stringify(favs));
-    }
+        updateFavIcon();
+      }
 
-    loadItem();
-  </script>
-  <script src="js/utils.js"></script>
+      function shareListing() {
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Listing link copied to clipboard!');
+        });
+      }
+
+      function initiateChat() {
+        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if(!user) {
+            window.location.href = 'Login Page.html?redirect=Listing Detail.html?id=' + currentListing.id;
+            return;
+        }
+        if(user.email === currentListing.userEmail) {
+            alert("You cannot chat with yourself!");
+            return;
+        }
+        // Redirect to Inbox with context
+        window.location.href = `Inbox.html?chatWith=${encodeURIComponent(currentListing.userEmail || currentListing.userName)}&ref=${currentListing.id}`;
+      }
+    </script>
 </body>
 </html>
