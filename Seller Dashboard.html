@@ -21,8 +21,8 @@
             accent: "#4D96A9",
             bgLight: "#F8F9FA",
             "background-light": "#f0f4f8",
-            "background-dark": "#121212",
-            "card-dark": "#1e1e1e"},
+            "background-dark": "#0f172a",
+            "card-dark": "#1e293b"},
           fontFamily: { sans: ["Spline Sans", "sans-serif"] },
           boxShadow: {
             soft: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
@@ -50,9 +50,13 @@
         <span class="material-symbols-outlined">mail</span> Messages
         <span id="sideBadge" class="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden">0</span>
       </a>
-      <a href="Post Listing.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-800 hover:text-gray-900 dark:text-white font-medium rounded-xl transition-colors">
+      <div class="flex items-center gap-4">
+          <button onclick="if(typeof toggleDarkMode === 'function') toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400">
+             <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+          </button>
+<a href="Post Listing.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-800 hover:text-gray-900 dark:text-white font-medium rounded-xl transition-colors">
         <span class="material-symbols-outlined">add_circle</span> Post New Ad
-      </a>
+      </a></div>
       <a href="#" onclick="requestVerification()" class="flex items-center gap-3 px-4 py-3 text-blue-500 hover:bg-blue-50 font-bold rounded-xl transition-colors" id="navVerifyBtn">
         <span class="material-symbols-outlined">verified</span> Get Verified
       </a>

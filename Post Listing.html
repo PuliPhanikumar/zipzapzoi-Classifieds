@@ -16,9 +16,9 @@
             "primary": "#019863",
             "secondary": "#4D96A9",
             "background-light": "#F8F9FA",
-            "background-dark": "#1A1B1C",
+            "background-dark": "#0f172a",
             "card-light": "#FFFFFF",
-            "card-dark": "#2C2D2E",
+            "card-dark": "#1e293b",
             "text-light": "#333333",
             "text-dark": "#E9ECEF",
             "border-light": "#E9ECEF",
@@ -51,7 +51,11 @@
       <span class="material-symbols-outlined text-secondary text-3xl">all_inclusive</span>
       <h2 class="text-xl font-bold">ZipZapZoi</h2>
     </div>
-    <a href="Seller Dashboard.html" class="text-sm font-semibold hover:text-secondary transition-colors">Cancel & Exit</a>
+    <div class="flex items-center gap-4">
+          <button onclick="if(typeof toggleDarkMode === 'function') toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400">
+             <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+          </button>
+<a href="Seller Dashboard.html" class="text-sm font-semibold hover:text-secondary transition-colors">Cancel & Exit</a></div>
   </div>
 </header>
 
@@ -228,15 +232,7 @@
   let schema = {};
 
   function loadSchemaFromBrain() {
-    const rawData = localStorage.getItem('zzz_classifieds_schema');
-    
-    // Fallback if Admin Console hasn't been run yet
-    if (!rawData) {
-      alert("System Warning: Admin Schema not found. Defaulting to empty configuration. Please visit Admin Console and click 'Factory Reset' first.");
-      return;
-    }
-
-    const brain = JSON.parse(rawData);
+    const brain = window.ZZZ_SCHEMA;
     
     // CONVERT Admin Relational Data -> Post Listing Nested Data for UI
     brain.categories.forEach(cat => {
