@@ -210,6 +210,7 @@
       </section>
     </main>
 
+    <script src="js/schema.js"></script>
     <script src="js/utils.js"></script>
     <script>
       let currentListing = null;
@@ -258,6 +259,37 @@
            document.getElementById('conditionBadge').textContent = currentListing.condition.toUpperCase();
         } else {
            document.getElementById('conditionBadge').style.display = 'none';
+        }
+
+        // Dynamic Attributes
+        if (currentListing.dynamicData && Object.keys(currentListing.dynamicData).length > 0) {
+            const grid = document.getElementById('attributesGrid');
+            const section = document.getElementById('attributesSection');
+            let html = '';
+            
+            const brainFields = (window.ZZZ_SCHEMA && window.ZZZ_SCHEMA.fields) ? window.ZZZ_SCHEMA.fields : [];
+
+            Object.entries(currentListing.dynamicData).forEach(([key, val]) => {
+                if(!val) return;
+                const fieldDef = brainFields.find(f => f.id === key);
+                const label = fieldDef ? fieldDef.label : key.replace(/_/g, ' ').toUpperCase();
+                
+                html += `
+                  <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">${label}</p>
+                    <p class="font-bold text-gray-900 dark:text-white text-sm truncate" title="${val}">${val}</p>
+                  </div>
+                `;
+            });
+
+            if (html !== '') {
+                grid.innerHTML = html;
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        } else {
+            document.getElementById('attributesSection').style.display = 'none';
         }
 
         // Gallery
