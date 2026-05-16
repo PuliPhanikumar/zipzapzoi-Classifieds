@@ -92,7 +92,7 @@
         </div>
     </aside>
 
-    <main class="flex-1 flex-col bg-[#efeae2] dark:bg-[#0b141a] relative hidden md:flex" id="chatArea">
+    <main class="flex-1 flex-col bg-[#efeae2] dark:bg-background-dark relative hidden md:flex" id="chatArea">
       
       <div id="emptyState" class="absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-gray-50 dark:bg-gray-800 z-0">
         <div class="w-40 h-40 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-500">
@@ -102,7 +102,7 @@
         <p class="text-gray-500 dark:text-gray-400 max-w-sm">Choose a chat from the left to view messages or negotiate prices.</p>
       </div>
 
-      <div id="activeChat" class="flex flex-col h-full hidden z-10 w-full bg-[#efeae2] dark:bg-[#0b141a]">
+      <div id="activeChat" class="flex flex-col h-full hidden z-10 w-full bg-[#efeae2] dark:bg-background-dark">
         
         <div class="bg-white dark:bg-card-dark px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between shadow-sm">
           <div class="flex items-center gap-3">
@@ -139,7 +139,7 @@
         <div class="flex-1 overflow-y-auto p-4 space-y-2 custom-scroll" id="messagesFeed" style="background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay;">
            </div>
 
-        <div class="px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar bg-[#efeae2]/50" id="quickReplies">
+        <div class="px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar bg-[#efeae2]/50 dark:bg-card-dark/50" id="quickReplies">
            <button class="bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-800 hover:text-primary shadow-sm whitespace-nowrap transition-colors" onclick="setInput('Is this still available?')">Is this available?</button>
            <button class="bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-800 hover:text-primary shadow-sm whitespace-nowrap transition-colors" onclick="setInput('What is your best price?')">Best price?</button>
            <button class="bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-800 hover:text-primary shadow-sm whitespace-nowrap transition-colors" onclick="setInput('I am interested!')">I am interested!</button>
@@ -276,15 +276,26 @@
       document.getElementById('chatAvatar').textContent = (otherName || '?').charAt(0);
       document.getElementById('contextTitle').textContent = listTitle;
       document.getElementById('contextLink').href = `Listing Detail.html?id=${listingId}`;
+      
+      // Try to load real listing details for context banner
+      const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+      const listData = listings.find(l => l.id === listingId);
+      if (listData) {
+          document.getElementById('contextPrice').textContent = `₹${listData.price}`;
+          document.getElementById('contextImg').style.backgroundImage = `url('${listData.image}')`;
+      } else {
+          document.getElementById('contextPrice').textContent = '';
+          document.getElementById('contextImg').style.backgroundImage = `url('https://via.placeholder.com/150')`;
+      }
 
       const feed = document.getElementById('messagesFeed');
       feed.innerHTML = msgs.map(m => {
         const isMe = m.fromUserId === currentUser.id;
         return `
           <div class="flex w-full ${isMe ? 'justify-end' : 'justify-start'} slide-in">
-            <div class="msg-bubble px-4 py-2 rounded-xl shadow-sm relative text-sm ${isMe ? 'bg-bubble-me text-gray-800 dark:text-white rounded-tr-none' : 'bg-white dark:bg-card-dark text-gray-800 dark:text-white rounded-tl-none'}">
+            <div class="msg-bubble px-4 py-2 rounded-xl shadow-sm relative text-sm ${isMe ? 'bg-bubble-me dark:bg-primary text-gray-800 dark:text-white rounded-tr-none' : 'bg-white dark:bg-card-dark text-gray-800 dark:text-white rounded-tl-none'}">
               ${m.text}
-              <div class="msg-time ${isMe ? 'text-green-100' : 'text-gray-400'}">${new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} 
+              <div class="msg-time ${isMe ? 'text-green-800 dark:text-green-100' : 'text-gray-400'}">${new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} 
               ${isMe ? '<span class="material-symbols-outlined text-[10px] text-blue-500 align-middle ml-1">done_all</span>' : ''}</div>
             </div>
           </div>
@@ -332,8 +343,18 @@
         
         // Context Banner
         document.getElementById('contextTitle').textContent = intent.listingTitle || "Direct Message";
-        document.getElementById('contextPrice').textContent = ""; 
-        document.getElementById('contextLink').href = "#";
+        
+        const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+        const listData = listings.find(l => l.id === intent.listingId);
+        if (listData) {
+            document.getElementById('contextPrice').textContent = `₹${listData.price}`;
+            document.getElementById('contextImg').style.backgroundImage = `url('${listData.image}')`;
+            document.getElementById('contextLink').href = `Listing Detail.html?id=${intent.listingId}`;
+        } else {
+            document.getElementById('contextPrice').textContent = ""; 
+            document.getElementById('contextImg').style.backgroundImage = `url('https://via.placeholder.com/150')`;
+            document.getElementById('contextLink').href = "#";
+        }
 
         // Generate a temporary ID
         const pIds = [currentUser.id, intent.partnerId].sort().join('_');

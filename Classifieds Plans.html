@@ -145,6 +145,7 @@
     </div>
   </main>
 
+  <script src="js/schema.js"></script>
   <script src="js/utils.js"></script>
   <script>
     // 1. Load Pending Listing
@@ -178,17 +179,15 @@
         document.getElementById('summaryTotal').textContent = `₹${total}`;
         document.getElementById('payBtnText').textContent = `Pay ₹${total}`;
 
-        // Set Icon based on category
-        const icons = {
-            'Electronics': 'devices',
-            'Vehicles': 'directions_car',
-            'Real Estate': 'home',
-            'Jobs': 'work',
-            'Pets': 'pets',
-            'Fashion': 'checkroom',
-            'Furniture': 'chair'
-        };
-        document.getElementById('summaryIcon').textContent = icons[listing.category] || 'category';
+        // Look up Category Icon from Master Schema
+        let categoryIcon = 'category'; // Default fallback
+        if (window.ZZZ_SCHEMA && window.ZZZ_SCHEMA.categories) {
+            const catDef = window.ZZZ_SCHEMA.categories.find(c => c.label === listing.category);
+            if (catDef && catDef.icon) {
+                categoryIcon = catDef.icon;
+            }
+        }
+        document.getElementById('summaryIcon').textContent = categoryIcon;
     }
 
     // 3. Process Mock Payment
