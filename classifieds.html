@@ -238,8 +238,10 @@
       // =====================================
       function renderAuth() {
         const authArea = document.getElementById('headerAuthArea');
+        const toggleBtn = `<button onclick="toggleDarkMode()" aria-label="Toggle Dark Mode" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center text-gray-600 dark:text-gray-400 mr-2"><span class="material-symbols-outlined" id="themeIcon">dark_mode</span></button>`;
+        
         if(currentUser) {
-          authArea.innerHTML = `
+          authArea.innerHTML = toggleBtn + `
             <a href="Post Listing.html" class="hidden md:flex items-center gap-2 py-2 px-4 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white font-bold text-sm transition-colors">
               <span class="material-symbols-outlined text-lg">add_circle</span> Post Ad
             </a>
@@ -256,10 +258,16 @@
             </div>
           `;
         } else {
-          authArea.innerHTML = `
+          authArea.innerHTML = toggleBtn + `
             <a href="Login Page.html?redirect=classifieds.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Log In</a>
             <a href="User Registration.html" class="text-sm font-bold bg-primary text-white py-2.5 px-6 rounded-full shadow-lg hover:shadow-primary/30 transition-transform active:scale-95 ml-2">Sign Up</a>
           `;
+        }
+        
+        // Update the icon immediately based on current state
+        if (document.documentElement.classList.contains('dark')) {
+            const icon = document.getElementById('themeIcon');
+            if(icon) icon.textContent = 'light_mode';
         }
       }
 
