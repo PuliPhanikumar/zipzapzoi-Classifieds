@@ -1,406 +1,310 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>ZipZapZoi Dashboard</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
-<script>
-tailwind.config = {
-  darkMode: "class",
-  theme: {
-    extend: {
-      colors: {
-        primary: "#F97316",
-            "background-light": "#F8FAFC",
-            "background-dark": "#1E293B",
-        "text-light": "#1E293B",
-        "text-dark": "#F8FAFC"
-      ,
-            "card-dark": "#1e1e1e"},
-      fontFamily: { display: ["Poppins", "sans-serif"] },
-      borderRadius: { DEFAULT: "1.5rem", "2xl": "2rem", "3xl": "2.5rem" },
-    },
-  },
-};
-</script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ZipZapZoi – Hub</title>
+  <meta name="description" content="Welcome to the ZipZapZoi Ecosystem. Choose your module."/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          fontFamily: { sans: ["Spline Sans", "sans-serif"] },
+          colors: {
+            "primary": "#F97316", // ZipZapZoi global primary
+            "secondary": "#4D96A9",
+            "background-light": "#f0f4f8",
+            "background-dark": "#0d0d0d",
+            "card-dark": "#1a1a1a"
+          }
+        }
+      }
+    }
+    // Init dark mode BEFORE render to prevent flash
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!localStorage.getItem('zzz_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+  
+  <style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24; }
+    
+    @keyframes slideUp { from { opacity:0; transform: translateY(30px); } to { opacity:1; transform: translateY(0); } }
+    .animate-in { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    
+    .hub-card {
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transform-style: preserve-3d;
+    }
+    .hub-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
+    }
+    .dark .hub-card:hover {
+      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.6);
+    }
 
-<style>
-/* --- ORIGINAL DASHBOARD STYLES --- */
-body { overflow-x: hidden; height: 100vh; width: 100vw; min-height: max(884px, 100dvh); }
-@keyframes slide-in-up {
-  0% { opacity: 0; transform: translateY(40px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-@keyframes logo-bounce {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-20px) scale(1.1); }
-}
-.animate-logo-bounce { animation: logo-bounce 2s infinite; }
-.animate-slide-in-up { animation: slide-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
-.card-shadow { box-shadow: 0px 10px 20px rgba(0,0,0,0.1), inset 0px -8px 15px rgba(0,0,0,0.05), 0px 30px 60px -12px rgba(0,0,0,0.2); }
-.dark .card-shadow { box-shadow: 0px 10px 20px rgba(0,0,0,0.3), inset 0px -8px 15px rgba(0,0,0,0.2), 0px 30px 60px -12px rgba(0,0,0,0.4); }
-.card { transition: all 0.4s cubic-bezier(0.175,0.885,0.32,1.275); transform-style: preserve-3d; perspective: 1000px; }
-.card:hover { transform: translateY(-15px) scale(1.08) rotateX(10deg) rotateY(5deg); box-shadow: 0px 25px 40px rgba(0,0,0,0.2), inset 0px -8px 15px rgba(0,0,0,0.1), 0px 50px 80px -20px rgba(0,0,0,0.3); }
-.card:active { transform: translateY(-5px) scale(1.02); transition: all 0.2s ease; }
-@keyframes card-bounce-in {
-  0% { opacity: 0; transform: translateY(50px) scale(0.8); }
-  60% { opacity: 1; transform: translateY(-15px) scale(1.05); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-}
-.animate-card-bounce-in { animation: card-bounce-in 1s cubic-bezier(0.34,1.56,0.64,1) both; }
-
-/* --- VIDEO OVERLAY STYLES --- */
-.overlay {
-    height: 100%;
-    width: 100%;
-    position: fixed;
-    z-index: 9999;
-    left: 0;
-    top: 0;
-    background-color: #000;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-}
-#videoWrapper { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
-video { width: 100%; max-height: 100vh; object-fit: contain; outline: none; }
-.closebtn { position: absolute; top: 20px; right: 40px; font-size: 50px; color: rgba(255,255,255,0.5); text-decoration: none; cursor: pointer; z-index: 10001; transition: color 0.3s; }
-.closebtn:hover { color: #fff; }
-.overlay-content { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
-#messageContainer { color: white; font-family: 'Poppins', sans-serif; animation: fadeIn 1s ease-in; padding: 20px; text-align: center; display: none; z-index: 10002; }
-#dynamicTitle { font-size: 40px; font-weight: 700; color: #F97316; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
-.sub-text { font-size: 20px; color: #cbd5e1; margin-bottom: 40px; }
-.action-btn { padding: 15px 35px; margin: 0 10px; font-size: 18px; border: none; border-radius: 50px; cursor: pointer; font-weight: 600; transition: transform 0.2s; }
-.action-btn:hover { transform: scale(1.05); }
-.btn-close { background-color: white; color: black; }
-.btn-replay { background-color: #333; color: white; border: 1px solid #555; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-</style>
-<script src="js/data-manager.js"></script>
+    /* Video Overlay */
+    #videoOverlay {
+        position: fixed; inset: 0; z-index: 9999;
+        background: rgba(0,0,0,0.9); backdrop-filter: blur(10px);
+        display: none; justify-content: center; align-items: center; flex-direction: column;
+    }
+    #videoWrapper { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+    video { width: 100%; max-height: 100vh; object-fit: contain; outline: none; }
+    #messageContainer { animation: fadeIn 0.5s ease-out; text-align: center; display: none; z-index: 10000; padding: 2rem; }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  </style>
 </head>
 
-<body class="font-display text-text-light dark:text-text-dark bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
+<body class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 font-sans transition-colors duration-300 min-h-screen flex flex-col overflow-x-hidden">
 
-<nav class="w-full flex justify-between items-center px-6 py-4 bg-white/80 dark:bg-card-dark/80 dark:bg-background-dark/80 backdrop-blur-lg shadow-bouncy sticky top-0 z-50">
-  <div class="flex items-center gap-2">
-    <span class="material-icons text-primary text-4xl animate-logo-bounce">bolt</span>
-    <h1 class="text-2xl font-bold text-dark-charcoal dark:text-white tracking-tight">ZipZapZoi</h1>
-  </div>
-  
-  <div id="navAuthArea" class="flex items-center gap-4">
+  <!-- NAVBAR -->
+  <nav class="sticky top-0 z-50 w-full bg-white/80 dark:bg-card-dark/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 shadow-sm transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        
+        <!-- Logo -->
+        <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.reload()">
+          <span class="material-symbols-outlined text-primary text-3xl animate-pulse">all_inclusive</span>
+          <span class="font-bold text-xl tracking-tight text-gray-900 dark:text-white">ZipZapZoi</span>
+        </div>
+
+        <!-- Right Side (Auth & Theme) -->
+        <div class="flex items-center gap-4">
+          <!-- Theme Toggle -->
+          <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors">
+            <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+          </button>
+          
+          <!-- Auth Area -->
+          <div id="navAuthArea" class="flex items-center gap-3">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+      </div>
     </div>
-</nav>
+  </nav>
 
-<div class="h-[calc(100vh-80px)] w-screen flex flex-col items-center justify-center p-4">
-  <main class="flex-grow flex flex-col items-center justify-center w-full max-w-6xl mx-auto px-4">
-    <div class="text-center mb-8 animate-slide-in-up">
-      <h1 id="welcomeTitle" class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">Welcome!</h1>
-      <p class="text-base text-gray-600 dark:text-gray-300 dark:text-gray-400">What's your next adventure?</p>
+  <!-- MAIN HUB CONTENT -->
+  <main class="flex-grow flex flex-col items-center justify-center w-full max-w-7xl mx-auto px-6 py-12">
+    
+    <div class="text-center mb-12 animate-in" style="animation-delay: 0.1s; opacity: 0;">
+      <h1 id="welcomeTitle" class="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-3 tracking-tight">Welcome to the Ecosystem</h1>
+      <p class="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">Select a module below to start your next adventure. Everything you need, all under one roof.</p>
     </div>
 
-    <div class="grid grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+    <!-- MODULE GRID -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
       
-      <a href="Classifieds LandingPage.html" class="card animate-card-bounce-in card-shadow rounded-3xl bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/50 p-6 flex flex-col items-start justify-between cursor-pointer group">
-        <div>
-          <div class="w-16 h-16 rounded-2xl bg-blue-500 text-white flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
-            <span class="material-icons text-4xl">storefront</span>
-          </div>
-          <h2 class="text-xl font-bold text-blue-800 dark:text-blue-200">Classifieds</h2>
-          <p class="text-blue-600 dark:text-blue-300 mt-1 text-sm">Find & manage listings.</p>
+      <!-- 1. Classifieds -->
+      <a href="Classifieds LandingPage.html" class="hub-card animate-in rounded-3xl bg-white dark:bg-card-dark border border-gray-100 dark:border-gray-800 p-8 flex flex-col items-start relative overflow-hidden group" style="animation-delay: 0.2s; opacity: 0;">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 dark:bg-blue-500/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center mb-6 shadow-lg shadow-blue-500/30">
+          <span class="material-symbols-outlined text-3xl">storefront</span>
         </div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2 relative z-10">Classifieds</h2>
+        <p class="text-gray-500 dark:text-gray-400 text-sm relative z-10">Buy, sell, and discover amazing local deals in your community.</p>
       </a>
 
-      <a href="../ZipZapZoi Food Delivery/ZipZapZoi Eats Codes/index.html" class="card animate-card-bounce-in card-shadow rounded-3xl bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/50 p-6 flex flex-col items-start justify-between cursor-pointer group">
-        <div>
-          <div class="w-16 h-16 rounded-2xl bg-green-500 text-white flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
-            <span class="material-icons text-4xl">restaurant</span>
-          </div>
-          <h2 class="text-xl font-bold text-green-800 dark:text-green-200">Food Delivery</h2>
-          <p class="text-green-600 dark:text-green-300 mt-1 text-sm">Meals to your door.</p>
+      <!-- 2. Food Delivery -->
+      <a href="../ZipZapZoi Food Delivery/ZipZapZoi Eats Codes/index.html" class="hub-card animate-in rounded-3xl bg-white dark:bg-card-dark border border-gray-100 dark:border-gray-800 p-8 flex flex-col items-start relative overflow-hidden group" style="animation-delay: 0.3s; opacity: 0;">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-green-500/10 dark:bg-green-500/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-400 to-green-600 text-white flex items-center justify-center mb-6 shadow-lg shadow-green-500/30">
+          <span class="material-symbols-outlined text-3xl">restaurant</span>
         </div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2 relative z-10">Food Delivery</h2>
+        <p class="text-gray-500 dark:text-gray-400 text-sm relative z-10">Craving something delicious? Get hot meals delivered to your door.</p>
       </a>
 
-      <div onclick="openVideo('Drive Services')" class="card animate-card-bounce-in card-shadow rounded-3xl bg-gradient-to-br from-indigo-100 to-indigo-200 dark:from-indigo-900/50 dark:to-indigo-800/50 p-6 flex flex-col items-start justify-between cursor-pointer group">
-        <div>
-          <div class="w-16 h-16 rounded-2xl bg-indigo-500 text-white flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
-            <span class="material-icons text-4xl">directions_car</span>
-          </div>
-          <h2 class="text-xl font-bold text-indigo-800 dark:text-indigo-200">Drive Services</h2>
-          <p class="text-indigo-600 dark:text-indigo-300 mt-1 text-sm">Get there fast.</p>
+      <!-- 3. Hostels -->
+      <a href="../ZipZapZoi Hostel/index.html" class="hub-card animate-in rounded-3xl bg-white dark:bg-card-dark border border-gray-100 dark:border-gray-800 p-8 flex flex-col items-start relative overflow-hidden group" style="animation-delay: 0.4s; opacity: 0;">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 dark:bg-purple-500/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-400 to-purple-600 text-white flex items-center justify-center mb-6 shadow-lg shadow-purple-500/30">
+          <span class="material-symbols-outlined text-3xl">apartment</span>
         </div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2 relative z-10">Hostel POS</h2>
+        <p class="text-gray-500 dark:text-gray-400 text-sm relative z-10">Manage your stay, track expenses, and connect with roommates.</p>
+      </a>
+
+      <!-- 4. Drive Services (Placeholder) -->
+      <div onclick="openVideo('Drive Services')" class="hub-card animate-in rounded-3xl bg-white dark:bg-card-dark border border-gray-100 dark:border-gray-800 p-8 flex flex-col items-start relative overflow-hidden group cursor-pointer" style="animation-delay: 0.5s; opacity: 0;">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 dark:bg-indigo-500/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-400 to-indigo-600 text-white flex items-center justify-center mb-6 shadow-lg shadow-indigo-500/30">
+          <span class="material-symbols-outlined text-3xl">directions_car</span>
+        </div>
+        <div class="flex items-center gap-2 mb-2 relative z-10">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Drive Services</h2>
+          <span class="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[10px] font-bold rounded-full uppercase tracking-wide">Soon</span>
+        </div>
+        <p class="text-gray-500 dark:text-gray-400 text-sm relative z-10">Book reliable rides and get to your destination quickly and safely.</p>
       </div>
 
-      <div onclick="openVideo('Shopping')" class="card animate-card-bounce-in card-shadow rounded-3xl bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/50 dark:to-red-800/50 p-6 flex flex-col items-start justify-between cursor-pointer group">
-        <div>
-          <div class="w-16 h-16 rounded-2xl bg-red-500 text-white flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
-            <span class="material-icons text-4xl">shopping_bag</span>
-          </div>
-          <h2 class="text-xl font-bold text-red-800 dark:text-red-200">Shopping</h2>
-          <p class="text-red-600 dark:text-red-300 mt-1 text-sm">Discover products.</p>
+      <!-- 5. Shopping (Placeholder) -->
+      <div onclick="openVideo('Shopping')" class="hub-card animate-in rounded-3xl bg-white dark:bg-card-dark border border-gray-100 dark:border-gray-800 p-8 flex flex-col items-start relative overflow-hidden group cursor-pointer" style="animation-delay: 0.6s; opacity: 0;">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 dark:bg-pink-500/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-400 to-pink-600 text-white flex items-center justify-center mb-6 shadow-lg shadow-pink-500/30">
+          <span class="material-symbols-outlined text-3xl">shopping_bag</span>
         </div>
+        <div class="flex items-center gap-2 mb-2 relative z-10">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Shopping</h2>
+          <span class="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[10px] font-bold rounded-full uppercase tracking-wide">Soon</span>
+        </div>
+        <p class="text-gray-500 dark:text-gray-400 text-sm relative z-10">Discover products, compare prices, and shop from local vendors.</p>
       </div>
 
-      <div onclick="openVideo('Explore')" class="card animate-card-bounce-in card-shadow rounded-3xl bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/50 dark:to-yellow-800/50 p-6 flex flex-col items-start justify-between cursor-pointer group">
-        <div>
-          <div class="w-16 h-16 rounded-2xl bg-yellow-500 text-white flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
-            <span class="material-icons text-4xl">explore</span>
-          </div>
-          <h2 class="text-xl font-bold text-yellow-800 dark:text-yellow-200">Explore</h2>
-          <p class="text-yellow-600 dark:text-yellow-300 mt-1 text-sm">Uncover hidden gems.</p>
+      <!-- 6. Explore (Placeholder) -->
+      <div onclick="openVideo('Explore')" class="hub-card animate-in rounded-3xl bg-white dark:bg-card-dark border border-gray-100 dark:border-gray-800 p-8 flex flex-col items-start relative overflow-hidden group cursor-pointer" style="animation-delay: 0.7s; opacity: 0;">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 dark:bg-yellow-500/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-600 text-white flex items-center justify-center mb-6 shadow-lg shadow-yellow-500/30">
+          <span class="material-symbols-outlined text-3xl">explore</span>
         </div>
+        <div class="flex items-center gap-2 mb-2 relative z-10">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Explore</h2>
+          <span class="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[10px] font-bold rounded-full uppercase tracking-wide">Soon</span>
+        </div>
+        <p class="text-gray-500 dark:text-gray-400 text-sm relative z-10">Uncover hidden gems, local events, and trending activities nearby.</p>
       </div>
 
-      <div onclick="openVideo('Recipes')" class="card animate-card-bounce-in card-shadow rounded-3xl bg-gradient-to-br from-cyan-100 to-cyan-200 dark:from-cyan-900/50 dark:to-cyan-800/50 p-6 flex flex-col items-start justify-between cursor-pointer group">
-        <div>
-          <div class="w-16 h-16 rounded-2xl bg-cyan-500 text-white flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
-            <span class="material-icons text-4xl">menu_book</span>
-          </div>
-          <h2 class="text-xl font-bold text-cyan-800 dark:text-cyan-200">Recipes</h2>
-          <p class="text-cyan-600 dark:text-cyan-300 mt-1 text-sm">Inspire your cooking.</p>
-        </div>
-      </div>
     </div>
   </main>
-</div>
 
-<div id="videoOverlay" class="overlay">
-    <div class="overlay-content">
-        <div id="videoWrapper">
-            <video id="promoVideo" playsinline>
-                Your browser does not support HTML5 video.
-            </video>
-        </div>
-        <div id="messageContainer">
-            <div id="dynamicTitle">MODULE NAME</div>
-            <p class="sub-text">We are currently building this feature. It will be live very soon!</p>
-            <button class="action-btn btn-close" onclick="closeVideo()">Go Back</button>
-            <button class="action-btn btn-replay" onclick="replayVideo()">Replay</button>
-        </div>
-    </div>
-</div>
-
-<script>
-// ===============================================
-// 1. UNIVERSAL AUTH & REDIRECT LOGIC
-// ===============================================
-(function(){
-  const navArea = document.getElementById('navAuthArea');
-  const userData = JSON.parse(sessionStorage.getItem('zzz_user') || localStorage.getItem('zzz_user') || 'null');
-
-  if(userData){
-    // LOGGED IN STATE
-    document.getElementById('welcomeTitle').textContent = `Welcome back, ${userData.name}!`;
-    
-    // Check Role for Redirects
-    let dashboardLink = 'Seller Dashboard.html'; // Default for user
-    let roleBadge = '';
-
-    if(userData.role === 'admin' || userData.role === 'super_admin') {
-       dashboardLink = 'AdminConsoleV2.html';
-       roleBadge = '<span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full ml-2">ADMIN</span>';
-    }
-
-    navArea.innerHTML = `
-      <div class="flex items-center gap-3">
-        <a href="${dashboardLink}" class="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:bg-gray-800 transition-colors">
-          <div class="bg-primary/10 rounded-full w-8 h-8 flex items-center justify-center text-primary font-bold shadow-sm">
-            ${userData.name.charAt(0).toUpperCase()}
-          </div>
-          <span class="font-semibold text-sm text-gray-700 dark:text-white hidden md:block">${userData.name}</span>
-          ${roleBadge}
-        </a>
-        <button id="logoutBtn" class="text-sm font-bold text-red-500 hover:text-red-700 transition-colors">Logout</button>
+  <!-- VIDEO OVERLAY FOR COMING SOON -->
+  <div id="videoOverlay">
+      <div id="videoWrapper">
+          <video id="promoVideo" playsinline>
+              Your browser does not support HTML5 video.
+          </video>
+          <button onclick="closeVideo()" class="absolute top-6 right-6 text-white/50 hover:text-white transition-colors bg-black/30 hover:bg-black/50 p-2 rounded-full backdrop-blur-md">
+            <span class="material-symbols-outlined text-3xl">close</span>
+          </button>
       </div>
-    `;
-
-    document.getElementById('logoutBtn').addEventListener('click', ()=>{
-      // Universal Logout Logic
-      sessionStorage.removeItem('zzz_user');
-      localStorage.removeItem('zzz_user');
-      window.location.reload(); // Refresh to show login state
-    });
-
-  } else {
-    // GUEST STATE
-    navArea.innerHTML = `
-      <a href="Login Page.html?redirect=dashboard.html" class="px-4 py-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Log In</a>
-      <a href="User Registration.html" class="px-5 py-2 bg-primary text-white rounded-full text-sm font-bold shadow hover:bg-orange-600 hover:-translate-y-0.5 transition-all">Sign Up</a>
-    `;
-    document.getElementById('welcomeTitle').textContent = 'Welcome to ZipZapZoi!';
-  }
-})();
-
-// ===============================================
-// 2. VIDEO OVERLAY LOGIC
-// ===============================================
-const videoPaths = {
-    'Food Delivery': 'Assets/ZipZapZoi1.mp4',
-    'Drive Services': 'Assets/ZIpZapZoi3.mp4',
-    'Shopping': 'Assets/ZIpZapZoi5.mp4',
-    'Explore': 'Assets/ZipZapZoi2.mp4',
-    'Recipes': 'Assets/ZIpZapZoi4.mp4'
-};
-
-const overlay = document.getElementById("videoOverlay");
-const videoWrapper = document.getElementById("videoWrapper");
-const messageContainer = document.getElementById("messageContainer");
-const video = document.getElementById("promoVideo");
-const titleText = document.getElementById("dynamicTitle");
-
-function openVideo(moduleName) {
-    const videoFile = videoPaths[moduleName];
-    if(!videoFile) {
-        alert("Video not found: " + moduleName);
-        return;
-    }
-
-    video.src = videoFile;
-    video.load();
-
-    videoWrapper.style.display = "flex";
-    messageContainer.style.display = "none";
-    titleText.innerText = moduleName + " COMING SOON";
-    overlay.style.display = "flex";
-    
-    video.currentTime = 0;
-    video.play().catch(e => console.log("Autoplay blocked:", e));
-}
-
-video.addEventListener('ended', function() {
-    videoWrapper.style.display = "none";
-    messageContainer.style.display = "block";
-});
-
-function closeVideo() {
-    overlay.style.display = "none";
-    video.pause();
-    video.src = "";
-}
-
-function replayVideo() {
-    videoWrapper.style.display = "flex";
-    messageContainer.style.display = "none";
-    video.currentTime = 0;
-    video.play();
-}
-// ============================================
-// UNIVERSAL UTILITY FUNCTIONS (ADD TO ALL)
-// ============================================
-
-// CSRF Token Management
-function generateCsrfToken() {
-    return 'csrf_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-}
-
-function getCsrfToken() {
-    let token = sessionStorage.getItem('csrf_token');
-    if (!token) {
-        token = generateCsrfToken();
-        sessionStorage.setItem('csrf_token', token);
-    }
-    return token;
-}
-
-function setCsrfToken() {
-    const token = getCsrfToken();
-    const inputs = document.querySelectorAll('input[name="csrf_token"]');
-    inputs.forEach(input => input.value = token);
-}
-
-// Input Validation Functions
-function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function validatePhone(phone) {
-    const digits = phone.replace(/\D/g, '');
-    return digits.length === 10;
-}
-
-function validatePrice(price) {
-    const num = parseFloat(price);
-    return !isNaN(num) && num > 0 && num < 1000000;
-}
-
-function validatePassword(password) {
-    return password.length >= 8 &&
-           /[a-z]/.test(password) &&
-           /[A-Z]/.test(password) &&
-           /[0-9]/.test(password);
-}
-
-// Input Sanitization
-function sanitizeInput(input) {
-    const div = document.createElement('div');
-    div.textContent = input;
-    return div.innerHTML;
-}
-
-function sanitizeHTML(html) {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div.textContent;
-}
-
-// Error/Success Messages
-function showError(message) {
-    let errorDiv = document.getElementById('errorMessage');
-    if (!errorDiv) {
-        errorDiv = document.createElement('div');
-        errorDiv.id = 'errorMessage';
-        errorDiv.style.cssText = 'color: red; padding: 10px; margin: 10px 0; border: 1px solid red; border-radius: 4px; display: none;';
-        const form = document.querySelector('form');
-        if (form) form.parentElement.insertBefore(errorDiv, form);
-    }
-    errorDiv.textContent = message;
-    errorDiv.style.display = 'block';
-    errorDiv.setAttribute('role', 'alert');
-}
-
-function showSuccess(message) {
-    let successDiv = document.getElementById('successMessage');
-    if (!successDiv) {
-        successDiv = document.createElement('div');
-        successDiv.id = 'successMessage';
-        successDiv.style.cssText = 'color: green; padding: 10px; margin: 10px 0; border: 1px solid green; border-radius: 4px; display: none;';
-        const form = document.querySelector('form');
-        if (form) form.parentElement.insertBefore(successDiv, form);
-    }
-    successDiv.textContent = message;
-    successDiv.style.display = 'block';
-    successDiv.setAttribute('role', 'status');
-}
-
-function hideError() {
-    const errorDiv = document.getElementById('errorMessage');
-    if (errorDiv) errorDiv.style.display = 'none';
-}
-
-function hideSuccess() {
-    const successDiv = document.getElementById('successMessage');
-    if (successDiv) successDiv.style.display = 'none';
-}
-
-// Initialize on page load
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    setCsrfToken();
-    
-    // --- GLOBAL ALERT CHECK ---
-    const alertObj = JSON.parse(localStorage.getItem('zzz_global_alert') || '{}');
-    if (alertObj.active && alertObj.text) {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = 'bg-yellow-400 text-yellow-900 px-4 py-2 text-center font-bold text-sm z-[100] relative shadow-sm';
-        alertDiv.innerHTML = `<span class="material-symbols-outlined align-middle text-[18px] mr-1">campaign</span> ${alertObj.text}`;
-        document.body.insertBefore(alertDiv, document.body.firstChild);
-    }
-});
-</script>
+      <div id="messageContainer" class="bg-white dark:bg-card-dark rounded-3xl shadow-2xl p-10 max-w-md mx-4">
+          <div class="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
+            <span class="material-symbols-outlined text-4xl">rocket_launch</span>
+          </div>
+          <h2 id="dynamicTitle" class="text-2xl font-bold text-gray-900 dark:text-white mb-3">MODULE NAME</h2>
+          <p class="text-gray-500 dark:text-gray-400 mb-8">We are actively building this module. It will be rolling out to users very soon!</p>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <button onclick="closeVideo()" class="flex-1 py-3 px-6 rounded-xl border border-gray-200 dark:border-gray-700 font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Go Back</button>
+            <button onclick="replayVideo()" class="flex-1 py-3 px-6 rounded-xl bg-primary hover:bg-[#e06512] font-bold text-white shadow-lg shadow-primary/30 transition-colors">Replay Video</button>
+          </div>
+      </div>
+  </div>
 
   <script src="js/utils.js"></script>
+  <script>
+    // Theme Icon Sync
+    if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
+
+    // Universal Auth Binding
+    (function(){
+      const navArea = document.getElementById('navAuthArea');
+      const userData = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+
+      if(userData){
+        // Logged In
+        document.getElementById('welcomeTitle').textContent = `Welcome back, ${userData.name.split(' ')[0]}!`;
+        
+        const initial = userData.name.charAt(0).toUpperCase();
+        let roleBadge = '';
+        if(userData.role === 'admin' || userData.role === 'super_admin') {
+           roleBadge = '<span class="bg-red-500/10 text-red-500 dark:text-red-400 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Admin</span>';
+        }
+
+        navArea.innerHTML = `
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-sm">
+                ${initial}
+              </div>
+              <div class="hidden md:flex flex-col">
+                <span class="font-bold text-sm text-gray-900 dark:text-white leading-tight">${userData.name}</span>
+                ${roleBadge}
+              </div>
+            </div>
+            <button onclick="hubLogout()" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-red-50 dark:hover:bg-red-500/10 text-gray-400 hover:text-red-500 transition-colors" title="Log Out">
+              <span class="material-symbols-outlined text-[20px]">logout</span>
+            </button>
+          </div>
+        `;
+      } else {
+        // Guest
+        navArea.innerHTML = `
+          <a href="Login Page.html?redirect=dashboard.html" class="px-4 py-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">Log In</a>
+          <a href="User Registration.html" class="px-5 py-2.5 bg-primary hover:bg-[#e06512] text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/30 transition-transform active:scale-95">Sign Up</a>
+        `;
+      }
+    })();
+
+    function hubLogout() {
+      localStorage.removeItem('zzz_user');
+      window.location.reload();
+    }
+
+    // Video Overlay Logic
+    const videoPaths = {
+        'Drive Services': 'Assets/ZIpZapZoi3.mp4',
+        'Shopping': 'Assets/ZIpZapZoi5.mp4',
+        'Explore': 'Assets/ZipZapZoi2.mp4'
+    };
+
+    const overlay = document.getElementById("videoOverlay");
+    const videoWrapper = document.getElementById("videoWrapper");
+    const messageContainer = document.getElementById("messageContainer");
+    const video = document.getElementById("promoVideo");
+    const titleText = document.getElementById("dynamicTitle");
+
+    function openVideo(moduleName) {
+        const videoFile = videoPaths[moduleName];
+        if(!videoFile) {
+            // Fallback if video is missing
+            videoWrapper.style.display = "none";
+            messageContainer.style.display = "block";
+            titleText.innerText = moduleName;
+            overlay.style.display = "flex";
+            return;
+        }
+
+        video.src = videoFile;
+        video.load();
+
+        videoWrapper.style.display = "flex";
+        messageContainer.style.display = "none";
+        titleText.innerText = moduleName;
+        overlay.style.display = "flex";
+        
+        video.currentTime = 0;
+        video.play().catch(e => {
+            console.log("Autoplay blocked:", e);
+            videoWrapper.style.display = "none";
+            messageContainer.style.display = "block";
+        });
+    }
+
+    video.addEventListener('ended', function() {
+        videoWrapper.style.display = "none";
+        messageContainer.style.display = "block";
+    });
+
+    function closeVideo() {
+        overlay.style.display = "none";
+        video.pause();
+        video.src = "";
+    }
+
+    function replayVideo() {
+        videoWrapper.style.display = "flex";
+        messageContainer.style.display = "none";
+        video.currentTime = 0;
+        video.play();
+    }
+  </script>
 </body>
 </html>
