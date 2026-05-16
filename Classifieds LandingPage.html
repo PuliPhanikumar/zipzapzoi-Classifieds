@@ -198,31 +198,8 @@
         <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Explore Categories</h2>
         <a href="classifieds.html" class="text-primary font-bold hover:underline flex items-center gap-1">View All <span class="material-symbols-outlined">arrow_forward</span></a>
       </div>
-      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <a href="classifieds.html" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
-          <span class="material-symbols-outlined text-4xl text-cyan-500 group-hover:-translate-y-1 transition-transform">devices</span>
-          <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">Electronics</span>
-        </a>
-        <a href="classifieds.html" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
-          <span class="material-symbols-outlined text-4xl text-blue-500 group-hover:-translate-y-1 transition-transform">directions_car</span>
-          <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">Vehicles</span>
-        </a>
-        <a href="classifieds.html" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
-          <span class="material-symbols-outlined text-4xl text-green-500 group-hover:-translate-y-1 transition-transform">yard</span>
-          <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">Home</span>
-        </a>
-        <a href="classifieds.html" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
-          <span class="material-symbols-outlined text-4xl text-pink-500 group-hover:-translate-y-1 transition-transform">checkroom</span>
-          <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">Fashion</span>
-        </a>
-        <a href="classifieds.html" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
-          <span class="material-symbols-outlined text-4xl text-purple-500 group-hover:-translate-y-1 transition-transform">real_estate_agent</span>
-          <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">Real Estate</span>
-        </a>
-        <a href="classifieds.html" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
-          <span class="material-symbols-outlined text-4xl text-orange-500 group-hover:-translate-y-1 transition-transform">handyman</span>
-          <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">Services</span>
-        </a>
+      <div id="categoriesGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <!-- Rendered via JS -->
       </div>
     </div>
   </section>
@@ -284,8 +261,47 @@
     </div>
   </footer>
 
+  <script src="js/schema.js"></script>
   <script src="js/utils.js"></script>
   <script>
+    // Toggle Dark Mode
+    function toggleDarkMode() {
+        const doc = document.documentElement;
+        const icon = document.getElementById('themeIcon');
+        if (doc.classList.contains('dark')) {
+            doc.classList.remove('dark');
+            localStorage.setItem('zzz_theme', 'light');
+            if(icon) icon.textContent = 'dark_mode';
+        } else {
+            doc.classList.add('dark');
+            localStorage.setItem('zzz_theme', 'dark');
+            if(icon) icon.textContent = 'light_mode';
+        }
+    }
+
+    // Render Dynamic Categories from Schema
+    function renderCategories() {
+        const grid = document.getElementById('categoriesGrid');
+        if (!grid || !window.ZZZ_SCHEMA) return;
+
+        // Take up to 6 categories
+        const cats = window.ZZZ_SCHEMA.categories.slice(0, 6);
+        
+        // Dynamic color mappings for visual flair based on index
+        const colors = ['cyan', 'blue', 'green', 'pink', 'purple', 'orange'];
+
+        grid.innerHTML = cats.map((c, index) => {
+            const colorClass = `text-${colors[index % colors.length]}-500`;
+            return `
+                <a href="SearchResult.html?q=&cat=${c.id}" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
+                    <span class="material-symbols-outlined text-4xl ${colorClass} group-hover:-translate-y-1 transition-transform">${c.icon}</span>
+                    <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">${c.label}</span>
+                </a>
+            `;
+        }).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', renderCategories);
     // Mobile menu toggle
     document.getElementById('mobileMenuBtn').addEventListener('click', () => {
       document.getElementById('mobileMenu').classList.toggle('hidden');
