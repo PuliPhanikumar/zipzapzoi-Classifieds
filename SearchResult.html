@@ -110,7 +110,13 @@
             <div class="space-y-6">
               <div>
                 <label class="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Category</label>
-                <select id="catFilter" onchange="renderResults()" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold focus:ring-primary dark:text-white cursor-pointer">
+                <select id="catFilter" onchange="updateSubcategories(); renderResults()" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold focus:ring-primary dark:text-white cursor-pointer">
+                  <!-- Rendered via JS -->
+                </select>
+              </div>
+              <div id="subcatContainer" class="hidden">
+                <label class="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Subcategory</label>
+                <select id="subcatFilter" onchange="renderResults()" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold focus:ring-primary dark:text-white cursor-pointer">
                   <!-- Rendered via JS -->
                 </select>
               </div>
@@ -188,7 +194,32 @@
       function clearSearch() {
         document.getElementById('searchQuery').value = '';
         document.getElementById('catFilter').value = 'all';
+        updateSubcategories();
         updateSearch();
+      }
+
+      function updateSubcategories() {
+        const cat = document.getElementById('catFilter').value;
+        const subcatContainer = document.getElementById('subcatContainer');
+        const subcatSelect = document.getElementById('subcatFilter');
+        
+        if (cat === 'all') {
+            subcatContainer.classList.add('hidden');
+            subcatSelect.value = 'all';
+            return;
+        }
+
+        const catDef = window.ZZZ_SCHEMA.categories.find(c => c.id === cat || c.label === cat);
+        const subcats = window.ZZZ_SCHEMA.subcategories.filter(s => s.categoryId === (catDef ? catDef.id : cat));
+        
+        if (subcats.length > 0) {
+            subcatSelect.innerHTML = '<option value="all">All in this category</option>' + 
+                subcats.map(s => `<option value="${s.id}">${s.label}</option>`).join('');
+            subcatContainer.classList.remove('hidden');
+        } else {
+            subcatContainer.classList.add('hidden');
+            subcatSelect.value = 'all';
+        }
       }
 
       function renderResults() {
@@ -196,38 +227,61 @@
         const empty = document.getElementById('emptyState');
         const count = document.getElementById('resultCount');
 
-        const q = currentQuery.toLowerCase();
-        const cat = document.getElementById('catFilter').value;
-        const sort = document.getElementById('sortFilter').value;
-
-        // Filter
-        let filtered = allListings.filter(l => {
-            const matchesQuery = !q || l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q);
-            const matchesCat = cat === 'all' || l.category === cat;
-            return matchesQuery && matchesCat;
-        });
-
-        // Sort
-        if(sort === 'price_low') filtered.sort((a,b) => a.price - b.price);
-        if(sort === 'price_high') filtered.sort((a,b) => b.price - a.price);
-        if(sort === 'newest') filtered.reverse();
-
-        count.textContent = `Showing ${filtered.length} result${filtered.length === 1 ? '' : 's'} for "${currentQuery || 'All'}"`;
-
-        if(filtered.length === 0) {
-            grid.classList.add('hidden');
-            empty.classList.remove('hidden');
-            empty.classList.add('flex');
-            return;
-        }
-
+        // Show Skeletons
         grid.classList.remove('hidden');
         empty.classList.add('hidden');
         empty.classList.remove('flex');
+        
+        let skeletons = '';
+        for(let i=0; i<6; i++) {
+            skeletons += `
+            <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 p-4 animate-pulse">
+                <div class="h-48 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl mb-4"></div>
+                <div class="h-4 w-3/4 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
+                <div class="h-6 w-1/2 bg-gray-200 dark:bg-gray-800 rounded mb-4"></div>
+                <div class="h-3 w-1/3 bg-gray-200 dark:bg-gray-800 rounded"></div>
+            </div>`;
+        }
+        grid.innerHTML = skeletons;
+        count.textContent = 'Searching...';
 
-        const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+        setTimeout(() => {
+            const q = currentQuery.toLowerCase();
+            const cat = document.getElementById('catFilter').value;
+            const subcat = document.getElementById('subcatContainer').classList.contains('hidden') ? 'all' : document.getElementById('subcatFilter').value;
+            const sort = document.getElementById('sortFilter').value;
 
-        grid.innerHTML = filtered.map((l, index) => {
+            // Filter
+            let filtered = allListings.filter(l => {
+                const matchesQuery = !q || l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q);
+                
+                // Allow matching category id or label
+                let listingCatId = l.category;
+                const catObj = window.ZZZ_SCHEMA.categories.find(c => c.label === l.category);
+                if (catObj) listingCatId = catObj.id;
+
+                const matchesCat = cat === 'all' || listingCatId === cat || l.category === cat;
+                const matchesSubcat = subcat === 'all' || l.subcategory === subcat;
+                return matchesQuery && matchesCat && matchesSubcat;
+            });
+
+            // Sort
+            if(sort === 'price_low') filtered.sort((a,b) => a.price - b.price);
+            if(sort === 'price_high') filtered.sort((a,b) => b.price - a.price);
+            if(sort === 'newest') filtered.reverse();
+
+            count.textContent = `Showing ${filtered.length} result${filtered.length === 1 ? '' : 's'} for "${currentQuery || 'All'}"`;
+
+            if(filtered.length === 0) {
+                grid.classList.add('hidden');
+                empty.classList.remove('hidden');
+                empty.classList.add('flex');
+                return;
+            }
+
+            const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+
+            grid.innerHTML = filtered.map((l, index) => {
           const isFav = favs.includes(l.id);
           const timeDelay = index * 0.05;
           return `
@@ -257,6 +311,7 @@
             </div>
           `;
         }).join('');
+        }, 500); // Simulated delay
       }
 
       function toggleFav(id, btn) {

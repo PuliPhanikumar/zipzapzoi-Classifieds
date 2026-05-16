@@ -296,11 +296,25 @@
       // =====================================
       function renderGrid() {
         const grid = document.getElementById('listingsGrid');
-        
-        // 1. Filter Category
-        let filtered = activeCategory === 'All' ? allListings : allListings.filter(l => l.category === activeCategory);
-        
-        // 2. Filter Search Box (for instant filtering if implemented)
+
+        // Show Skeletons
+        let skeletons = '';
+        for(let i=0; i<6; i++) {
+            skeletons += `
+            <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 p-4 animate-pulse">
+                <div class="h-48 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl mb-4"></div>
+                <div class="h-4 w-3/4 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
+                <div class="h-6 w-1/2 bg-gray-200 dark:bg-gray-800 rounded mb-4"></div>
+                <div class="h-3 w-1/3 bg-gray-200 dark:bg-gray-800 rounded"></div>
+            </div>`;
+        }
+        grid.innerHTML = skeletons;
+
+        setTimeout(() => {
+            // 1. Filter Category
+            let filtered = activeCategory === 'All' ? allListings : allListings.filter(l => l.category === activeCategory);
+            
+            // 2. Filter Search Box (for instant filtering if implemented)
         const q = document.getElementById('searchQuery').value.toLowerCase();
         if(q) filtered = filtered.filter(l => l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q));
 
@@ -374,6 +388,7 @@
             </div>
           `;
         }).join('');
+        }, 500); // Simulated network delay
       }
 
       // =====================================

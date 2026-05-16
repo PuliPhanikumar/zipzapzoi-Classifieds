@@ -371,6 +371,11 @@
         // Store temp data on the input for the sendMessage function
         document.getElementById('msgInput').dataset.tempPartnerId = intent.partnerId;
         document.getElementById('msgInput').dataset.tempPartnerName = intent.partnerName;
+        if (intent.initialText) {
+            document.getElementById('msgInput').value = intent.initialText;
+        } else {
+            document.getElementById('msgInput').value = '';
+        }
     }
 
     // --- 4. SEND MESSAGE ---

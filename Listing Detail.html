@@ -171,7 +171,7 @@
               </div>
 
               <!-- Seller Info -->
-              <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl mb-6 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" onclick="alert('View Profile feature coming soon!')">
+              <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl mb-6 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" onclick="viewSellerProfile()">
                 <div class="flex items-center gap-3">
                   <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl shadow-inner">
                     <span id="sellerInit">S</span>
@@ -188,7 +188,7 @@
                 <button onclick="initiateChat()" class="w-full py-4 rounded-xl bg-primary hover:bg-green-700 text-white font-bold shadow-lg shadow-primary/30 transition-transform active:scale-95 flex items-center justify-center gap-2">
                   <span class="material-symbols-outlined">chat</span> Chat with Seller
                 </button>
-                <button onclick="alert('Make Offer coming soon!')" class="w-full py-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 font-bold text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary dark:hover:border-primary dark:hover:text-primary transition-colors">
+                <button onclick="makeOffer()" class="w-full py-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 font-bold text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary dark:hover:border-primary dark:hover:text-primary transition-colors">
                   Make Offer
                 </button>
               </div>
@@ -358,8 +358,52 @@
             alert("You cannot chat with yourself!");
             return;
         }
-        // Redirect to Inbox with context
-        window.location.href = `Inbox.html?chatWith=${encodeURIComponent(currentListing.userEmail || currentListing.userName)}&ref=${currentListing.id}`;
+        const sId = currentListing.userId || currentListing.userEmail || 'anonymous';
+        const sName = currentListing.userName || 'Anonymous Seller';
+        
+        const intent = { 
+            action: 'start_chat', 
+            partnerId: sId, 
+            partnerName: sName,
+            listingId: currentListing.id,
+            listingTitle: currentListing.title
+        };
+        localStorage.setItem('zzz_chat_intent', JSON.stringify(intent));
+        window.location.href = "Inbox.html";
+      }
+
+      function makeOffer() {
+        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if(!user) {
+            window.location.href = 'Login Page.html?redirect=Listing Detail.html?id=' + currentListing.id;
+            return;
+        }
+        
+        const sId = currentListing.userId || currentListing.userEmail || 'anonymous';
+        if(user.email === currentListing.userEmail || user.id === sId) {
+            alert("You cannot make an offer on your own listing!");
+            return;
+        }
+
+        const offer = prompt(`Enter your offer amount for ${currentListing.title} (Asking: ₹${currentListing.price}):`);
+        if(offer && !isNaN(offer)) {
+            const sName = currentListing.userName || 'Anonymous Seller';
+            const intent = { 
+                action: 'start_chat', 
+                partnerId: sId, 
+                partnerName: sName,
+                listingId: currentListing.id,
+                listingTitle: currentListing.title,
+                initialText: `Hi! I'd like to make an offer of ₹${offer} for this.`
+            };
+            localStorage.setItem('zzz_chat_intent', JSON.stringify(intent));
+            window.location.href = "Inbox.html";
+        }
+      }
+      function viewSellerProfile() {
+        if (!currentListing) return;
+        const sId = currentListing.userId || currentListing.userEmail || 'anonymous';
+        window.location.href = 'profile.html?sellerId=' + encodeURIComponent(sId);
       }
     </script>
 </body>
