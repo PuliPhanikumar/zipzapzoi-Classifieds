@@ -211,21 +211,13 @@
       </section>
     </main>
 
-    <script src="js/utils.js"></script>
-    <script>
+      <script src="js/schema.js"></script>
+      <script src="js/utils.js"></script>
+      <script>
       // =====================================
       // 1. DATA & STATE
       // =====================================
-      const categories = [
-        { id: 'All', icon: 'explore', label: 'Explore' },
-        { id: 'Vehicles', icon: 'directions_car', label: 'Vehicles' },
-        { id: 'Electronics', icon: 'smartphone', label: 'Electronics' },
-        { id: 'Furniture', icon: 'chair', label: 'Furniture' },
-        { id: 'Real Estate', icon: 'real_estate_agent', label: 'Properties' },
-        { id: 'Fashion', icon: 'checkroom', label: 'Fashion' },
-        { id: 'Jobs', icon: 'work', label: 'Jobs' },
-        { id: 'Services', icon: 'handyman', label: 'Services' }
-      ];
+      const categories = [{ id: 'All', icon: 'explore', label: 'Explore' }, ...window.ZZZ_SCHEMA.categories];
 
       let activeCategory = 'All';
       let allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');

@@ -111,12 +111,7 @@
               <div>
                 <label class="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Category</label>
                 <select id="catFilter" onchange="renderResults()" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold focus:ring-primary dark:text-white cursor-pointer">
-                  <option value="all">All Categories</option>
-                  <option value="Vehicles">Vehicles</option>
-                  <option value="Electronics">Electronics</option>
-                  <option value="Furniture">Furniture</option>
-                  <option value="Real Estate">Real Estate</option>
-                  <option value="Fashion">Fashion</option>
+                  <!-- Rendered via JS -->
                 </select>
               </div>
               <div>
@@ -160,6 +155,7 @@
       </section>
     </main>
 
+    <script src="js/schema.js"></script>
     <script src="js/utils.js"></script>
     <script>
       let currentQuery = '';
@@ -168,6 +164,11 @@
       document.addEventListener('DOMContentLoaded', () => {
         if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
         
+        // Populate Dropdown from schema
+        const catSelect = document.getElementById('catFilter');
+        catSelect.innerHTML = '<option value="all">All Categories</option>' + 
+          window.ZZZ_SCHEMA.categories.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
+
         allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
         
         const params = new URLSearchParams(window.location.search);
