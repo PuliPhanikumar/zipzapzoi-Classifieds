@@ -160,6 +160,20 @@
   <script>
     const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
     const STORAGE_KEY = 'zzz_messages';
+    const CONV_SEP = '::';
+
+    function getConversationId(userA, userB, listingId) {
+      return [...[userA, userB].sort(), listingId || 'general'].join(CONV_SEP);
+    }
+
+    function parseConversationId(convId) {
+      const parts = convId.split(CONV_SEP);
+      return {
+        userA: parts[0],
+        userB: parts[1],
+        listingId: parts.slice(2).join(CONV_SEP) || 'general'
+      };
+    }
     
     document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
 
@@ -169,8 +183,7 @@
       const convMap = {};
 
       allMsgs.forEach(msg => {
-        const participants = [msg.fromUserId, msg.toUserId].sort().join('_');
-        const convId = `${participants}_${msg.listingId}`;
+        const convId = getConversationId(msg.fromUserId, msg.toUserId, msg.listingId);
 
         if (!convMap[convId]) {
           convMap[convId] = {
@@ -238,12 +251,11 @@
       
       const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       let updated = false;
-      const parts = convId.split('_'); 
-      const listingId = parts[2]; 
+      const conv = parseConversationId(convId);
+      const listingId = conv.listingId; 
 
       const msgs = allMsgs.filter(m => {
-         const p = [m.fromUserId, m.toUserId].sort().join('_');
-         const isMatch = `${p}_${m.listingId}` === convId;
+         const isMatch = getConversationId(m.fromUserId, m.toUserId, m.listingId) === convId;
          if(isMatch && m.toUserId === currentUser.id && !m.read) {
              m.read = true; updated = true;
          }
@@ -316,14 +328,14 @@
         // 1. Search for existing conversation
         const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
         const existingMsg = allMsgs.find(m => 
-            (m.fromUserId === intent.partnerId && m.toUserId === currentUser.id) ||
-            (m.fromUserId === currentUser.id && m.toUserId === intent.partnerId)
+            (((m.fromUserId === intent.partnerId && m.toUserId === currentUser.id) ||
+            (m.fromUserId === currentUser.id && m.toUserId === intent.partnerId)) &&
+            (m.listingId || 'general') === (intent.listingId || 'general'))
         );
 
         if (existingMsg) {
             // Found existing -> Open it
-            const participants = [existingMsg.fromUserId, existingMsg.toUserId].sort().join('_');
-            const convId = `${participants}_${existingMsg.listingId}`;
+            const convId = getConversationId(existingMsg.fromUserId, existingMsg.toUserId, existingMsg.listingId);
             openChat(convId);
         } else {
             // 2. Start NEW Chat Interface
@@ -357,8 +369,7 @@
         }
 
         // Generate a temporary ID
-        const pIds = [currentUser.id, intent.partnerId].sort().join('_');
-        activeConvId = `${pIds}_${intent.listingId || 'general'}`;
+        activeConvId = getConversationId(currentUser.id, intent.partnerId, intent.listingId || 'general');
 
         // Clear Feed with Welcome Message
         document.getElementById('messagesFeed').innerHTML = `
@@ -384,13 +395,13 @@
       if(!txt || !activeConvId) return;
 
       const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      const parts = activeConvId.split('_');
+      const conv = parseConversationId(activeConvId);
       
       // Determine Receiver
-      let otherUserId = parts[0] === currentUser.id ? parts[1] : parts[0];
+      let otherUserId = conv.userA === currentUser.id ? conv.userB : conv.userA;
       let otherName = document.getElementById('chatName').textContent;
       let listTitle = document.getElementById('contextTitle').textContent;
-      let listId = parts[2];
+      let listId = conv.listingId;
 
       // Handle "Draft/New" mode where parts might vary or be 'general'
       if(document.getElementById('msgInput').dataset.tempPartnerId) {
@@ -470,6 +481,13 @@
     });
 
     document.getElementById('searchBox').addEventListener('input', renderList);
+
+    window.addEventListener('storage', (event) => {
+      if(event.key === STORAGE_KEY || event.key === 'zzz_data_updated_at') {
+        renderList();
+        if(activeConvId) openChat(activeConvId);
+      }
+    });
 
     // Initial Load
     renderList();

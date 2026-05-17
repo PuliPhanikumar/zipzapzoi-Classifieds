@@ -139,7 +139,7 @@
           </div>
           <div class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 hover:shadow-md transition-shadow">
             <div class="flex justify-between items-start">
-              <div><p class="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase">Pending Reports</p><h3 class="text-3xl font-bold text-slate-800 dark:text-white mt-2" id="statFlags">0</h3></div>
+              <div><p class="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase">Admin Queue</p><h3 class="text-3xl font-bold text-slate-800 dark:text-white mt-2" id="statFlags">0</h3></div>
               <span class="material-symbols-outlined text-red-500 bg-red-50 p-2 rounded-lg">flag</span>
             </div>
           </div>
@@ -183,7 +183,7 @@
       </div>
 
       <div id="tab-moderation" class="tab-content hidden">
-        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden">
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden mb-6">
           <div class="p-4 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center bg-slate-50 dark:bg-gray-800/50/50">
              <h3 class="font-bold text-slate-700 dark:text-gray-200 flex items-center gap-2"><span class="material-symbols-outlined text-red-500">flag</span> Reported Items</h3>
              <button onclick="clearReports()" class="text-xs font-bold text-slate-400 dark:text-gray-500 hover:text-red-500">Clear All</button>
@@ -193,6 +193,17 @@
               <tr><th class="px-6 py-4">Report Time</th><th class="px-6 py-4">Item Name</th><th class="px-6 py-4">Reason</th><th class="px-6 py-4 text-right">Action</th></tr>
             </thead>
             <tbody id="reportsTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden">
+          <div class="p-4 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center bg-slate-50 dark:bg-gray-800/50/50">
+             <h3 class="font-bold text-slate-700 dark:text-gray-200 flex items-center gap-2"><span class="material-symbols-outlined text-blue-500">verified_user</span> Verification Requests</h3>
+          </div>
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 dark:text-gray-400 font-bold uppercase text-xs">
+              <tr><th class="px-6 py-4">Requested</th><th class="px-6 py-4">User</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Action</th></tr>
+            </thead>
+            <tbody id="verificationTableBody" class="divide-y divide-slate-100"></tbody>
           </table>
         </div>
       </div>
@@ -349,7 +360,7 @@
     function switchTab(id) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         document.getElementById('tab-' + id).classList.remove('hidden');
-        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active-nav', 'bg-slate-100 dark:bg-gray-800'));
+        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active-nav', 'bg-slate-100', 'dark:bg-gray-800'));
         document.getElementById('nav-' + id).classList.add('active-nav');
         
         const titles = { dashboard: 'Dashboard', listings: 'Listings Manager', users: 'User Base', settings: 'Global Settings', schema: 'Schema Manager', support: 'Support Desk', moderation: 'Moderation Queue' };
@@ -368,25 +379,33 @@
         const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
         const tickets = JSON.parse(localStorage.getItem('zzz_support_tickets') || '[]');
         const flags = JSON.parse(localStorage.getItem('zzz_flags') || '[]');
+        const verificationReqs = JSON.parse(localStorage.getItem('zzz_verification_reqs') || '[]');
+        const queueCount = flags.length + verificationReqs.filter(r => (r.status || 'pending') === 'pending').length + listings.filter(l => (l.status || 'active') === 'pending_review').length;
         
         document.getElementById('statUsers').textContent = users.length;
-        document.getElementById('statListings').textContent = listings.length;
+        document.getElementById('statListings').textContent = listings.filter(l => (l.status || 'active') === 'active').length;
         document.getElementById('statTickets').textContent = tickets.filter(t => t.status === 'Open').length;
-        document.getElementById('statFlags').textContent = flags.length;
+        document.getElementById('statFlags').textContent = queueCount;
     }
 
     function loadListings() {
         const list = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
         const tbody = document.getElementById('listingsTableBody');
+        if(list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400 dark:text-gray-500">No listings yet.</td></tr>';
+            return;
+        }
         tbody.innerHTML = list.map(l => `
             <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/80 border-b border-slate-100 dark:border-gray-800">
                 <td class="px-6 py-4 font-bold text-slate-700 dark:text-gray-200">${l.title}</td>
                 <td class="px-6 py-4 text-xs text-slate-500 dark:text-gray-400">${l.userName}</td>
                 <td class="px-6 py-4 text-xs bg-slate-100 dark:bg-gray-800 rounded">${l.category}</td>
                 <td class="px-6 py-4 text-brand font-bold">₹${l.price}</td>
-                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs uppercase font-bold">${l.status}</span></td>
+                <td class="px-6 py-4">${statusBadge(l.status || 'active')}</td>
                 <td class="px-6 py-4 text-right flex gap-2 justify-end">
                     <button onclick="window.open('Listing Detail.html?id=${l.id}', '_blank')" class="text-blue-500 text-xs font-bold hover:underline">View</button>
+                    ${(l.status || 'active') === 'pending_review' || (l.status || 'active') === 'rejected' ? `<button onclick="approveListing('${l.id}')" class="text-green-600 text-xs font-bold hover:underline">Approve</button>` : ''}
+                    ${(l.status || 'active') !== 'rejected' && (l.status || 'active') !== 'sold' ? `<button onclick="rejectListing('${l.id}')" class="text-orange-500 text-xs font-bold hover:underline">Reject</button>` : ''}
                     <button onclick="window.open('Post Listing.html?id=${l.id}', '_blank')" class="text-slate-500 dark:text-gray-400 text-xs font-bold hover:underline">Edit</button>
                     <button onclick="deleteListing('${l.id}')" class="text-red-500 text-xs font-bold hover:underline">Delete</button>
                 </td>
@@ -401,8 +420,8 @@
         
         const tbody = document.getElementById('usersTableBody');
         tbody.innerHTML = users.map(u => {
-            const isBanned = banned.includes(u.name);
-            const isVerified = verified.includes(u.name);
+            const isBanned = banned.includes(u.name) || banned.includes(u.id);
+            const isVerified = verified.includes(u.name) || verified.includes(u.id);
             return `
             <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/80 border-b border-slate-100 dark:border-gray-800">
                 <td class="px-6 py-4 flex items-center gap-2"><div class="w-6 h-6 rounded-full bg-slate-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold">${u.name.charAt(0)}</div> ${u.name}</td>
@@ -412,7 +431,7 @@
                 <td class="px-6 py-4">${isVerified ? '<span class="text-blue-500 material-symbols-outlined text-sm">verified</span>' : '<span class="text-slate-300 text-xs">No</span>'}</td>
                 <td class="px-6 py-4 text-right flex gap-2 justify-end">
                     <button onclick="openEditUser('${u.id}')" class="text-slate-500 dark:text-gray-400 text-xs font-bold hover:underline">Edit</button>
-                    <button onclick="toggleVerify('${u.name}')" class="text-blue-500 text-xs font-bold hover:underline">${isVerified ? 'Unverify' : 'Verify'}</button>
+                    <button onclick="toggleVerify('${u.name}', '${u.id}')" class="text-blue-500 text-xs font-bold hover:underline">${isVerified ? 'Unverify' : 'Verify'}</button>
                     <button onclick="toggleBan('${u.name}')" class="text-${isBanned ? 'green' : 'red'}-500 text-xs font-bold hover:underline">${isBanned ? 'Unban' : 'Ban'}</button>
                 </td>
             </tr>
@@ -424,30 +443,64 @@
         const tbody = document.getElementById('reportsTableBody');
         if(reports.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-400 dark:text-gray-500">No reported items.</td></tr>';
+        } else {
+            tbody.innerHTML = reports.map(r => {
+                const isListing = !!r.listingId;
+                const title = r.listingTitle || r.reportedUserName || 'Unknown';
+                const date = r.date || r.time || Date.now();
+                const id = r.listingId || r.reportedUserId;
+                
+
+                return `
+                <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/80 border-b border-slate-100 dark:border-gray-800">
+                    <td class="px-6 py-4 text-xs text-slate-400 dark:text-gray-500">${new Date(date).toLocaleDateString()}</td>
+                    <td class="px-6 py-4 font-bold text-slate-700 dark:text-gray-200">${title} ${isListing ? '<span class="text-blue-500 text-[10px] bg-blue-50 px-1 rounded ml-1">ITEM</span>' : '<span class="text-purple-500 text-[10px] bg-purple-50 px-1 rounded ml-1">USER</span>'}</td>
+                    <td class="px-6 py-4 text-red-500 text-xs font-bold">${r.reason}</td>
+                    <td class="px-6 py-4 text-right flex gap-2 justify-end">
+                        ${isListing ? 
+                            '<button onclick="window.open(&quot;Listing Detail.html?id=' + id + '&quot;, &quot;_blank&quot;)" class="text-blue-500 text-xs font-bold hover:underline">Inspect</button>' +
+                            '<button onclick="rejectListing(&quot;' + id + '&quot;)" class="text-orange-500 text-xs font-bold hover:underline">Reject Item</button>' +
+                            '<button onclick="deleteListing(&quot;' + id + '&quot;)" class="text-red-500 text-xs font-bold hover:underline">Delete Item</button>' 
+                            : 
+                            '<button onclick="window.open(&quot;profile.html?sellerId=' + id + '&quot;, &quot;_blank&quot;)" class="text-blue-500 text-xs font-bold hover:underline">Inspect User</button>' +
+                            '<button onclick="toggleBan(&quot;' + title + '&quot;)" class="text-red-500 text-xs font-bold hover:underline">Ban User</button>'
+                        }
+                        <button onclick="dismissReport('${r.id || id}')" class="text-slate-400 dark:text-gray-500 text-xs font-bold hover:underline">Dismiss</button>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        }
+        loadVerificationRequests();
+    }
+
+    function loadVerificationRequests() {
+        const requests = JSON.parse(localStorage.getItem('zzz_verification_reqs') || '[]');
+        const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+        const tbody = document.getElementById('verificationTableBody');
+        if(!tbody) return;
+
+        if(requests.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-400 dark:text-gray-500">No verification requests.</td></tr>';
             return;
         }
-        tbody.innerHTML = reports.map(r => {
-            const isListing = !!r.listingId;
-            const title = r.listingTitle || r.reportedUserName || 'Unknown';
-            const date = r.date || r.time || Date.now();
-            const id = r.listingId || r.reportedUserId;
-            
 
+        tbody.innerHTML = requests.map(r => {
+            const user = users.find(u => u.id === r.userId) || {};
+            const status = r.status || 'pending';
             return `
-            <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/80 border-b border-slate-100 dark:border-gray-800">
-                <td class="px-6 py-4 text-xs text-slate-400 dark:text-gray-500">${new Date(date).toLocaleDateString()}</td>
-                <td class="px-6 py-4 font-bold text-slate-700 dark:text-gray-200">${title} ${isListing ? '<span class="text-blue-500 text-[10px] bg-blue-50 px-1 rounded ml-1">ITEM</span>' : '<span class="text-purple-500 text-[10px] bg-purple-50 px-1 rounded ml-1">USER</span>'}</td>
-                <td class="px-6 py-4 text-red-500 text-xs font-bold">${r.reason}</td>
-                <td class="px-6 py-4 text-right flex gap-2 justify-end">
-                    ${isListing ? 
-                        '<button onclick="window.open(&quot;Listing Detail.html?id=' + id + '&quot;, &quot;_blank&quot;)" class="text-blue-500 text-xs font-bold hover:underline">Inspect</button>' +
-                        '<button onclick="deleteListing(&quot;' + id + '&quot;)" class="text-red-500 text-xs font-bold hover:underline">Delete Item</button>' 
-                        : 
-                        '<button onclick="window.open(&quot;profile.html?sellerId=' + id + '&quot;, &quot;_blank&quot;)" class="text-blue-500 text-xs font-bold hover:underline">Inspect User</button>' +
-                        '<button onclick="toggleBan(&quot;' + title + '&quot;)" class="text-red-500 text-xs font-bold hover:underline">Ban User</button>'
-                    }
+              <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/80 border-b border-slate-100 dark:border-gray-800">
+                <td class="px-6 py-4 text-xs text-slate-400 dark:text-gray-500">${new Date(r.date || Date.now()).toLocaleDateString()}</td>
+                <td class="px-6 py-4">
+                  <div class="font-bold text-slate-700 dark:text-gray-200">${r.userName || user.name || 'User'}</div>
+                  <div class="text-xs text-slate-400 dark:text-gray-500 font-mono">${user.email || r.userId}</div>
                 </td>
-            </tr>
+                <td class="px-6 py-4">${statusBadge(status)}</td>
+                <td class="px-6 py-4 text-right flex gap-2 justify-end">
+                  <button onclick="window.open('profile.html?sellerId=${r.userId}', '_blank')" class="text-blue-500 text-xs font-bold hover:underline">Profile</button>
+                  ${status === 'pending' ? `<button onclick="reviewVerification('${r.userId}', 'approved')" class="text-green-600 text-xs font-bold hover:underline">Approve</button><button onclick="reviewVerification('${r.userId}', 'rejected')" class="text-red-500 text-xs font-bold hover:underline">Reject</button>` : ''}
+                </td>
+              </tr>
             `;
         }).join('');
     }
@@ -455,11 +508,15 @@
     function loadSupport() {
         const tickets = JSON.parse(localStorage.getItem('zzz_support_tickets') || '[]');
         const tbody = document.getElementById('supportTableBody');
+        if(tickets.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400 dark:text-gray-500">No support tickets.</td></tr>';
+            return;
+        }
         tbody.innerHTML = tickets.map(t => `
             <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/80 border-b border-slate-100 dark:border-gray-800">
                 <td class="px-6 py-4 text-xs text-slate-400 dark:text-gray-500 font-mono">${t.id}</td>
-                <td class="px-6 py-4 font-bold text-slate-700 dark:text-gray-200">${t.userName}</td>
-                <td class="px-6 py-4 text-brand font-bold">${t.topic}</td>
+                <td class="px-6 py-4 font-bold text-slate-700 dark:text-gray-200">${t.userName || t.user || t.email || 'Guest'}</td>
+                <td class="px-6 py-4 text-brand font-bold">${t.topic || t.subject || t.message || 'Support Request'}</td>
                 <td class="px-6 py-4"><span class="${t.status === 'Open' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'} px-2 py-1 rounded text-xs uppercase font-bold">${t.status}</span></td>
                 <td class="px-6 py-4 text-right">${t.status === 'Open' ? `<button onclick="resolveTicket('${t.id}')" class="text-green-600 font-bold text-xs">Resolve</button>` : ''}</td>
             </tr>
@@ -483,20 +540,79 @@
         `).join('');
     }
 
+    function touchData() {
+        localStorage.setItem('zzz_data_updated_at', String(Date.now()));
+    }
+
+    function statusBadge(status) {
+        const value = status || 'active';
+        const styles = {
+            active: 'bg-green-100 text-green-700',
+            pending_review: 'bg-yellow-100 text-yellow-700',
+            rejected: 'bg-red-100 text-red-700',
+            sold: 'bg-slate-100 dark:bg-gray-800 text-slate-600 dark:text-gray-300',
+            pending: 'bg-yellow-100 text-yellow-700',
+            approved: 'bg-green-100 text-green-700',
+            resolved: 'bg-slate-100 dark:bg-gray-800 text-slate-600 dark:text-gray-300'
+        };
+        return `<span class="${styles[value] || styles.active} px-2 py-1 rounded text-xs uppercase font-bold">${value.replace(/_/g, ' ')}</span>`;
+    }
+
+    function setListingStatus(id, status, reason) {
+        let list = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+        const idx = list.findIndex(l => l.id === id);
+        if(idx === -1) return alert('Listing not found.');
+        list[idx].status = status;
+        list[idx].moderationStatus = status;
+        list[idx].moderationReason = reason || '';
+        list[idx].moderatedAt = new Date().toISOString();
+        localStorage.setItem('zzz_listings', JSON.stringify(list));
+        touchData();
+        logAction(status === 'active' ? 'APPROVE_LISTING' : 'REJECT_LISTING', `${status === 'active' ? 'Approved' : 'Rejected'} listing: ${list[idx].title}`);
+        loadListings();
+        loadReports();
+        loadData();
+    }
+
+    function approveListing(id) {
+        setListingStatus(id, 'active', '');
+    }
+
+    function rejectListing(id) {
+        const reason = prompt('Reason for rejection', 'Needs admin review or violates marketplace rules.');
+        if(reason === null) return;
+        setListingStatus(id, 'rejected', reason);
+    }
+
+    function dismissReport(id) {
+        let reports = JSON.parse(localStorage.getItem('zzz_flags') || '[]');
+        reports = reports.filter(r => (r.id || r.listingId || r.reportedUserId) !== id);
+        localStorage.setItem('zzz_flags', JSON.stringify(reports));
+        touchData();
+        logAction('DISMISS_REPORT', `Dismissed report ${id}`);
+        loadReports();
+        loadData();
+    }
+
     function deleteListing(id) {
         if(!confirm("Delete this listing?")) return;
         let list = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
         list = list.filter(l => l.id !== id);
         localStorage.setItem('zzz_listings', JSON.stringify(list));
+        touchData();
         logAction("DELETE_LISTING", `Deleted listing ID ${id}`);
         loadListings();
+        loadReports();
         loadData();
     }
     
     function clearReports() {
         if(!confirm("Clear all reports?")) return;
         localStorage.setItem('zzz_flags', '[]');
+        touchData();
+        logAction('CLEAR_REPORTS', 'Cleared all moderation reports');
         loadReports();
+        loadData();
     }
 
     function toggleBan(name) {
@@ -509,20 +625,48 @@
             logAction("BAN_USER", `Banned user ${name}`);
         }
         localStorage.setItem('zzz_banned_users', JSON.stringify(banned));
+        touchData();
         loadUsers();
+        loadReports();
     }
     
-    function toggleVerify(name) {
+    function toggleVerify(name, id) {
         let verified = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
-        if(verified.includes(name)) {
-            verified = verified.filter(n => n !== name);
+        if(verified.includes(name) || verified.includes(id)) {
+            verified = verified.filter(n => n !== name && n !== id);
             logAction("UNVERIFY_USER", `Unverified user ${name}`);
         } else {
-            verified.push(name);
+            verified = Array.from(new Set([...verified, id, name].filter(Boolean)));
             logAction("VERIFY_USER", `Verified user ${name}`);
         }
         localStorage.setItem('zzz_verified_users', JSON.stringify(verified));
+        touchData();
         loadUsers();
+    }
+
+    function reviewVerification(userId, decision) {
+        let requests = JSON.parse(localStorage.getItem('zzz_verification_reqs') || '[]');
+        const req = requests.find(r => r.userId === userId && (r.status || 'pending') === 'pending');
+        if(!req) return alert('Verification request not found.');
+
+        req.status = decision;
+        req.reviewedAt = new Date().toISOString();
+
+        let verified = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
+        if(decision === 'approved') {
+            verified = Array.from(new Set([...verified, userId, req.userName].filter(Boolean)));
+            logAction('APPROVE_VERIFICATION', `Approved verification for ${req.userName || userId}`);
+        } else {
+            verified = verified.filter(v => v !== userId && v !== req.userName);
+            logAction('REJECT_VERIFICATION', `Rejected verification for ${req.userName || userId}`);
+        }
+
+        localStorage.setItem('zzz_verification_reqs', JSON.stringify(requests));
+        localStorage.setItem('zzz_verified_users', JSON.stringify(verified));
+        touchData();
+        loadVerificationRequests();
+        loadUsers();
+        loadData();
     }
     
     function resolveTicket(id) {
@@ -614,7 +758,10 @@
     function loadSchema() {
         const s = localStorage.getItem('zzz_classifieds_schema');
         if(s) schema = JSON.parse(s);
-        else { schema = JSON.parse(JSON.stringify(FACTORY_SCHEMA)); localStorage.setItem('zzz_classifieds_schema', JSON.stringify(schema)); }
+        else {
+            schema = window.ZZZ && window.ZZZ.ensureClassifiedsSchema ? window.ZZZ.ensureClassifiedsSchema() : JSON.parse(JSON.stringify(FACTORY_SCHEMA));
+            localStorage.setItem('zzz_classifieds_schema', JSON.stringify(schema));
+        }
         renderCategories();
     }
     
@@ -725,6 +872,7 @@
 
     function saveSchemaToDB() {
         localStorage.setItem('zzz_classifieds_schema', JSON.stringify(schema));
+        localStorage.setItem('zzz_data_updated_at', String(Date.now()));
         logAction("SCHEMA_CHANGE", `Updated Schema Structure`);
     }
 
@@ -737,8 +885,32 @@
 
     // Modal Helpers
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-    function handleLogout() { localStorage.removeItem('zzz_user'); window.location.href = 'Login Page.html'; }
-    function refreshData() { loadData(); alert("Data Refreshed"); }
+    function handleLogout() {
+        if(window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(null);
+        else {
+            localStorage.removeItem('zzz_user');
+            localStorage.removeItem('zipzapzoi_current_user');
+        }
+        window.location.href = 'Login Page.html';
+    }
+    function refreshActiveTab() {
+        loadData();
+        const active = document.querySelector('.tab-content:not(.hidden)');
+        if(!active) return;
+        const id = active.id.replace('tab-', '');
+        if(id === 'listings') loadListings();
+        if(id === 'users') loadUsers();
+        if(id === 'support') loadSupport();
+        if(id === 'moderation') loadReports();
+        if(id === 'settings') { loadSettings(); renderLogs(); }
+        if(id === 'schema') loadSchema();
+    }
+
+    function refreshData() { refreshActiveTab(); alert("Data Refreshed"); }
+
+    window.addEventListener('storage', (event) => {
+        if(event.key && event.key.startsWith('zzz_')) refreshActiveTab();
+    });
 
   </script>
   <script src="js/utils.js"></script>

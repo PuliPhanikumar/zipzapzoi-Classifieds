@@ -228,8 +228,9 @@
         return;
       }
 
-      // Create new user
-      const role = email.includes('admin') ? 'admin' : 'user';
+      // Public signups always create normal user accounts.
+      // Admin accounts must be created from the Admin Console.
+      const role = 'user';
       const newUser = {
         id: 'user_' + Date.now(),
         name: name,
@@ -245,7 +246,11 @@
       localStorage.setItem('zzz_users', JSON.stringify(users));
       
       // Auto login
-      localStorage.setItem('zzz_user', JSON.stringify(newUser));
+      if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(newUser);
+      else {
+        localStorage.setItem('zzz_user', JSON.stringify(newUser));
+        localStorage.setItem('zipzapzoi_current_user', JSON.stringify(newUser));
+      }
 
       showToast('Account created successfully! 🎉');
       

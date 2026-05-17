@@ -220,7 +220,7 @@
       }
       // 3. Demo User
       if (email === 'user@zipzapzoi.com' && password === 'user123') {
-        loginSuccess({ id: 'user_01', name: 'Zoi User', email, role: 'user', phone: '', avatar: '' });
+        loginSuccess({ id: 'user_01', name: 'Demo User', email, role: 'user', phone: '', avatar: '' });
         return;
       }
 
@@ -242,7 +242,11 @@
       document.getElementById('btnIcon').textContent = 'arrow_forward';
       return;
     }
-    localStorage.setItem('zzz_user', JSON.stringify(user));
+    if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(user);
+    else {
+      localStorage.setItem('zzz_user', JSON.stringify(user));
+      localStorage.setItem('zipzapzoi_current_user', JSON.stringify(user));
+    }
     showToast('Welcome back, ' + user.name.split(' ')[0] + '! 🎉');
     const redirect = new URLSearchParams(window.location.search).get('redirect');
     setTimeout(() => {

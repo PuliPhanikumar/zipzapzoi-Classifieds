@@ -282,10 +282,11 @@
     // Render Dynamic Categories from Schema
     function renderCategories() {
         const grid = document.getElementById('categoriesGrid');
-        if (!grid || !window.ZZZ_SCHEMA) return;
+        const classifiedsSchema = window.ZZZ ? window.ZZZ.getClassifiedsSchema() : window.ZZZ_SCHEMA;
+        if (!grid || !classifiedsSchema) return;
 
         // Take up to 6 categories
-        const cats = window.ZZZ_SCHEMA.categories.slice(0, 6);
+        const cats = classifiedsSchema.categories.slice(0, 6);
         
         // Dynamic color mappings for visual flair based on index
         const colors = ['cyan', 'blue', 'green', 'pink', 'purple', 'orange'];

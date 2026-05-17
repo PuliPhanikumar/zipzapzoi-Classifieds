@@ -181,8 +181,9 @@
 
         // Look up Category Icon from Master Schema
         let categoryIcon = 'category'; // Default fallback
-        if (window.ZZZ_SCHEMA && window.ZZZ_SCHEMA.categories) {
-            const catDef = window.ZZZ_SCHEMA.categories.find(c => c.label === listing.category);
+        const classifiedsSchema = window.ZZZ ? window.ZZZ.getClassifiedsSchema() : window.ZZZ_SCHEMA;
+        if (classifiedsSchema && classifiedsSchema.categories) {
+            const catDef = classifiedsSchema.categories.find(c => c.label === listing.category || c.id === listing.categoryId);
             if (catDef && catDef.icon) {
                 categoryIcon = catDef.icon;
             }
@@ -224,9 +225,10 @@
         if(!pendingListing) return;
 
         // Finalize metadata
-        pendingListing.status = 'active';
+        pendingListing.status = 'pending_review';
+        pendingListing.moderationStatus = 'pending_review';
         pendingListing.datePosted = new Date().toISOString();
-        pendingListing.time = "Just now";
+        pendingListing.time = pendingListing.time || new Date().toISOString();
 
         // Get existing listings
         let allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
@@ -235,7 +237,8 @@
         allListings.unshift(pendingListing);
         
         // Save back
-        localStorage.setItem('zzz_listings', JSON.stringify(allListings));
+        if(window.ZZZ && window.ZZZ.write) window.ZZZ.write('zzz_listings', allListings);
+        else localStorage.setItem('zzz_listings', JSON.stringify(allListings));
 
         // Clear session
         sessionStorage.removeItem('zzz_pending_listing');

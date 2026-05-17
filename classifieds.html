@@ -217,11 +217,12 @@
       // =====================================
       // 1. DATA & STATE
       // =====================================
-      const categories = [{ id: 'All', icon: 'explore', label: 'Explore' }, ...window.ZZZ_SCHEMA.categories];
+      const classifiedsSchema = window.ZZZ ? window.ZZZ.getClassifiedsSchema() : window.ZZZ_SCHEMA;
+      const categories = [{ id: 'All', icon: 'explore', label: 'Explore' }, ...classifiedsSchema.categories];
 
       let activeCategory = 'All';
       let allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-      const currentUser = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      const currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
 
       // =====================================
       // 2. INITIALIZATION
@@ -231,6 +232,13 @@
         renderAuth();
         renderCategories();
         renderGrid();
+      });
+
+      window.addEventListener('storage', (event) => {
+        if(event.key === 'zzz_listings' || event.key === 'zzz_favorites_by_user' || event.key === 'zzz_data_updated_at') {
+          allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+          renderGrid();
+        }
       });
 
       // =====================================
@@ -312,7 +320,8 @@
 
         setTimeout(() => {
             // 1. Filter Category
-            let filtered = activeCategory === 'All' ? allListings : allListings.filter(l => l.category === activeCategory);
+            const publicListings = allListings.filter(l => (l.status || 'active') === 'active');
+            let filtered = activeCategory === 'All' ? publicListings : publicListings.filter(l => l.category === activeCategory || l.categoryId === activeCategory);
             
             // 2. Filter Search Box (for instant filtering if implemented)
         const q = document.getElementById('searchQuery').value.toLowerCase();
@@ -346,7 +355,7 @@
           return;
         }
 
-        const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+        const favs = window.ZZZ ? window.ZZZ.getFavoriteIds() : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
 
         grid.innerHTML = filtered.map((l, index) => {
           const isFav = favs.includes(l.id);
@@ -415,15 +424,21 @@
           window.location.href = `Login Page.html?redirect=classifieds.html`;
           return;
         }
-        let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-        if(favs.includes(id)) {
-          favs = favs.filter(f => f !== id);
+        let isFav;
+        if(window.ZZZ) {
+          isFav = window.ZZZ.toggleFavorite(id);
+        } else {
+          let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+          if(favs.includes(id)) favs = favs.filter(f => f !== id);
+          else favs.push(id);
+          localStorage.setItem('zzz_favorites', JSON.stringify(favs));
+          isFav = favs.includes(id);
+        }
+        if(!isFav) {
           btn.classList.remove('active');
         } else {
-          favs.push(id);
           btn.classList.add('active');
         }
-        localStorage.setItem('zzz_favorites', JSON.stringify(favs));
       }
     </script>
 </body>

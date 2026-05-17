@@ -166,6 +166,7 @@
     <script>
       let currentQuery = '';
       let allListings = [];
+      const classifiedsSchema = window.ZZZ ? window.ZZZ.getClassifiedsSchema() : window.ZZZ_SCHEMA;
 
       document.addEventListener('DOMContentLoaded', () => {
         if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
@@ -173,7 +174,7 @@
         // Populate Dropdown from schema
         const catSelect = document.getElementById('catFilter');
         catSelect.innerHTML = '<option value="all">All Categories</option>' + 
-          window.ZZZ_SCHEMA.categories.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
+          classifiedsSchema.categories.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
 
         allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
         
@@ -182,6 +183,13 @@
         document.getElementById('searchQuery').value = currentQuery;
         
         renderResults();
+      });
+
+      window.addEventListener('storage', (event) => {
+        if(event.key === 'zzz_listings' || event.key === 'zzz_favorites_by_user' || event.key === 'zzz_data_updated_at') {
+          allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+          renderResults();
+        }
       });
 
       function updateSearch() {
@@ -209,8 +217,8 @@
             return;
         }
 
-        const catDef = window.ZZZ_SCHEMA.categories.find(c => c.id === cat || c.label === cat);
-        const subcats = window.ZZZ_SCHEMA.subcategories.filter(s => s.categoryId === (catDef ? catDef.id : cat));
+        const catDef = classifiedsSchema.categories.find(c => c.id === cat || c.label === cat);
+        const subcats = classifiedsSchema.subcategories.filter(s => s.categoryId === (catDef ? catDef.id : cat));
         
         if (subcats.length > 0) {
             subcatSelect.innerHTML = '<option value="all">All in this category</option>' + 
@@ -252,12 +260,12 @@
             const sort = document.getElementById('sortFilter').value;
 
             // Filter
-            let filtered = allListings.filter(l => {
+            let filtered = allListings.filter(l => (l.status || 'active') === 'active').filter(l => {
                 const matchesQuery = !q || l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q);
                 
                 // Allow matching category id or label
                 let listingCatId = l.category;
-                const catObj = window.ZZZ_SCHEMA.categories.find(c => c.label === l.category);
+                const catObj = classifiedsSchema.categories.find(c => c.label === l.category);
                 if (catObj) listingCatId = catObj.id;
 
                 const matchesCat = cat === 'all' || listingCatId === cat || l.category === cat;
@@ -279,7 +287,7 @@
                 return;
             }
 
-            const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+            const favs = window.ZZZ ? window.ZZZ.getFavoriteIds() : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
 
             grid.innerHTML = filtered.map((l, index) => {
           const isFav = favs.includes(l.id);
@@ -320,15 +328,21 @@
           window.location.href = `Login Page.html?redirect=SearchResult.html?q=${currentQuery}`;
           return;
         }
-        let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-        if(favs.includes(id)) {
-          favs = favs.filter(f => f !== id);
+        let isFav;
+        if(window.ZZZ) {
+          isFav = window.ZZZ.toggleFavorite(id);
+        } else {
+          let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+          if(favs.includes(id)) favs = favs.filter(f => f !== id);
+          else favs.push(id);
+          localStorage.setItem('zzz_favorites', JSON.stringify(favs));
+          isFav = favs.includes(id);
+        }
+        if(!isFav) {
           btn.classList.remove('active');
         } else {
-          favs.push(id);
           btn.classList.add('active');
         }
-        localStorage.setItem('zzz_favorites', JSON.stringify(favs));
       }
     </script>
 </body>

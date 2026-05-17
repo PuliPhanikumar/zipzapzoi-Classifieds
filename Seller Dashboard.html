@@ -187,26 +187,29 @@
     </div>
   </div>
 
+  <script src="js/utils.js"></script>
   <script>
     // --- 1. AUTH & INIT ---
-    const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
+    const currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
     
     if (!currentUser) {
       window.location.href = 'Login Page.html?redirect=Seller Dashboard.html';
       throw new Error("Unauthenticated user, redirecting...");
     } else {
       const bannedUsers = JSON.parse(localStorage.getItem('zzz_banned_users') || '[]');
-      if (bannedUsers.includes(currentUser.name)) {
-          localStorage.removeItem('zzz_user');
+      if (bannedUsers.includes(currentUser.name) || bannedUsers.includes(currentUser.id)) {
+          if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(null);
+          else localStorage.removeItem('zzz_user');
           alert("Your account has been suspended by an Administrator.");
           window.location.href = 'Login Page.html';
           throw new Error("Banned user, redirecting...");
       }
-      document.getElementById('userName').textContent = currentUser.name.split(' ')[0];
+      document.getElementById('userName').textContent = currentUser.name || (currentUser.email ? currentUser.email.split('@')[0] : 'User');
     }
 
     function handleLogout() {
-      localStorage.removeItem('zzz_user');
+      if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(null);
+      else localStorage.removeItem('zzz_user');
       window.location.href = 'Login Page.html';
     }
 
@@ -219,25 +222,42 @@
       const unreadCount = allMsgs.filter(m => m.toUserId === currentUser.id && !m.read).length;
 
       // Update Stats
-      document.getElementById('statActive').textContent = myListings.filter(i => i.status !== 'sold').length;
+      document.getElementById('statActive').textContent = myListings.filter(i => (i.status || 'active') === 'active').length;
       document.getElementById('statSold').textContent = myListings.filter(i => i.status === 'sold').length;
       document.getElementById('statMsgs').textContent = unreadCount;
-      document.getElementById('statViews').textContent = myListings.length * 142; // Mock views logic
+      document.getElementById('statViews').textContent = myListings.reduce((sum, item) => sum + Number(item.views || 0), 0);
 
       if(unreadCount > 0) {
         document.getElementById('sideBadge').classList.remove('hidden');
         document.getElementById('sideBadge').textContent = unreadCount;
         document.getElementById('msgBadge').classList.remove('hidden');
+      } else {
+        document.getElementById('sideBadge').classList.add('hidden');
+        document.getElementById('msgBadge').classList.add('hidden');
       }
 
       renderList(myListings);
       initChart();
     }
 
+    window.addEventListener('storage', (event) => {
+      if(event.key === 'zzz_listings' || event.key === 'zzz_messages' || event.key === 'zzz_data_updated_at') {
+        loadDashboard();
+      }
+    });
+
     // --- 3. RENDER LISTINGS ---
     function renderList(items) {
       const container = document.getElementById('listingsList');
-      if(items.length === 0) return; // Keep default empty state
+      if(items.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-gray-400 bg-white dark:bg-card-dark rounded-2xl border border-dashed border-gray-300">
+            <span class="material-symbols-outlined text-4xl mb-2">post_add</span>
+            <p>You haven't posted anything yet.</p>
+          </div>
+        `;
+        return;
+      }
 
       container.innerHTML = items.map(item => `
         <div class="bg-white dark:bg-card-dark p-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col md:flex-row gap-4 items-center">
@@ -247,16 +267,17 @@
           <div class="flex-1 text-center md:text-left">
             <div class="flex items-center justify-center md:justify-start gap-2 mb-1">
               <h4 class="font-bold text-gray-900 dark:text-white">${item.title}</h4>
-              ${item.status === 'sold' 
+              ${(item.status || 'active') === 'sold' 
                 ? '<span class="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">SOLD</span>' 
-                : '<span class="bg-green-100 text-green-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">ACTIVE</span>'}
+                : statusPill(item.status || 'active')}
             </div>
             <p class="text-brand font-bold">₹ ${item.price}</p>
-            <p class="text-xs text-gray-400 mt-1">${new Date(item.time || Date.now()).toLocaleDateString()}</p>
+            <p class="text-xs text-gray-400 mt-1">${formatListingDate(item)}</p>
+            <p class="text-xs text-gray-400 mt-1">${Number(item.views || 0)} views</p>
           </div>
 
           <div class="flex flex-wrap gap-2 w-full md:w-auto">
-            ${item.status !== 'sold' ? `
+            ${(item.status || 'active') === 'active' ? `
               <button onclick="openSoldModal('${item.id}')" class="flex-1 md:flex-none px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-sm font-bold transition-colors">Mark Sold</button>
               <button onclick="promoteItem('${item.id}')" class="flex-1 md:flex-none px-4 py-2 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-1"><span class="material-symbols-outlined text-[14px]">bolt</span> Promote</button>
               <button onclick="editItem('${item.id}')" class="flex-1 md:flex-none px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-sm font-bold transition-colors">Edit</button>
@@ -305,6 +326,7 @@
             }
         }
         localStorage.setItem('zzz_listings', JSON.stringify(all));
+        localStorage.setItem('zzz_data_updated_at', String(Date.now()));
         showToast("Listing marked as Sold!");
         loadDashboard();
       }
@@ -318,6 +340,7 @@
             if(idx > -1) {
                 all[idx].isPremium = true;
                 localStorage.setItem('zzz_listings', JSON.stringify(all));
+                localStorage.setItem('zzz_data_updated_at', String(Date.now()));
                 showToast("Listing Promoted Successfully!", "success");
                 loadDashboard();
             }
@@ -326,7 +349,7 @@
 
     window.requestVerification = () => {
         const vUsers = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
-        if (vUsers.includes(currentUser.id)) {
+        if (vUsers.includes(currentUser.id) || vUsers.includes(currentUser.name)) {
             showToast("You are already verified!", "success");
             return;
         }
@@ -339,10 +362,12 @@
         reqs.push({
             userId: currentUser.id,
             userName: currentUser.name,
+            userEmail: currentUser.email || '',
             date: new Date().toISOString(),
             status: 'pending'
         });
         localStorage.setItem('zzz_verification_reqs', JSON.stringify(reqs));
+        localStorage.setItem('zzz_data_updated_at', String(Date.now()));
         showToast("Verification requested! Admin will review your profile shortly.", "success");
         document.getElementById('navVerifyBtn').innerHTML = `<span class="material-symbols-outlined">schedule</span> Pending Verification`;
     };
@@ -352,6 +377,7 @@
       let all = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
       all = all.filter(i => i.id !== id);
       localStorage.setItem('zzz_listings', JSON.stringify(all));
+      localStorage.setItem('zzz_data_updated_at', String(Date.now()));
       loadDashboard();
     };
 
@@ -365,8 +391,25 @@
       if(idx > -1) {
         all[idx].status = status;
         localStorage.setItem('zzz_listings', JSON.stringify(all));
+        localStorage.setItem('zzz_data_updated_at', String(Date.now()));
         loadDashboard();
       }
+    }
+
+    function formatListingDate(item) {
+      const raw = item.updatedAt || item.createdAt || item.time;
+      if (!raw || raw === 'Just now') return 'Just now';
+      const date = new Date(raw);
+      return Number.isNaN(date.getTime()) ? 'Just now' : date.toLocaleDateString();
+    }
+
+    function statusPill(status) {
+      const styles = {
+        active: 'bg-green-100 text-green-600',
+        pending_review: 'bg-yellow-100 text-yellow-700',
+        rejected: 'bg-red-100 text-red-600'
+      };
+      return `<span class="${styles[status] || styles.active} text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">${status.replace(/_/g, ' ')}</span>`;
     }
 
     // --- 5. CHART ---
@@ -534,6 +577,5 @@ function showToast(message, type = 'success') {
 }
 
   </script>
-  <script src="js/utils.js"></script>
 </body>
 </html>

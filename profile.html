@@ -263,7 +263,7 @@ if (document.documentElement.classList.contains('dark')) {
 
 /* ========== LOAD PROFILE ========== */
 function loadProfile() {
-  const sellerListings = allListings.filter(l => l.userId === sellerId);
+  const sellerListings = allListings.filter(l => l.userId === sellerId && (l.status || 'active') === 'active');
   document.getElementById('activeCount').textContent = sellerListings.length;
 
   let sellerName = "ZipZapZoi User";

@@ -236,9 +236,18 @@
             return;
         }
 
+        const viewer = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const canInspect = viewer && (viewer.id === currentListing.userId || viewer.role === 'admin' || viewer.role === 'super_admin');
+        if((currentListing.status || 'active') !== 'active' && !canInspect) {
+            alert('This listing is not currently active.');
+            window.location.href = 'classifieds.html';
+            return;
+        }
+
         // Simulate Views
         currentListing.views = (currentListing.views || 0) + 1;
-        localStorage.setItem('zzz_listings', JSON.stringify(listings));
+        if(window.ZZZ && window.ZZZ.write) window.ZZZ.write('zzz_listings', listings);
+        else localStorage.setItem('zzz_listings', JSON.stringify(listings));
 
         renderData();
       });
@@ -267,7 +276,8 @@
             const section = document.getElementById('attributesSection');
             let html = '';
             
-            const brainFields = (window.ZZZ_SCHEMA && window.ZZZ_SCHEMA.fields) ? window.ZZZ_SCHEMA.fields : [];
+            const brain = window.ZZZ ? window.ZZZ.getClassifiedsSchema() : window.ZZZ_SCHEMA;
+            const brainFields = (brain && brain.fields) ? brain.fields : [];
 
             Object.entries(currentListing.dynamicData).forEach(([key, val]) => {
                 if(!val) return;
@@ -304,7 +314,7 @@
         }
 
         // Check Fav
-        const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+        const favs = window.ZZZ ? window.ZZZ.getFavoriteIds() : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
         isFavorite = favs.includes(currentListing.id);
         updateFavIcon();
       }
@@ -329,15 +339,19 @@
             return;
         }
 
-        let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-        if(isFavorite) {
-            favs = favs.filter(f => f !== currentListing.id);
-            isFavorite = false;
+        if(window.ZZZ) {
+            isFavorite = window.ZZZ.toggleFavorite(currentListing.id);
         } else {
-            favs.push(currentListing.id);
-            isFavorite = true;
+            let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+            if(isFavorite) {
+                favs = favs.filter(f => f !== currentListing.id);
+                isFavorite = false;
+            } else {
+                favs.push(currentListing.id);
+                isFavorite = true;
+            }
+            localStorage.setItem('zzz_favorites', JSON.stringify(favs));
         }
-        localStorage.setItem('zzz_favorites', JSON.stringify(favs));
         updateFavIcon();
       }
 
