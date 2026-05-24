@@ -170,6 +170,22 @@
             empty.classList.add('flex');
             return;
         }
+      });
+
+      function renderFavorites() {
+        const grid = document.getElementById('favoritesGrid');
+        const empty = document.getElementById('emptyState');
+        const count = document.getElementById('favCount');
+
+        const favListings = allListings.filter(l => favIds.includes(l.id));
+        count.textContent = `${favListings.length} item${favListings.length === 1 ? '' : 's'} saved`;
+
+        if(favListings.length === 0) {
+            grid.classList.add('hidden');
+            empty.classList.remove('hidden');
+            empty.classList.add('flex');
+            return;
+        }
 
         grid.classList.remove('hidden');
         empty.classList.add('hidden');

@@ -289,7 +289,8 @@
     // Render Dynamic Categories from Schema
     function renderCategories() {
         const grid = document.getElementById('categoriesGrid');
-        if (!grid || !window.ZZZ_SCHEMA) return;
+        const classifiedsSchema = window.ZZZ ? window.ZZZ.getClassifiedsSchema() : window.ZZZ_SCHEMA;
+        if (!grid || !classifiedsSchema) return;
 
         // Take up to 6 categories
         const cats = window.ZZZ_SCHEMA.categories.slice(0, 6);

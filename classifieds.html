@@ -274,10 +274,11 @@
             </div>
           `;
         } else {
-          authArea.innerHTML = toggleBtn + `
-            <a href="Login Page.html?redirect=classifieds.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Log In</a>
-            <a href="User Registration.html" class="text-sm font-bold bg-primary text-white py-2.5 px-6 rounded-full shadow-lg hover:shadow-primary/30 transition-transform active:scale-95 ml-2">Sign Up</a>
-          `;
+          let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+          if(favs.includes(id)) favs = favs.filter(f => f !== id);
+          else favs.push(id);
+          localStorage.setItem('zzz_favorites', JSON.stringify(favs));
+          isFav = favs.includes(id);
         }
         
         // Update the icon immediately based on current state

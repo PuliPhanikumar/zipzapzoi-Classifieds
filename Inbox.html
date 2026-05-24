@@ -186,6 +186,21 @@
     
     document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
 
+    function getConversationId(userA, userB, listingId) {
+      return [...[userA, userB].sort(), listingId || 'general'].join(CONV_SEP);
+    }
+
+    function parseConversationId(convId) {
+      const parts = convId.split(CONV_SEP);
+      return {
+        userA: parts[0],
+        userB: parts[1],
+        listingId: parts.slice(2).join(CONV_SEP) || 'general'
+      };
+    }
+    
+    document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+
     // --- 1. DATA LOADING ---
     function getConversations() {
       const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');

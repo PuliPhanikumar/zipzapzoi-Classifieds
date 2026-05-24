@@ -305,6 +305,14 @@
             return;
         }
 
+        const viewer = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const canInspect = viewer && (viewer.id === currentListing.userId || viewer.role === 'admin' || viewer.role === 'super_admin');
+        if((currentListing.status || 'active') !== 'active' && !canInspect) {
+            alert('This listing is not currently active.');
+            window.location.href = 'classifieds.html';
+            return;
+        }
+
         // Simulate Views
         currentListing.views = (currentListing.views || 0) + 1;
         localStorage.setItem('zzz_listings', JSON.stringify(listings));
@@ -375,6 +383,42 @@
         // Check Fav
         const favs = window.ZZZ ? window.ZZZ.getFavoriteIds() : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
         isFavorite = favs.includes(currentListing.id);
+        updateFavIcon();
+      }
+
+      function updateFavIcon() {
+        const btn = document.getElementById('favBtnHeader');
+        if(isFavorite) {
+            btn.classList.add('text-red-500');
+            btn.classList.remove('text-gray-600', 'dark:text-gray-400');
+            btn.querySelector('span').style.fontVariationSettings = "'FILL' 1";
+        } else {
+            btn.classList.remove('text-red-500');
+            btn.classList.add('text-gray-600', 'dark:text-gray-400');
+            btn.querySelector('span').style.fontVariationSettings = "'FILL' 0";
+        }
+      }
+
+      function toggleFav() {
+        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if(!user) {
+            window.location.href = 'Login Page.html?redirect=Listing Detail.html?id=' + currentListing.id;
+            return;
+        }
+
+        if(window.ZZZ) {
+            isFavorite = window.ZZZ.toggleFavorite(currentListing.id);
+        } else {
+            let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+            if(isFavorite) {
+                favs = favs.filter(f => f !== currentListing.id);
+                isFavorite = false;
+            } else {
+                favs.push(currentListing.id);
+                isFavorite = true;
+            }
+            localStorage.setItem('zzz_favorites', JSON.stringify(favs));
+        }
         updateFavIcon();
 
         // Toggle Negotiable badge

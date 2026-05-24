@@ -179,6 +179,7 @@
     <script>
       let currentQuery = '';
       let allListings = [];
+      const classifiedsSchema = window.ZZZ ? window.ZZZ.getClassifiedsSchema() : window.ZZZ_SCHEMA;
 
       document.addEventListener('DOMContentLoaded', () => {
         if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
@@ -186,7 +187,7 @@
         // Populate Dropdown from schema
         const catSelect = document.getElementById('catFilter');
         catSelect.innerHTML = '<option value="all">All Categories</option>' + 
-          window.ZZZ_SCHEMA.categories.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
+          classifiedsSchema.categories.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
 
         allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
         
@@ -195,6 +196,13 @@
         document.getElementById('searchQuery').value = currentQuery;
         
         renderResults();
+      });
+
+      window.addEventListener('storage', (event) => {
+        if(event.key === 'zzz_listings' || event.key === 'zzz_favorites_by_user' || event.key === 'zzz_data_updated_at') {
+          allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+          renderResults();
+        }
       });
 
       function updateSearch() {
@@ -222,8 +230,8 @@
             return;
         }
 
-        const catDef = window.ZZZ_SCHEMA.categories.find(c => c.id === cat || c.label === cat);
-        const subcats = window.ZZZ_SCHEMA.subcategories.filter(s => s.categoryId === (catDef ? catDef.id : cat));
+        const catDef = classifiedsSchema.categories.find(c => c.id === cat || c.label === cat);
+        const subcats = classifiedsSchema.subcategories.filter(s => s.categoryId === (catDef ? catDef.id : cat));
         
         if (subcats.length > 0) {
             subcatSelect.innerHTML = '<option value="all">All in this category</option>' + 
@@ -232,6 +240,116 @@
         } else {
             subcatContainer.classList.add('hidden');
             subcatSelect.value = 'all';
+        }
+      }
+
+      function renderResults() {
+        const grid = document.getElementById('resultsGrid');
+        const empty = document.getElementById('emptyState');
+        const count = document.getElementById('resultCount');
+
+        // Show Skeletons
+        grid.classList.remove('hidden');
+        empty.classList.add('hidden');
+        empty.classList.remove('flex');
+        
+        let skeletons = '';
+        for(let i=0; i<6; i++) {
+            skeletons += `
+            <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 p-4 animate-pulse">
+                <div class="h-48 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl mb-4"></div>
+                <div class="h-4 w-3/4 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
+                <div class="h-6 w-1/2 bg-gray-200 dark:bg-gray-800 rounded mb-4"></div>
+                <div class="h-3 w-1/3 bg-gray-200 dark:bg-gray-800 rounded"></div>
+            </div>`;
+        }
+        grid.innerHTML = skeletons;
+        count.textContent = 'Searching...';
+
+        setTimeout(() => {
+            const q = currentQuery.toLowerCase();
+            const cat = document.getElementById('catFilter').value;
+            const subcat = document.getElementById('subcatContainer').classList.contains('hidden') ? 'all' : document.getElementById('subcatFilter').value;
+            const sort = document.getElementById('sortFilter').value;
+
+            // Filter
+            let filtered = allListings.filter(l => (l.status || 'active') === 'active').filter(l => {
+                const matchesQuery = !q || l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q);
+                
+                // Allow matching category id or label
+                let listingCatId = l.category;
+                const catObj = classifiedsSchema.categories.find(c => c.label === l.category);
+                if (catObj) listingCatId = catObj.id;
+
+                const matchesCat = cat === 'all' || listingCatId === cat || l.category === cat;
+                const matchesSubcat = subcat === 'all' || l.subcategory === subcat;
+                return matchesQuery && matchesCat && matchesSubcat;
+            });
+
+            // Sort
+            if(sort === 'price_low') filtered.sort((a,b) => a.price - b.price);
+            if(sort === 'price_high') filtered.sort((a,b) => b.price - a.price);
+            if(sort === 'newest') filtered.reverse();
+
+            count.textContent = `Showing ${filtered.length} result${filtered.length === 1 ? '' : 's'} for "${currentQuery || 'All'}"`;
+
+            if(filtered.length === 0) {
+                grid.classList.add('hidden');
+                empty.classList.remove('hidden');
+                empty.classList.add('flex');
+                return;
+            }
+
+            const favs = window.ZZZ ? window.ZZZ.getFavoriteIds() : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+
+            grid.innerHTML = filtered.map((l, index) => {
+          const isFav = favs.includes(l.id);
+          const timeDelay = index * 0.05;
+          return `
+            <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer relative group opacity-0 animate-pop" style="animation-delay: ${timeDelay}s" onclick="window.location.href='Listing Detail.html?id=${l.id}'">
+              
+              <div class="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-900">
+                <img src="${l.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                
+                <div class="absolute top-4 left-4 bg-white/90 dark:bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-gray-800 dark:text-white uppercase tracking-wider card-image-wrap">
+                  ${l.category}
+                </div>
+
+                <button onclick="event.stopPropagation(); toggleFav('${l.id}', this)" class="fav-btn absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center card-image-wrap ${isFav ? 'active' : ''}">
+                  <span class="material-symbols-outlined text-xl">favorite</span>
+                </button>
+              </div>
+
+              <div class="p-5">
+                <div class="flex justify-between items-start mb-1">
+                  <h3 class="text-base font-bold text-gray-900 dark:text-white truncate pr-2">${l.title}</h3>
+                  <p class="text-lg font-black text-primary">₹${l.price.toLocaleString()}</p>
+                </div>
+                <div class="flex items-center gap-3 text-xs font-bold text-gray-400 dark:text-gray-500 mt-3">
+                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> ${l.location || 'Local'}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+        }, 500); // Simulated delay
+      }
+
+      function toggleFav(id, btn) {
+        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if(!user) {
+          window.location.href = `Login Page.html?redirect=SearchResult.html?q=${currentQuery}`;
+          return;
+        }
+        let isFav;
+        if(window.ZZZ) {
+          isFav = window.ZZZ.toggleFavorite(id);
+        } else {
+          let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+          if(favs.includes(id)) favs = favs.filter(f => f !== id);
+          else favs.push(id);
+          localStorage.setItem('zzz_favorites', JSON.stringify(favs));
+          isFav = favs.includes(id);
         }
       }
 

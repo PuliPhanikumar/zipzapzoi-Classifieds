@@ -229,9 +229,10 @@
 </div>
 
 <script src="js/schema.js"></script>
+<script src="js/utils.js"></script>
 <script>
 (function() {
-  const currentUserAuth = JSON.parse(localStorage.getItem('zzz_user'));
+  const currentUserAuth = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
   if (!currentUserAuth) {
     window.location.href = 'Login Page.html?redirect=Post Listing.html';
     return;
@@ -240,7 +241,7 @@
   let schema = {};
 
   function loadSchemaFromBrain() {
-    const brain = window.ZZZ_SCHEMA;
+    const brain = window.ZZZ && window.ZZZ.getClassifiedsSchema ? window.ZZZ.getClassifiedsSchema() : (window.ZZZ_SCHEMA || { categories: [], subcategories: [], fields: [] });
     
     // CONVERT Admin Relational Data -> Post Listing Nested Data for UI
     brain.categories.forEach(cat => {
@@ -386,7 +387,7 @@
     // Setup Listener for Subcategory Change -> Populate Fields
     subCategorySelect.onchange = (e) => {
         const selectedSubLabel = e.target.value;
-        const brain = JSON.parse(localStorage.getItem('zzz_classifieds_schema'));
+        const brain = window.ZZZ && window.ZZZ.getClassifiedsSchema ? window.ZZZ.getClassifiedsSchema() : (window.ZZZ_SCHEMA || { fields: [] });
         
         // Find subcategory ID using the label
         const subObj = currentCategory.subIds.find(s => s.label === selectedSubLabel);
@@ -612,11 +613,13 @@
 
   // --- 8. SUBMIT HANDLER ---
   function handleSubmit() {
-    const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
+    const currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+    if(!currentCategory || !currentCategoryKey) return alert('Please choose a category.');
+    if(!subCategorySelect.value) return alert('Please choose a subcategory.');
     
     // Gather Dynamic Data
     const dynamicData = {};
-    const brain = JSON.parse(localStorage.getItem('zzz_classifieds_schema'));
+    const brain = window.ZZZ && window.ZZZ.getClassifiedsSchema ? window.ZZZ.getClassifiedsSchema() : (window.ZZZ_SCHEMA || { fields: [] });
     
     // Find fields for current selection to scrape data
     const subLabel = subCategorySelect.value;
@@ -629,10 +632,14 @@
          });
     }
 
+    const previousItem = editId ? (JSON.parse(localStorage.getItem('zzz_listings') || '[]').find(l => l.id === editId) || {}) : {};
+    const postedAt = previousItem.postedAt || previousItem.createdAt || new Date().toISOString();
     const newItem = {
         id: editId || 'item_' + Date.now(),
         userId: currentUser ? currentUser.id : 'guest',
         userName: currentUser ? currentUser.name : 'Guest User',
+        userEmail: currentUser ? currentUser.email : '',
+        categoryId: currentCategoryKey,
         category: schema[currentCategoryKey].label,
         subcategory: subCategorySelect.value,
         title: document.getElementById('postTitle').value,
@@ -648,8 +655,12 @@
         image: uploadedImages[0] || 'https://via.placeholder.com/400',
         images: uploadedImages,
         dynamicData: dynamicData,
-        time: 'Just now',
-        status: 'active'
+        time: postedAt,
+        createdAt: postedAt,
+        updatedAt: new Date().toISOString(),
+        status: previousItem.status || 'active',
+        views: previousItem.views || 0,
+        promoted: previousItem.promoted || false
     };
 
     // --- REDIRECT TO MONETIZATION / PLANS PAGE ---
@@ -754,6 +765,5 @@
   };
 })();
   </script>
-  <script src="js/utils.js"></script>
 </body>
 </html>
