@@ -2,26 +2,34 @@
 <html lang="en">
 <head>
   <script>
-  // --- AUTH CHECK ---
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+  </script>
+  <script>
+  // --- AUTH CHECK & DARK MODE INIT ---
   (function() {
     const raw = localStorage.getItem('zzz_user');
     if (!raw) {
       window.location.href = 'Login Page.html?redirect=Inbox.html';
+    }
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
     }
   })();
   </script>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ZipZapZoi - Messages</title>
-
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
-
   <script>
     tailwind.config = {
       darkMode: "class",
-        theme: {
+      theme: {
         extend: {
           fontFamily: { sans: ["Spline Sans", "sans-serif"] },
           colors: {
@@ -32,7 +40,8 @@
             "bubble-them": "#FFFFFF",
             "background-light": "#f0f4f8",
             "background-dark": "#0f172a",
-            "card-dark": "#1e293b"},
+            "card-dark": "#1e293b"
+          },
           boxShadow: {
             "bouncy": "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)",
           }
@@ -160,6 +169,20 @@
   <script>
     const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
     const STORAGE_KEY = 'zzz_messages';
+    const CONV_SEP = '::';
+
+    function getConversationId(userA, userB, listingId) {
+      return [...[userA, userB].sort(), listingId || 'general'].join(CONV_SEP);
+    }
+
+    function parseConversationId(convId) {
+      const parts = convId.split(CONV_SEP);
+      return {
+        userA: parts[0],
+        userB: parts[1],
+        listingId: parts.slice(2).join(CONV_SEP) || 'general'
+      };
+    }
     
     document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
 
@@ -169,8 +192,7 @@
       const convMap = {};
 
       allMsgs.forEach(msg => {
-        const participants = [msg.fromUserId, msg.toUserId].sort().join('_');
-        const convId = `${participants}_${msg.listingId}`;
+        const convId = getConversationId(msg.fromUserId, msg.toUserId, msg.listingId);
 
         if (!convMap[convId]) {
           convMap[convId] = {
@@ -208,7 +230,7 @@
       }
 
       container.innerHTML = list
-        .filter(c => c.listingTitle.toLowerCase().includes(search) || (c.lastMsg.text && c.lastMsg.text.toLowerCase().includes(search)))
+        .filter(c => (c.listingTitle || '').toLowerCase().includes(search) || (c.lastMsg.text && c.lastMsg.text.toLowerCase().includes(search)))
         .map(c => {
           const isActive = c.id === activeConvId;
           const date = new Date(c.lastMsg.timestamp).toLocaleDateString([], {month:'short', day:'numeric'});
@@ -238,12 +260,11 @@
       
       const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       let updated = false;
-      const parts = convId.split('_'); 
-      const listingId = parts[2]; 
+      const conv = parseConversationId(convId);
+      const listingId = conv.listingId; 
 
       const msgs = allMsgs.filter(m => {
-         const p = [m.fromUserId, m.toUserId].sort().join('_');
-         const isMatch = `${p}_${m.listingId}` === convId;
+         const isMatch = getConversationId(m.fromUserId, m.toUserId, m.listingId) === convId;
          if(isMatch && m.toUserId === currentUser.id && !m.read) {
              m.read = true; updated = true;
          }
@@ -291,10 +312,30 @@
       const feed = document.getElementById('messagesFeed');
       feed.innerHTML = msgs.map(m => {
         const isMe = m.fromUserId === currentUser.id;
+        
+        if (m.type === 'offer') {
+             return `
+              <div class="flex w-full ${isMe ? 'justify-end' : 'justify-start'} slide-in">
+                <div class="px-4 py-3 rounded-xl shadow-sm text-sm ${isMe ? 'bg-green-100 text-green-900 rounded-tr-none' : 'bg-white dark:bg-card-dark text-gray-800 dark:text-white rounded-tl-none'} border-l-4 border-l-green-500">
+                  <p class="font-bold text-xs text-green-600 mb-1 uppercase tracking-wider">${isMe ? 'You made an offer' : 'Received Offer'}</p>
+                  <p class="font-black text-2xl mb-2">₹${Number(m.offerAmount).toLocaleString()}</p>
+                  ${!isMe && m.status === 'pending' ? `
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="handleOffer('${m.id}', 'reject')" class="flex-1 py-1 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded">Reject</button>
+                        <button onclick="handleOffer('${m.id}', 'accept')" class="flex-1 py-1 text-xs font-bold text-green-600 bg-green-50 hover:bg-green-100 rounded">Accept</button>
+                    </div>
+                  ` : ''}
+                  ${m.status === 'accepted' ? '<p class="text-xs font-bold text-green-600 mt-1"><span class="material-symbols-outlined text-[12px] align-middle">check_circle</span> Accepted</p>' : ''}
+                  ${m.status === 'rejected' ? '<p class="text-xs font-bold text-red-600 mt-1"><span class="material-symbols-outlined text-[12px] align-middle">cancel</span> Rejected</p>' : ''}
+                </div>
+              </div>
+             `;
+        }
+
         return `
           <div class="flex w-full ${isMe ? 'justify-end' : 'justify-start'} slide-in">
             <div class="msg-bubble px-4 py-2 rounded-xl shadow-sm relative text-sm ${isMe ? 'bg-bubble-me dark:bg-primary text-gray-800 dark:text-white rounded-tr-none' : 'bg-white dark:bg-card-dark text-gray-800 dark:text-white rounded-tl-none'}">
-              ${m.text}
+              ${sanitizeInput(m.text)}
               <div class="msg-time ${isMe ? 'text-green-800 dark:text-green-100' : 'text-gray-400'}">${new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} 
               ${isMe ? '<span class="material-symbols-outlined text-[10px] text-blue-500 align-middle ml-1">done_all</span>' : ''}</div>
             </div>
@@ -316,14 +357,14 @@
         // 1. Search for existing conversation
         const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
         const existingMsg = allMsgs.find(m => 
-            (m.fromUserId === intent.partnerId && m.toUserId === currentUser.id) ||
-            (m.fromUserId === currentUser.id && m.toUserId === intent.partnerId)
+            (((m.fromUserId === intent.partnerId && m.toUserId === currentUser.id) ||
+            (m.fromUserId === currentUser.id && m.toUserId === intent.partnerId)) &&
+            (m.listingId || 'general') === (intent.listingId || 'general'))
         );
 
         if (existingMsg) {
             // Found existing -> Open it
-            const participants = [existingMsg.fromUserId, existingMsg.toUserId].sort().join('_');
-            const convId = `${participants}_${existingMsg.listingId}`;
+            const convId = getConversationId(existingMsg.fromUserId, existingMsg.toUserId, existingMsg.listingId);
             openChat(convId);
         } else {
             // 2. Start NEW Chat Interface
@@ -357,8 +398,7 @@
         }
 
         // Generate a temporary ID
-        const pIds = [currentUser.id, intent.partnerId].sort().join('_');
-        activeConvId = `${pIds}_${intent.listingId || 'general'}`;
+        activeConvId = getConversationId(currentUser.id, intent.partnerId, intent.listingId || 'general');
 
         // Clear Feed with Welcome Message
         document.getElementById('messagesFeed').innerHTML = `
@@ -384,13 +424,13 @@
       if(!txt || !activeConvId) return;
 
       const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      const parts = activeConvId.split('_');
+      const conv = parseConversationId(activeConvId);
       
       // Determine Receiver
-      let otherUserId = parts[0] === currentUser.id ? parts[1] : parts[0];
+      let otherUserId = conv.userA === currentUser.id ? conv.userB : conv.userA;
       let otherName = document.getElementById('chatName').textContent;
       let listTitle = document.getElementById('contextTitle').textContent;
-      let listId = parts[2];
+      let listId = conv.listingId;
 
       // Handle "Draft/New" mode where parts might vary or be 'general'
       if(document.getElementById('msgInput').dataset.tempPartnerId) {
@@ -420,13 +460,14 @@
       renderList(); // Update sidebar
       
       // Auto-Reply Sim (Optional)
-      setTimeout(() => {
-         simulateReply(activeConvId, otherUserId, otherName, listId, listTitle);
-      }, 2000);
+      if (localStorage.getItem('zzz_dev_mode') === 'true') {
+        setTimeout(() => {
+           simulateReply(activeConvId, otherUserId, otherName, listId, listTitle);
+        }, 2000);
+      }
     }
 
     function simulateReply(convId, userId, userName, listId, listTitle) {
-      // Basic simulation logic...
       const replies = ["Okay, sounds good.", "Can you share more info?", "I am interested."];
       const replyMsg = {
         id: 'msg_' + Date.now(),
@@ -452,12 +493,43 @@
       document.getElementById('msgInput').focus();
     }
 
+    
+    function handleOffer(msgId, action) {
+        const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const msg = allMsgs.find(m => m.id === msgId);
+        if(!msg) return;
+
+        msg.status = action === 'accept' ? 'accepted' : 'rejected';
+        
+        // Add a system text message
+        const sysMsg = {
+          id: 'msg_' + Date.now(),
+          type: 'text',
+          fromUserId: currentUser.id,
+          fromName: currentUser.name,
+          toUserId: msg.fromUserId,
+          toName: msg.fromName,
+          listingId: msg.listingId,
+          listingTitle: msg.listingTitle,
+          text: action === 'accept' ? `I have accepted your offer of ₹${Number(msg.offerAmount).toLocaleString()}!` : `Sorry, I cannot accept your offer of ₹${Number(msg.offerAmount).toLocaleString()}.`,
+          timestamp: new Date().toISOString(),
+          read: false
+        };
+        allMsgs.push(sysMsg);
+        
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(allMsgs));
+        openChat(activeConvId);
+        renderList();
+    }
+
+    // --- 5. NAVIGATION / CLOSE CHATS ---
     function closeChatMobile() {
       document.getElementById('activeChat').classList.add('hidden');
       document.getElementById('sidebar').classList.remove('hidden');
       activeConvId = null;
       renderList();
     }
+
     function closeChatDesktop() {
       document.getElementById('activeChat').classList.add('hidden');
       document.getElementById('emptyState').classList.remove('hidden');
@@ -470,6 +542,13 @@
     });
 
     document.getElementById('searchBox').addEventListener('input', renderList);
+
+    window.addEventListener('storage', (event) => {
+      if(event.key === STORAGE_KEY || event.key === 'zzz_data_updated_at') {
+        renderList();
+        if(activeConvId) openChat(activeConvId);
+      }
+    });
 
     // Initial Load
     renderList();

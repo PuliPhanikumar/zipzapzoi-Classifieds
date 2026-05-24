@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+  </script>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ZipZapZoi – Hub</title>
@@ -244,7 +251,11 @@
     })();
 
     function hubLogout() {
-      localStorage.removeItem('zzz_user');
+      if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(null);
+      else {
+          localStorage.removeItem('zzz_user');
+          localStorage.removeItem('zipzapzoi_current_user');
+      }
       window.location.reload();
     }
 

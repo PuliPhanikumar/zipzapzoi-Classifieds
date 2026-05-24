@@ -4,12 +4,13 @@
 (function () {
   function getUser() {
     try {
-      if (window.ZZZDataManager && window.ZZZDataManager.getCurrentUser) {
-        return window.ZZZDataManager.getCurrentUser();
+      if (window.ZZZ && window.ZZZ.getCurrentUser) {
+        return window.ZZZ.getCurrentUser();
       }
       const raw =
+        localStorage.getItem('zzz_user') ||
         sessionStorage.getItem('zzz_user') ||
-        localStorage.getItem('zzz_user');
+        localStorage.getItem('zipzapzoi_current_user');
       return raw ? JSON.parse(raw) : null;
     } catch {
       return null;
@@ -21,7 +22,7 @@
     const user = getUser();
     if (!user) {
       alert('Please log in or sign up to continue.');
-      location.href = 'Login-Page.html';
+      location.href = 'Login Page.html';
       return false;
     }
     return true;
@@ -47,11 +48,14 @@
     const logoutBtn = document.getElementById('zzzLogoutBtn');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => {
-        if (window.ZZZDataManager && window.ZZZDataManager.setCurrentUser) {
-          window.ZZZDataManager.setCurrentUser(null);
+        if (window.ZZZ && window.ZZZ.setCurrentUser) {
+          window.ZZZ.setCurrentUser(null);
+        } else if (window.ZZZDataManager && window.ZZZDataManager.setCurrentUser) {
+            window.ZZZDataManager.setCurrentUser(null);
         }
         sessionStorage.removeItem('zzz_user');
         localStorage.removeItem('zzz_user');
+        localStorage.removeItem('zipzapzoi_current_user');
         window.location.href = 'index.html';
       });
     }

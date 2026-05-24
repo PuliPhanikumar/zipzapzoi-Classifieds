@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+  </script>
+  
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ZipZapZoi - Seller Dashboard</title>
@@ -47,7 +55,7 @@
         <span class="material-symbols-outlined">storefront</span> Browse Market
       </a>
       <a href="Inbox.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-800 hover:text-gray-900 dark:text-white font-medium rounded-xl transition-colors">
-        <span class="material-symbols-outlined">mail</span> Messages
+        <span class="material-symbols-outlined">mail</span> Messages <span class="zzz-unread-badge bg-red-500 text-white text-[10px] font-bold h-4 w-4 flex items-center justify-center rounded-full ml-auto shadow" style="display: none;">0</span>
         <span id="sideBadge" class="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden">0</span>
       </a>
       <div class="flex items-center gap-4">
@@ -99,7 +107,7 @@
         </div>
         <div class="flex items-center gap-4">
           <button onclick="if(typeof toggleDarkMode === 'function') toggleDarkMode()" aria-label="Toggle Dark Mode" class="p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center text-gray-600 dark:text-gray-400 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-800 shadow-sm">
-             <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+             <span class="material-symbols-outlined" id="themeIconSidebar">dark_mode</span>
           </button>
           <a href="Post Listing.html" class="bg-brand hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-brand/20 transition-all active:scale-95 flex items-center justify-center gap-2">
           <span class="material-symbols-outlined">add</span> Post New Ad
@@ -197,8 +205,12 @@
     } else {
       const bannedUsers = JSON.parse(localStorage.getItem('zzz_banned_users') || '[]');
       if (bannedUsers.includes(currentUser.name)) {
-          localStorage.removeItem('zzz_user');
-          alert("Your account has been suspended by an Administrator.");
+          if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(null);
+          else {
+              localStorage.removeItem('zzz_user');
+              localStorage.removeItem('zipzapzoi_current_user');
+          }
+          showToast("Your account has been suspended by an Administrator.", "error");
           window.location.href = 'Login Page.html';
           throw new Error("Banned user, redirecting...");
       }
@@ -206,7 +218,11 @@
     }
 
     function handleLogout() {
-      localStorage.removeItem('zzz_user');
+      if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(null);
+      else {
+          localStorage.removeItem('zzz_user');
+          localStorage.removeItem('zipzapzoi_current_user');
+      }
       window.location.href = 'Login Page.html';
     }
 
@@ -399,6 +415,13 @@
         }
       });
     }
+
+    // Sync theme icons on load
+    const isDark = document.documentElement.classList.contains('dark');
+    const themeIcon = document.getElementById('themeIcon');
+    if (themeIcon) themeIcon.textContent = isDark ? 'light_mode' : 'dark_mode';
+    const themeIconSidebar = document.getElementById('themeIconSidebar');
+    if (themeIconSidebar) themeIconSidebar.textContent = isDark ? 'light_mode' : 'dark_mode';
 
     loadDashboard();
   // ============================================

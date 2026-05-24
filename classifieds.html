@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+  </script>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>ZipZapZoi - Marketplace</title>
@@ -135,7 +142,7 @@
             </div>
             
             <div class="sm:w-1/3 w-full flex items-center px-6 h-12">
-              <span class="material-symbols-outlined text-gray-400 cursor-pointer hover:text-primary transition-colors" onclick="alert('Detecting location...')">my_location</span>
+              <span class="material-symbols-outlined text-gray-400 cursor-pointer hover:text-primary transition-colors" onclick="showToast('Detecting location...')">my_location</span>
               <input id="searchLoc" class="w-full bg-transparent border-none focus:ring-0 text-sm ml-2 placeholder-gray-400 font-bold dark:text-white" placeholder="City or Zip" type="text" onkeypress="if(event.key === 'Enter') executeSearch()"/>
             </div>
             
@@ -217,11 +224,12 @@
       // =====================================
       // 1. DATA & STATE
       // =====================================
-      const categories = [{ id: 'All', icon: 'explore', label: 'Explore' }, ...window.ZZZ_SCHEMA.categories];
+      const classifiedsSchema = window.ZZZ ? window.ZZZ.getClassifiedsSchema() : window.ZZZ_SCHEMA;
+      const categories = [{ id: 'All', icon: 'explore', label: 'Explore' }, ...classifiedsSchema.categories];
 
       let activeCategory = 'All';
       let allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-      const currentUser = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      const currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
 
       // =====================================
       // 2. INITIALIZATION
@@ -231,6 +239,13 @@
         renderAuth();
         renderCategories();
         renderGrid();
+      });
+
+      window.addEventListener('storage', (event) => {
+        if(event.key === 'zzz_listings' || event.key === 'zzz_favorites_by_user' || event.key === 'zzz_data_updated_at') {
+          allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+          renderGrid();
+        }
       });
 
       // =====================================
@@ -250,7 +265,8 @@
                 <span class="material-symbols-outlined">favorite</span>
               </a>
               <a href="Inbox.html" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors relative" title="Messages">
-                <span class="material-symbols-outlined">chat</span>
+                <span class="material-symbols-outlined">chat</span> 
+                <span class="zzz-unread-badge absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-red-500 text-white text-[10px] font-bold h-4 w-4 flex items-center justify-center rounded-full shadow border border-white dark:border-card-dark" style="display: none;">0</span>
               </a>
               <a href="Seller Dashboard.html" class="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-primary text-white flex items-center justify-center font-bold shadow-md cursor-pointer border-2 border-transparent hover:border-white transition-all ml-2">
                 ${currentUser.name.charAt(0).toUpperCase()}
@@ -312,7 +328,8 @@
 
         setTimeout(() => {
             // 1. Filter Category
-            let filtered = activeCategory === 'All' ? allListings : allListings.filter(l => l.category === activeCategory);
+            const publicListings = allListings.filter(l => (l.status || 'active') === 'active');
+            let filtered = activeCategory === 'All' ? publicListings : publicListings.filter(l => l.category === activeCategory || l.categoryId === activeCategory);
             
             // 2. Filter Search Box (for instant filtering if implemented)
         const q = document.getElementById('searchQuery').value.toLowerCase();
@@ -346,7 +363,7 @@
           return;
         }
 
-        const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+        const favs = window.ZZZ ? window.ZZZ.getFavoriteIds() : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
 
         grid.innerHTML = filtered.map((l, index) => {
           const isFav = favs.includes(l.id);
@@ -415,15 +432,21 @@
           window.location.href = `Login Page.html?redirect=classifieds.html`;
           return;
         }
-        let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-        if(favs.includes(id)) {
-          favs = favs.filter(f => f !== id);
+        let isFav;
+        if(window.ZZZ) {
+          isFav = window.ZZZ.toggleFavorite(id);
+        } else {
+          let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+          if(favs.includes(id)) favs = favs.filter(f => f !== id);
+          else favs.push(id);
+          localStorage.setItem('zzz_favorites', JSON.stringify(favs));
+          isFav = favs.includes(id);
+        }
+        if(!isFav) {
           btn.classList.remove('active');
         } else {
-          favs.push(id);
           btn.classList.add('active');
         }
-        localStorage.setItem('zzz_favorites', JSON.stringify(favs));
       }
     </script>
 </body>

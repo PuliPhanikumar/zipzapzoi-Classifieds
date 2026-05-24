@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+  </script>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>ZipZapZoi - Post Your Ad</title>
@@ -127,7 +134,7 @@
             </div>
             <div class="flex items-center gap-4 mt-8">
                <label class="flex items-center gap-2 cursor-pointer">
-                 <input type="checkbox" class="rounded text-secondary focus:ring-secondary w-5 h-5">
+                 <input type="checkbox" id="postNegotiable" class="rounded text-secondary focus:ring-secondary w-5 h-5">
                  <span class="text-sm font-medium">Price Negotiable</span>
                </label>
             </div>
@@ -583,6 +590,8 @@
                 subCategorySelect.dispatchEvent(new Event('change'));
                 
                 document.getElementById('specificLocation').value = item.specificLocation || '';
+                if(document.getElementById('postNegotiable')) document.getElementById('postNegotiable').checked = !!item.negotiable;
+                if(document.getElementById('hidePhone')) document.getElementById('hidePhone').checked = !!item.hidePhone;
                 
                 // Load Dynamic Fields
                 if(item.dynamicData) {
@@ -627,7 +636,10 @@
         category: schema[currentCategoryKey].label,
         subcategory: subCategorySelect.value,
         title: document.getElementById('postTitle').value,
-        price: document.getElementById('postPrice').value,
+        price: parseFloat(document.getElementById('postPrice').value) || 0,
+        negotiable: document.getElementById('postNegotiable') ? document.getElementById('postNegotiable').checked : false,
+        hidePhone: document.getElementById('hidePhone') ? document.getElementById('hidePhone').checked : false,
+        phone: currentUser ? (currentUser.phone || '') : '',
         description: document.getElementById('postDescription').value,
         state: document.getElementById('stateSelect').value,
         city: document.getElementById('citySelect').value,
@@ -647,7 +659,7 @@
         const idx = listings.findIndex(l => l.id === editId);
         if(idx !== -1) listings[idx] = newItem;
         localStorage.setItem('zzz_listings', JSON.stringify(listings));
-        alert("Listing Updated Successfully!");
+        showToast("Listing Updated Successfully!");
         window.location.href = 'Seller Dashboard.html';
     } else {
         // If new ad, store in session and go to Plans page for checkout

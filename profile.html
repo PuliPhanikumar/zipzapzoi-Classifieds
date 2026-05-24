@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+  </script>
+  
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ZipZapZoi - Seller Profile</title>
@@ -242,7 +250,7 @@ const allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
 const verifiedUsers = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
 
 if (!sellerId) {
-  alert("No seller profile specified. Redirecting to listings.");
+  showToast("No seller profile specified. Redirecting to listings.", "error");
   window.location.href = "classifieds.html";
 }
 
@@ -263,7 +271,7 @@ if (document.documentElement.classList.contains('dark')) {
 
 /* ========== LOAD PROFILE ========== */
 function loadProfile() {
-  const sellerListings = allListings.filter(l => l.userId === sellerId);
+  const sellerListings = allListings.filter(l => l.userId === sellerId && (l.status || 'active') === 'active');
   document.getElementById('activeCount').textContent = sellerListings.length;
 
   let sellerName = "ZipZapZoi User";
@@ -360,7 +368,7 @@ function startChat() {
      }
      return;
   }
-  if (currentUser.id === sellerId) return alert("You cannot chat with yourself!");
+  if (currentUser.id === sellerId) return showToast("You cannot chat with yourself!", "error");
   const intent = { action: 'start_chat', partnerId: sellerId, partnerName: document.getElementById('profileName').textContent };
   localStorage.setItem('zzz_chat_intent', JSON.stringify(intent));
   window.location.href = "Inbox.html";

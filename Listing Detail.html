@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+  </script>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>ZipZapZoi - Listing Details</title>
@@ -178,7 +185,7 @@
                   </div>
                   <div>
                     <p id="sellerName" class="font-bold text-gray-900 dark:text-white">Seller Name</p>
-                    <p class="text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-blue-500">verified</span> Verified Member</p>
+                    <p id="sellerVerifiedBadge" class="text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center gap-1 hidden"><span class="material-symbols-outlined text-[14px] text-blue-500">verified</span> Verified Member</p>
                   </div>
                 </div>
                 <span class="material-symbols-outlined text-gray-400">chevron_right</span>
@@ -199,7 +206,7 @@
             </div>
             
             <div class="mt-4 text-center">
-              <button onclick="alert('Report submitted.')" class="text-xs font-bold text-red-400 hover:text-red-600 transition-colors flex items-center justify-center gap-1 mx-auto">
+              <button onclick="reportListing()" class="text-xs font-bold text-red-400 hover:text-red-600 transition-colors flex items-center justify-center gap-1 mx-auto">
                 <span class="material-symbols-outlined text-[14px]">flag</span> Report this listing
               </button>
             </div>
@@ -209,6 +216,68 @@
 
       </section>
     </main>
+
+    <!-- Make Offer Modal -->
+    <div id="offerModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+      <div class="bg-white dark:bg-card-dark rounded-3xl p-6 max-w-sm w-full mx-4 shadow-2xl border border-gray-100 dark:border-gray-800 transition-colors">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white">Make an Offer</h3>
+          <button onclick="closeOfferModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Send a price offer to the seller for <span id="modalListingTitle" class="font-bold text-gray-900 dark:text-white"></span>.
+        </p>
+        <div class="mb-4">
+          <span class="text-xs text-gray-400 uppercase font-bold">Asking Price</span>
+          <p id="modalAskingPrice" class="text-lg font-black text-gray-900 dark:text-white"></p>
+        </div>
+        <div class="mb-6 relative">
+          <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Your Offer (₹)</label>
+          <span class="absolute left-4 bottom-3 text-gray-500 font-bold">₹</span>
+          <input type="number" id="offerAmountInput" placeholder="Enter amount" class="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent font-bold text-lg text-gray-900 dark:text-white">
+        </div>
+        <div class="flex gap-3">
+          <button onclick="closeOfferModal()" class="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Cancel</button>
+          <button onclick="submitOffer()" class="flex-1 py-3 rounded-xl bg-primary hover:bg-green-700 text-white font-bold transition-all shadow-md shadow-primary/20">Send Offer</button>
+        </div>
+      </div>
+    </div>
+
+    
+    <!-- Floating Chat Widget -->
+    <div id="floatingChatWidget" class="fixed bottom-6 right-6 w-96 h-[500px] bg-white dark:bg-card-dark rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col z-50 transform transition-transform duration-300 translate-y-[120%]">
+      
+      <!-- Chat Header -->
+      <div class="bg-primary px-4 py-3 rounded-t-2xl flex items-center justify-between text-white shadow-md">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg" id="chatWidgetAvatar">?</div>
+          <div>
+            <h3 class="font-bold leading-tight" id="chatWidgetName">Seller</h3>
+            <p class="text-xs text-white/80 flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-green-300"></span> Online
+            </p>
+          </div>
+        </div>
+        <button onclick="closeFloatingChat()" class="text-white/80 hover:text-white transition-colors p-1">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <!-- Messages Feed -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-[#efeae2] dark:bg-background-dark custom-scroll" id="chatWidgetFeed" style="background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay;">
+        <!-- Messages will be injected here -->
+      </div>
+
+      <!-- Input Area -->
+      <div class="bg-white dark:bg-card-dark p-3 border-t border-gray-200 dark:border-gray-700 flex items-center gap-2 rounded-b-2xl">
+        <input type="text" id="chatWidgetInput" class="flex-1 bg-gray-100 dark:bg-gray-800 border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none transition-all placeholder-gray-400 dark:text-white" placeholder="Type a message...">
+        <button onclick="sendFloatingMessage('text')" class="w-9 h-9 bg-primary text-white rounded-full shadow-md hover:bg-green-700 transition-transform active:scale-95 flex items-center justify-center flex-shrink-0">
+          <span class="material-symbols-outlined text-sm">send</span>
+        </button>
+      </div>
+    </div>
 
     <script src="js/schema.js"></script>
     <script src="js/utils.js"></script>
@@ -222,7 +291,7 @@
         const params = new URLSearchParams(window.location.search);
         const id = params.get('id');
         if(!id) {
-            alert('Listing not found');
+            showToast('Listing not found', 'error');
             window.location.href = 'classifieds.html';
             return;
         }
@@ -231,7 +300,7 @@
         currentListing = listings.find(l => l.id === id);
 
         if(!currentListing) {
-            alert('Listing not found or deleted');
+            showToast('Listing not found or deleted', 'error');
             window.location.href = 'classifieds.html';
             return;
         }
@@ -304,9 +373,30 @@
         }
 
         // Check Fav
-        const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+        const favs = window.ZZZ ? window.ZZZ.getFavoriteIds() : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
         isFavorite = favs.includes(currentListing.id);
         updateFavIcon();
+
+        // Toggle Negotiable badge
+        const negBadge = document.getElementById('negotiableBadge');
+        if(negBadge) {
+            if(currentListing.negotiable) negBadge.classList.remove('hidden');
+            else negBadge.classList.add('hidden');
+        }
+        
+        // Toggle Seller Verified badge
+        const verifiedUsers = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
+        const isSellerVerified = verifiedUsers.includes(currentListing.userId) || verifiedUsers.includes(currentListing.userName);
+        const badgeEl = document.getElementById('sellerVerifiedBadge');
+        if (badgeEl) {
+            if (isSellerVerified) {
+                badgeEl.classList.remove('hidden');
+                badgeEl.classList.add('flex');
+            } else {
+                badgeEl.classList.add('hidden');
+                badgeEl.classList.remove('flex');
+            }
+        }
       }
 
       function updateFavIcon() {
@@ -323,57 +413,53 @@
       }
 
       function toggleFav() {
-        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
         if(!user) {
             window.location.href = 'Login Page.html?redirect=Listing Detail.html?id=' + currentListing.id;
             return;
         }
 
-        let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-        if(isFavorite) {
-            favs = favs.filter(f => f !== currentListing.id);
-            isFavorite = false;
+        if(window.ZZZ) {
+            isFavorite = window.ZZZ.toggleFavorite(currentListing.id);
         } else {
-            favs.push(currentListing.id);
-            isFavorite = true;
+            let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+            if(isFavorite) {
+                favs = favs.filter(f => f !== currentListing.id);
+                isFavorite = false;
+            } else {
+                favs.push(currentListing.id);
+                isFavorite = true;
+            }
+            localStorage.setItem('zzz_favorites', JSON.stringify(favs));
         }
-        localStorage.setItem('zzz_favorites', JSON.stringify(favs));
         updateFavIcon();
       }
 
       function shareListing() {
         const url = window.location.href;
         navigator.clipboard.writeText(url).then(() => {
-            alert('Listing link copied to clipboard!');
+            showToast('Listing link copied to clipboard!', 'success');
         });
       }
 
       function initiateChat() {
-        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
         if(!user) {
             window.location.href = 'Login Page.html?redirect=Listing Detail.html?id=' + currentListing.id;
             return;
         }
         if(user.email === currentListing.userEmail) {
-            alert("You cannot chat with yourself!");
+            showToast('You cannot chat with yourself!', 'error');
             return;
         }
         const sId = currentListing.userId || currentListing.userEmail || 'anonymous';
         const sName = currentListing.userName || 'Anonymous Seller';
         
-        const intent = { 
-            action: 'start_chat', 
-            partnerId: sId, 
-            partnerName: sName,
-            listingId: currentListing.id,
-            listingTitle: currentListing.title
-        };
-        localStorage.setItem('zzz_chat_intent', JSON.stringify(intent));
-        window.location.href = "Inbox.html";
+        openFloatingChat(sId, sName);
       }
 
       function makeOffer() {
-        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
         if(!user) {
             window.location.href = 'Login Page.html?redirect=Listing Detail.html?id=' + currentListing.id;
             return;
@@ -381,25 +467,227 @@
         
         const sId = currentListing.userId || currentListing.userEmail || 'anonymous';
         if(user.email === currentListing.userEmail || user.id === sId) {
-            alert("You cannot make an offer on your own listing!");
+            showToast('You cannot make an offer on your own listing!', 'error');
             return;
         }
 
-        const offer = prompt(`Enter your offer amount for ${currentListing.title} (Asking: ₹${currentListing.price}):`);
-        if(offer && !isNaN(offer)) {
-            const sName = currentListing.userName || 'Anonymous Seller';
-            const intent = { 
-                action: 'start_chat', 
-                partnerId: sId, 
-                partnerName: sName,
-                listingId: currentListing.id,
-                listingTitle: currentListing.title,
-                initialText: `Hi! I'd like to make an offer of ₹${offer} for this.`
-            };
-            localStorage.setItem('zzz_chat_intent', JSON.stringify(intent));
-            window.location.href = "Inbox.html";
+        document.getElementById('modalListingTitle').textContent = currentListing.title;
+        document.getElementById('modalAskingPrice').textContent = `₹${parseFloat(currentListing.price).toLocaleString()}`;
+        document.getElementById('offerAmountInput').value = '';
+        document.getElementById('offerModal').classList.remove('hidden');
+      }
+
+      function closeOfferModal() {
+        document.getElementById('offerModal').classList.add('hidden');
+      }
+
+      function submitOffer() {
+        const offer = document.getElementById('offerAmountInput').value.trim();
+        if(!offer || isNaN(offer) || parseFloat(offer) <= 0) {
+            showToast('Please enter a valid offer amount.', 'error');
+            return;
+        }
+
+        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const sId = currentListing.userId || currentListing.userEmail || 'anonymous';
+        const sName = currentListing.userName || 'Anonymous Seller';
+        
+        closeOfferModal();
+        openFloatingChat(sId, sName);
+        sendFloatingMessage('offer', `Hi! I'd like to make an offer of ₹${Number(offer).toLocaleString()} for this.`, offer);
+      }
+      
+      
+      // --- FLOATING CHAT LOGIC ---
+      let chatWidgetPartnerId = null;
+      let chatWidgetPartnerName = null;
+
+      function openFloatingChat(partnerId, partnerName) {
+        chatWidgetPartnerId = partnerId;
+        chatWidgetPartnerName = partnerName;
+        document.getElementById('chatWidgetName').textContent = partnerName;
+        document.getElementById('chatWidgetAvatar').textContent = partnerName.charAt(0).toUpperCase();
+        
+        const widget = document.getElementById('floatingChatWidget');
+        widget.classList.remove('translate-y-[120%]');
+        
+        renderFloatingMessages();
+      }
+
+      function closeFloatingChat() {
+        document.getElementById('floatingChatWidget').classList.add('translate-y-[120%]');
+      }
+
+      function renderFloatingMessages() {
+        if(!chatWidgetPartnerId) return;
+        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if(!user) return;
+
+        const allMsgs = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
+        const convId = [...[user.id, chatWidgetPartnerId].sort(), currentListing.id].join('::');
+
+        const msgs = allMsgs.filter(m => {
+           const isMatch = [...[m.fromUserId, m.toUserId].sort(), m.listingId].join('::') === convId;
+           if(isMatch && m.toUserId === user.id && !m.read) m.read = true; // Mark as read while open
+           return isMatch;
+        }).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+        localStorage.setItem('zzz_messages', JSON.stringify(allMsgs)); // Save read state
+
+        const feed = document.getElementById('chatWidgetFeed');
+        if(msgs.length === 0) {
+            feed.innerHTML = `<div class="text-center text-gray-500 text-xs mt-4">Say Hi to ${chatWidgetPartnerName}! 👋</div>`;
+            return;
+        }
+
+        feed.innerHTML = msgs.map(m => {
+          const isMe = m.fromUserId === user.id;
+          
+          if (m.type === 'offer') {
+             return `
+              <div class="flex w-full ${isMe ? 'justify-end' : 'justify-start'}">
+                <div class="px-4 py-3 rounded-xl shadow-sm text-sm ${isMe ? 'bg-green-100 text-green-900 rounded-tr-none' : 'bg-white dark:bg-card-dark text-gray-800 dark:text-white rounded-tl-none'} border-l-4 border-l-green-500">
+                  <p class="font-bold text-xs text-green-600 mb-1 uppercase tracking-wider">${isMe ? 'You made an offer' : 'Received Offer'}</p>
+                  <p class="font-black text-2xl mb-2">₹${Number(m.offerAmount).toLocaleString()}</p>
+                  ${!isMe && m.status === 'pending' ? `
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="handleOffer('${m.id}', 'reject')" class="flex-1 py-1 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded">Reject</button>
+                        <button onclick="handleOffer('${m.id}', 'accept')" class="flex-1 py-1 text-xs font-bold text-green-600 bg-green-50 hover:bg-green-100 rounded">Accept</button>
+                    </div>
+                  ` : ''}
+                  ${m.status === 'accepted' ? '<p class="text-xs font-bold text-green-600 mt-1"><span class="material-symbols-outlined text-[12px] align-middle">check_circle</span> Accepted</p>' : ''}
+                  ${m.status === 'rejected' ? '<p class="text-xs font-bold text-red-600 mt-1"><span class="material-symbols-outlined text-[12px] align-middle">cancel</span> Rejected</p>' : ''}
+                </div>
+              </div>
+             `;
+          }
+
+          return `
+            <div class="flex w-full ${isMe ? 'justify-end' : 'justify-start'}">
+              <div class="max-w-[85%] px-3 py-2 rounded-xl shadow-sm text-sm ${isMe ? 'bg-bubble-me dark:bg-primary text-gray-800 dark:text-white rounded-tr-none' : 'bg-white dark:bg-card-dark text-gray-800 dark:text-white rounded-tl-none'}">
+                ${window.sanitizeInput ? window.sanitizeInput(m.text) : m.text}
+                <div class="text-[9px] opacity-70 text-right mt-1">${new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+        feed.scrollTop = feed.scrollHeight;
+      }
+
+      function sendFloatingMessage(type = 'text', overrideText = null, offerAmount = null) {
+        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if(!user || !chatWidgetPartnerId) return;
+
+        const inputEl = document.getElementById('chatWidgetInput');
+        let txt = overrideText !== null ? overrideText : inputEl.value.trim();
+        if(!txt && type === 'text') return;
+
+        const allMsgs = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
+        const newMsg = {
+          id: 'msg_' + Date.now(),
+          type: type,
+          fromUserId: user.id,
+          fromName: user.name,
+          toUserId: chatWidgetPartnerId,
+          toName: chatWidgetPartnerName,
+          listingId: currentListing.id,
+          listingTitle: currentListing.title,
+          text: txt,
+          offerAmount: offerAmount,
+          status: type === 'offer' ? 'pending' : null,
+          timestamp: new Date().toISOString(),
+          read: false
+        };
+
+        allMsgs.push(newMsg);
+        localStorage.setItem('zzz_messages', JSON.stringify(allMsgs));
+        if(inputEl) inputEl.value = '';
+        renderFloatingMessages();
+
+        // Optional Dev Mode simulation
+        if (localStorage.getItem('zzz_dev_mode') === 'true' && type === 'text') {
+            setTimeout(() => {
+                const reply = {
+                    id: 'msg_' + Date.now(),
+                    type: 'text',
+                    fromUserId: chatWidgetPartnerId,
+                    fromName: chatWidgetPartnerName,
+                    toUserId: user.id,
+                    toName: user.name,
+                    listingId: currentListing.id,
+                    listingTitle: currentListing.title,
+                    text: "Sounds good, thanks for reaching out!",
+                    timestamp: new Date().toISOString(),
+                    read: false
+                };
+                const m2 = JSON.parse(localStorage.getItem('zzz_messages'));
+                m2.push(reply);
+                localStorage.setItem('zzz_messages', JSON.stringify(m2));
+                renderFloatingMessages();
+            }, 1500);
         }
       }
+
+      function handleOffer(msgId, action) {
+        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const allMsgs = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
+        const msg = allMsgs.find(m => m.id === msgId);
+        if(!msg) return;
+
+        msg.status = action === 'accept' ? 'accepted' : 'rejected';
+        
+        // Add a system text message
+        const sysMsg = {
+          id: 'msg_' + Date.now(),
+          type: 'text',
+          fromUserId: user.id,
+          fromName: user.name,
+          toUserId: msg.fromUserId,
+          toName: msg.fromName,
+          listingId: msg.listingId,
+          listingTitle: msg.listingTitle,
+          text: action === 'accept' ? `I have accepted your offer of ₹${Number(msg.offerAmount).toLocaleString()}!` : `Sorry, I cannot accept your offer of ₹${Number(msg.offerAmount).toLocaleString()}.`,
+          timestamp: new Date().toISOString(),
+          read: false
+        };
+        allMsgs.push(sysMsg);
+        
+        localStorage.setItem('zzz_messages', JSON.stringify(allMsgs));
+        renderFloatingMessages();
+      }
+
+      window.addEventListener('storage', (e) => {
+          if(e.key === 'zzz_messages' && !document.getElementById('floatingChatWidget').classList.contains('translate-y-[120%]')) {
+              renderFloatingMessages();
+          }
+      });
+      // --- END FLOATING CHAT LOGIC ---
+
+
+      function reportListing() {
+        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if(!user) {
+            window.location.href = 'Login Page.html?redirect=Listing Detail.html?id=' + currentListing.id;
+            return;
+        }
+
+        const reason = prompt("Please enter the reason for reporting this listing:");
+        if(reason && reason.trim()) {
+            const flags = JSON.parse(localStorage.getItem('zzz_flags') || '[]');
+            flags.push({
+                id: 'flag_' + Date.now(),
+                listingId: currentListing.id,
+                listingTitle: currentListing.title,
+                reporterId: user.id || 'anonymous',
+                reporterName: user.name || 'Anonymous',
+                reason: reason.trim(),
+                date: Date.now()
+            });
+            localStorage.setItem('zzz_flags', JSON.stringify(flags));
+            showToast('Thank you for reporting. Our moderation team will review this listing.', 'success');
+        }
+      }
+
       function viewSellerProfile() {
         if (!currentListing) return;
         const sId = currentListing.userId || currentListing.userEmail || 'anonymous';

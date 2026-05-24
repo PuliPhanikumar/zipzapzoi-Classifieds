@@ -1,746 +1,904 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AdminOS Ultimate - ZipZapZoi</title>
+  <title>AdminOS Ultimate - ZipZapZoi Classifieds</title>
   
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
-  <script src="js/schema.js"></script>
+  <script src="js/schema.js"></script> 
+  <script src="js/utils.js"></script>
   <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
     tailwind.config = {
       darkMode: "class",
-        theme: {
-        extend: {
-          fontFamily: { sans: ["Spline Sans", "sans-serif"] },
-          colors: { 
-            brand: "#019863", 
-            dark: "#0f172a",
-            danger: "#ef4444",
-            warning: "#f59e0b",
-            "background-light": "#f0f4f8",
-            "background-dark": "#0f172a",
-            "card-dark": "#1e293b"
-          }
-        }
-      }
+      theme: { extend: { fontFamily: { sans: ["Spline Sans", "sans-serif"] }, colors: { brand: "#019863", dark: "#0f172a", "card-dark": "#1e293b" } } }
     }
   </script>
   <style>
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-    .active-nav { background-color: #019863; color: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-    .active-list-item { border-left: 4px solid #019863; background-color: #f0fdf4; }
+    .dark ::-webkit-scrollbar-thumb { background: #334155; }
+    .active-nav { background-color: #019863; color: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .active-schema { background-color: #019863; color: white; border-color: #019863; }
+    .tab-badge { position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;border-radius:9999px;font-size:10px;font-weight:700;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center; }
+    .modal-overlay { backdrop-filter:blur(4px); }
   </style>
 </head>
-<body class="h-screen flex overflow-hidden bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
+<body class="h-screen flex overflow-hidden bg-slate-50 dark:bg-[#0f172a] text-slate-800 dark:text-gray-100 transition-colors selection:bg-brand selection:text-white">
 
-  <aside class="w-64 bg-white dark:bg-card-dark border-r border-slate-200 dark:border-gray-700 flex flex-col z-20 shadow-xl">
-    <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-gray-800 bg-slate-50 dark:bg-gray-800/50">
-      <span class="material-symbols-outlined text-brand text-3xl mr-2">admin_panel_settings</span>
-      <h1 class="font-bold text-lg tracking-tight">Admin<span class="text-brand">OS</span></h1>
-    </div>
-
-    <nav class="flex-1 overflow-y-auto p-4 space-y-2">
-      <div class="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider mb-2 px-2 mt-2">Operations</div>
-      
-      <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-link active-nav flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm">
-        <span class="material-symbols-outlined">dashboard</span> Dashboard
-      </a>
-      
-      <a href="#" onclick="switchTab('listings')" id="nav-listings" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:bg-gray-800/50 transition-all font-medium text-sm text-slate-600 dark:text-gray-300">
-        <span class="material-symbols-outlined">inventory_2</span> Listings
-      </a>
-
-      <a href="#" onclick="switchTab('users')" id="nav-users" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:bg-gray-800/50 transition-all font-medium text-sm text-slate-600 dark:text-gray-300">
-        <span class="material-symbols-outlined">group</span> User Base
-      </a>
-      
-      <a href="#" onclick="switchTab('moderation')" id="nav-moderation" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:bg-gray-800/50 transition-all font-medium text-sm text-slate-600 dark:text-gray-300">
-        <span class="material-symbols-outlined text-red-500">gavel</span> Moderation
-      </a>
-
-      <a href="#" onclick="switchTab('support')" id="nav-support" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:bg-gray-800/50 transition-all font-medium text-sm text-slate-600 dark:text-gray-300">
-        <span class="material-symbols-outlined">support_agent</span> Support Desk
-      </a>
-
-      <div class="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider mt-6 mb-2 px-2">System Core</div>
-
-      <a href="#" onclick="switchTab('schema')" id="nav-schema" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:bg-gray-800/50 transition-all font-medium text-sm text-slate-600 dark:text-gray-300">
-        <span class="material-symbols-outlined text-purple-600">schema</span> Schema Manager
-      </a>
-
-      <a href="#" onclick="switchTab('settings')" id="nav-settings" class="nav-link flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:bg-gray-800/50 transition-all font-medium text-sm text-slate-600 dark:text-gray-300">
-        <span class="material-symbols-outlined text-slate-700 dark:text-gray-200">settings_applications</span> Global Settings
-      </a>
-    </nav>
-
-    <div class="p-4 border-t border-slate-100 dark:border-gray-800 bg-slate-50 dark:bg-gray-800/50">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center font-bold shadow-md" id="adminAvatar">A</div>
-        <div>
-          <p class="text-sm font-bold text-slate-800 dark:text-white" id="adminName">Super Admin</p>
-          <p class="text-[10px] text-green-600 font-mono font-bold tracking-wide">● ONLINE</p>
-        </div>
-      </div>
-      <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 bg-white dark:bg-card-dark border border-slate-200 dark:border-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-slate-600 dark:text-gray-300 py-2 rounded-lg text-sm font-bold transition-all shadow-sm">
-        <span class="material-symbols-outlined text-sm">logout</span> Logout
-      </button>
-    </div>
-  </aside>
-
-  <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50 dark:bg-gray-800/50">
+<aside class="w-64 bg-white dark:bg-card-dark border-r border-slate-200 dark:border-gray-700 flex flex-col z-20 shadow-xl flex-shrink-0">
+  <div class="h-16 flex items-center px-6 border-b border-slate-100 dark:border-gray-800 bg-slate-50 dark:bg-gray-800/50">
+    <span class="material-symbols-outlined text-brand text-3xl mr-2">admin_panel_settings</span>
+    <h1 class="font-bold text-lg tracking-tight">Admin<span class="text-brand">OS</span></h1>
+  </div>
+  
+  <nav class="flex-1 overflow-y-auto p-3 space-y-1">
+    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 mb-2 ml-2">Command Center</div>
+    <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-link active-nav flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium"><span class="material-symbols-outlined text-[20px]">dashboard</span> Dashboard & Analytics</a>
     
-    <header class="h-16 bg-white dark:bg-card-dark border-b border-slate-200 dark:border-gray-700 flex items-center justify-between px-8 shadow-sm z-10">
-      <h2 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
-        <span class="material-symbols-outlined text-brand" id="pageIcon">dashboard</span>
-        <span id="pageTitle">Dashboard</span>
-      </h2>
-      <div class="flex items-center gap-4">
-        <button onclick="toggleDarkMode()" class="p-2 text-slate-400 dark:text-gray-500 hover:text-brand hover:bg-green-50 rounded-full transition-colors" title="Toggle Dark Mode">
-          <span class="material-symbols-outlined">dark_mode</span>
-        </button>
-        <button onclick="refreshData()" class="p-2 text-slate-400 dark:text-gray-500 hover:text-brand hover:bg-green-50 rounded-full transition-colors" title="Refresh Data">
-          <span class="material-symbols-outlined">refresh</span>
-        </button>
-        <button onclick="window.open('classifieds.html', '_blank')" class="bg-slate-800 dark:bg-white hover:bg-black text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg transition-transform active:scale-95 flex items-center gap-2">
-          Live Site <span class="material-symbols-outlined text-sm">open_in_new</span>
-        </button>
-      </div>
-    </header>
+    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4 mb-2 ml-2">Database</div>
+    <a href="#" onclick="switchTab('listings')" id="nav-listings" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 text-sm text-slate-600 dark:text-gray-300 relative"><span class="material-symbols-outlined text-[20px]">inventory_2</span> Listings <span id="badge-listings" class="tab-badge hidden">0</span></a>
+    <a href="#" onclick="switchTab('users')" id="nav-users" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 text-sm text-slate-600 dark:text-gray-300"><span class="material-symbols-outlined text-[20px]">group</span> User Base</a>
+    
+    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4 mb-2 ml-2">Revenue</div>
+    <a href="#" onclick="switchTab('payments')" id="nav-payments" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 text-sm text-slate-600 dark:text-gray-300"><span class="material-symbols-outlined text-[20px] text-emerald-500">payments</span> Payments & Refunds</a>
+    <a href="#" onclick="switchTab('coupons')" id="nav-coupons" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 text-sm text-slate-600 dark:text-gray-300"><span class="material-symbols-outlined text-[20px] text-pink-500">local_offer</span> Promo Coupons</a>
+    
+    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4 mb-2 ml-2">Content & Moderation</div>
+    <a href="#" onclick="switchTab('moderation')" id="nav-moderation" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 text-sm text-slate-600 dark:text-gray-300 relative"><span class="material-symbols-outlined text-[20px] text-red-500">gavel</span> Reports & AI Mod <span id="badge-moderation" class="tab-badge hidden">0</span></a>
+    <a href="#" onclick="switchTab('support')" id="nav-support" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 text-sm text-slate-600 dark:text-gray-300 relative"><span class="material-symbols-outlined text-[20px]">support_agent</span> Tickets & SLA <span id="badge-support" class="tab-badge hidden">0</span></a>
+    
+    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4 mb-2 ml-2">System Config</div>
+    <a href="#" onclick="switchTab('schema')" id="nav-schema" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 text-sm text-slate-600 dark:text-gray-300"><span class="material-symbols-outlined text-[20px] text-brand">account_tree</span> Schema Builder</a>
+    <a href="#" onclick="switchTab('settings')" id="nav-settings" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 text-sm text-slate-600 dark:text-gray-300"><span class="material-symbols-outlined text-[20px]">tune</span> Global Settings</a>
+    <a href="#" onclick="switchTab('security')" id="nav-security" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 text-sm text-slate-600 dark:text-gray-300"><span class="material-symbols-outlined text-[20px] text-red-600">security</span> Security Center</a>
+  </nav>
 
-    <div id="contentArea" class="flex-1 overflow-y-auto p-8">
+  <div class="p-4 border-t border-slate-100 dark:border-gray-800 bg-slate-50 dark:bg-gray-800/50">
+    <button onclick="handleLogout()" class="w-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-slate-600 dark:text-gray-300 py-2 rounded-lg text-sm font-bold flex justify-center items-center gap-2 transition-colors shadow-sm"><span class="material-symbols-outlined text-sm">logout</span> Logout</button>
+  </div>
+</aside>
+
+<main class="flex-1 flex flex-col h-full overflow-hidden">
+  <header class="h-16 bg-white dark:bg-card-dark border-b border-slate-200 dark:border-gray-700 flex justify-between items-center px-8 flex-shrink-0 shadow-sm z-10">
+    <div class="flex items-center gap-2">
+        <h2 class="text-xl font-bold text-slate-800 dark:text-white" id="pageTitle">Dashboard & Analytics</h2>
+        <span class="ml-2 px-2 py-0.5 bg-brand/10 text-brand text-[10px] font-bold uppercase rounded border border-brand/20">ZipZapZoi Classifieds</span>
+    </div>
+    
+    <div class="flex items-center gap-4">
+      <div id="sessionTimerDisplay" class="text-xs font-mono text-slate-500 bg-slate-100 dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-gray-700">Session: 15:00</div>
+      <button onclick="toggleDarkMode()" class="p-2 text-slate-400 hover:text-brand bg-slate-50 dark:bg-gray-800 rounded-full transition-colors"><span class="material-symbols-outlined" id="themeIcon">dark_mode</span></button>
+      <button onclick="refreshData()" class="p-2 text-slate-400 hover:text-blue-500 bg-slate-50 dark:bg-gray-800 rounded-full transition-colors" title="Force Sync"><span class="material-symbols-outlined">sync</span></button>
+      <button onclick="window.open('classifieds.html','_blank')" class="bg-slate-800 dark:bg-white text-white dark:text-slate-800 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-black transition-transform active:scale-95 shadow-md">Live Site <span class="material-symbols-outlined text-sm">open_in_new</span></button>
+    </div>
+  </header>
+
+  <div id="contentArea" class="flex-1 overflow-y-auto p-8 relative">
+
+    <div id="tab-dashboard" class="tab-content block space-y-6">
       
-      <div id="tab-dashboard" class="tab-content block space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 hover:shadow-md transition-shadow">
-            <div class="flex justify-between items-start">
-              <div><p class="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase">Total Users</p><h3 class="text-3xl font-bold text-slate-800 dark:text-white mt-2" id="statUsers">0</h3></div>
-              <span class="material-symbols-outlined text-blue-500 bg-blue-50 p-2 rounded-lg">group</span>
-            </div>
-          </div>
-          <div class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 hover:shadow-md transition-shadow">
-            <div class="flex justify-between items-start">
-              <div><p class="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase">Active Listings</p><h3 class="text-3xl font-bold text-slate-800 dark:text-white mt-2" id="statListings">0</h3></div>
-              <span class="material-symbols-outlined text-brand bg-green-50 p-2 rounded-lg">inventory_2</span>
-            </div>
-          </div>
-          <div class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 hover:shadow-md transition-shadow">
-            <div class="flex justify-between items-start">
-              <div><p class="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase">Support Tickets</p><h3 class="text-3xl font-bold text-slate-800 dark:text-white mt-2" id="statTickets">0</h3></div>
-              <span class="material-symbols-outlined text-orange-500 bg-orange-50 p-2 rounded-lg">support_agent</span>
-            </div>
-          </div>
-          <div class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 hover:shadow-md transition-shadow">
-            <div class="flex justify-between items-start">
-              <div><p class="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase">Pending Reports</p><h3 class="text-3xl font-bold text-slate-800 dark:text-white mt-2" id="statFlags">0</h3></div>
-              <span class="material-symbols-outlined text-red-500 bg-red-50 p-2 rounded-lg">flag</span>
-            </div>
-          </div>
+      <div class="grid grid-cols-4 gap-5">
+        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl border border-slate-100 dark:border-gray-800 flex items-center justify-between shadow-sm hover:-translate-y-1 transition-transform"><div class="flex-1"><p class="text-xs font-bold text-slate-400 uppercase">Total Users</p><h3 class="text-3xl font-bold mt-1 text-slate-800 dark:text-white" id="statUsers">0</h3></div><span class="material-symbols-outlined text-3xl text-blue-500 opacity-20">group</span></div>
+        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl border border-slate-100 dark:border-gray-800 flex items-center justify-between shadow-sm hover:-translate-y-1 transition-transform"><div class="flex-1"><p class="text-xs font-bold text-slate-400 uppercase">Active Listings</p><h3 class="text-3xl font-bold mt-1 text-brand" id="statListings">0</h3></div><span class="material-symbols-outlined text-3xl text-brand opacity-20">inventory_2</span></div>
+        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl border border-slate-100 dark:border-gray-800 flex items-center justify-between shadow-sm hover:-translate-y-1 transition-transform"><div class="flex-1"><p class="text-xs font-bold text-slate-400 uppercase">Open Tickets</p><h3 class="text-3xl font-bold mt-1 text-orange-500" id="statTickets">0</h3></div><span class="material-symbols-outlined text-3xl text-orange-500 opacity-20">support_agent</span></div>
+        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl border border-slate-100 dark:border-gray-800 flex items-center justify-between shadow-sm hover:-translate-y-1 transition-transform"><div class="flex-1"><p class="text-xs font-bold text-slate-400 uppercase">Total Revenue</p><h3 class="text-3xl font-bold mt-1 text-emerald-500" id="statRev">₹0</h3></div><span class="material-symbols-outlined text-3xl text-emerald-500 opacity-20">payments</span></div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-6">
+        <div class="col-span-2 bg-white dark:bg-card-dark p-6 rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm">
+            <h3 class="font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-slate-400">trending_up</span> Platform Activity (Last 7 Days)</h3>
+            <div class="relative w-full" style="height: 250px;"><canvas id="activityChart"></canvas></div>
         </div>
-        <div class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800">
-          <h3 class="font-bold text-slate-800 dark:text-white mb-4">Activity Overview</h3>
-          <div class="h-64"><canvas id="activityChart"></canvas></div>
+        <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm">
+            <h3 class="font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-slate-400">donut_large</span> Listing Status</h3>
+            <div class="relative w-full flex items-center justify-center" style="height: 250px;"><canvas id="statusChart"></canvas></div>
         </div>
       </div>
 
-      <div id="tab-listings" class="tab-content hidden">
-        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden">
-          <div class="p-4 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center bg-slate-50 dark:bg-gray-800/50/50">
-             <h3 class="font-bold text-slate-700 dark:text-gray-200">Marketplace Database</h3>
-             <input type="text" placeholder="Search Listings..." class="bg-white dark:bg-card-dark border border-slate-200 dark:border-gray-700 rounded-lg px-4 py-2 text-sm w-64 focus:ring-2 focus:ring-brand">
-          </div>
-          <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 dark:text-gray-400 font-bold uppercase text-xs">
-              <tr><th class="px-6 py-4">Item</th><th class="px-6 py-4">Seller</th><th class="px-6 py-4">Category</th><th class="px-6 py-4">Price</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Actions</th></tr>
+      <div class="grid grid-cols-3 gap-6">
+        <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm">
+            <h3 class="font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-purple-500">pie_chart</span> Category Market Share</h3>
+            <div class="relative w-full flex items-center justify-center" style="height: 250px;"><canvas id="categoryChart"></canvas></div>
+        </div>
+        <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm">
+            <h3 class="font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-brand">filter_alt</span> Conversion Funnel</h3>
+            <div class="relative w-full" style="height: 250px;"><canvas id="funnelChart"></canvas></div>
+        </div>
+        <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm">
+            <h3 class="font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-blue-500">public</span> Geographic Distribution</h3>
+            <div class="relative w-full" style="height: 250px;"><canvas id="geoChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm">
+        <h3 class="font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-slate-400">receipt_long</span> System Audit Logs</h3>
+        <div class="overflow-y-auto max-h-64"><table class="w-full text-xs text-left"><thead class="text-slate-400 uppercase sticky top-0 bg-white dark:bg-card-dark"><tr><th class="pb-2">Timestamp</th><th class="pb-2">Admin</th><th class="pb-2">Action</th><th class="pb-2">Details</th></tr></thead><tbody id="dashboardLogs" class="divide-y divide-slate-100 dark:divide-gray-800"></tbody></table></div>
+      </div>
+    </div>
+
+    <div id="tab-listings" class="tab-content hidden h-full flex flex-col">
+      <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 flex flex-col flex-1 overflow-hidden">
+        <div class="p-4 border-b border-slate-100 dark:border-gray-800 flex gap-3 items-center bg-slate-50 dark:bg-gray-800/50">
+          <h3 class="font-bold flex-1">Database</h3>
+          <button onclick="window.open('Post Listing.html','_blank')" class="bg-brand text-white px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-green-700 flex items-center gap-1 transition-colors"><span class="material-symbols-outlined text-[16px]">add</span> Manual Listing</button>
+          <input type="text" id="listingSearch" oninput="loadListings()" placeholder="Search listings..." class="border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-lg px-3 py-1.5 text-sm w-64 focus:ring-2 focus:ring-brand">
+          <select id="listingStatusFilter" onchange="loadListings()" class="border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand"><option value="">All Statuses</option><option value="active">Active</option><option value="pending_review">Pending</option><option value="expired">Expired</option><option value="rejected">Rejected</option></select>
+        </div>
+        <div class="flex-1 overflow-y-auto">
+          <table class="w-full text-left text-sm relative"><thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 font-bold uppercase text-xs sticky top-0 shadow-sm"><tr><th class="px-4 py-3">Item</th><th class="px-4 py-3">Seller</th><th class="px-4 py-3">Category</th><th class="px-4 py-3">Price</th><th class="px-4 py-3">Status</th><th class="px-4 py-3 text-right">Actions</th></tr></thead><tbody id="listingsTableBody" class="divide-y divide-slate-100 dark:divide-gray-800"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-users" class="tab-content hidden h-full flex flex-col gap-4">
+      <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 flex flex-col flex-1 overflow-hidden">
+        <div class="p-4 border-b border-slate-100 dark:border-gray-800 flex flex-wrap gap-3 items-center bg-slate-50 dark:bg-gray-800/50">
+          <h3 class="font-bold flex-1">User Base</h3>
+          <button onclick="showToast('Triggering CSV Download...')" class="border border-slate-300 dark:border-gray-600 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-slate-50 dark:hover:bg-gray-800 flex items-center gap-1 transition-colors"><span class="material-symbols-outlined text-[16px]">download</span> Export</button>
+          <button onclick="openUserModal()" class="bg-brand text-white px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-green-700 flex items-center gap-1 transition-colors"><span class="material-symbols-outlined text-[16px]">add</span> Add User</button>
+          <input type="text" id="userSearch" oninput="loadUsers()" placeholder="Search users..." class="border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-lg px-3 py-1.5 text-sm w-64 focus:ring-2 focus:ring-brand">
+        </div>
+        <div class="flex-1 overflow-y-auto">
+          <table class="w-full text-left text-sm relative"><thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 font-bold uppercase text-xs sticky top-0 shadow-sm"><tr><th class="px-6 py-3">User & Badges</th><th class="px-6 py-3">Role</th><th class="px-6 py-3">Trust Score</th><th class="px-6 py-3">Joined</th><th class="px-6 py-3 text-right">Actions</th></tr></thead><tbody id="usersTableBody" class="divide-y divide-slate-100 dark:divide-gray-800"></tbody></table>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 flex flex-col flex-1 overflow-hidden">
+        <div class="p-4 border-b border-slate-100 dark:border-gray-800 bg-slate-50 dark:bg-gray-800/50 flex justify-between items-center">
+          <h3 class="font-bold">Verification Requests</h3>
+        </div>
+        <div class="flex-1 overflow-y-auto">
+          <table class="w-full text-left text-sm relative">
+            <thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 font-bold uppercase text-xs sticky top-0 shadow-sm">
+              <tr>
+                <th class="px-6 py-3">User</th>
+                <th class="px-6 py-3">Requested Date</th>
+                <th class="px-6 py-3">Status</th>
+                <th class="px-6 py-3 text-right">Actions</th>
+              </tr>
             </thead>
-            <tbody id="listingsTableBody" class="divide-y divide-slate-100"></tbody>
+            <tbody id="verificationsTableBody" class="divide-y divide-slate-100 dark:divide-gray-800"></tbody>
           </table>
         </div>
       </div>
+    </div>
 
-      <div id="tab-users" class="tab-content hidden">
-        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden">
-          <div class="p-4 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center bg-slate-50 dark:bg-gray-800/50/50">
-             <h3 class="font-bold text-slate-700 dark:text-gray-200">Registered Users</h3>
-             <button onclick="openAddUserModal()" class="bg-brand text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-green-700 flex items-center gap-2">
-               <span class="material-symbols-outlined text-sm">person_add</span> Add New User
-             </button>
-          </div>
-          <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 dark:text-gray-400 font-bold uppercase text-xs">
-              <tr><th class="px-6 py-4">User</th><th class="px-6 py-4">Email</th><th class="px-6 py-4">Role</th><th class="px-6 py-4">Status</th><th class="px-6 py-4">Verified</th><th class="px-6 py-4 text-right">Actions</th></tr>
-            </thead>
-            <tbody id="usersTableBody" class="divide-y divide-slate-100"></tbody>
-          </table>
+    <div id="tab-payments" class="tab-content hidden h-full flex flex-col space-y-6">
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-6 flex-shrink-0">
+            <h3 class="font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-brand">settings_ethernet</span> Gateway Configuration</h3>
+            <div class="grid grid-cols-4 gap-4">
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Provider</label><select class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm"><option>Razorpay</option><option>Stripe</option></select></div>
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Environment</label><select class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm"><option>Live</option><option>Test</option></select></div>
+                <div class="col-span-2"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">API Key</label><input type="password" value="rzp_test_12345" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm"></div>
+            </div>
+            <button onclick="showToast('Gateway configuration saved locally')" class="mt-4 bg-slate-800 text-white px-4 py-2 rounded font-bold text-sm">Save Config</button>
         </div>
-      </div>
-
-      <div id="tab-moderation" class="tab-content hidden">
-        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden">
-          <div class="p-4 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center bg-slate-50 dark:bg-gray-800/50/50">
-             <h3 class="font-bold text-slate-700 dark:text-gray-200 flex items-center gap-2"><span class="material-symbols-outlined text-red-500">flag</span> Reported Items</h3>
-             <button onclick="clearReports()" class="text-xs font-bold text-slate-400 dark:text-gray-500 hover:text-red-500">Clear All</button>
-          </div>
-          <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 dark:text-gray-400 font-bold uppercase text-xs">
-              <tr><th class="px-6 py-4">Report Time</th><th class="px-6 py-4">Item Name</th><th class="px-6 py-4">Reason</th><th class="px-6 py-4 text-right">Action</th></tr>
-            </thead>
-            <tbody id="reportsTableBody" class="divide-y divide-slate-100"></tbody>
-          </table>
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 flex flex-col flex-1 overflow-hidden">
+            <div class="p-4 border-b border-slate-100 dark:border-gray-800 bg-slate-50 dark:bg-gray-800/50"><h3 class="font-bold">Transaction Ledger</h3></div>
+            <div class="flex-1 overflow-y-auto"><table class="w-full text-left text-sm relative"><thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 font-bold uppercase text-xs sticky top-0"><tr><th class="px-6 py-3">Txn ID</th><th class="px-6 py-3">User</th><th class="px-6 py-3">Amount</th><th class="px-6 py-3">Status</th><th class="px-6 py-3 text-right">Action</th></tr></thead><tbody id="paymentsTableBody" class="divide-y divide-slate-100 dark:divide-gray-800"></tbody></table></div>
         </div>
-      </div>
+    </div>
 
-      <div id="tab-settings" class="tab-content hidden space-y-8">
+    <div id="tab-coupons" class="tab-content hidden space-y-6">
         <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-6">
-          <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-            <span class="material-symbols-outlined text-warning">campaign</span> Global System Alerts
-          </h3>
-          <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
-             <div class="flex gap-4 items-center">
-               <input type="text" id="globalBannerInput" class="flex-1 border-yellow-300 rounded-lg px-4 py-2 text-sm focus:ring-warning" placeholder="System Alert Message...">
-               <label class="flex items-center gap-2 cursor-pointer font-bold text-sm text-slate-700 dark:text-gray-200">
-                 <input type="checkbox" id="bannerActive" class="rounded text-warning focus:ring-warning w-5 h-5"> Active
-               </label>
-             </div>
+          <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-pink-500">local_offer</span> Manage Promo Codes</h3>
+          <div class="flex gap-4 mb-6">
+              <input type="text" id="couponCode" placeholder="Code (e.g. ZOI50)" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand uppercase">
+              <input type="number" id="couponDiscount" placeholder="Discount %" class="w-1/3 border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand">
+              <button onclick="createCoupon()" class="bg-brand text-white px-6 py-2 rounded-lg font-bold w-1/3 text-sm hover:bg-green-700">Create Code</button>
           </div>
-          <button onclick="saveGlobalSettings()" class="bg-slate-800 dark:bg-white text-white px-6 py-2 rounded-lg font-bold hover:bg-black transition-colors">Save Settings</button>
+          <table class="w-full text-left text-sm"><thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 font-bold uppercase text-xs"><tr><th class="px-6 py-3">Code</th><th class="px-6 py-3">Discount</th><th class="px-6 py-3">Status</th><th class="px-6 py-3 text-right">Action</th></tr></thead><tbody id="couponsTableBody" class="divide-y divide-slate-100 dark:divide-gray-800"></tbody></table>
         </div>
-        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden">
-          <div class="p-4 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center bg-slate-50 dark:bg-gray-800/50/50">
-            <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="material-symbols-outlined text-slate-500 dark:text-gray-400">receipt_long</span> Audit Logs</h3>
-            <button onclick="clearLogs()" class="text-red-500 text-xs font-bold hover:underline">Clear History</button>
+    </div>
+
+    <div id="tab-moderation" class="tab-content hidden space-y-6">
+      <div class="grid grid-cols-2 gap-6">
+          <div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-100 dark:border-gray-800 p-4 shadow-sm flex flex-col max-h-[500px]">
+              <h3 class="font-bold text-red-500 mb-3 flex items-center gap-2"><span class="material-symbols-outlined">flag</span> Active Reports Queue</h3>
+              <div class="overflow-y-auto flex-1"><table class="w-full text-xs text-left"><tbody id="reportsTableBody" class="divide-y divide-slate-100 dark:divide-gray-800"></tbody></table></div>
           </div>
-          <div class="max-h-96 overflow-y-auto">
-            <table class="w-full text-left text-sm">
-              <thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 dark:text-gray-400 font-bold text-xs sticky top-0"><tr><th class="px-6 py-3">Timestamp</th><th class="px-6 py-3">Admin</th><th class="px-6 py-3">Action</th><th class="px-6 py-3">Details</th></tr></thead>
-              <tbody id="logsTableBody" class="divide-y divide-slate-100 font-mono text-xs"></tbody>
-            </table>
+          <div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-100 dark:border-gray-800 p-4 shadow-sm flex flex-col max-h-[500px]">
+              <h3 class="font-bold text-orange-500 mb-1 flex items-center gap-2"><span class="material-symbols-outlined">person_off</span> Reporter Abuse Tracking</h3>
+              <p class="text-[10px] text-slate-500 mb-3 border-b border-slate-100 dark:border-gray-800 pb-2">Users who frequently submit false reports.</p>
+              <div class="overflow-y-auto flex-1"><table class="w-full text-xs text-left"><thead class="text-slate-400 sticky top-0 bg-white dark:bg-card-dark"><tr><th class="pb-2">User Name</th><th class="pb-2 text-center">Reports Filed</th><th class="pb-2 text-right">Action</th></tr></thead><tbody id="abuseTableBody" class="divide-y divide-slate-100 dark:divide-gray-800"></tbody></table></div>
           </div>
+      </div>
+      <div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-100 dark:border-gray-800 p-6 shadow-sm border-t-4 border-t-purple-500">
+        <h3 class="font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-purple-500">memory</span> Z.O.I Nexus AI Auto-Moderation Engine</h3>
+        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">High-Risk Keyword Blacklist (Auto-Reject Listings)</label>
+        <textarea id="autoRejectKeywords" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500" rows="3" placeholder="scam, wire transfer, western union, send money..."></textarea>
+        <button onclick="showToast('Z.O.I Nexus Rules Saved')" class="mt-4 bg-purple-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-purple-700 transition-colors">Deploy AI Rules</button>
+      </div>
+    </div>
+
+    <div id="tab-support" class="tab-content hidden h-full flex flex-col">
+      <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 flex flex-col flex-1 overflow-hidden">
+        <div class="p-4 border-b border-slate-100 dark:border-gray-800 bg-slate-50 dark:bg-gray-800/50 flex justify-between items-center">
+            <h3 class="font-bold">Tickets & SLA Management</h3>
+        </div>
+        <div class="flex-1 overflow-y-auto">
+            <table class="w-full text-left text-sm relative"><thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 font-bold uppercase text-xs sticky top-0 shadow-sm"><tr><th class="px-6 py-3">Priority</th><th class="px-6 py-3">User</th><th class="px-6 py-3">Topic</th><th class="px-6 py-3">Assigned Admin</th><th class="px-6 py-3">SLA Status</th><th class="px-6 py-3 text-right">Action</th></tr></thead><tbody id="supportTableBody" class="divide-y divide-slate-100 dark:divide-gray-800"></tbody></table>
         </div>
       </div>
+    </div>
 
-      <div id="tab-schema" class="tab-content hidden h-full flex flex-col">
-        <div class="flex justify-between items-center mb-6">
-          <div><h3 class="text-xl font-bold text-slate-800 dark:text-white">Schema Architecture</h3><p class="text-sm text-slate-500 dark:text-gray-400">Manage Categories, Subcategories & Fields</p></div>
-          <div class="flex gap-3">
-             <button onclick="resetToFactory()" class="px-4 py-2 text-sm font-bold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 shadow-sm border border-red-200">Factory Reset</button>
-             <button onclick="saveSchemaToDB()" class="px-6 py-2 text-sm font-bold text-white bg-brand rounded-lg shadow-lg hover:bg-green-700 flex items-center gap-2"><span class="material-symbols-outlined text-sm">save</span> Save Changes</button>
-          </div>
-        </div>
-        <div class="flex-1 grid grid-cols-12 gap-6 h-[550px]">
-          <div class="col-span-3 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden">
-            <div class="p-3 bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center"><span class="text-xs font-bold uppercase">1. Categories</span><button onclick="addItem('category')" class="text-brand hover:bg-green-100 p-1 rounded"><span class="material-symbols-outlined text-sm">add</span></button></div>
-            <div id="listCategories" class="overflow-y-auto flex-1 p-2 space-y-1"></div>
-          </div>
-          <div class="col-span-4 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden">
-            <div class="p-3 bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center"><span class="text-xs font-bold uppercase">2. Subcategories</span><button onclick="addItem('subcategory')" id="btnAddSub" class="text-brand hover:bg-green-100 p-1 rounded disabled:opacity-50" disabled><span class="material-symbols-outlined text-sm">add</span></button></div>
-            <div id="listSubcategories" class="overflow-y-auto flex-1 p-2 space-y-1"><div class="text-center text-slate-400 dark:text-gray-500 mt-10 text-xs">Select a Category</div></div>
-          </div>
-          <div class="col-span-5 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden">
-            <div class="p-3 bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center"><span class="text-xs font-bold uppercase">3. Fields</span><button onclick="addItem('field')" id="btnAddField" class="text-brand hover:bg-green-100 p-1 rounded disabled:opacity-50" disabled><span class="material-symbols-outlined text-sm">add</span></button></div>
-            <div id="listFields" class="overflow-y-auto flex-1 p-2 space-y-1"><div class="text-center text-slate-400 dark:text-gray-500 mt-10 text-xs">Select a Subcategory</div></div>
-          </div>
+    <div id="tab-schema" class="tab-content hidden h-full flex flex-col">
+      <div class="flex justify-between items-center mb-6 flex-shrink-0">
+        <div><h3 class="text-xl font-bold">Relational Schema Builder</h3><p class="text-sm text-slate-500">Manage categories, subcategories, custom fields, and flags hierarchically.</p></div>
+        <div class="flex gap-3">
+            <button onclick="resetSchemaToFactory()" class="px-4 py-2 text-sm font-bold text-red-600 bg-red-50 rounded-lg border border-red-200 hover:bg-red-100 transition-colors">Factory Reset</button>
+            <button onclick="showToast('Schema Auto-Saves to Database', 'success')" class="px-6 py-2 text-sm font-bold text-white bg-brand rounded-lg shadow hover:bg-green-700 transition-colors flex items-center gap-2"><span class="material-symbols-outlined text-sm">cloud_done</span> Saved</button>
         </div>
       </div>
       
-      <div id="tab-support" class="tab-content hidden">
-        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden">
-           <div class="p-4 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center bg-slate-50 dark:bg-gray-800/50/50"><h3 class="font-bold text-slate-700 dark:text-gray-200">Support Tickets</h3></div>
-           <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 dark:text-gray-400 font-bold uppercase text-xs"><tr><th class="px-6 py-4">ID</th><th class="px-6 py-4">User</th><th class="px-6 py-4">Topic</th><th class="px-6 py-4">Status</th><th class="px-6 py-4 text-right">Action</th></tr></thead>
-            <tbody id="supportTableBody"></tbody>
-           </table>
+      <div class="flex-1 grid grid-cols-12 gap-6 min-h-0">
+        <div class="col-span-3 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden">
+          <div class="p-3 bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wider text-slate-500">1. Categories</span><button onclick="openSchemaModal('category')" class="text-brand hover:bg-green-100 p-1 rounded transition-colors"><span class="material-symbols-outlined text-sm">add</span></button></div>
+          <div id="schemaCategories" class="overflow-y-auto flex-1 p-2 space-y-1"></div>
         </div>
-      </div>
-    </div>
-  </main>
-
-  <div id="editModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
-    <div class="bg-white dark:bg-card-dark rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
-      <div class="bg-brand p-4 flex justify-between items-center"><h3 class="text-white font-bold" id="modalTitle">Edit Item</h3><button onclick="closeModal('editModal')" class="text-white hover:bg-white dark:bg-card-dark/20 rounded-full p-1"><span class="material-symbols-outlined">close</span></button></div>
-      <div class="p-6 space-y-4">
-        <div><label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">Label Name</label><input type="text" id="editLabel" class="w-full border border-slate-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand"></div>
-        <div id="fieldExtras" class="hidden space-y-4">
-          <div>
-            <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">Input Type</label>
-            <select id="editType" onchange="toggleOptionsInput()" class="w-full border border-slate-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm bg-slate-50 dark:bg-gray-800/50">
-              <option value="text">Text Box</option><option value="textarea">Long Text Area</option><option value="number">Number</option><option value="select">Dropdown (Select)</option><option value="date">Date Picker</option><option value="checkbox">Yes/No Checkbox</option>
-            </select>
-          </div>
-          <div id="optionsContainer" class="hidden">
-            <label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">Dropdown Options</label>
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-               <p class="text-[10px] text-yellow-800 mb-2 font-bold">Comma separated values:</p>
-               <textarea id="editOptions" class="w-full border-yellow-300 rounded-md px-3 py-2 text-sm focus:ring-yellow-400" rows="3"></textarea>
+        <div class="col-span-4 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden">
+          <div class="p-3 bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wider text-slate-500">2. Subcategories</span><button id="btnAddSub" onclick="openSchemaModal('subcategory')" class="text-brand hover:bg-green-100 p-1 rounded transition-colors disabled:opacity-30" disabled><span class="material-symbols-outlined text-sm">add</span></button></div>
+          <div id="schemaSubcats" class="overflow-y-auto flex-1 p-2 space-y-1"><div class="text-center text-xs text-slate-400 mt-10">Select a Category &rarr;</div></div>
+        </div>
+        <div class="col-span-5 flex flex-col gap-6 overflow-hidden min-h-0">
+            <div class="flex-1 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden min-h-[50%]">
+              <div class="p-3 bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wider text-slate-500">3. Custom Fields</span><button id="btnAddField" onclick="openSchemaModal('field')" class="text-brand hover:bg-green-100 p-1 rounded transition-colors disabled:opacity-30" disabled><span class="material-symbols-outlined text-sm">add</span></button></div>
+              <div id="schemaFields" class="overflow-y-auto flex-1 p-2 space-y-1"><div class="text-center text-xs text-slate-400 mt-10">Select a Subcategory &rarr;</div></div>
             </div>
-          </div>
+            <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm p-4 flex-shrink-0 border-l-4 border-l-brand">
+                <h4 class="font-bold mb-3 text-sm flex items-center gap-2">Category Feature Flags</h4>
+                <div id="featureFlagsUI" class="hidden space-y-3">
+                    <label class="flex items-center gap-3 text-sm cursor-pointer"><input type="checkbox" id="flagEscrow" onchange="saveFeatureFlags()" class="rounded text-brand w-4 h-4 focus:ring-brand"> Require Escrow Payment System</label>
+                    <label class="flex items-center gap-3 text-sm cursor-pointer"><input type="checkbox" id="flagVerify" onchange="saveFeatureFlags()" class="rounded text-brand w-4 h-4 focus:ring-brand"> Require Strict Seller ID Verification</label>
+                    <label class="flex items-center gap-3 text-sm cursor-pointer"><input type="checkbox" id="flagPremium" onchange="saveFeatureFlags()" class="rounded text-brand w-4 h-4 focus:ring-brand"> Limit to Premium/Featured Listings Only</label>
+                </div>
+                <p id="featureFlagsEmpty" class="text-slate-400 text-xs italic">Select a Category above to configure flags.</p>
+            </div>
         </div>
-        <div id="catExtras" class="hidden"><label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">Icon Name</label><input type="text" id="editIcon" class="w-full border border-slate-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm"></div>
-        <div class="pt-4 flex gap-3"><button onclick="saveItem()" class="flex-1 bg-brand text-white font-bold py-2 rounded-lg shadow-md hover:bg-green-700">Save</button><button onclick="deleteItem()" class="px-4 py-2 text-red-500 font-bold border border-red-200 rounded-lg hover:bg-red-50">Delete</button></div>
       </div>
     </div>
-  </div>
 
-  <div id="userModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
-    <div class="bg-white dark:bg-card-dark rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-      <div class="bg-slate-800 dark:bg-white p-4 flex justify-between items-center"><h3 class="text-white font-bold">Manage User</h3><button onclick="closeModal('userModal')" class="text-white hover:bg-white dark:bg-card-dark/20 rounded-full p-1"><span class="material-symbols-outlined">close</span></button></div>
-      <form onsubmit="handleUserSubmit(event)" class="p-6 space-y-4">
-        <input type="hidden" id="editUserId">
-        <div><label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">Full Name</label><input type="text" id="newUserName" required class="w-full border border-slate-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm"></div>
-        <div><label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">Email</label><input type="email" id="newUserEmail" required class="w-full border border-slate-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm"></div>
-        <div><label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">Password</label><input type="text" id="newUserPass" required class="w-full border border-slate-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm"></div>
-        <div><label class="block text-xs font-bold text-slate-500 dark:text-gray-400 uppercase mb-1">Role</label><select id="newUserRole" class="w-full border border-slate-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm"><option value="user">User</option><option value="admin">Admin</option></select></div>
-        <button type="submit" class="w-full bg-brand text-white font-bold py-2 rounded-lg mt-4">Save User</button>
-      </form>
+    <div id="tab-settings" class="tab-content hidden space-y-6">
+      <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-6">
+        <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-brand">tune</span> Listing & Media Configurations</h3>
+        <div class="grid grid-cols-3 gap-6">
+          <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">Global Listing Expiry (Days)</label><input type="number" id="cfgExpiry" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand" value="30"></div>
+          <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">Max Upload Size (MB)</label><input type="number" id="cfgUploadSize" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand" value="5"></div>
+          <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">Allowed Image Formats</label><input type="text" id="cfgFormats" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand" value="jpg,png,webp"></div>
+        </div>
+        <button onclick="saveSettingsLocal()" class="mt-6 bg-brand text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700 transition-colors shadow-sm">Save System Config</button>
+      </div>
+    </div>
+
+    <div id="tab-security" class="tab-content hidden space-y-6">
+      <div class="bg-white dark:bg-card-dark rounded-2xl p-6 border border-slate-100 dark:border-gray-800 shadow-sm max-w-2xl border-t-4 border-t-red-600">
+          <h3 class="font-bold mb-6 flex items-center gap-2 text-red-600"><span class="material-symbols-outlined">security</span> Access Control Policies</h3>
+          <div class="space-y-5">
+              <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" id="cfg2FA" class="rounded text-red-600 w-5 h-5 focus:ring-red-600"> <span class="font-bold text-sm">Enforce 2FA for all Admin Roles</span></label>
+              <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">Idle Session Timeout (Minutes)</label><input type="number" id="cfgTimeout" value="15" class="w-1/2 border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500"></div>
+              <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">IP Allowlist (Comma Separated)</label><textarea id="cfgIPs" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500" rows="3" placeholder="Leave blank to allow all IPs"></textarea></div>
+          </div>
+          <button onclick="saveSettingsLocal()" class="mt-6 bg-slate-800 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-black transition-colors shadow-sm">Enforce Security Policy</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div id="schemaModal" class="fixed inset-0 bg-black/50 modal-overlay z-50 hidden flex items-center justify-center">
+  <div class="bg-white dark:bg-card-dark rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 dark:border-gray-700">
+    <div class="bg-brand p-4 flex justify-between items-center"><h3 class="text-white font-bold" id="schemaModalTitle">Manage Item</h3><button onclick="closeModal('schemaModal')" class="text-white hover:bg-white/20 rounded-full p-1 transition-colors"><span class="material-symbols-outlined">close</span></button></div>
+    <div class="p-6 space-y-4">
+      <input type="hidden" id="schemaItemType"> <input type="hidden" id="schemaItemId">
+      <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Display Label</label><input type="text" id="schemaLabel" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand"></div>
+      <div id="schemaIconBlock" class="hidden"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Material Icon Name</label><input type="text" id="schemaIcon" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand" placeholder="e.g., directions_car"></div>
+      <div id="schemaFieldBlock" class="hidden space-y-4">
+        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Input Type</label><select id="schemaType" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand" onchange="document.getElementById('schemaOptionsBlock').classList.toggle('hidden', this.value!=='select')"><option value="text">Short Text</option><option value="number">Number</option><option value="select">Dropdown (Select)</option><option value="checkbox">Checkbox (Boolean)</option></select></div>
+        <div id="schemaOptionsBlock" class="hidden"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Dropdown Options (Comma separated)</label><textarea id="schemaOptions" class="w-full border border-slate-300 dark:bg-gray-800 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-brand" rows="2"></textarea></div>
+      </div>
+      <div class="pt-4 flex gap-3"><button onclick="saveSchemaItem()" class="flex-1 bg-brand text-white font-bold py-2 rounded-lg hover:bg-green-700 transition-colors shadow-sm">Save Item</button><button id="schemaDeleteBtn" onclick="deleteSchemaItem()" class="px-4 py-2 text-red-500 font-bold border border-red-200 rounded-lg hover:bg-red-50 transition-colors">Delete</button></div>
     </div>
   </div>
+</div>
 
-  <script>
-  // --- ADMIN SECURITY CHECK ---
-  (function() {
-    const raw = localStorage.getItem('zzz_user');
-    if (raw) {
-      const user = JSON.parse(raw);
-      if (user.role !== 'admin' && user.role !== 'super_admin') {
-        alert("⛔ Access Denied: Admin privileges required.");
-        window.location.href = 'classifieds.html';
-      }
-    } else {
+<div id="userModal" class="fixed inset-0 bg-black/50 modal-overlay z-50 hidden flex items-center justify-center">
+  <div class="bg-white dark:bg-card-dark rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 dark:border-gray-700">
+    <div class="bg-slate-800 p-4 flex justify-between items-center"><h3 class="text-white font-bold" id="userModalTitle">Manage User</h3><button onclick="closeModal('userModal')" class="text-white hover:bg-white/20 rounded-full p-1 transition-colors"><span class="material-symbols-outlined">close</span></button></div>
+    <div class="p-6 space-y-4">
+      <input type="hidden" id="userId">
+      <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name</label><input type="text" id="userName" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand"></div>
+      <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label><input type="email" id="userEmail" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand"></div>
+      <div class="grid grid-cols-2 gap-4">
+          <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Role</label><select id="userRole" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand"><option value="user">Standard User</option><option value="moderator">Moderator</option><option value="admin">Administrator</option></select></div>
+      </div>
+      <button onclick="saveUser()" class="w-full bg-brand text-white font-bold py-2 rounded-lg hover:bg-green-700 transition-colors shadow-sm mt-2">Save User</button>
+    </div>
+  </div>
+</div>
+
+<div id="timelineModal" class="fixed inset-0 bg-black/50 modal-overlay z-50 hidden flex items-center justify-center">
+  <div class="bg-white dark:bg-card-dark rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 dark:border-gray-700">
+    <div class="bg-slate-50 dark:bg-gray-800 p-4 flex justify-between items-center border-b border-slate-200 dark:border-gray-700"><h3 class="font-bold text-lg flex items-center gap-2"><span class="material-symbols-outlined text-brand">history</span> User Timeline</h3><button onclick="closeModal('timelineModal')" class="text-slate-400 hover:text-red-500 transition-colors"><span class="material-symbols-outlined">close</span></button></div>
+    <div class="p-6"><div id="timelineContent" class="space-y-4 max-h-80 overflow-y-auto text-sm pr-2"></div></div>
+  </div>
+</div>
+
+<div id="confirmModal" class="fixed inset-0 bg-black/50 modal-overlay z-50 hidden flex items-center justify-center">
+  <div class="bg-white dark:bg-card-dark rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200 dark:border-gray-700">
+    <div class="p-6 text-center">
+      <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4"><span class="material-symbols-outlined text-4xl">warning</span></div>
+      <h3 class="font-bold text-lg mb-2" id="confirmTitle">Are you sure?</h3>
+      <p class="text-sm text-slate-500 dark:text-gray-400 mb-6" id="confirmMessage">This action cannot be undone.</p>
+      <div class="flex gap-3"><button onclick="closeModal('confirmModal')" class="flex-1 border border-slate-200 dark:border-gray-600 py-2 rounded-lg font-bold text-sm hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors">Cancel</button><button id="confirmOkBtn" class="flex-1 bg-red-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors shadow-sm">Confirm</button></div>
+    </div>
+  </div>
+</div>
+
+<div id="refundModal" class="fixed inset-0 bg-black/50 modal-overlay z-50 hidden flex items-center justify-center">
+  <div class="bg-white dark:bg-card-dark rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 dark:border-gray-700">
+    <div class="bg-red-600 p-4 flex justify-between items-center"><h3 class="text-white font-bold">Process Refund</h3><button onclick="closeModal('refundModal')" class="text-white hover:bg-white/20 rounded-full p-1 transition-colors"><span class="material-symbols-outlined">close</span></button></div>
+    <div class="p-6 space-y-4">
+      <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-700 dark:text-red-300" id="refundTxnInfo"></div>
+      <input type="hidden" id="refundTxnId">
+      <button onclick="executeRefund()" class="w-full bg-red-600 text-white font-bold py-2 rounded-lg hover:bg-red-700 transition-colors shadow-sm">Confirm & Process Refund</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="fixed bottom-6 right-6 z-[999] hidden transform transition-all duration-300 scale-95 opacity-0">
+  <div class="bg-slate-800 dark:bg-white dark:text-slate-800 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 font-bold text-sm border border-slate-700 dark:border-gray-200 min-w-[250px]">
+    <span class="material-symbols-outlined text-brand" id="toastIcon">check_circle</span>
+    <span id="toastMsg" class="flex-1">Action Successful!</span>
+  </div>
+</div>
+
+<script>
+// ==============================
+// 1. CORE UTILITIES & SECURITY
+// ==============================
+function escapeHTML(str) { return typeof str!=='string'?str:str.replace(/[&<>'"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m])); }
+function safeJSON(key, fallback=[]) { try{const d=localStorage.getItem(key);return d?JSON.parse(d):fallback;}catch(e){return fallback;} }
+function showToast(msg, type='success') { 
+    const t=document.getElementById('toast'); 
+    document.getElementById('toastMsg').textContent=msg; 
+    document.getElementById('toastIcon').textContent=type==='error'?'error':'check_circle'; 
+    document.getElementById('toastIcon').className = `material-symbols-outlined ${type==='error'?'text-red-500':'text-brand'}`;
+    t.classList.remove('hidden'); 
+    setTimeout(() => { t.classList.remove('scale-95', 'opacity-0'); t.classList.add('scale-100', 'opacity-100'); }, 10); 
+    setTimeout(() => { t.classList.remove('scale-100', 'opacity-100'); t.classList.add('scale-95', 'opacity-0'); setTimeout(()=>t.classList.add('hidden'), 300); }, 3000); 
+}
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+function toggleDarkMode() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('zzz_theme', isDark ? 'dark' : 'light');
+    document.getElementById('themeIcon').textContent = isDark ? 'light_mode' : 'dark_mode';
+}
+function confirmAction(title, msg, callback) {
+    document.getElementById('confirmTitle').textContent = title; document.getElementById('confirmMessage').textContent = msg;
+    document.getElementById('confirmOkBtn').onclick = () => { closeModal('confirmModal'); callback(); };
+    document.getElementById('confirmModal').classList.remove('hidden');
+}
+function logAction(action, detail) {
+    let logs = safeJSON('zzz_admin_logs'); const u = safeJSON('zzz_user',{name:'Super Admin'});
+    logs.unshift({ time: new Date().toLocaleString(), admin: u.name.split(' ')[0], action, detail });
+    if(logs.length > 50) logs.length = 50; localStorage.setItem('zzz_admin_logs', JSON.stringify(logs));
+}
+
+let sessionTimer, sessionTimeoutMin = safeJSON('zzz_sys_cfg', {timeout:15}).timeout;
+function resetSessionTimer() {
+    clearTimeout(sessionTimer); let t = sessionTimeoutMin * 60;
+    if(window.sysTick) clearInterval(window.sysTick);
+    window.sysTick = setInterval(() => {
+        t--; document.getElementById('sessionTimerDisplay').textContent = `Session: ${Math.floor(t/60).toString().padStart(2,'0')}:${(t%60).toString().padStart(2,'0')}`;
+        if(t<=0) { clearInterval(window.sysTick); showToast("Session Expired.", "error"); handleLogout(); }
+    }, 1000);
+    sessionTimer = setTimeout(()=>{clearInterval(window.sysTick);}, t*1000);
+}
+['mousemove','click','keypress'].forEach(e=>document.addEventListener(e, resetSessionTimer));
+
+(function authCheck(){
+    // 1. Enforce Admin/Moderator/SuperAdmin Role
+    if (typeof isAdmin === 'function' && !isAdmin()) {
+        showToast("Access Denied: Administrator or Moderator role required.", "error");
         window.location.href = 'Login Page.html?redirect=AdminConsoleV2.html';
+        return;
     }
-  })();
+    
+    // 2. IP Allowlist Check
+    const sysCfg = safeJSON('zzz_sys_cfg', {ips:''});
+    if (sysCfg.ips && sysCfg.ips.trim()) {
+        const allowedIPs = sysCfg.ips.split(',').map(ip => ip.trim()).filter(Boolean);
+        if (allowedIPs.length > 0) {
+            const currentIP = localStorage.getItem('zzz_client_ip') || '127.0.0.1';
+            if (!allowedIPs.includes(currentIP)) {
+                showToast(`Access Denied: IP address ${currentIP} is not authorized.`, 'error');
+                window.location.href = 'classifieds.html';
+                return;
+            }
+        }
+    }
+    
+    // 3. 2FA Verification Mock
+    const enforce2FA = sysCfg.enforce2fa;
+    if (enforce2FA) {
+        const hasCompleted2FA = sessionStorage.getItem('zzz_admin_2fa_verified') === 'true';
+        if (!hasCompleted2FA) {
+            const enteredCode = prompt("Two-Factor Authentication (2FA) is enforced. Enter your 6-digit code (Use 123456 for demo):");
+            if (enteredCode !== '123456') {
+                showToast("Invalid 2FA Code. Access Denied.", "error");
+                handleLogout();
+                return;
+            }
+            sessionStorage.setItem('zzz_admin_2fa_verified', 'true');
+        }
+    }
 
-  // --- 1. CORE & DATA (THE MASTER BRAIN) ---
-  // Schema is pulled from js/schema.js
-  const FACTORY_SCHEMA = window.ZZZ_SCHEMA;
+    seedMockData(); 
+    resetSessionTimer();
+    const theme = localStorage.getItem('zzz_theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const dark = theme === 'dark' || (!theme && prefersDark);
+    if(dark) { document.documentElement.classList.add('dark'); document.getElementById('themeIcon').textContent='light_mode'; }
+    else { document.documentElement.classList.remove('dark'); document.getElementById('themeIcon').textContent='dark_mode'; }
+})();
 
-    let schema = { categories: [], subcategories: [], fields: [] };
-    let selectedCatId = null, selectedSubId = null, editingItem = null;
+function switchTab(id) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.getElementById('tab-'+id).classList.remove('hidden');
+    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active-nav'));
+    document.getElementById('nav-'+id).classList.add('active-nav');
+    
+    if(id==='dashboard') { loadDashboard(); requestAnimationFrame(() => initCharts()); }
+    if(id==='listings') loadListings(); 
+    if(id==='users') { loadUsers(); loadVerificationReqs(); } 
+    if(id==='payments') loadPayments();
+    if(id==='coupons') loadCoupons();
+    if(id==='moderation') loadReports();
+    if(id==='support') loadSupport(); 
+    if(id==='schema') renderSchemaBuilder();
+    if(id==='settings' || id==='security') loadSettingsUI();
+}
 
-    document.addEventListener('DOMContentLoaded', () => {
-        if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
-        loadData();
-        loadSchema();
-        loadSettings();
-        renderLogs();
+function refreshData() { showToast('Syncing with database...', 'success'); setTimeout(()=>{ location.reload(); }, 500); }
+
+// ==============================
+// 2. DASHBOARD & CHARTS (SAFE INIT)
+// ==============================
+function loadDashboard() {
+    const users = safeJSON('zzz_users'); const listings = safeJSON('zzz_listings'); const txns = safeJSON('zzz_transactions');
+    document.getElementById('statUsers').textContent = users.length;
+    document.getElementById('statListings').textContent = listings.filter(l=>l.status==='active').length;
+    document.getElementById('statTickets').textContent = safeJSON('zzz_support_tickets').filter(t=>t.status==='Open').length;
+    document.getElementById('statRev').textContent = '₹' + Number(txns.filter(t=>t.status==='success').reduce((sum, t)=>sum+Number(t.amount||0), 0)).toLocaleString();
+    
+    const logs = safeJSON('zzz_admin_logs');
+    document.getElementById('dashboardLogs').innerHTML = logs.map(l=>`<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/50"><td class="py-2 text-slate-400 whitespace-nowrap">${escapeHTML(l.time.split(',')[0])}</td><td class="font-bold whitespace-nowrap">${escapeHTML(l.admin)}</td><td class="text-brand text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">${escapeHTML(l.action)}</td><td class="text-slate-600 dark:text-gray-300 truncate max-w-[200px]">${escapeHTML(l.detail)}</td></tr>`).join('') || '<tr><td colspan="4" class="py-4 text-center text-slate-400">No logs.</td></tr>';const charts = {};
+function initCharts() {
+    try {
+        const actCtx = document.getElementById('activityChart');
+        if(!actCtx || actCtx.offsetParent === null) return; // Don't init if hidden
+
+        ['activity','status','category','funnel','geo'].forEach(k => { if(charts[k]) charts[k].destroy(); });
         
-        // Activity Chart
-        const ctx = document.getElementById('activityChart');
-        if(ctx) {
-            new Chart(ctx.getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [{ label: 'Traffic', data: [50, 60, 45, 80, 70, 90, 100], borderColor: '#019863', tension: 0.4 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
+        Chart.defaults.color = document.documentElement.classList.contains('dark') ? '#94a3b8' : '#64748b';
+        Chart.defaults.font.family = "'Spline Sans', sans-serif";
+
+        // 1. Dynamic Activity Chart
+        const list = safeJSON('zzz_listings');
+        const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        const counts = [0, 0, 0, 0, 0, 0, 0];
+        const labels = [];
+        const now = new Date();
+        
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(now.getDate() - i);
+            labels.push(days[d.getDay()]);
+            
+            const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0).getTime();
+            const endOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999).getTime();
+            
+            list.forEach(l => {
+                const ts = new Date(l.createdAt).getTime();
+                if (ts >= startOfDay && ts <= endOfDay) {
+                    counts[6 - i]++;
+                }
             });
         }
+
+        charts.activity = new Chart(actCtx, { 
+            type:'line', 
+            data:{ 
+                labels: labels, 
+                datasets:[{ 
+                    label:'New Listings', 
+                    data: counts, 
+                    borderColor:'#019863', 
+                    backgroundColor:'rgba(1,152,99,0.1)', 
+                    tension:0.4, 
+                    fill:true 
+                }] 
+            }, 
+            options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}} 
+        });
+        
+        // 2. Dynamic Status Chart
+        const activeCount = list.filter(l => l.status === 'active').length;
+        const pendingCount = list.filter(l => l.status === 'pending_review').length;
+        const rejectedCount = list.filter(l => l.status === 'rejected').length;
+        const expiredCount = list.filter(l => l.status === 'expired').length;
+
+        charts.status = new Chart(document.getElementById('statusChart'), { 
+            type:'doughnut', 
+            data:{ 
+                labels:['Active','Pending','Rejected','Expired'], 
+                datasets:[{ 
+                    data:[activeCount, pendingCount, rejectedCount, expiredCount], 
+                    backgroundColor:['#019863','#f59e0b','#ef4444','#94a3b8'] 
+                }] 
+            }, 
+            options:{responsive:true, maintainAspectRatio:false, cutout:'70%', plugins:{legend:{position:'bottom'}}} 
+        });
+
+        // 3. Dynamic Category Chart
+        const catCounts = {};
+        list.forEach(l => {
+            const c = l.category || 'Uncategorized';
+            catCounts[c] = (catCounts[c] || 0) + 1;
+        });
+        const sortedCats = Object.entries(catCounts).sort((a,b) => b[1] - a[1]);
+        const catLabels = sortedCats.slice(0, 4).map(x => x[0]);
+        const catData = sortedCats.slice(0, 4).map(x => x[1]);
+        if (sortedCats.length > 4) {
+            catLabels.push('Others');
+            catData.push(sortedCats.slice(4).reduce((sum, x) => sum + x[1], 0));
+        }
+
+        charts.category = new Chart(document.getElementById('categoryChart'), { 
+            type:'pie', 
+            data:{ 
+                labels: catLabels.length ? catLabels : ['None'], 
+                datasets:[{ 
+                    data: catData.length ? catData : [0], 
+                    backgroundColor:['#019863','#3b82f6','#8b5cf6','#f59e0b','#94a3b8'] 
+                }] 
+            }, 
+            options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right'}}} 
+        });
+
+        // 4. Dynamic Funnel Chart
+        charts.funnel = new Chart(document.getElementById('funnelChart'), { 
+            type:'bar', 
+            data:{ 
+                labels:['Visitors','Searches','Drafts','Live'], 
+                datasets:[{ 
+                    label:'Users', 
+                    data:[activeCount * 12, activeCount * 8, activeCount * 2, activeCount], 
+                    backgroundColor:'#019863', 
+                    borderRadius:4 
+                }] 
+            }, 
+            options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}} 
+        });
+
+        // 5. Dynamic Geo Chart
+        const locCounts = {};
+        list.forEach(l => {
+            const loc = l.location || 'Mumbai';
+            locCounts[loc] = (locCounts[loc] || 0) + 1;
+        });
+        const sortedLocs = Object.entries(locCounts).sort((a,b) => b[1] - a[1]);
+        const locLabels = sortedLocs.slice(0, 4).map(x => x[0]);
+        const locData = sortedLocs.slice(0, 4).map(x => x[1]);
+        while (locLabels.length < 4) {
+            locLabels.push(['Delhi', 'Bangalore', 'Pune', 'Kolkata'][locLabels.length]);
+            locData.push(0);
+        }
+
+        charts.geo = new Chart(document.getElementById('geoChart'), { 
+            type:'bar', 
+            data:{ 
+                labels: locLabels, 
+                datasets:[{ 
+                    label:'Users', 
+                    data: locData, 
+                    backgroundColor:'#3b82f6', 
+                    borderRadius:4 
+                }] 
+            }, 
+            options:{indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}} 
+        });
+    } catch(e) {}
+}
+
+// ==============================
+// 3. LISTINGS & USERS
+// ==============================
+function loadListings() {
+    let list = safeJSON('zzz_listings'); const search = document.getElementById('listingSearch').value.toLowerCase(); const status = document.getElementById('listingStatusFilter').value;
+    if(search) list = list.filter(l => (l.title||'').toLowerCase().includes(search) || (l.userName||'').toLowerCase().includes(search));
+    if(status) list = list.filter(l => l.status === status);
+    const tbody = document.getElementById('listingsTableBody');
+    const statusColors = { active:'bg-green-100 text-green-700', pending_review:'bg-yellow-100 text-yellow-700', rejected:'bg-red-100 text-red-700', expired:'bg-slate-100 text-slate-700' };
+    tbody.innerHTML = list.length ? list.map(l => {
+        const actions = [];
+        if (l.status === 'pending_review') {
+            actions.push(`<button onclick="confirmAction('Approve Listing', 'Approve ${escapeHTML(l.title)}?', ()=>{ approveListing('${l.id}') })" class="text-green-500 hover:text-green-700 text-xs font-bold transition-colors mr-2 animate-pulse" title="Approve"><span class="material-symbols-outlined text-[16px] align-middle">check_circle</span></button>`);
+            actions.push(`<button onclick="confirmAction('Reject Listing', 'Reject ${escapeHTML(l.title)}?', ()=>{ rejectListing('${l.id}') })" class="text-red-500 hover:text-red-700 text-xs font-bold transition-colors mr-2" title="Reject"><span class="material-symbols-outlined text-[16px] align-middle">cancel</span></button>`);
+        }
+        actions.push(`<button onclick="confirmAction('Delete Listing', 'Remove ${escapeHTML(l.title)}?', ()=>{ deleteListing('${l.id}') })" class="text-slate-400 hover:text-red-600 text-xs font-bold transition-colors" title="Delete"><span class="material-symbols-outlined text-[16px] align-middle">delete</span></button>`);
+        return `<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/50 border-b border-slate-100 dark:border-gray-800"><td class="px-4 py-3 font-bold">${escapeHTML(l.title)}</td><td class="px-4 py-3 text-xs">${escapeHTML(l.userName)}</td><td class="px-4 py-3 text-xs"><span class="bg-slate-100 dark:bg-gray-700 px-2 py-1 rounded">${escapeHTML(l.category)}</span></td><td class="px-4 py-3 font-bold text-brand">₹${Number(l.price).toLocaleString()}</td><td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${statusColors[l.status]||statusColors.expired}">${escapeHTML(l.status)}</span></td><td class="px-4 py-3 text-right"><div class="flex gap-2 justify-end items-center">${actions.join('')}</div></td></tr>`;
+    }).join('') : '<tr><td colspan="6" class="p-8 text-center text-slate-400">No listings found.</td></tr>';
+}
+function approveListing(id) { let list = safeJSON('zzz_listings'); const idx = list.findIndex(l => l.id === id); if (idx > -1) { list[idx].status = 'active'; localStorage.setItem('zzz_listings', JSON.stringify(list)); logAction('APPROVE_LISTING', id); loadListings(); showToast('Listing approved', 'success'); } }
+function rejectListing(id) { let list = safeJSON('zzz_listings'); const idx = list.findIndex(l => l.id === id); if (idx > -1) { list[idx].status = 'rejected'; localStorage.setItem('zzz_listings', JSON.stringify(list)); logAction('REJECT_LISTING', id); loadListings(); showToast('Listing rejected', 'error'); } }
+function deleteListing(id) { let list = safeJSON('zzz_listings').filter(l => l.id !== id); localStorage.setItem('zzz_listings', JSON.stringify(list)); logAction('DELETE_LISTING', id); loadListings(); showToast('Listing deleted'); }
+
+function loadUsers() {
+    let users = safeJSON('zzz_users'); const search = document.getElementById('userSearch').value.toLowerCase();
+    if(search) users = users.filter(u => (u.name||'').toLowerCase().includes(search) || (u.email||'').toLowerCase().includes(search));
+    const banned = safeJSON('zzz_banned_users');
+    const verified = safeJSON('zzz_verified_users');
+    document.getElementById('usersTableBody').innerHTML = users.length ? users.map(u => {
+        const score = Math.floor(Math.random()*40)+60; const scoreColor = score > 80 ? 'text-green-600 bg-green-100' : score > 50 ? 'text-yellow-600 bg-yellow-100' : 'text-red-600 bg-red-100';
+        const roleColor = u.role==='super_admin'?'text-purple-600 bg-purple-100':u.role==='moderator'?'text-blue-600 bg-blue-100':'text-slate-600 bg-slate-100 dark:bg-gray-700';
+        const isBanned = banned.includes(u.id) || banned.includes(u.name);
+        const isVerified = verified.includes(u.id) || verified.includes(u.name);
+        const vBadge = isVerified ? `<span class="material-symbols-outlined text-[14px] text-blue-500 align-middle ml-1" title="Verified">verified</span>` : '';
+        const banAction = isBanned ? 
+            `<button onclick="confirmAction('Unban User', 'Restore access for ${escapeHTML(u.email)}?', ()=>{ unbanUser('${u.id}') })" class="text-red-500 hover:text-red-700" title="Unban"><span class="material-symbols-outlined text-[18px]">lock_open</span></button>` :
+            `<button onclick="confirmAction('Ban User', 'Revoke access for ${escapeHTML(u.email)}?', ()=>{ banUser('${u.id}') })" class="text-slate-400 hover:text-red-500" title="Ban"><span class="material-symbols-outlined text-[18px]">block</span></button>`;
+        return `<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/50 border-b border-slate-100 dark:border-gray-800"><td class="px-6 py-3"><div class="font-bold flex items-center gap-1">${escapeHTML(u.name)}${vBadge}</div><div class="text-[10px] text-slate-500 font-mono">${escapeHTML(u.email)}</div></td><td class="px-6 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${roleColor}">${escapeHTML(u.role)}</span></td><td class="px-6 py-3"><span class="px-2 py-1 rounded text-xs font-bold ${scoreColor}">${score}%</span></td><td class="px-6 py-3 text-xs text-slate-400">${new Date(u.createdAt || u.joined || Date.now()).toLocaleDateString()}</td><td class="px-6 py-3 text-right flex gap-3 justify-end items-center"><button onclick="openUserModal('${u.id}')" class="text-slate-400 hover:text-brand" title="Edit"><span class="material-symbols-outlined text-[18px]">edit</span></button><button onclick="openTimeline('${u.id}')" class="text-slate-400 hover:text-blue-500" title="Timeline"><span class="material-symbols-outlined text-[18px]">history</span></button>${banAction}</td></tr>`;
+    }).join('') : '<tr><td colspan="5" class="p-8 text-center text-slate-400">No users found.</td></tr>';
+}
+function banUser(userId) { let banned = safeJSON('zzz_banned_users'); if(!banned.includes(userId)) { banned.push(userId); localStorage.setItem('zzz_banned_users', JSON.stringify(banned)); logAction('BAN_USER', userId); showToast('User banned', 'error'); loadUsers(); } }
+function unbanUser(userId) { let banned = safeJSON('zzz_banned_users'); banned = banned.filter(id => id !== userId); localStorage.setItem('zzz_banned_users', JSON.stringify(banned)); logAction('UNBAN_USER', userId); showToast('User unbanned', 'success'); loadUsers(); }
+
+function loadVerificationReqs() {
+    const reqs = safeJSON('zzz_verification_reqs');
+    const tbody = document.getElementById('verificationsTableBody');
+    if (!tbody) return;
+    const pendingReqs = reqs.filter(r => r.status === 'pending');
+    tbody.innerHTML = pendingReqs.length ? pendingReqs.map(r => `
+        <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/50 border-b border-slate-100 dark:border-gray-800">
+            <td class="px-6 py-3">
+                <div class="font-bold">${escapeHTML(r.userName)}</div>
+                <div class="text-[10px] text-slate-500 font-mono">${escapeHTML(r.userEmail || '')}</div>
+            </td>
+            <td class="px-6 py-3 text-xs text-slate-400">${new Date(r.date).toLocaleString()}</td>
+            <td class="px-6 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-yellow-100 text-yellow-700">Pending</span></td>
+            <td class="px-6 py-3 text-right flex gap-3 justify-end items-center">
+                <button onclick="confirmAction('Approve Verification', 'Verify ${escapeHTML(r.userName)}?', ()=>{ approveVerification('${r.userId}') })" class="text-green-500 hover:text-green-700 text-xs font-bold transition-colors">Approve</button>
+                <button onclick="confirmAction('Reject Verification', 'Reject verification for ${escapeHTML(r.userName)}?', ()=>{ rejectVerification('${r.userId}') })" class="text-red-500 hover:text-red-700 text-xs font-bold transition-colors">Reject</button>
+            </td>
+        </tr>
+    `).join('') : '<tr><td colspan="4" class="p-8 text-center text-slate-400">No pending verification requests.</td></tr>';
+}
+function approveVerification(userId) {
+    let reqs = safeJSON('zzz_verification_reqs');
+    const reqIdx = reqs.findIndex(r => r.userId === userId);
+    if (reqIdx > -1) { reqs[reqIdx].status = 'approved'; localStorage.setItem('zzz_verification_reqs', JSON.stringify(reqs)); }
+    let verified = safeJSON('zzz_verified_users');
+    if (!verified.includes(userId)) { verified.push(userId); localStorage.setItem('zzz_verified_users', JSON.stringify(verified)); }
+    logAction('APPROVE_VERIFICATION', userId);
+    showToast('User verification approved', 'success');
+    loadVerificationReqs();
+    loadUsers();
+}
+function rejectVerification(userId) {
+    let reqs = safeJSON('zzz_verification_reqs');
+    const reqIdx = reqs.findIndex(r => r.userId === userId);
+    if (reqIdx > -1) { reqs[reqIdx].status = 'rejected'; localStorage.setItem('zzz_verification_reqs', JSON.stringify(reqs)); }
+    let verified = safeJSON('zzz_verified_users');
+    verified = verified.filter(id => id !== userId);
+    localStorage.setItem('zzz_verified_users', JSON.stringify(verified));
+    logAction('REJECT_VERIFICATION', userId);
+    showToast('User verification rejected', 'error');
+    loadVerificationReqs();
+    loadUsers();
+}
+
+function openUserModal(id = null) {
+    document.getElementById('userModalTitle').textContent = id ? 'Edit User' : 'Add User'; 
+    const form = { id:'', name:'', email:'', role:'user' };
+    if(id) { const u = safeJSON('zzz_users').find(x=>x.id===id); if(u) Object.assign(form, u); }
+    document.getElementById('userId').value = form.id; document.getElementById('userName').value = form.name; document.getElementById('userEmail').value = form.email; document.getElementById('userRole').value = form.role;
+    document.getElementById('userModal').classList.remove('hidden');
+}
+function saveUser() {
+    const id = document.getElementById('userId').value; const name = document.getElementById('userName').value; const email = document.getElementById('userEmail').value; const role = document.getElementById('userRole').value;
+    if(!name || !email) return showToast('Name and Email required', 'error');
+    let users = safeJSON('zzz_users');
+    if(id) { const idx = users.findIndex(u=>u.id===id); if(idx>-1) users[idx] = {...users[idx], name, email, role}; }
+    else { users.push({ id:'u_'+Date.now(), name, email, role, createdAt:new Date().toISOString() }); }
+    localStorage.setItem('zzz_users', JSON.stringify(users)); closeModal('userModal'); loadUsers(); showToast('User saved');
+}
+function openTimeline(uid) {
+    const u = safeJSON('zzz_users').find(x=>x.id===uid); if(!u) return;
+    const evts = [ {t:new Date(u.createdAt), msg:'Account created'}, {t:new Date(Date.now()-3600000), msg:'User logged in'} ];
+    document.getElementById('timelineContent').innerHTML = evts.sort((a,b)=>b.t-a.t).map(e=>`<div class="border-l-2 border-slate-200 dark:border-gray-700 pl-4 pb-4 relative"><div class="absolute w-2 h-2 bg-brand rounded-full -left-[5px] top-1"></div><p class="text-[10px] text-slate-400 font-mono">${e.t.toLocaleString()}</p><p class="font-bold text-slate-700 dark:text-gray-200">${escapeHTML(e.msg)}</p></div>`).join('');
+    document.getElementById('timelineModal').classList.remove('hidden');
+}
+
+// ==============================
+// 4. PAYMENTS & COUPONS
+// ==============================
+function loadPayments() {
+    const txns = safeJSON('zzz_transactions');
+    document.getElementById('paymentsTableBody').innerHTML = txns.length ? txns.map(t=>`<tr class="border-b border-slate-100 dark:border-gray-800"><td class="py-3 font-mono text-xs text-slate-500">${t.id}</td><td class="font-bold text-xs">${escapeHTML(t.userName)}</td><td class="text-brand font-bold text-xs">₹${t.amount}</td><td><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${t.status==='success'?'bg-green-100 text-green-700':t.status==='refunded'?'bg-red-100 text-red-700':'bg-yellow-100 text-yellow-700'}">${t.status}</span></td><td class="text-right">${t.status==='success'?`<button onclick="openRefund('${t.id}')" class="text-red-500 text-xs font-bold hover:underline">Refund</button>`:''}</td></tr>`).join('') : '<tr><td colspan="5" class="p-6 text-center text-slate-400">No transactions.</td></tr>';
+}
+function openRefund(id) {
+    const t = safeJSON('zzz_transactions').find(x=>x.id===id); if(!t) return;
+    document.getElementById('refundTxnId').value = id; document.getElementById('refundTxnInfo').textContent = `Txn: ${t.id} | Amount: ₹${t.amount}`;
+    document.getElementById('refundModal').classList.remove('hidden');
+}
+function executeRefund() {
+    const id = document.getElementById('refundTxnId').value; let txns = safeJSON('zzz_transactions');
+    const idx = txns.findIndex(x=>x.id===id); if(idx>-1) { txns[idx].status = 'refunded'; localStorage.setItem('zzz_transactions', JSON.stringify(txns)); loadPayments(); loadDashboard(); showToast('Refund processed'); closeModal('refundModal'); }
+}
+function loadCoupons() {
+    const coupons = safeJSON('zzz_coupons');
+    document.getElementById('couponsTableBody').innerHTML = coupons.length ? coupons.map(c=>`<tr class="border-b border-slate-100 dark:border-gray-800"><td class="py-3 font-bold font-mono">${escapeHTML(c.code)}</td><td class="text-brand font-bold">${c.discount}%</td><td><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-green-100 text-green-700">Active</span></td><td class="text-right"><button onclick="confirmAction('Delete Coupon', 'Delete ${c.code}?', ()=>{deleteCoupon('${c.code}')})" class="text-red-500 text-xs font-bold">Delete</button></td></tr>`).join('') : '<tr><td colspan="4" class="p-6 text-center text-slate-400">No active coupons.</td></tr>';
+}
+function createCoupon() {
+    const code = document.getElementById('couponCode').value.toUpperCase().trim(); const discount = document.getElementById('couponDiscount').value;
+    if(!code || !discount) return showToast('Fill all fields', 'error');
+    let coupons = safeJSON('zzz_coupons'); coupons.push({code, discount}); localStorage.setItem('zzz_coupons', JSON.stringify(coupons));
+    document.getElementById('couponCode').value = ''; document.getElementById('couponDiscount').value = ''; loadCoupons(); showToast('Coupon created');
+}
+function deleteCoupon(code) { let c = safeJSON('zzz_coupons').filter(x=>x.code!==code); localStorage.setItem('zzz_coupons', JSON.stringify(c)); loadCoupons(); showToast('Coupon deleted'); }
+
+// ==============================
+// 5. MODERATION & SUPPORT
+// ==============================
+function loadReports() {
+    const flags = safeJSON('zzz_flags');
+    document.getElementById('reportsTableBody').innerHTML = flags.length ? flags.map(f=>`<tr class="border-b border-slate-100 dark:border-gray-800"><td class="font-bold text-xs py-2">${escapeHTML(f.listingTitle)}</td><td class="text-red-500 font-bold text-xs">${escapeHTML(f.reason)}</td></tr>`).join('') : '<tr><td colspan="2" class="p-6 text-center text-slate-400">Queue is empty.</td></tr>';
+    
+    const listings = safeJSON('zzz_listings');
+    const userReportCounts = {};
+    
+    flags.forEach(f => {
+        const lst = listings.find(l => l.id === f.listingId);
+        if (lst) {
+            const uName = lst.userName || 'Anonymous';
+            userReportCounts[uName] = (userReportCounts[uName] || 0) + 1;
+        } else {
+            userReportCounts['Deleted Listing Seller'] = (userReportCounts['Deleted Listing Seller'] || 0) + 1;
+        }
     });
+    
+    const sortedReports = Object.entries(userReportCounts).sort((a,b) => b[1] - a[1]);
+    
+    document.getElementById('abuseTableBody').innerHTML = sortedReports.length ? sortedReports.map(([uName, count]) => `
+        <tr>
+            <td class="py-2 text-xs font-bold text-slate-500">${escapeHTML(uName)}</td>
+            <td class="text-center font-bold text-orange-500">${count}</td>
+            <td class="text-right">
+                <button onclick="showToast('Warning sent to ${escapeHTML(uName)}', 'warning')" class="text-[10px] font-bold bg-orange-100 text-orange-700 px-2 py-1 rounded hover:bg-orange-200">Warn</button>
+            </td>
+        </tr>
+    `).join('') : '<tr><td colspan="3" class="py-4 text-center text-slate-400">No reports submitted.</td></tr>';
+}
+function loadSupport() {
+    let tix = safeJSON('zzz_support_tickets');
+    document.getElementById('supportTableBody').innerHTML = tix.length ? tix.map(t => {
+        return `<tr class="border-b border-slate-100 dark:border-gray-800"><td class="px-6 py-3"><span class="text-[10px] font-bold uppercase px-2 py-1 rounded bg-red-100 text-red-700">${escapeHTML(t.priority)}</span></td><td class="px-6 py-3 text-xs font-bold">${escapeHTML(t.userName)}</td><td class="px-6 py-3 text-xs truncate max-w-[150px]">${escapeHTML(t.topic)}</td><td class="px-6 py-3"><select class="text-xs border rounded p-1"><option>Unassigned</option><option>Admin 1</option></select></td><td class="px-6 py-3 text-xs font-bold text-red-500">2h left</td><td class="px-6 py-3 text-right"><button onclick="showToast('Ticket Resolved'); loadSupport();" class="text-brand text-xs font-bold">Resolve</button></td></tr>`;
+    }).join('') : '<tr><td colspan="6" class="p-8 text-center text-slate-400">No tickets found.</td></tr>';
+}
 
-    // --- 2. NAVIGATION ---
-    function switchTab(id) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-        document.getElementById('tab-' + id).classList.remove('hidden');
-        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active-nav', 'bg-slate-100 dark:bg-gray-800'));
-        document.getElementById('nav-' + id).classList.add('active-nav');
-        
-        const titles = { dashboard: 'Dashboard', listings: 'Listings Manager', users: 'User Base', settings: 'Global Settings', schema: 'Schema Manager', support: 'Support Desk', moderation: 'Moderation Queue' };
-        document.getElementById('pageTitle').textContent = titles[id];
-        
-        if(id === 'listings') loadListings();
-        if(id === 'users') loadUsers();
-        if(id === 'settings') renderLogs();
-        if(id === 'support') loadSupport();
-        if(id === 'moderation') loadReports();
-    }
+// ==============================
+// 6. SCHEMA BUILDER (BULLETPROOF DB SYNC)
+// ==============================
+const DEFAULT_SCHEMA = { categories: [{id:'c1', label:'Vehicles', icon:'directions_car'}], subcategories: [{id:'s1', categoryId:'c1', label:'Cars'}], fields: [{id:'f1', subcategoryId:'s1', label:'Mileage', type:'number', options:''}] };
+let curSchema = {categories:[], subcategories:[], fields:[]};
+let activeCat = null, activeSub = null;
 
-    // --- 3. DATA LOADERS ---
-    function loadData() {
-        const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-        const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-        const tickets = JSON.parse(localStorage.getItem('zzz_support_tickets') || '[]');
-        const flags = JSON.parse(localStorage.getItem('zzz_flags') || '[]');
-        
-        document.getElementById('statUsers').textContent = users.length;
-        document.getElementById('statListings').textContent = listings.length;
-        document.getElementById('statTickets').textContent = tickets.filter(t => t.status === 'Open').length;
-        document.getElementById('statFlags').textContent = flags.length;
-    }
-
-    function loadListings() {
-        const list = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-        const tbody = document.getElementById('listingsTableBody');
-        tbody.innerHTML = list.map(l => `
-            <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/80 border-b border-slate-100 dark:border-gray-800">
-                <td class="px-6 py-4 font-bold text-slate-700 dark:text-gray-200">${l.title}</td>
-                <td class="px-6 py-4 text-xs text-slate-500 dark:text-gray-400">${l.userName}</td>
-                <td class="px-6 py-4 text-xs bg-slate-100 dark:bg-gray-800 rounded">${l.category}</td>
-                <td class="px-6 py-4 text-brand font-bold">₹${l.price}</td>
-                <td class="px-6 py-4"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs uppercase font-bold">${l.status}</span></td>
-                <td class="px-6 py-4 text-right flex gap-2 justify-end">
-                    <button onclick="window.open('Listing Detail.html?id=${l.id}', '_blank')" class="text-blue-500 text-xs font-bold hover:underline">View</button>
-                    <button onclick="window.open('Post Listing.html?id=${l.id}', '_blank')" class="text-slate-500 dark:text-gray-400 text-xs font-bold hover:underline">Edit</button>
-                    <button onclick="deleteListing('${l.id}')" class="text-red-500 text-xs font-bold hover:underline">Delete</button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    function loadUsers() {
-        const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-        const banned = JSON.parse(localStorage.getItem('zzz_banned_users') || '[]');
-        const verified = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
-        
-        const tbody = document.getElementById('usersTableBody');
-        tbody.innerHTML = users.map(u => {
-            const isBanned = banned.includes(u.name);
-            const isVerified = verified.includes(u.name);
-            return `
-            <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/80 border-b border-slate-100 dark:border-gray-800">
-                <td class="px-6 py-4 flex items-center gap-2"><div class="w-6 h-6 rounded-full bg-slate-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold">${u.name.charAt(0)}</div> ${u.name}</td>
-                <td class="px-6 py-4 text-xs font-mono">${u.email}</td>
-                <td class="px-6 py-4"><span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs uppercase font-bold">${u.role}</span></td>
-                <td class="px-6 py-4"><span class="${isBanned ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'} px-2 py-1 rounded text-xs uppercase font-bold">${isBanned ? 'Banned' : 'Active'}</span></td>
-                <td class="px-6 py-4">${isVerified ? '<span class="text-blue-500 material-symbols-outlined text-sm">verified</span>' : '<span class="text-slate-300 text-xs">No</span>'}</td>
-                <td class="px-6 py-4 text-right flex gap-2 justify-end">
-                    <button onclick="openEditUser('${u.id}')" class="text-slate-500 dark:text-gray-400 text-xs font-bold hover:underline">Edit</button>
-                    <button onclick="toggleVerify('${u.name}')" class="text-blue-500 text-xs font-bold hover:underline">${isVerified ? 'Unverify' : 'Verify'}</button>
-                    <button onclick="toggleBan('${u.name}')" class="text-${isBanned ? 'green' : 'red'}-500 text-xs font-bold hover:underline">${isBanned ? 'Unban' : 'Ban'}</button>
-                </td>
-            </tr>
-        `}).join('');
+function renderSchemaBuilder() {
+    // Check localStorage -> window.ZZZ_SCHEMA -> DEFAULT_SCHEMA
+    let saved = localStorage.getItem('zzz_classifieds_schema');
+    if (saved) {
+        try { curSchema = JSON.parse(saved); } catch(e) { curSchema = DEFAULT_SCHEMA; }
+    } else if (window.ZZZ_SCHEMA) {
+        curSchema = window.ZZZ_SCHEMA;
+    } else {
+        curSchema = DEFAULT_SCHEMA;
     }
     
-    function loadReports() {
-        const reports = JSON.parse(localStorage.getItem('zzz_flags') || '[]');
-        const tbody = document.getElementById('reportsTableBody');
-        if(reports.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-400 dark:text-gray-500">No reported items.</td></tr>';
-            return;
-        }
-        tbody.innerHTML = reports.map(r => {
-            const isListing = !!r.listingId;
-            const title = r.listingTitle || r.reportedUserName || 'Unknown';
-            const date = r.date || r.time || Date.now();
-            const id = r.listingId || r.reportedUserId;
-            
-
-            return `
-            <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/80 border-b border-slate-100 dark:border-gray-800">
-                <td class="px-6 py-4 text-xs text-slate-400 dark:text-gray-500">${new Date(date).toLocaleDateString()}</td>
-                <td class="px-6 py-4 font-bold text-slate-700 dark:text-gray-200">${title} ${isListing ? '<span class="text-blue-500 text-[10px] bg-blue-50 px-1 rounded ml-1">ITEM</span>' : '<span class="text-purple-500 text-[10px] bg-purple-50 px-1 rounded ml-1">USER</span>'}</td>
-                <td class="px-6 py-4 text-red-500 text-xs font-bold">${r.reason}</td>
-                <td class="px-6 py-4 text-right flex gap-2 justify-end">
-                    ${isListing ? 
-                        '<button onclick="window.open(&quot;Listing Detail.html?id=' + id + '&quot;, &quot;_blank&quot;)" class="text-blue-500 text-xs font-bold hover:underline">Inspect</button>' +
-                        '<button onclick="deleteListing(&quot;' + id + '&quot;)" class="text-red-500 text-xs font-bold hover:underline">Delete Item</button>' 
-                        : 
-                        '<button onclick="window.open(&quot;profile.html?sellerId=' + id + '&quot;, &quot;_blank&quot;)" class="text-blue-500 text-xs font-bold hover:underline">Inspect User</button>' +
-                        '<button onclick="toggleBan(&quot;' + title + '&quot;)" class="text-red-500 text-xs font-bold hover:underline">Ban User</button>'
-                    }
-                </td>
-            </tr>
-            `;
-        }).join('');
-    }
+    document.getElementById('schemaCategories').innerHTML = curSchema.categories.map(c=>`<div onclick="selCat('${c.id}')" class="p-2.5 rounded mb-1 cursor-pointer border border-slate-100 dark:border-gray-700 flex justify-between items-center group transition-colors ${activeCat===c.id?'active-schema shadow-md':'bg-white dark:bg-card-dark hover:bg-slate-50 dark:hover:bg-gray-800'}"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] opacity-70">${escapeHTML(c.icon||'category')}</span><span class="text-sm font-bold">${escapeHTML(c.label)}</span></div><button onclick="openSchemaModal('category', '${c.id}', event)" class="opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">edit</span></button></div>`).join('');
     
-    function loadSupport() {
-        const tickets = JSON.parse(localStorage.getItem('zzz_support_tickets') || '[]');
-        const tbody = document.getElementById('supportTableBody');
-        tbody.innerHTML = tickets.map(t => `
-            <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/80 border-b border-slate-100 dark:border-gray-800">
-                <td class="px-6 py-4 text-xs text-slate-400 dark:text-gray-500 font-mono">${t.id}</td>
-                <td class="px-6 py-4 font-bold text-slate-700 dark:text-gray-200">${t.userName}</td>
-                <td class="px-6 py-4 text-brand font-bold">${t.topic}</td>
-                <td class="px-6 py-4"><span class="${t.status === 'Open' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'} px-2 py-1 rounded text-xs uppercase font-bold">${t.status}</span></td>
-                <td class="px-6 py-4 text-right">${t.status === 'Open' ? `<button onclick="resolveTicket('${t.id}')" class="text-green-600 font-bold text-xs">Resolve</button>` : ''}</td>
-            </tr>
-        `).join('');
-    }
-
-    // --- 4. ACTIONS & LOGGING ---
-    function logAction(action, detail) {
-        const logs = JSON.parse(localStorage.getItem('zzz_admin_logs') || '[]');
-        logs.unshift({ time: new Date().toLocaleString(), admin: 'Admin', action, detail });
-        localStorage.setItem('zzz_admin_logs', JSON.stringify(logs));
-        renderLogs();
-    }
-
-    function renderLogs() {
-        const logs = JSON.parse(localStorage.getItem('zzz_admin_logs') || '[]');
-        const tbody = document.getElementById('logsTableBody');
-        if(!tbody) return;
-        tbody.innerHTML = logs.map(l => `
-            <tr><td class="px-6 py-2 text-slate-400 dark:text-gray-500">${l.time}</td><td class="px-6 py-2 font-bold">${l.admin}</td><td class="px-6 py-2 text-brand">${l.action}</td><td class="px-6 py-2 text-slate-600 dark:text-gray-300">${l.detail}</td></tr>
-        `).join('');
-    }
-
-    function deleteListing(id) {
-        if(!confirm("Delete this listing?")) return;
-        let list = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-        list = list.filter(l => l.id !== id);
-        localStorage.setItem('zzz_listings', JSON.stringify(list));
-        logAction("DELETE_LISTING", `Deleted listing ID ${id}`);
-        loadListings();
-        loadData();
-    }
+    const subcats = activeCat ? curSchema.subcategories.filter(s=>s.categoryId===activeCat) : [];
+    document.getElementById('schemaSubcats').innerHTML = activeCat ? (subcats.length ? subcats.map(s=>`<div onclick="selSub('${s.id}')" class="p-2.5 rounded mb-1 cursor-pointer border border-slate-100 dark:border-gray-700 flex justify-between items-center group transition-colors ${activeSub===s.id?'active-schema shadow-md':'bg-white dark:bg-card-dark hover:bg-slate-50 dark:hover:bg-gray-800'}"><span class="text-sm font-bold">${escapeHTML(s.label)}</span><button onclick="openSchemaModal('subcategory', '${s.id}', event)" class="opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">edit</span></button></div>`).join('') : '<div class="text-center text-xs text-slate-400 mt-4">No subcategories yet.</div>') : '<div class="text-center text-xs text-slate-400 mt-10">Select a Category &rarr;</div>';
+    document.getElementById('btnAddSub').disabled = !activeCat;
     
-    function clearReports() {
-        if(!confirm("Clear all reports?")) return;
-        localStorage.setItem('zzz_flags', '[]');
-        loadReports();
-    }
+    const fields = activeSub ? curSchema.fields.filter(f=>f.subcategoryId===activeSub) : [];
+    document.getElementById('schemaFields').innerHTML = activeSub ? (fields.length ? fields.map(f=>`<div class="p-2.5 rounded mb-1 border border-slate-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-card-dark group"><div class="flex flex-col"><span class="text-sm font-bold">${escapeHTML(f.label)}</span><span class="text-[10px] text-slate-400 font-mono uppercase">${escapeHTML(f.type)}</span></div><button onclick="openSchemaModal('field', '${f.id}')" class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-brand transition-opacity"><span class="material-symbols-outlined text-[16px]">edit</span></button></div>`).join('') : '<div class="text-center text-xs text-slate-400 mt-4">No custom fields yet.</div>') : '<div class="text-center text-xs text-slate-400 mt-10">Select a Subcategory &rarr;</div>';
+    document.getElementById('btnAddField').disabled = !activeSub;
+}
+function selCat(id) { activeCat = id; activeSub = null; renderSchemaBuilder(); }
+function selSub(id) { activeSub = id; renderSchemaBuilder(); }
 
-    function toggleBan(name) {
-        let banned = JSON.parse(localStorage.getItem('zzz_banned_users') || '[]');
-        if(banned.includes(name)) {
-            banned = banned.filter(n => n !== name);
-            logAction("UNBAN_USER", `Unbanned user ${name}`);
-        } else {
-            banned.push(name);
-            logAction("BAN_USER", `Banned user ${name}`);
-        }
-        localStorage.setItem('zzz_banned_users', JSON.stringify(banned));
-        loadUsers();
-    }
+function openSchemaModal(type, id = null, event = null) {
+    if(event) event.stopPropagation();
+    document.getElementById('schemaModalTitle').textContent = id ? `Edit ${type}` : `Add ${type}`;
+    document.getElementById('schemaItemType').value = type; document.getElementById('schemaItemId').value = id||'';
+    document.getElementById('schemaIconBlock').classList.toggle('hidden', type!=='category');
+    document.getElementById('schemaFieldBlock').classList.toggle('hidden', type!=='field');
+    document.getElementById('schemaDeleteBtn').classList.toggle('hidden', !id);
+
+    let form = {label:'', icon:'', type:'text', options:''};
+    if(id) { const arr = type==='category' ? curSchema.categories : type==='subcategory' ? curSchema.subcategories : curSchema.fields; const item = arr.find(x=>x.id===id); if(item) Object.assign(form, item); }
     
-    function toggleVerify(name) {
-        let verified = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
-        if(verified.includes(name)) {
-            verified = verified.filter(n => n !== name);
-            logAction("UNVERIFY_USER", `Unverified user ${name}`);
-        } else {
-            verified.push(name);
-            logAction("VERIFY_USER", `Verified user ${name}`);
-        }
-        localStorage.setItem('zzz_verified_users', JSON.stringify(verified));
-        loadUsers();
-    }
+    document.getElementById('schemaLabel').value = form.label; document.getElementById('schemaIcon').value = form.icon;
+    document.getElementById('schemaType').value = form.type; document.getElementById('schemaOptions').value = form.options;
+    document.getElementById('schemaOptionsBlock').classList.toggle('hidden', form.type!=='select');
+    document.getElementById('schemaModal').classList.remove('hidden');
+}
+
+function saveSchemaItem() {
+    const type = document.getElementById('schemaItemType').value; const id = document.getElementById('schemaItemId').value;
+    const label = document.getElementById('schemaLabel').value.trim(); if(!label) return showToast('Label required', 'error');
+    let arr = type==='category' ? curSchema.categories : type==='subcategory' ? curSchema.subcategories : curSchema.fields;
     
-    function resolveTicket(id) {
-        let tickets = JSON.parse(localStorage.getItem('zzz_support_tickets') || '[]');
-        const idx = tickets.findIndex(t => t.id === id);
-        if(idx !== -1) {
-            tickets[idx].status = 'Resolved';
-            localStorage.setItem('zzz_support_tickets', JSON.stringify(tickets));
-            logAction("RESOLVE_TICKET", `Resolved ticket ${id}`);
-            loadSupport();
-        }
+    if(id) {
+        let idx = arr.findIndex(x=>x.id===id);
+        if(idx>-1) { arr[idx].label = label; if(type==='category') arr[idx].icon = document.getElementById('schemaIcon').value; if(type==='field') { arr[idx].type = document.getElementById('schemaType').value; arr[idx].options = document.getElementById('schemaOptions').value; } }
+    } else {
+        const newId = type.charAt(0) + Date.now(); let obj = {id:newId, label};
+        if(type==='category') { obj.icon = document.getElementById('schemaIcon').value; }
+        if(type==='subcategory') obj.categoryId = activeCat;
+        if(type==='field') { obj.subcategoryId = activeSub; obj.type = document.getElementById('schemaType').value; obj.options = document.getElementById('schemaOptions').value; }
+        arr.push(obj);
     }
+    saveSchemaToDB(); closeModal('schemaModal'); renderSchemaBuilder();
+}
+function deleteSchemaItem() {
+    const type = document.getElementById('schemaItemType').value; const id = document.getElementById('schemaItemId').value;
+    confirmAction('Delete Schema Item', 'Are you sure? This may affect existing listings.', () => {
+        if(type==='category') { curSchema.categories = curSchema.categories.filter(x=>x.id!==id); curSchema.subcategories = curSchema.subcategories.filter(x=>x.categoryId!==id); activeCat=null; activeSub=null; }
+        if(type==='subcategory') { curSchema.subcategories = curSchema.subcategories.filter(x=>x.id!==id); curSchema.fields = curSchema.fields.filter(x=>x.subcategoryId!==id); activeSub=null; }
+        if(type==='field') curSchema.fields = curSchema.fields.filter(x=>x.id!==id);
+        saveSchemaToDB(); closeModal('schemaModal'); renderSchemaBuilder(); showToast('Item deleted');
+    });
+}
+function saveSchemaToDB() { localStorage.setItem('zzz_classifieds_schema', JSON.stringify(curSchema)); logAction('SCHEMA_UPDATE', 'Modified Database Schema'); }
+function resetSchemaToFactory() { confirmAction('Factory Reset', 'Restore default schema?', ()=>{ localStorage.setItem('zzz_classifieds_schema', JSON.stringify(DEFAULT_SCHEMA)); renderSchemaBuilder(); showToast('Schema Reset'); }); }
 
-    function clearLogs() {
-        if(confirm("Clear all audit logs?")) {
-            localStorage.setItem('zzz_admin_logs', '[]');
-            renderLogs();
-        }
-    }
+// ==============================
+// 7. GLOBAL CONFIG & BACKUPS
+// ==============================
+function loadSettingsUI() { const cfg = safeJSON('zzz_sys_cfg', {expiry:30, uploadSize:5, formats:'jpg,png,webp', timeout:15, ips:'', enforce2fa:false}); ['expiry','uploadSize','formats','timeout','ips'].forEach(k => { const el = document.getElementById('cfg'+k.charAt(0).toUpperCase()+k.slice(1)); if(el) el.value = cfg[k]; }); const el2fa = document.getElementById('cfg2FA'); if(el2fa) el2fa.checked = !!cfg.enforce2fa; }
+function saveSettingsLocal() { const cfg = { expiry: document.getElementById('cfgExpiry')?.value||30, uploadSize: document.getElementById('cfgUploadSize')?.value||5, formats: document.getElementById('cfgFormats')?.value||'jpg,png', timeout: document.getElementById('cfgTimeout')?.value||15, ips: document.getElementById('cfgIPs')?.value||'', enforce2fa: document.getElementById('cfg2FA')?.checked||false }; localStorage.setItem('zzz_sys_cfg', JSON.stringify(cfg)); logAction('SYS_CONFIG_UPDATE', 'Updated global settings'); showToast('Settings applied securely'); resetSessionTimer(); }
+function handleLogout() { if(window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(null); else { localStorage.removeItem('zzz_user'); localStorage.removeItem('zipzapzoi_current_user'); } sessionStorage.removeItem('zzz_admin_2fa_verified'); window.location.href = 'Login Page.html'; }
 
-    // --- 5. GLOBAL SETTINGS ---
-    function loadSettings() {
-        const banner = JSON.parse(localStorage.getItem('zzz_global_alert') || '{}');
-        if(banner.text) document.getElementById('globalBannerInput').value = banner.text;
-        if(banner.active) document.getElementById('bannerActive').checked = true;
+// ==============================
+// 8. MOCK DATABASE SEEDER
+// ==============================
+function seedMockData(forceReset = false) {
+    if(forceReset || safeJSON('zzz_users').length === 0) {
+        localStorage.setItem('zzz_users', JSON.stringify([{id:'u1', name:'Super Admin', email:'admin@zipzapzoi.com', role:'super_admin', createdAt:Date.now()}, {id:'u2', name:'John Doe', email:'john@example.com', role:'user', createdAt:Date.now() - 864000000}]));
+        localStorage.setItem('zzz_listings', JSON.stringify([{id:'l1', title:'2022 Honda Civic', userName:'John Doe', category:'Vehicles', price:1500000, status:'active', createdAt:Date.now() - 172800000}, {id:'l2', title:'iPhone 13 Pro', userName:'Alice Smith', category:'Electronics', price:65000, status:'pending_review', createdAt:Date.now()}]));
+        localStorage.setItem('zzz_support_tickets', JSON.stringify([{id:'t1', userName:'John Doe', topic:'App crashing on upload', priority:'urgent', status:'Open', createdAt:Date.now()-3600000}]));
+        localStorage.setItem('zzz_flags', JSON.stringify([{id:'f1', listingTitle:'Suspicious Investment', reason:'Potential Scam / Fraud', date:Date.now()}]));
+        localStorage.setItem('zzz_transactions', JSON.stringify([{id:'txn_123', userName:'Alice Smith', amount:199, status:'success', date:Date.now()}, {id:'txn_124', userName:'John Doe', amount:49, status:'refunded', date:Date.now()}]));
+        localStorage.setItem('zzz_coupons', JSON.stringify([{code:'ZOI50', discount:50}, {code:'LAUNCH20', discount:20}]));
+        logAction('SYSTEM_INIT', 'Bootstrapped mock database.');
     }
-
-    function saveGlobalSettings() {
-        const text = document.getElementById('globalBannerInput').value;
-        const active = document.getElementById('bannerActive').checked;
-        localStorage.setItem('zzz_global_alert', JSON.stringify({ text, active }));
-        logAction("SETTINGS_UPDATE", `Updated Global Banner: ${active ? 'Active' : 'Inactive'}`);
-        alert("Settings Saved!");
-    }
-
-    // --- 6. ADD/EDIT USER ---
-    function openAddUserModal() { 
-        document.getElementById('editUserId').value = '';
-        document.getElementById('newUserName').value = '';
-        document.getElementById('newUserEmail').value = '';
-        document.getElementById('newUserPass').value = '';
-        document.getElementById('userModal').classList.remove('hidden'); 
-    }
-    
-    function openEditUser(id) {
-        const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-        const u = users.find(x => x.id === id);
-        if(u) {
-            document.getElementById('editUserId').value = u.id;
-            document.getElementById('newUserName').value = u.name;
-            document.getElementById('newUserEmail').value = u.email;
-            document.getElementById('newUserPass').value = u.password;
-            document.getElementById('newUserRole').value = u.role;
-            document.getElementById('userModal').classList.remove('hidden');
-        }
-    }
-    
-    function handleUserSubmit(e) {
-        e.preventDefault();
-        const id = document.getElementById('editUserId').value;
-        const name = document.getElementById('newUserName').value;
-        const email = document.getElementById('newUserEmail').value;
-        const pass = document.getElementById('newUserPass').value;
-        const role = document.getElementById('newUserRole').value;
-
-        let users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-        
-        if(id) {
-            // Edit Mode
-            const idx = users.findIndex(u => u.id === id);
-            if(idx !== -1) {
-                users[idx] = { ...users[idx], name, email, password: pass, role };
-                logAction("EDIT_USER", `Updated user: ${email}`);
-            }
-        } else {
-            // Create Mode
-            if(users.some(u => u.email === email)) return alert("Email already exists!");
-            users.push({ id: 'u_'+Date.now(), name, email, password: pass, role, avatar: '' });
-            logAction("CREATE_USER", `Created ${role}: ${email}`);
-        }
-        
-        localStorage.setItem('zzz_users', JSON.stringify(users));
-        alert("User Saved!");
-        closeModal('userModal');
-        loadUsers();
-    }
-
-    // --- 7. SCHEMA EDITOR LOGIC ---
-    function loadSchema() {
-        const s = localStorage.getItem('zzz_classifieds_schema');
-        if(s) schema = JSON.parse(s);
-        else { schema = JSON.parse(JSON.stringify(FACTORY_SCHEMA)); localStorage.setItem('zzz_classifieds_schema', JSON.stringify(schema)); }
-        renderCategories();
-    }
-    
-    function renderCategories() {
-        document.getElementById('listCategories').innerHTML = schema.categories.map(c => 
-            `<div onclick="selCat('${c.id}')" class="p-3 rounded hover:bg-slate-50 dark:bg-gray-800/50 cursor-pointer flex items-center justify-between ${selectedCatId===c.id ? 'active-list-item':''}"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-slate-400 dark:text-gray-500 text-sm">${c.icon}</span> <span class="text-sm font-medium">${c.label}</span></div><button onclick="editItem(event,'category','${c.id}')" class="text-slate-300 hover:text-blue-500"><span class="material-symbols-outlined text-sm">edit</span></button></div>`
-        ).join('');
-    }
-    
-    function selCat(id) {
-        selectedCatId = id; selectedSubId = null;
-        renderCategories();
-        const subs = schema.subcategories.filter(s => s.categoryId === id);
-        document.getElementById('listSubcategories').innerHTML = subs.length ? subs.map(s => `<div onclick="selSub('${s.id}')" class="p-3 rounded hover:bg-slate-50 dark:bg-gray-800/50 cursor-pointer flex justify-between ${selectedSubId===s.id ? 'active-list-item':''}"><span class="text-sm font-medium">${s.label}</span><button onclick="editItem(event,'subcategory','${s.id}')" class="text-slate-300 hover:text-blue-500"><span class="material-symbols-outlined text-sm">edit</span></button></div>`).join('') : '<div class="text-center text-xs text-slate-400 dark:text-gray-500 mt-4">No Subcategories</div>';
-        document.getElementById('btnAddSub').disabled = false;
-        document.getElementById('listFields').innerHTML = '<div class="text-center text-xs text-slate-400 dark:text-gray-500 mt-10">Select a Subcategory</div>';
-    }
-
-    function selSub(id) {
-        selectedSubId = id;
-        selCat(selectedCatId); // re-render to highlight sub
-        const fields = schema.fields.filter(f => f.subcategoryId === id);
-        document.getElementById('listFields').innerHTML = fields.length ? fields.map(f => `<div class="p-3 border border-slate-100 dark:border-gray-800 rounded mb-2 bg-white dark:bg-card-dark flex justify-between group"><div><p class="text-sm font-bold">${f.label}</p><span class="text-[10px] bg-slate-100 dark:bg-gray-800 px-1 rounded uppercase">${f.type}</span></div><button onclick="editItem(event,'field','${f.id}')" class="text-slate-300 hover:text-blue-500 opacity-0 group-hover:opacity-100"><span class="material-symbols-outlined text-sm">edit</span></button></div>`).join('') : '<div class="text-center text-xs text-slate-400 dark:text-gray-500 mt-4">No Fields</div>';
-        document.getElementById('btnAddField').disabled = false;
-    }
-    
-    // TOGGLE OPTIONS VISIBILITY
-    function toggleOptionsInput() {
-        const type = document.getElementById('editType').value;
-        const container = document.getElementById('optionsContainer');
-        if(type === 'select') {
-            container.classList.remove('hidden');
-        } else {
-            container.classList.add('hidden');
-        }
-    }
-
-    function editItem(e, type, id) {
-        e.stopPropagation();
-        editingItem = { type, id };
-        let item;
-        if(type==='category') item=schema.categories.find(x=>x.id===id);
-        if(type==='subcategory') item=schema.subcategories.find(x=>x.id===id);
-        if(type==='field') item=schema.fields.find(x=>x.id===id);
-        
-        document.getElementById('editLabel').value = item.label;
-        document.getElementById('modalTitle').textContent = "Edit " + type;
-        document.getElementById('catExtras').classList.toggle('hidden', type!=='category');
-        document.getElementById('fieldExtras').classList.toggle('hidden', type!=='field');
-        
-        if(type==='category') document.getElementById('editIcon').value = item.icon;
-        
-        if(type==='field') { 
-            document.getElementById('editType').value = item.type; 
-            document.getElementById('editOptions').value = item.options || ''; 
-            toggleOptionsInput();
-        }
-        
-        document.getElementById('editModal').classList.remove('hidden');
-    }
-
-    function addItem(type) {
-        editingItem = { type, id: null };
-        document.getElementById('editLabel').value = '';
-        document.getElementById('modalTitle').textContent = "Add " + type;
-        document.getElementById('catExtras').classList.toggle('hidden', type!=='category');
-        document.getElementById('fieldExtras').classList.toggle('hidden', type!=='field');
-        
-        if(type === 'field') {
-             document.getElementById('editType').value = 'text';
-             toggleOptionsInput();
-        }
-
-        document.getElementById('editModal').classList.remove('hidden');
-    }
-
-    function saveItem() {
-        const label = document.getElementById('editLabel').value;
-        if(!label) return;
-        
-        if(!editingItem.id) { // NEW
-            const newId = label.toLowerCase().replace(/[^a-z0-9]/g,'_') + '_' + Date.now();
-            if(editingItem.type === 'category') schema.categories.push({ id: newId, label, icon: document.getElementById('editIcon').value || 'circle' });
-            if(editingItem.type === 'subcategory') schema.subcategories.push({ id: newId, categoryId: selectedCatId, label });
-            if(editingItem.type === 'field') schema.fields.push({ id: newId, subcategoryId: selectedSubId, label, type: document.getElementById('editType').value, options: document.getElementById('editOptions').value });
-        } else { // EDIT
-            if(editingItem.type === 'category') { const i = schema.categories.find(x=>x.id===editingItem.id); i.label = label; i.icon = document.getElementById('editIcon').value; }
-            if(editingItem.type === 'subcategory') { const i = schema.subcategories.find(x=>x.id===editingItem.id); i.label = label; }
-            if(editingItem.type === 'field') { const i = schema.fields.find(x=>x.id===editingItem.id); i.label = label; i.type = document.getElementById('editType').value; i.options = document.getElementById('editOptions').value; }
-        }
-        
-        saveSchemaToDB();
-        closeModal('editModal');
-        if(selectedCatId) selCat(selectedCatId);
-        if(selectedSubId) selSub(selectedSubId);
-    }
-
-    function deleteItem() {
-        if(!editingItem.id) return;
-        if(!confirm("Delete item?")) return;
-        if(editingItem.type === 'category') schema.categories = schema.categories.filter(x=>x.id!==editingItem.id);
-        if(editingItem.type === 'subcategory') schema.subcategories = schema.subcategories.filter(x=>x.id!==editingItem.id);
-        if(editingItem.type === 'field') schema.fields = schema.fields.filter(x=>x.id!==editingItem.id);
-        saveSchemaToDB();
-        closeModal('editModal');
-        renderCategories();
-    }
-
-    function saveSchemaToDB() {
-        localStorage.setItem('zzz_classifieds_schema', JSON.stringify(schema));
-        logAction("SCHEMA_CHANGE", `Updated Schema Structure`);
-    }
-
-    function resetToFactory() {
-        if(confirm("DANGER: This will replace your schema with the Master Factory Default list. Continue?")) {
-            localStorage.setItem('zzz_classifieds_schema', JSON.stringify(FACTORY_SCHEMA));
-            location.reload();
-        }
-    }
-
-    // Modal Helpers
-    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-    function handleLogout() { localStorage.removeItem('zzz_user'); window.location.href = 'Login Page.html'; }
-    function refreshData() { loadData(); alert("Data Refreshed"); }
-
-  </script>
-  <script src="js/utils.js"></script>
+    loadDashboard();
+}
+</script>
 </body>
 </html>

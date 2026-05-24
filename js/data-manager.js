@@ -291,7 +291,7 @@ const ZZZDataManager = (function() {
   // ===== USER METHODS =====
   function getCurrentUser() {
     try {
-      const userStr = localStorage.getItem(USER_KEY);
+      const userStr = localStorage.getItem(USER_KEY) || localStorage.getItem('zzz_user') || sessionStorage.getItem('zzz_user');
       return userStr ? JSON.parse(userStr) : null;
     } catch (error) {
       return null;
@@ -301,8 +301,11 @@ const ZZZDataManager = (function() {
   function setCurrentUser(user) {
     if (user) {
       localStorage.setItem(USER_KEY, JSON.stringify(user));
+      localStorage.setItem('zzz_user', JSON.stringify(user));
     } else {
       localStorage.removeItem(USER_KEY);
+      localStorage.removeItem('zzz_user');
+      sessionStorage.removeItem('zzz_user');
     }
   }
 

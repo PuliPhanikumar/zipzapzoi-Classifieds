@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+  </script>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>ZipZapZoi - My Favorites</title>
@@ -128,16 +135,25 @@
       document.addEventListener('DOMContentLoaded', () => {
         if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
         
-        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
         if(!user) {
             window.location.href = 'Login Page.html?redirect=favorites.html';
             return;
         }
 
-        favIds = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+        favIds = window.ZZZ ? window.ZZZ.getFavoriteIds(user.id) : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
         allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
         
         renderFavorites();
+      });
+
+      window.addEventListener('storage', (event) => {
+        if(event.key === 'zzz_listings' || event.key === 'zzz_favorites_by_user' || event.key === 'zzz_data_updated_at') {
+          const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+          favIds = window.ZZZ ? window.ZZZ.getFavoriteIds(user && user.id) : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+          allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+          renderFavorites();
+        }
       });
 
       function renderFavorites() {
@@ -194,7 +210,8 @@
       function removeFav(id) {
         // 1. Update localStorage immediately
         favIds = favIds.filter(f => f !== id);
-        localStorage.setItem('zzz_favorites', JSON.stringify(favIds));
+        if(window.ZZZ) window.ZZZ.setFavoriteIds(favIds);
+        else localStorage.setItem('zzz_favorites', JSON.stringify(favIds));
         
         // 2. Animate DOM removal without full re-render
         const card = document.getElementById(`card-${id}`);

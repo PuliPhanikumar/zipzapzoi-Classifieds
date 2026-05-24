@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+  </script>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ZipZapZoi - Buy, Sell, Connect</title>
@@ -240,7 +247,7 @@
         <ul class="space-y-2 text-sm text-gray-500 dark:text-gray-400">
           <li><a href="help.html" class="hover:text-primary transition-colors">Help Center</a></li>
           <li><a href="legal.html" class="hover:text-primary transition-colors">Terms &amp; Privacy</a></li>
-          <li><a href="AdminConsoleV2.html" class="hover:text-primary transition-colors">Admin</a></li>
+          <li id="footerAdminLinkContainer" class="hidden"><a href="AdminConsoleV2.html" class="hover:text-primary transition-colors">Admin</a></li>
         </ul>
       </div>
       <div>
@@ -324,6 +331,12 @@
         document.getElementById('mobileSignupBtn').textContent = 'Dashboard';
         document.getElementById('mobileSignupBtn').href = 'Seller Dashboard.html';
       }
+    }
+
+    // Show admin link in footer if user is admin
+    if (typeof isAdmin === 'function' && isAdmin()) {
+      const container = document.getElementById('footerAdminLinkContainer');
+      if (container) container.classList.remove('hidden');
     }
   </script>
 </body>

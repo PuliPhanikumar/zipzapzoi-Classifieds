@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+  </script>
+  
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>ZipZapZoi - Choose Your Plan</title>
@@ -96,6 +104,20 @@
              <span>GST (18%)</span>
              <span class="font-semibold text-gray-900 dark:text-white" id="summaryGst">₹0</span>
            </div>
+           <div id="discountRow" class="flex justify-between text-pink-500 hidden">
+             <span>Promo Discount</span>
+             <span class="font-semibold" id="summaryDiscount">-₹0</span>
+           </div>
+        </div>
+
+        <!-- Promo Code Input -->
+        <div class="mb-6">
+           <label class="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase mb-2">Promo Code</label>
+           <div class="flex gap-2">
+             <input type="text" id="promoCodeInput" placeholder="Enter coupon code" class="flex-1 uppercase bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand dark:text-white">
+             <button onclick="applyPromoCode()" class="bg-slate-800 dark:bg-white dark:text-slate-800 hover:bg-black dark:hover:bg-gray-200 text-white font-bold px-4 py-2 rounded-xl text-xs transition-colors">Apply</button>
+           </div>
+           <p id="promoMessage" class="text-xs mt-1 hidden"></p>
         </div>
 
         <div class="flex justify-between items-end">
@@ -153,41 +175,95 @@
     let pendingListing = null;
 
     if(!pendingJSON) {
-        // Redirect if directly accessed without pending listing
         window.location.href = 'Post Listing.html';
     } else {
         pendingListing = JSON.parse(pendingJSON);
         setupCheckout(pendingListing);
     }
 
-    // 2. Setup Pricing Logic
+    // 2. Pricing Logic & Coupon Validation
+    let baseFee = 10;
+    let currentDiscount = 0; // percentage discount (e.g. 50 for 50%)
+
     function setupCheckout(listing) {
         document.getElementById('summaryTitle').textContent = listing.title;
         document.getElementById('summaryCategory').textContent = listing.category;
 
         // Pricing Rules
-        let baseFee = 10;
+        baseFee = 10;
         if(listing.category === 'Real Estate' || listing.category === 'Vehicles') {
             baseFee = 20;
         }
 
-        const gst = parseFloat((baseFee * 0.18).toFixed(2));
-        const total = baseFee + gst;
-
         document.getElementById('summaryFee').textContent = `₹${baseFee}`;
-        document.getElementById('summaryGst').textContent = `₹${gst}`;
-        document.getElementById('summaryTotal').textContent = `₹${total}`;
-        document.getElementById('payBtnText').textContent = `Pay ₹${total}`;
+        updatePrices();
 
         // Look up Category Icon from Master Schema
         let categoryIcon = 'category'; // Default fallback
-        if (window.ZZZ_SCHEMA && window.ZZZ_SCHEMA.categories) {
-            const catDef = window.ZZZ_SCHEMA.categories.find(c => c.label === listing.category);
+        const schema = window.ZZZ ? window.ZZZ.getClassifiedsSchema() : window.ZZZ_SCHEMA;
+        if (schema && schema.categories) {
+            const catDef = schema.categories.find(c => c.label === listing.category || c.id === listing.categoryId);
             if (catDef && catDef.icon) {
                 categoryIcon = catDef.icon;
             }
         }
         document.getElementById('summaryIcon').textContent = categoryIcon;
+    }
+
+    function applyPromoCode() {
+        const input = document.getElementById('promoCodeInput').value.trim().toUpperCase();
+        const msg = document.getElementById('promoMessage');
+        const discountRow = document.getElementById('discountRow');
+        
+        if(!input) {
+            msg.textContent = "Please enter a code.";
+            msg.className = "text-xs mt-1 text-red-500 font-bold";
+            msg.classList.remove('hidden');
+            return;
+        }
+
+        const coupons = JSON.parse(localStorage.getItem('zzz_coupons') || '[]');
+        const coupon = coupons.find(c => c.code.toUpperCase() === input);
+
+        if(!coupon) {
+            msg.textContent = "Invalid coupon code.";
+            msg.className = "text-xs mt-1 text-red-500 font-bold";
+            msg.classList.remove('hidden');
+            
+            currentDiscount = 0;
+            discountRow.classList.add('hidden');
+            updatePrices();
+            return;
+        }
+
+        // Apply discount
+        currentDiscount = coupon.discount;
+        msg.textContent = `Coupon ${coupon.code} applied: ${currentDiscount}% discount!`;
+        msg.className = "text-xs mt-1 text-green-500 font-bold";
+        msg.classList.remove('hidden');
+        
+        updatePrices();
+    }
+
+    function updatePrices() {
+        const discountAmount = parseFloat(((baseFee * currentDiscount) / 100).toFixed(2));
+        const finalBase = baseFee - discountAmount;
+        const gst = parseFloat((finalBase * 0.18).toFixed(2));
+        const total = parseFloat((finalBase + gst).toFixed(2));
+
+        const discountRow = document.getElementById('discountRow');
+        const summaryDiscount = document.getElementById('summaryDiscount');
+
+        if(currentDiscount > 0) {
+            discountRow.classList.remove('hidden');
+            summaryDiscount.textContent = `-₹${discountAmount}`;
+        } else {
+            discountRow.classList.add('hidden');
+        }
+
+        document.getElementById('summaryGst').textContent = `₹${gst}`;
+        document.getElementById('summaryTotal').textContent = `₹${total}`;
+        document.getElementById('payBtnText').textContent = `Pay ₹${total}`;
     }
 
     // 3. Process Mock Payment
@@ -196,14 +272,12 @@
         const btnText = document.getElementById('payBtnText');
         const btnIcon = document.getElementById('payBtnIcon');
 
-        // Loading State
         btn.disabled = true;
         btn.classList.add('opacity-80', 'cursor-not-allowed');
         btnText.textContent = "Processing...";
         btnIcon.className = "loading-spinner";
 
         setTimeout(() => {
-            // Success State
             btn.classList.remove('bg-brand', 'hover:bg-brandDark');
             btn.classList.add('bg-green-500', 'hover:bg-green-600');
             btnText.textContent = "Payment Successful!";
@@ -223,8 +297,9 @@
     function saveListing() {
         if(!pendingListing) return;
 
-        // Finalize metadata
-        pendingListing.status = 'active';
+        // Finalize metadata with moderation review required
+        pendingListing.status = 'pending_review';
+        pendingListing.moderationStatus = 'pending_review';
         pendingListing.datePosted = new Date().toISOString();
         pendingListing.time = "Just now";
 
@@ -235,7 +310,8 @@
         allListings.unshift(pendingListing);
         
         // Save back
-        localStorage.setItem('zzz_listings', JSON.stringify(allListings));
+        if(window.ZZZ && window.ZZZ.write) window.ZZZ.write('zzz_listings', allListings);
+        else localStorage.setItem('zzz_listings', JSON.stringify(allListings));
 
         // Clear session
         sessionStorage.removeItem('zzz_pending_listing');
