@@ -3,270 +3,395 @@
 <head>
   <script>
     if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark');
+      document.documentElement.classList.add('dark');
     } else {
-        document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove('dark');
     }
   </script>
-  
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ZipZapZoi - Seller Dashboard</title>
+  <title>ZipZapZoi — Seller Dashboard</title>
+  <meta name="description" content="Manage your listings, track views, messages and plan usage on ZipZapZoi Seller Dashboard."/>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
 
   <script>
     tailwind.config = {
-      darkMode: "class",
-        theme: {
+      darkMode: 'class',
+      theme: {
         extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
           colors: {
-            brand: "#019863",
-            accent: "#4D96A9",
-            bgLight: "#F8F9FA",
-            "background-light": "#f0f4f8",
-            "background-dark": "#0f172a",
-            "card-dark": "#1e293b"},
-          fontFamily: { sans: ["Spline Sans", "sans-serif"] },
-          boxShadow: {
-            soft: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
+            primary: '#019863',
+            secondary: '#4D96A9',
+            brand: '#019863',
+            'bg-light': '#f4f7f5',
+            'bg-dark': '#0a0f1a',
+            'card-dark': '#111827'
           }
         }
       }
     }
   </script>
+  <style>
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24; }
+    .sidebar-link { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:12px; font-weight:600; font-size:14px; color:#6b7280; transition:all 0.2s; cursor:pointer; text-decoration:none; }
+    .sidebar-link:hover { background:#f0fdf4; color:#019863; }
+    .dark .sidebar-link:hover { background:rgba(1,152,99,0.1); color:#34d399; }
+    .sidebar-link.active { background:#f0fdf4; color:#019863; font-weight:800; }
+    .dark .sidebar-link.active { background:rgba(1,152,99,0.15); color:#34d399; }
+    .stat-card { transition:all 0.25s; }
+    .stat-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px rgba(0,0,0,0.08); }
+    .listing-card { transition:all 0.2s; }
+    .listing-card:hover { box-shadow:0 4px 20px rgba(0,0,0,0.08); }
+    .plan-bar-fill { transition: width 1s ease; }
+    #performanceChart { max-height:220px; }
+  </style>
 </head>
-<body class="bg-bgLight flex min-h-screen bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
 
-  <aside class="hidden md:flex w-64 bg-white dark:bg-card-dark border-r flex-col sticky top-0 h-screen">
-    <div class="p-6 border-b flex items-center gap-2 text-brand font-bold text-xl">
-      <span class="material-symbols-outlined text-3xl">all_inclusive</span> ZipZapZoi
-    </div>
-    
-    <nav class="flex-1 p-4 space-y-2">
-      <a href="#" class="flex items-center gap-3 px-4 py-3 bg-green-50 text-brand font-bold rounded-xl">
-        <span class="material-symbols-outlined">dashboard</span> Overview
+<body class="bg-bg-light dark:bg-bg-dark text-gray-800 dark:text-gray-100 flex min-h-screen transition-colors duration-300">
+
+  <!-- ═══════════════════════════
+       SIDEBAR (Desktop)
+  ═══════════════════════════ -->
+  <aside class="hidden md:flex w-64 bg-white dark:bg-card-dark border-r border-gray-100 dark:border-gray-800 flex-col sticky top-0 h-screen z-30 flex-shrink-0">
+    <!-- Logo -->
+    <a href="Classifieds LandingPage.html" class="flex items-center gap-2 px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+      <span class="material-symbols-outlined text-primary text-3xl">all_inclusive</span>
+      <span class="font-black text-lg text-gray-900 dark:text-white">ZipZapZoi</span>
+    </a>
+
+    <!-- Nav -->
+    <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+      <a href="#" class="sidebar-link active" id="navOverview">
+        <span class="material-symbols-outlined text-[20px]">dashboard</span> Overview
       </a>
-      <a href="classifieds.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-800 hover:text-gray-900 dark:text-white font-medium rounded-xl transition-colors">
-        <span class="material-symbols-outlined">storefront</span> Browse Market
+      <a href="classifieds.html" class="sidebar-link">
+        <span class="material-symbols-outlined text-[20px]">storefront</span> Browse Market
       </a>
-      <a href="Inbox.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-800 hover:text-gray-900 dark:text-white font-medium rounded-xl transition-colors">
-        <span class="material-symbols-outlined">mail</span> Messages <span class="zzz-unread-badge bg-red-500 text-white text-[10px] font-bold h-4 w-4 flex items-center justify-center rounded-full ml-auto shadow" style="display: none;">0</span>
-        <span id="sideBadge" class="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden">0</span>
+      <a href="Inbox.html" class="sidebar-link" id="navInbox">
+        <span class="material-symbols-outlined text-[20px]">mail</span>
+        Messages
+        <span id="sideBadge" class="ml-auto bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full hidden">0</span>
       </a>
-      <div class="flex items-center gap-4">
-          <button onclick="if(typeof toggleDarkMode === 'function') toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400">
-             <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
-          </button>
-<a href="#" onclick="quotaAwarePost(); return false;" class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-800 hover:text-gray-900 dark:text-white font-medium rounded-xl transition-colors">
-        <span class="material-symbols-outlined">add_circle</span> Post New Ad
-      </a></div>
-      <a href="#" onclick="requestVerification()" class="flex items-center gap-3 px-4 py-3 text-blue-500 hover:bg-blue-50 font-bold rounded-xl transition-colors" id="navVerifyBtn">
-        <span class="material-symbols-outlined">verified</span> Get Verified
+      <a href="#" onclick="quotaAwarePost(); return false;" class="sidebar-link">
+        <span class="material-symbols-outlined text-[20px]">add_circle</span> Post New Ad
       </a>
-      <a href="profile.html?sellerId=me" onclick="this.href='profile.html?sellerId='+currentUser.id" class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-800 hover:text-gray-900 dark:text-white font-medium rounded-xl transition-colors">
-        <span class="material-symbols-outlined">person</span> Public Profile
+      <a href="#" onclick="requestVerification(); return false;" class="sidebar-link text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20" id="navVerifyBtn">
+        <span class="material-symbols-outlined text-[20px]">verified</span> Get Verified
+      </a>
+      <a href="profile.html" id="navProfileLink" class="sidebar-link">
+        <span class="material-symbols-outlined text-[20px]">person</span> My Profile
+      </a>
+      <a href="favorites.html" class="sidebar-link">
+        <span class="material-symbols-outlined text-[20px]">favorite</span> Favorites
+      </a>
+      <a href="Classifieds Plans.html" class="sidebar-link">
+        <span class="material-symbols-outlined text-[20px]">price_change</span> Plans & Pricing
       </a>
     </nav>
 
-    <div class="p-4 border-t">
-      <button onclick="handleLogout()" class="flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 font-bold rounded-xl w-full transition-colors">
-        <span class="material-symbols-outlined">logout</span> Log Out
+    <!-- Footer actions -->
+    <div class="p-3 border-t border-gray-100 dark:border-gray-800 space-y-1">
+      <button onclick="toggleDarkMode()" class="sidebar-link w-full text-left" id="darkModeBtn">
+        <span class="material-symbols-outlined text-[20px]" id="themeIcon">dark_mode</span>
+        <span id="darkModeLabel">Dark Mode</span>
+      </button>
+      <button onclick="handleLogout()" class="sidebar-link w-full text-left text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600">
+        <span class="material-symbols-outlined text-[20px]">logout</span> Log Out
       </button>
     </div>
   </aside>
 
+  <!-- ═══════════════════════════
+       MAIN CONTENT
+  ═══════════════════════════ -->
   <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
-    
-    <header class="md:hidden bg-white dark:bg-card-dark border-b h-16 flex items-center justify-between px-4 sticky top-0 z-20">
-      <div class="flex items-center gap-2 text-brand font-bold text-lg">
+
+    <!-- Mobile Header -->
+    <header class="md:hidden bg-white dark:bg-card-dark border-b border-gray-100 dark:border-gray-800 h-16 flex items-center justify-between px-4 sticky top-0 z-20">
+      <div class="flex items-center gap-2 text-primary font-black text-lg">
         <span class="material-symbols-outlined text-2xl">all_inclusive</span> Dashboard
       </div>
-      <button onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="p-2 text-gray-600 dark:text-gray-300">
-        <span class="material-symbols-outlined">menu</span>
-      </button>
+      <div class="flex items-center gap-2">
+        <button onclick="toggleDarkMode()" class="p-2 text-gray-500">
+          <span class="material-symbols-outlined text-[22px]" id="themeIconMobile">dark_mode</span>
+        </button>
+        <button onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="p-2 text-gray-600 dark:text-gray-300">
+          <span class="material-symbols-outlined text-3xl">menu</span>
+        </button>
+      </div>
     </header>
 
-    <div id="mobileMenu" class="hidden md:hidden bg-white dark:bg-card-dark border-b shadow-lg absolute top-16 left-0 right-0 z-10 p-4 space-y-2">
-      <a href="classifieds.html" class="block p-3 hover:bg-gray-50 dark:bg-gray-800 rounded-lg">Browse Market</a>
-      <a href="Inbox.html" class="block p-3 hover:bg-gray-50 dark:bg-gray-800 rounded-lg">Messages</a>
-      <a href="#" onclick="quotaAwarePost(); return false;" class="block p-3 hover:bg-gray-50 dark:bg-gray-800 rounded-lg text-brand font-bold">Post New Ad</a>
-      <button onclick="handleLogout()" class="block w-full text-left p-3 text-red-500 font-bold">Log Out</button>
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="hidden md:hidden bg-white dark:bg-card-dark border-b border-gray-100 dark:border-gray-800 shadow-lg absolute top-16 left-0 right-0 z-10 p-4 space-y-1">
+      <a href="classifieds.html" class="sidebar-link">Browse Market</a>
+      <a href="Inbox.html" class="sidebar-link">Messages</a>
+      <a href="#" onclick="quotaAwarePost(); return false;" class="sidebar-link text-primary font-black">
+        <span class="material-symbols-outlined text-[18px]">add_circle</span> Post New Ad
+      </a>
+      <a href="favorites.html" class="sidebar-link">Favorites</a>
+      <a href="Classifieds Plans.html" class="sidebar-link">Plans & Pricing</a>
+      <button onclick="handleLogout()" class="sidebar-link w-full text-left text-red-500">Log Out</button>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-4 md:p-8">
-      
+    <!-- Scrollable content -->
+    <div class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
 
-      <!-- ─── PLAN & QUOTA WIDGET ─── -->
-      <div id="zzz-plan-widget" class="bg-gradient-to-br from-primary to-green-700 rounded-2xl p-6 text-white shadow-xl mb-6 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-40 h-40 rounded-full bg-white/5 -translate-x-8 -translate-y-16"></div>
-        <div class="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-white/5 translate-x-4 translate-y-10"></div>
-        <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <!-- ── PLAN WIDGET ────────────────── -->
+      <div id="zzz-plan-widget" class="bg-gradient-to-br from-primary to-green-700 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-48 h-48 rounded-full bg-white/5 -translate-x-4 -translate-y-20 pointer-events-none"></div>
+        <div class="absolute bottom-0 left-0 w-36 h-36 rounded-full bg-white/5 translate-x-2 translate-y-10 pointer-events-none"></div>
+        <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div>
-            <p class="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">Current Plan</p>
-            <h3 class="text-2xl font-black mb-1" id="widgetPlanName">Free Plan</h3>
-            <p class="text-white/80 text-sm" id="widgetExpiry">—</p>
+            <p class="text-white/60 text-xs font-black uppercase tracking-widest mb-1">Current Plan</p>
+            <h3 class="text-2xl font-black mb-1" id="widgetPlanName">Loading...</h3>
+            <p class="text-white/75 text-sm" id="widgetExpiry">—</p>
           </div>
-          <div class="flex items-center gap-6">
+          <div class="flex items-center gap-8">
             <div class="text-center">
-              <p class="text-4xl font-black" id="widgetRemaining">—</p>
-              <p class="text-white/70 text-xs">Ads Left</p>
+              <p class="text-5xl font-black" id="widgetRemaining">—</p>
+              <p class="text-white/60 text-xs mt-1 font-bold">Ads Left</p>
             </div>
             <div class="text-center">
-              <p class="text-4xl font-black" id="widgetTotal">—</p>
-              <p class="text-white/70 text-xs">Total Ads</p>
+              <p class="text-5xl font-black" id="widgetTotal">—</p>
+              <p class="text-white/60 text-xs mt-1 font-bold">Total Ads</p>
             </div>
           </div>
-          <a href="Classifieds Plans.html" class="bg-white text-primary font-black py-3 px-6 rounded-xl shadow-md hover:bg-gray-100 transition-all active:scale-95 text-sm flex items-center gap-2 whitespace-nowrap">
+          <a href="Classifieds Plans.html" class="bg-white text-primary font-black py-3 px-6 rounded-xl shadow-lg hover:bg-gray-50 active:scale-95 transition-all text-sm flex items-center gap-2 whitespace-nowrap">
             <span class="material-symbols-outlined text-[18px]">upgrade</span> Upgrade Plan
           </a>
         </div>
-        <!-- Progress bar -->
-        <div class="mt-5 bg-white/20 rounded-full h-2 overflow-hidden">
-          <div id="widgetBar" class="bg-yellow-300 h-2 rounded-full transition-all duration-1000" style="width:0%"></div>
+        <!-- Progress Bar -->
+        <div class="relative mt-5 bg-white/20 rounded-full h-2.5 overflow-hidden">
+          <div id="widgetBar" class="plan-bar-fill bg-yellow-300 h-2.5 rounded-full" style="width:0%"></div>
         </div>
-        <div class="flex justify-between mt-1">
-          <p class="text-[11px] text-white/60" id="widgetBarLabel">Loading...</p>
-          <a href="Classifieds Plans.html" class="text-[11px] text-yellow-300 font-bold hover:underline">Get More Ads →</a>
+        <div class="flex justify-between mt-1.5">
+          <p class="text-[11px] text-white/60" id="widgetBarLabel">Loading plan data...</p>
+          <a href="Classifieds Plans.html" class="text-[11px] text-yellow-300 font-black hover:underline">Get More Ads →</a>
         </div>
       </div>
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+
+      <!-- ── GREETING + POST BUTTON ──────── -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Hello, <span id="userName">User</span>! 👋</h1>
-          <p class="text-gray-500 dark:text-gray-400 text-sm">Here is what's happening with your listings today.</p>
+          <h1 class="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">
+            Hello, <span id="userName">there</span>! 👋
+          </h1>
+          <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Here's what's happening with your listings today.</p>
         </div>
-        <div class="flex items-center gap-4">
-          <button onclick="if(typeof toggleDarkMode === 'function') toggleDarkMode()" aria-label="Toggle Dark Mode" class="p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center text-gray-600 dark:text-gray-400 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-800 shadow-sm">
-             <span class="material-symbols-outlined" id="themeIconSidebar">dark_mode</span>
-          </button>
-          <a href="Post Listing.html" class="bg-brand hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-brand/20 transition-all active:scale-95 flex items-center justify-center gap-2">
+        <button onclick="quotaAwarePost()" class="bg-primary hover:bg-green-700 text-white px-6 py-3 rounded-xl font-black shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 self-start sm:self-auto">
           <span class="material-symbols-outlined">add</span> Post New Ad
-        </a>
+        </button>
+      </div>
+
+      <!-- ── STATS GRID ───────────────────── -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="stat-card bg-white dark:bg-card-dark p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
+          <div class="flex justify-between items-start mb-3">
+            <div class="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+              <span class="material-symbols-outlined text-blue-500 text-[20px]">visibility</span>
+            </div>
+            <span class="text-xs font-bold text-green-600 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full">Live</span>
+          </div>
+          <p class="text-3xl font-black text-gray-900 dark:text-white" id="statViews">0</p>
+          <p class="text-xs text-gray-400 font-bold mt-1 uppercase tracking-wide">Total Views</p>
+        </div>
+
+        <div class="stat-card bg-white dark:bg-card-dark p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
+          <div class="flex justify-between items-start mb-3">
+            <div class="w-10 h-10 bg-purple-50 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+              <span class="material-symbols-outlined text-purple-500 text-[20px]">inventory_2</span>
+            </div>
+          </div>
+          <p class="text-3xl font-black text-gray-900 dark:text-white" id="statActive">0</p>
+          <p class="text-xs text-gray-400 font-bold mt-1 uppercase tracking-wide">Active Listings</p>
+        </div>
+
+        <div class="stat-card bg-white dark:bg-card-dark p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
+          <div class="flex justify-between items-start mb-3">
+            <div class="w-10 h-10 bg-orange-50 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
+              <span class="material-symbols-outlined text-orange-500 text-[20px]">mail</span>
+            </div>
+            <span id="msgBadge" class="hidden text-xs font-black text-white bg-red-500 px-2 py-0.5 rounded-full">New</span>
+          </div>
+          <p class="text-3xl font-black text-gray-900 dark:text-white" id="statMsgs">0</p>
+          <p class="text-xs text-gray-400 font-bold mt-1 uppercase tracking-wide">Unread Messages</p>
+        </div>
+
+        <div class="stat-card bg-white dark:bg-card-dark p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
+          <div class="flex justify-between items-start mb-3">
+            <div class="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+              <span class="material-symbols-outlined text-green-600 text-[20px]">check_circle</span>
+            </div>
+          </div>
+          <p class="text-3xl font-black text-gray-900 dark:text-white" id="statSold">0</p>
+          <p class="text-xs text-gray-400 font-bold mt-1 uppercase tracking-wide">Items Sold</p>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-800">
-          <div class="flex justify-between items-start mb-2">
-            <div class="p-2 bg-blue-50 text-blue-600 rounded-lg"><span class="material-symbols-outlined">visibility</span></div>
-            <span class="text-xs font-bold text-green-500 bg-green-50 px-2 py-1 rounded">+12%</span>
-          </div>
-          <h3 class="text-2xl font-bold text-gray-900 dark:text-white" id="statViews">0</h3>
-          <p class="text-xs text-gray-400 font-bold">TOTAL VIEWS</p>
-        </div>
-
-        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-800">
-          <div class="flex justify-between items-start mb-2">
-            <div class="p-2 bg-purple-50 text-purple-600 rounded-lg"><span class="material-symbols-outlined">inventory_2</span></div>
-          </div>
-          <h3 class="text-2xl font-bold text-gray-900 dark:text-white" id="statActive">0</h3>
-          <p class="text-xs text-gray-400 font-bold">ACTIVE LISTINGS</p>
-        </div>
-
-        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-800">
-          <div class="flex justify-between items-start mb-2">
-            <div class="p-2 bg-orange-50 text-orange-600 rounded-lg"><span class="material-symbols-outlined">mail</span></div>
-            <span id="msgBadge" class="hidden text-xs font-bold text-white bg-red-500 px-2 py-1 rounded-full">New</span>
-          </div>
-          <h3 class="text-2xl font-bold text-gray-900 dark:text-white" id="statMsgs">0</h3>
-          <p class="text-xs text-gray-400 font-bold">MESSAGES</p>
-        </div>
-
-        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-800">
-          <div class="flex justify-between items-start mb-2">
-            <div class="p-2 bg-green-50 text-green-600 rounded-lg"><span class="material-symbols-outlined">monetization_on</span></div>
-          </div>
-          <h3 class="text-2xl font-bold text-gray-900 dark:text-white" id="statSold">0</h3>
-          <p class="text-xs text-gray-400 font-bold">ITEMS SOLD</p>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-card-dark p-6 rounded-3xl shadow-soft border border-gray-100 dark:border-gray-800 mb-8">
-        <div class="flex items-center justify-between mb-6">
-          <h3 class="font-bold text-gray-800 dark:text-white">Performance Overview</h3>
-          <select class="text-xs bg-gray-50 dark:bg-gray-800 border-none rounded-lg p-2 font-bold text-gray-500 dark:text-gray-400 outline-none">
-            <option>Last 7 Days</option>
-            <option>This Month</option>
+      <!-- ── PERFORMANCE CHART ────────────── -->
+      <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-black text-gray-900 dark:text-white">Performance Overview</h3>
+          <select id="chartRange" onchange="refreshChart()" class="text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 font-bold text-gray-600 dark:text-gray-300 outline-none">
+            <option value="7">Last 7 Days</option>
+            <option value="30">This Month</option>
           </select>
         </div>
-        <div class="h-64 w-full">
+        <div style="position:relative;height:220px;">
           <canvas id="performanceChart"></canvas>
         </div>
       </div>
 
-      <h3 class="font-bold text-gray-800 dark:text-white text-lg mb-4">Your Listings</h3>
-      <div id="listingsList" class="space-y-4">
-        <div class="text-center py-12 text-gray-400 bg-white dark:bg-card-dark rounded-2xl border border-dashed border-gray-300">
-          <span class="material-symbols-outlined text-4xl mb-2">post_add</span>
-          <p>You haven't posted anything yet.</p>
+      <!-- ── MY LISTINGS ──────────────────── -->
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-black text-gray-900 dark:text-white text-lg">My Listings</h3>
+          <div class="flex gap-2">
+            <button onclick="filterListings('all')" id="filterAll" class="text-xs px-3 py-1.5 rounded-lg font-bold bg-primary text-white">All</button>
+            <button onclick="filterListings('active')" id="filterActive" class="text-xs px-3 py-1.5 rounded-lg font-bold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition-colors">Active</button>
+            <button onclick="filterListings('sold')" id="filterSold" class="text-xs px-3 py-1.5 rounded-lg font-bold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition-colors">Sold</button>
+            <button onclick="filterListings('pending_review')" id="filterPending" class="text-xs px-3 py-1.5 rounded-lg font-bold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition-colors">Pending</button>
+          </div>
         </div>
+        <div id="listingsList" class="space-y-3"></div>
       </div>
 
-      </div>
-
-    </div>
+    </div><!-- end scrollable -->
   </main>
 
-  <!-- Mark Sold Modal -->
+  <!-- ═══════════════════════════
+       MARK AS SOLD MODAL
+  ═══════════════════════════ -->
   <div id="soldModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-card-dark w-full max-w-sm rounded-3xl p-6 shadow-bouncy transform transition-all scale-95" id="soldModalContent">
-      <h3 class="font-bold text-xl text-gray-900 dark:text-white mb-2">Mark as Sold</h3>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Congrats on the sale! Help us keep track of who bought this item to enable reviews.</p>
-      
-      <div class="mb-4">
-        <label class="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-1">Buyer's Email (Optional)</label>
-        <input type="email" id="buyerEmail" placeholder="buyer@example.com" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-brand/20 outline-none">
+    <div class="bg-white dark:bg-card-dark w-full max-w-sm rounded-3xl p-6 shadow-2xl transform transition-all scale-95" id="soldModalContent">
+      <div class="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <span class="material-symbols-outlined text-green-600 text-3xl">check_circle</span>
       </div>
-      
-      <div class="flex gap-3 mt-6">
-        <button onclick="closeSoldModal()" class="flex-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold py-3 rounded-xl transition-colors">Cancel</button>
-        <button onclick="confirmSold()" class="flex-1 bg-brand hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg transition-transform active:scale-95">Confirm Sale</button>
+      <h3 class="font-black text-xl text-gray-900 dark:text-white text-center mb-1">Mark as Sold</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 text-center mb-5">Congrats on the sale! Track who bought it for reviews.</p>
+      <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Buyer's Email (Optional)</label>
+      <input type="email" id="buyerEmail" placeholder="buyer@example.com"
+        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/30 outline-none text-sm"/>
+      <div class="flex gap-3 mt-5">
+        <button onclick="closeSoldModal()" class="flex-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-700 dark:text-gray-200 font-bold py-3 rounded-xl transition-colors">Cancel</button>
+        <button onclick="confirmSold()" class="flex-1 bg-primary hover:bg-green-700 text-white font-black py-3 rounded-xl shadow-md transition-all active:scale-95">Confirm Sale</button>
       </div>
     </div>
   </div>
 
+  <!-- ═══════════════════════════
+       DELETE CONFIRM MODAL
+  ═══════════════════════════ -->
+  <div id="deleteModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-card-dark w-full max-w-sm rounded-3xl p-6 shadow-2xl">
+      <div class="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <span class="material-symbols-outlined text-red-500 text-3xl">delete</span>
+      </div>
+      <h3 class="font-black text-xl text-gray-900 dark:text-white text-center mb-1">Delete Listing?</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 text-center mb-5">This action cannot be undone. The listing will be permanently removed.</p>
+      <div class="flex gap-3">
+        <button onclick="closeDeleteModal()" class="flex-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-700 dark:text-gray-200 font-bold py-3 rounded-xl transition-colors">Cancel</button>
+        <button onclick="confirmDelete()" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-black py-3 rounded-xl shadow-md transition-all active:scale-95">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/schema.js"></script>
+  <script src="js/utils.js"></script>
   <script>
-    // --- 1. AUTH & INIT ---
-    const currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-    
+
+    // ═══════════════════════════════════════════
+    //  1. AUTH & INIT
+    // ═══════════════════════════════════════════
+    const currentUser = window.ZZZ
+      ? window.ZZZ.getCurrentUser()
+      : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+
     if (!currentUser) {
-      window.location.href = 'Login Page.html?redirect=Seller Dashboard.html';
-      throw new Error("Unauthenticated user, redirecting...");
-    } else {
-      const bannedUsers = JSON.parse(localStorage.getItem('zzz_banned_users') || '[]');
-      if (bannedUsers.includes(currentUser.name)) {
-          if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(null);
-          else {
-              localStorage.removeItem('zzz_user');
-              localStorage.removeItem('zipzapzoi_current_user');
-          }
-          showToast("Your account has been suspended by an Administrator.", "error");
-          window.location.href = 'Login Page.html';
-          throw new Error("Banned user, redirecting...");
-      }
-      document.getElementById('userName').textContent = currentUser.name || (currentUser.email ? currentUser.email.split('@')[0] : 'User');
+      window.location.href = 'Login Page.html?redirect=Seller+Dashboard.html';
+      throw new Error('Not authenticated');
     }
 
+    // Check ban
+    const bannedUsers = JSON.parse(localStorage.getItem('zzz_banned_users') || '[]');
+    if (bannedUsers.includes(currentUser.id) || bannedUsers.includes(currentUser.name)) {
+      if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(null);
+      else { localStorage.removeItem('zzz_user'); }
+      showToast('Your account has been suspended by an Administrator.', 'error');
+      setTimeout(() => window.location.href = 'Login Page.html', 2000);
+      throw new Error('Banned user');
+    }
+
+    // Set user name
+    document.getElementById('userName').textContent =
+      currentUser.name || currentUser.email?.split('@')[0] || 'User';
+
+    // Set profile link
+    document.getElementById('navProfileLink').href = 'profile.html?sellerId=' + currentUser.id;
+
+    // Check if verified
+    const vUsers = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
+    if (vUsers.includes(currentUser.id) || vUsers.includes(currentUser.name)) {
+      document.getElementById('navVerifyBtn').innerHTML =
+        '<span class="material-symbols-outlined text-[20px] text-green-500">verified</span> <span class="text-green-600 dark:text-green-400">Verified ✓</span>';
+    }
+
+    // Theme icons on load
+    const isDark = document.documentElement.classList.contains('dark');
+    ['themeIcon', 'themeIconMobile'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = isDark ? 'light_mode' : 'dark_mode';
+    });
+    if (isDark) {
+      const label = document.getElementById('darkModeLabel');
+      if (label) label.textContent = 'Light Mode';
+    }
+
+
+    // ═══════════════════════════════════════════
+    //  2. DARK MODE
+    // ═══════════════════════════════════════════
+    function toggleDarkMode() {
+      const doc = document.documentElement;
+      const dark = doc.classList.toggle('dark');
+      localStorage.setItem('zzz_theme', dark ? 'dark' : 'light');
+      ['themeIcon', 'themeIconMobile'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = dark ? 'light_mode' : 'dark_mode';
+      });
+      const label = document.getElementById('darkModeLabel');
+      if (label) label.textContent = dark ? 'Light Mode' : 'Dark Mode';
+      if (chartInstance) {
+        chartInstance.destroy();
+        chartInstance = null;
+        initChart();
+      }
+    }
+
+
+    // ═══════════════════════════════════════════
+    //  3. LOGOUT
+    // ═══════════════════════════════════════════
     function handleLogout() {
       if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(null);
-      else {
-          localStorage.removeItem('zzz_user');
-          localStorage.removeItem('zipzapzoi_current_user');
-      }
+      else localStorage.removeItem('zzz_user');
       window.location.href = 'Login Page.html';
     }
 
-    // ─── PLAN WIDGET ─────────────────────────────────────
+
+    // ═══════════════════════════════════════════
+    //  4. PLAN WIDGET
+    // ═══════════════════════════════════════════
     function loadPlanWidget() {
       if (!window.ZZZ || !window.ZZZ.Plans || !currentUser) return;
       const q = window.ZZZ.Plans.getUserQuota(currentUser.id);
-      const widget = document.getElementById('zzz-plan-widget');
-      if (!widget) return;
-
       if (!q) {
         document.getElementById('widgetPlanName').textContent = 'No Active Plan';
         document.getElementById('widgetRemaining').textContent = '0';
@@ -275,414 +400,397 @@
         document.getElementById('widgetExpiry').textContent = 'No active plan';
         return;
       }
-      const remaining = q.adsRemaining || 0;
-      const total = q.totalGranted || 0;
-      const pct = total > 0 ? Math.min(100, Math.round((remaining / total) * 100)) : 0;
-      document.getElementById('widgetPlanName').textContent = q.planName || 'Free';
+      const remaining = Math.max(0, q.adsRemaining || 0);
+      const total = Math.max(1, q.totalGranted || 1);
+      const pct = Math.min(100, Math.round((remaining / total) * 100));
+
+      document.getElementById('widgetPlanName').textContent = q.planName || 'Free Plan';
       document.getElementById('widgetRemaining').textContent = remaining;
-      document.getElementById('widgetTotal').textContent = total;
-      document.getElementById('widgetBarLabel').textContent = remaining + ' of ' + total + ' ads remaining';
+      document.getElementById('widgetTotal').textContent = q.totalGranted || 0;
+      document.getElementById('widgetBarLabel').textContent = remaining + ' of ' + (q.totalGranted || 0) + ' ads remaining';
+
       if (q.expiresAt) {
         const days = Math.max(0, Math.round((new Date(q.expiresAt) - Date.now()) / 86400000));
         document.getElementById('widgetExpiry').textContent = days > 0
-          ? 'Expires in ' + days + ' day' + (days !== 1 ? 's' : '') + ' (' + new Date(q.expiresAt).toLocaleDateString('en-IN') + ')'
+          ? 'Expires in ' + days + ' day' + (days !== 1 ? 's' : '') + ' · ' + new Date(q.expiresAt).toLocaleDateString('en-IN')
           : '⚠ Plan Expired — Renew Now';
+      } else {
+        document.getElementById('widgetExpiry').textContent = '—';
       }
+
       setTimeout(() => {
         const bar = document.getElementById('widgetBar');
         if (bar) bar.style.width = pct + '%';
-      }, 400);
+      }, 300);
     }
-    // ─── END PLAN WIDGET ────────────────────────────────
 
-    // --- 2. LOAD DATA ---
+
+    // ═══════════════════════════════════════════
+    //  5. LOAD DASHBOARD DATA
+    // ═══════════════════════════════════════════
+    let allMyListings = [];
+    let currentFilter = 'all';
+
     function loadDashboard() {
+      const allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+      allMyListings = allListings.filter(item => item.userId === currentUser.id);
 
-      // Update Stats
-      document.getElementById('statActive').textContent = myListings.filter(i => (i.status || 'active') === 'active').length;
-      document.getElementById('statSold').textContent = myListings.filter(i => i.status === 'sold').length;
+      const allMsgs = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
+      const unreadCount = allMsgs.filter(m => m.toUserId === currentUser.id && !m.read).length;
+
+      // Stats
+      document.getElementById('statViews').textContent =
+        allMyListings.reduce((sum, item) => sum + Number(item.views || 0), 0).toLocaleString('en-IN');
+      document.getElementById('statActive').textContent =
+        allMyListings.filter(i => (i.status || 'active') === 'active').length;
+      document.getElementById('statSold').textContent =
+        allMyListings.filter(i => i.status === 'sold').length;
       document.getElementById('statMsgs').textContent = unreadCount;
-      document.getElementById('statViews').textContent = myListings.reduce((sum, item) => sum + Number(item.views || 0), 0);
 
-      if(unreadCount > 0) {
-        document.getElementById('sideBadge').classList.remove('hidden');
+      // Message badge
+      if (unreadCount > 0) {
         document.getElementById('sideBadge').textContent = unreadCount;
+        document.getElementById('sideBadge').classList.remove('hidden');
         document.getElementById('msgBadge').classList.remove('hidden');
       } else {
         document.getElementById('sideBadge').classList.add('hidden');
         document.getElementById('msgBadge').classList.add('hidden');
       }
 
-      renderList(myListings);
+      // Render list
+      filterListings(currentFilter, false);
+      loadPlanWidget();
       initChart();
     }
 
-    window.addEventListener('storage', (event) => {
-      if(event.key === 'zzz_listings' || event.key === 'zzz_messages' || event.key === 'zzz_data_updated_at') {
-        loadDashboard();
-      loadPlanWidget();
-      }
-    });
 
-    // --- 3. RENDER LISTINGS ---
+    // ═══════════════════════════════════════════
+    //  6. FILTER LISTINGS
+    // ═══════════════════════════════════════════
+    function filterListings(filter, updateActive = true) {
+      currentFilter = filter;
+      if (updateActive) {
+        ['filterAll','filterActive','filterSold','filterPending'].forEach(id => {
+          const btn = document.getElementById(id);
+          if (btn) {
+            btn.className = 'text-xs px-3 py-1.5 rounded-lg font-bold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition-colors';
+          }
+        });
+        const activeBtn = { all:'filterAll', active:'filterActive', sold:'filterSold', pending_review:'filterPending' }[filter];
+        if (activeBtn && document.getElementById(activeBtn)) {
+          document.getElementById(activeBtn).className = 'text-xs px-3 py-1.5 rounded-lg font-bold bg-primary text-white';
+        }
+      }
+      const filtered = filter === 'all' ? allMyListings
+        : allMyListings.filter(i => (i.status || 'active') === filter);
+      renderList(filtered);
+    }
+
+
+    // ═══════════════════════════════════════════
+    //  7. RENDER LISTINGS
+    // ═══════════════════════════════════════════
+    function statusPill(status) {
+      const map = {
+        active: '<span class="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Active</span>',
+        sold: '<span class="bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Sold</span>',
+        pending_review: '<span class="bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Pending</span>',
+        rejected: '<span class="bg-gray-100 dark:bg-gray-800 text-gray-500 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Rejected</span>'
+      };
+      return map[status] || map['active'];
+    }
+
+    function formatDate(item) {
+      const raw = item.updatedAt || item.createdAt || item.time;
+      if (!raw || raw === 'Just now') return 'Just now';
+      const d = new Date(raw);
+      return isNaN(d.getTime()) ? 'Just now' : d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+    }
+
     function renderList(items) {
       const container = document.getElementById('listingsList');
-      if(items.length === 0) {
+      if (!items || items.length === 0) {
         container.innerHTML = `
-          <div class="text-center py-12 text-gray-400 bg-white dark:bg-card-dark rounded-2xl border border-dashed border-gray-300">
-            <span class="material-symbols-outlined text-4xl mb-2">post_add</span>
-            <p>You haven't posted anything yet.</p>
-          </div>
-        `;
+          <div class="text-center py-16 bg-white dark:bg-card-dark rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+            <span class="material-symbols-outlined text-5xl text-gray-300 dark:text-gray-600 mb-3 block">post_add</span>
+            <p class="text-gray-500 dark:text-gray-400 font-semibold">No listings found.</p>
+            <button onclick="quotaAwarePost()" class="mt-4 inline-flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-black text-sm hover:bg-green-700 transition-all">
+              <span class="material-symbols-outlined text-[18px]">add_circle</span> Post Your First Ad
+            </button>
+          </div>`;
         return;
       }
 
-      container.innerHTML = items.map(item => `
-        <div class="bg-white dark:bg-card-dark p-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col md:flex-row gap-4 items-center">
-          
-          <img src="${item.image || 'https://via.placeholder.com/150'}" class="w-full md:w-24 h-24 object-cover rounded-xl bg-gray-100 dark:bg-gray-800">
-          
-          <div class="flex-1 text-center md:text-left">
-            <div class="flex items-center justify-center md:justify-start gap-2 mb-1">
-              <h4 class="font-bold text-gray-900 dark:text-white">${item.title}</h4>
-              ${(item.status || 'active') === 'sold' 
-                ? '<span class="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">SOLD</span>' 
-                : statusPill(item.status || 'active')}
+      container.innerHTML = items.map(item => {
+        const status = item.status || 'active';
+        const imgSrc = (item.images && item.images[0]) || item.image || 'https://via.placeholder.com/80x80/f0f4f8/999?text=No+Img';
+        const isActive = status === 'active';
+        const isPremium = item.isPremium;
+
+        return `
+          <div class="listing-card bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col sm:flex-row gap-4 items-start sm:items-center p-4">
+            <div class="relative flex-shrink-0">
+              <img src="${imgSrc}" alt="${item.title}" class="w-full sm:w-20 h-20 object-cover rounded-xl bg-gray-100 dark:bg-gray-800" onerror="this.src='https://via.placeholder.com/80x80/f0f4f8/999?text=No+Img'"/>
+              ${isPremium ? '<span class="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-[9px] font-black px-1.5 py-0.5 rounded-full">⭐ TOP</span>' : ''}
             </div>
-            <p class="text-brand font-bold">₹ ${item.price}</p>
-            <p class="text-xs text-gray-400 mt-1">${formatListingDate(item)}</p>
-            <p class="text-xs text-gray-400 mt-1">${Number(item.views || 0)} views</p>
-          </div>
 
-          <div class="flex flex-wrap gap-2 w-full md:w-auto">
-            ${(item.status || 'active') === 'active' ? `
-              <button onclick="openSoldModal('${item.id}')" class="flex-1 md:flex-none px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-sm font-bold transition-colors">Mark Sold</button>
-              <button onclick="promoteItem('${item.id}')" class="flex-1 md:flex-none px-4 py-2 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-1"><span class="material-symbols-outlined text-[14px]">bolt</span> Promote</button>
-              <button onclick="editItem('${item.id}')" class="flex-1 md:flex-none px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-sm font-bold transition-colors">Edit</button>
-            ` : ''}
-            <button onclick="deleteItem('${item.id}')" class="flex-1 md:flex-none px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-bold transition-colors">Delete</button>
-          </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex flex-wrap items-center gap-2 mb-1">
+                <h4 class="font-black text-gray-900 dark:text-white text-sm truncate max-w-xs">${item.title}</h4>
+                ${statusPill(status)}
+              </div>
+              <p class="text-primary font-black text-base">₹${Number(item.price || 0).toLocaleString('en-IN')}</p>
+              <div class="flex items-center gap-3 mt-1 text-xs text-gray-400 flex-wrap">
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[13px]">location_on</span>${item.location || 'Not set'}
+                </span>
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[13px]">visibility</span>${Number(item.views || 0)} views
+                </span>
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[13px]">calendar_today</span>${formatDate(item)}
+                </span>
+              </div>
+            </div>
 
-        </div>
-      `).join('');
+            <div class="flex flex-wrap gap-2 w-full sm:w-auto flex-shrink-0">
+              ${isActive ? `
+                <button onclick="openSoldModal('${item.id}')" class="flex-1 sm:flex-none px-3 py-2 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 text-green-700 dark:text-green-400 rounded-lg text-xs font-black transition-colors">
+                  ✓ Mark Sold
+                </button>
+                <button onclick="promoteItem('${item.id}')" class="flex-1 sm:flex-none px-3 py-2 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 text-yellow-700 dark:text-yellow-400 rounded-lg text-xs font-black transition-colors flex items-center justify-center gap-1">
+                  <span class="material-symbols-outlined text-[13px]">bolt</span> Boost
+                </button>
+                <button onclick="editItem('${item.id}')" class="flex-1 sm:flex-none px-3 py-2 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-black transition-colors">
+                  ✏ Edit
+                </button>
+              ` : ''}
+              <button onclick="openDeleteModal('${item.id}')" class="flex-1 sm:flex-none px-3 py-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 text-red-600 dark:text-red-400 rounded-lg text-xs font-black transition-colors">
+                🗑 Delete
+              </button>
+            </div>
+          </div>`;
+      }).join('');
     }
 
-    // --- 4. ACTIONS ---
+
+    // ═══════════════════════════════════════════
+    //  8. LISTING ACTIONS
+    // ═══════════════════════════════════════════
     let pendingSoldId = null;
+    let pendingDeleteId = null;
 
-    window.openSoldModal = (id) => {
+    // Mark Sold Modal
+    function openSoldModal(id) {
       pendingSoldId = id;
-      document.getElementById('soldModal').classList.remove('hidden');
+      const modal = document.getElementById('soldModal');
+      modal.classList.remove('hidden');
       setTimeout(() => document.getElementById('soldModalContent').classList.remove('scale-95'), 10);
-    };
-
-    window.closeSoldModal = () => {
+    }
+    function closeSoldModal() {
       document.getElementById('soldModalContent').classList.add('scale-95');
       setTimeout(() => {
         document.getElementById('soldModal').classList.add('hidden');
         document.getElementById('buyerEmail').value = '';
         pendingSoldId = null;
       }, 200);
-    };
-
-    window.confirmSold = () => {
-      if(!pendingSoldId) return;
+    }
+    function confirmSold() {
+      if (!pendingSoldId) return;
       const email = document.getElementById('buyerEmail').value.trim();
-      
       let all = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
       const idx = all.findIndex(i => i.id === pendingSoldId);
-      if(idx > -1) {
+      if (idx > -1) {
         all[idx].status = 'sold';
-        if (email) {
-            all[idx].soldToEmail = email;
-            // Add a pending review request for the buyer
-            const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-            const buyer = users.find(u => u.email === email);
-            if (buyer) {
-                // Logic to trigger review flow later
-                console.log("Buyer found, ready for review prompt.");
-            }
-        }
+        all[idx].soldAt = new Date().toISOString();
+        if (email) all[idx].soldToEmail = email;
         localStorage.setItem('zzz_listings', JSON.stringify(all));
         localStorage.setItem('zzz_data_updated_at', String(Date.now()));
-        showToast("Listing marked as Sold!");
+        showToast('🎉 Listing marked as Sold!', 'success');
         loadDashboard();
       }
       closeSoldModal();
-    };
+    }
 
-    window.promoteItem = (id) => {
-        if(confirm("Promote this listing to the top of search results for ₹499? (Mock Payment)")) {
-            let all = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-            const idx = all.findIndex(i => i.id === id);
-            if(idx > -1) {
-                all[idx].isPremium = true;
-                localStorage.setItem('zzz_listings', JSON.stringify(all));
-                localStorage.setItem('zzz_data_updated_at', String(Date.now()));
-                showToast("Listing Promoted Successfully!", "success");
-                loadDashboard();
-            }
-        }
-    };
-
-    window.requestVerification = () => {
-        const vUsers = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
-        if (vUsers.includes(currentUser.id) || vUsers.includes(currentUser.name)) {
-            showToast("You are already verified!", "success");
-            return;
-        }
-        // Save verification request
-        const reqs = JSON.parse(localStorage.getItem('zzz_verification_reqs') || '[]');
-        if (reqs.find(r => r.userId === currentUser.id)) {
-            showToast("Your verification request is already pending review.");
-            return;
-        }
-        reqs.push({
-            userId: currentUser.id,
-            userName: currentUser.name,
-            userEmail: currentUser.email || '',
-            date: new Date().toISOString(),
-            status: 'pending'
-        });
-        localStorage.setItem('zzz_verification_reqs', JSON.stringify(reqs));
-        localStorage.setItem('zzz_data_updated_at', String(Date.now()));
-        showToast("Verification requested! Admin will review your profile shortly.", "success");
-        document.getElementById('navVerifyBtn').innerHTML = `<span class="material-symbols-outlined">schedule</span> Pending Verification`;
-    };
-
-    window.deleteItem = (id) => {
-      if(!confirm("Permanently delete this listing?")) return;
+    // Delete Modal
+    function openDeleteModal(id) {
+      pendingDeleteId = id;
+      document.getElementById('deleteModal').classList.remove('hidden');
+    }
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').classList.add('hidden');
+      pendingDeleteId = null;
+    }
+    function confirmDelete() {
+      if (!pendingDeleteId) return;
       let all = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-      all = all.filter(i => i.id !== id);
+      all = all.filter(i => i.id !== pendingDeleteId);
       localStorage.setItem('zzz_listings', JSON.stringify(all));
       localStorage.setItem('zzz_data_updated_at', String(Date.now()));
+      closeDeleteModal();
+      showToast('Listing deleted.', 'success');
       loadDashboard();
-    };
-
-    window.editItem = (id) => {
-      window.location.href = `Post Listing.html?id=${id}`;
-    };
-
-    function updateStatus(id, status) {
-      let all = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-      const idx = all.findIndex(i => i.id === id);
-      if(idx > -1) {
-        all[idx].status = status;
-        localStorage.setItem('zzz_listings', JSON.stringify(all));
-        localStorage.setItem('zzz_data_updated_at', String(Date.now()));
-        loadDashboard();
-      }
     }
+    // Keep old window.deleteItem for compatibility
+    window.deleteItem = (id) => openDeleteModal(id);
+    window.openSoldModal = openSoldModal;
+    window.closeSoldModal = closeSoldModal;
+    window.confirmSold = confirmSold;
 
-    function formatListingDate(item) {
-      const raw = item.updatedAt || item.createdAt || item.time;
-      if (!raw || raw === 'Just now') return 'Just now';
-      const date = new Date(raw);
-      return Number.isNaN(date.getTime()) ? 'Just now' : date.toLocaleDateString();
+    // Edit
+    function editItem(id) {
+      window.location.href = 'Post Listing.html?id=' + id;
     }
+    window.editItem = editItem;
 
-    // Sync theme icons on load
-    const isDark = document.documentElement.classList.contains('dark');
-    const themeIcon = document.getElementById('themeIcon');
-    if (themeIcon) themeIcon.textContent = isDark ? 'light_mode' : 'dark_mode';
-    const themeIconSidebar = document.getElementById('themeIconSidebar');
-    if (themeIconSidebar) themeIconSidebar.textContent = isDark ? 'light_mode' : 'dark_mode';
-
-    loadDashboard();
-  // ============================================
-// UNIVERSAL UTILITY FUNCTIONS (ADD TO ALL)
-// ============================================
-
-// CSRF Token Management
-function generateCsrfToken() {
-    return 'csrf_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-}
-
-function getCsrfToken() {
-    let token = sessionStorage.getItem('csrf_token');
-    if (!token) {
-        token = generateCsrfToken();
-        sessionStorage.setItem('csrf_token', token);
+    // Promote / Boost
+    function promoteItem(id) {
+      window.location.href = 'Classifieds Plans.html?boost=' + id;
     }
+    window.promoteItem = promoteItem;
 
-    // --- 5. CHART ---
-    function initChart() {
-      const ctx = document.getElementById('performanceChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-          datasets: [{
-            label: 'Profile Views',
-            data: [12, 19, 15, 25, 22, 30, 45],
-            borderColor: '#019863',
-            backgroundColor: 'rgba(1, 152, 99, 0.05)',
-            tension: 0.4,
-            fill: true,
-            borderWidth: 2,
-            pointRadius: 0,
-            pointHoverRadius: 6
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { beginAtZero: true, grid: { borderDash: [2, 4], color: '#f0f0f0' }, border: { display: false } },
-            x: { grid: { display: false }, border: { display: false } }
-          }
-        }
-      });
-    }
-
-    loadDashboard();
-  // ============================================
-// UNIVERSAL UTILITY FUNCTIONS (ADD TO ALL)
-// ============================================
-
-// CSRF Token Management
-function generateCsrfToken() {
-    return 'csrf_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-}
-
-function getCsrfToken() {
-    let token = sessionStorage.getItem('csrf_token');
-    if (!token) {
-        token = generateCsrfToken();
-        sessionStorage.setItem('csrf_token', token);
-    }
-    return token;
-}
-
-function setCsrfToken() {
-    const token = getCsrfToken();
-    const inputs = document.querySelectorAll('input[name="csrf_token"]');
-    inputs.forEach(input => input.value = token);
-}
-
-// Input Validation Functions
-function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function validatePhone(phone) {
-    const digits = phone.replace(/\D/g, '');
-    return digits.length === 10;
-}
-
-function validatePrice(price) {
-    const num = parseFloat(price);
-    return !isNaN(num) && num > 0 && num < 1000000;
-}
-
-function validatePassword(password) {
-    return password.length >= 8 &&
-           /[a-z]/.test(password) &&
-           /[A-Z]/.test(password) &&
-           /[0-9]/.test(password);
-}
-
-// Input Sanitization
-function sanitizeInput(input) {
-    const div = document.createElement('div');
-    div.textContent = input;
-    return div.innerHTML;
-}
-
-function sanitizeHTML(html) {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div.textContent;
-}
-
-// Error/Success Messages
-function showError(message) {
-    let errorDiv = document.getElementById('errorMessage');
-    if (!errorDiv) {
-        errorDiv = document.createElement('div');
-        errorDiv.id = 'errorMessage';
-        errorDiv.style.cssText = 'color: red; padding: 10px; margin: 10px 0; border: 1px solid red; border-radius: 4px; display: none;';
-        const form = document.querySelector('form');
-        if (form) form.parentElement.insertBefore(errorDiv, form);
-    }
-    errorDiv.textContent = message;
-    errorDiv.style.display = 'block';
-    errorDiv.setAttribute('role', 'alert');
-}
-
-function showSuccess(message) {
-    let successDiv = document.getElementById('successMessage');
-    if (!successDiv) {
-        successDiv = document.createElement('div');
-        successDiv.id = 'successMessage';
-        successDiv.style.cssText = 'color: green; padding: 10px; margin: 10px 0; border: 1px solid green; border-radius: 4px; display: none;';
-        const form = document.querySelector('form');
-        if (form) form.parentElement.insertBefore(successDiv, form);
-    }
-    successDiv.textContent = message;
-    successDiv.style.display = 'block';
-    successDiv.setAttribute('role', 'status');
-}
-
-function hideError() {
-    const errorDiv = document.getElementById('errorMessage');
-    if (errorDiv) errorDiv.style.display = 'none';
-}
-
-function hideSuccess() {
-    const successDiv = document.getElementById('successMessage');
-    if (successDiv) successDiv.style.display = 'none';
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    setCsrfToken();
-});
-
-// Toast Notification System
-function showToast(message, type = 'success') {
-    let container = document.getElementById('toastContainer');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'toastContainer';
-        container.className = 'fixed bottom-4 right-4 z-50 flex flex-col gap-2';
-        document.body.appendChild(container);
-    }
-    
-    const toast = document.createElement('div');
-    const isError = type === 'error';
-    toast.className = `flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 text-white font-bold text-sm ${isError ? 'bg-red-500' : 'bg-brand'}`;
-    toast.innerHTML = `<span class="material-symbols-outlined">${isError ? 'error' : 'check_circle'}</span> ${message}`;
-    
-    container.appendChild(toast);
-    
-    // Animate In
-    requestAnimationFrame(() => {
-        toast.classList.remove('translate-y-10', 'opacity-0');
-    });
-    
-    // Animate Out & Remove
-    setTimeout(() => {
-        toast.classList.add('translate-y-10', 'opacity-0');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-  
-    // ─── QUOTA-AWARE POST AD ──────────────────────
+    // Quota-Aware Post
     window.quotaAwarePost = function() {
-      if (!window.ZZZ || !window.ZZZ.Plans || !currentUser) { window.location.href = 'Post Listing.html'; return; }
+      if (!window.ZZZ || !window.ZZZ.Plans || !currentUser) {
+        window.location.href = 'Post Listing.html'; return;
+      }
       const q = window.ZZZ.Plans.getUserQuota(currentUser.id);
       if (!q || q.adsRemaining <= 0) {
-        if (confirm('You have 0 ads remaining.\nUpgrade your plan to continue posting?')) {
+        if (confirm('You have 0 ads remaining.\n\nUpgrade your plan to continue posting?')) {
           window.location.href = 'Classifieds Plans.html';
         }
         return;
       }
       window.location.href = 'Post Listing.html';
     };
-    // ─── END QUOTA-AWARE ─────────────────────────
+
+    // Verification request
+    window.requestVerification = function() {
+      const vUsers = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
+      if (vUsers.includes(currentUser.id)) {
+        showToast('You are already verified! ✓', 'success'); return;
+      }
+      const reqs = JSON.parse(localStorage.getItem('zzz_verification_reqs') || '[]');
+      if (reqs.find(r => r.userId === currentUser.id)) {
+        showToast('Your verification request is pending review.'); return;
+      }
+      reqs.push({
+        userId: currentUser.id, userName: currentUser.name,
+        userEmail: currentUser.email || '', date: new Date().toISOString(), status: 'pending'
+      });
+      localStorage.setItem('zzz_verification_reqs', JSON.stringify(reqs));
+      localStorage.setItem('zzz_data_updated_at', String(Date.now()));
+      showToast('Verification requested! Admin will review your profile.', 'success');
+      document.getElementById('navVerifyBtn').innerHTML =
+        '<span class="material-symbols-outlined text-[20px]">schedule</span> Pending Review';
+    };
+
+
+    // ═══════════════════════════════════════════
+    //  9. PERFORMANCE CHART
+    // ═══════════════════════════════════════════
+    let chartInstance = null;
+
+    function initChart() {
+      if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+      const ctx = document.getElementById('performanceChart');
+      if (!ctx) return;
+
+      const isDarkNow = document.documentElement.classList.contains('dark');
+      const gridColor = isDarkNow ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+      const labelColor = isDarkNow ? '#9ca3af' : '#6b7280';
+
+      const range = parseInt(document.getElementById('chartRange')?.value || '7');
+      const labels = range === 7
+        ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        : Array.from({length: 7}, (_, i) => `Week ${i+1}`);
+
+      // Generate semi-realistic data from actual listing view counts
+      const views = allMyListings.reduce((sum, i) => sum + Number(i.views || 0), 0);
+      const base = Math.max(views, 5);
+      const data = labels.map((_, i) => Math.round(base * 0.3 + Math.random() * base * 0.7 * (i / labels.length + 0.5)));
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Profile Views',
+            data,
+            borderColor: '#019863',
+            backgroundColor: isDarkNow ? 'rgba(1,152,99,0.08)' : 'rgba(1,152,99,0.06)',
+            tension: 0.4, fill: true, borderWidth: 2.5,
+            pointRadius: 4, pointHoverRadius: 7,
+            pointBackgroundColor: '#019863', pointBorderColor: '#fff', pointBorderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: isDarkNow ? '#1e293b' : '#fff',
+              titleColor: isDarkNow ? '#f1f5f9' : '#111827',
+              bodyColor: isDarkNow ? '#94a3b8' : '#6b7280',
+              borderColor: isDarkNow ? '#334155' : '#e5e7eb',
+              borderWidth: 1, padding: 10, cornerRadius: 10
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: gridColor, drawBorder: false },
+              ticks: { color: labelColor, font: { size: 11 } },
+              border: { display: false }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: labelColor, font: { size: 11 } },
+              border: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    function refreshChart() { initChart(); }
+
+
+    // ═══════════════════════════════════════════
+    //  10. TOAST
+    // ═══════════════════════════════════════════
+    function showToast(message, type = 'success') {
+      let container = document.getElementById('toastContainer');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'fixed bottom-6 right-6 z-[100] flex flex-col gap-2';
+        document.body.appendChild(container);
+      }
+      const toast = document.createElement('div');
+      const isError = type === 'error';
+      const isSuccess = type === 'success';
+      const bgClass = isError ? 'bg-red-500' : isSuccess ? 'bg-primary' : 'bg-gray-800';
+      const icon = isError ? 'error' : 'check_circle';
+      toast.className = `flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl transform translate-y-4 opacity-0 transition-all duration-300 text-white font-bold text-sm ${bgClass}`;
+      toast.innerHTML = `<span class="material-symbols-outlined text-[18px]">${icon}</span>${message}`;
+      container.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.remove('translate-y-4', 'opacity-0'));
+      setTimeout(() => {
+        toast.classList.add('translate-y-4', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // ── Storage sync ───────────────────────────
+    window.addEventListener('storage', (e) => {
+      if (['zzz_listings', 'zzz_messages', 'zzz_data_updated_at', 'zzz_user_quotas'].includes(e.key)) {
+        loadDashboard();
+      }
+    });
+
+    // ── INIT ──────────────────────────────────
+    loadDashboard();
 
   </script>
 </body>
