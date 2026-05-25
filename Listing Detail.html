@@ -14,6 +14,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script>
       tailwind.config = {
         darkMode: "class",
@@ -86,7 +87,8 @@
       /* Micro Animations */
       @keyframes slideUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
       .animate-in { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    </style>
+        #listingMap { height: 220px; border-radius: 16px; z-index: 1; }
+  </style>
 </head>
 <body class="font-display min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
     
@@ -163,6 +165,16 @@
             </div>
           </div>
 
+
+          <!-- Location Map -->
+          <div id="locationMapSection" class="mb-8" style="display:none;">
+            <hr class="border-gray-200 dark:border-gray-800 mb-8">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary">map</span> Item Location
+            </h2>
+            <div id="listingMap" class="border border-gray-200 dark:border-gray-700 shadow-md"></div>
+            <p class="text-xs text-gray-400 mt-2 text-center">Approximate location. Exact address shared after contact.</p>
+          </div>
         </div>
 
         <!-- Right: Sticky Action Box -->
@@ -325,6 +337,12 @@
         document.getElementById('detailCategory').textContent = currentListing.category;
         document.getElementById('detailPrice').textContent = `₹${parseFloat(currentListing.price).toLocaleString()}`;
         document.getElementById('detailLocation').textContent = currentListing.location || 'Local';
+        // Init map if coords available
+        if (typeof L !== 'undefined') {
+          initListingMap(currentListing.lat, currentListing.lng, currentListing.title);
+        } else {
+          window.addEventListener('load', () => initListingMap(currentListing.lat, currentListing.lng, currentListing.title));
+        }
         document.getElementById('detailTime').textContent = currentListing.date || 'Just now';
         document.getElementById('detailViews').textContent = currentListing.views || 1;
         document.getElementById('detailDescription').textContent = currentListing.description;
@@ -738,5 +756,6 @@
         window.location.href = 'profile.html?sellerId=' + encodeURIComponent(sId);
       }
     </script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/abKU=" crossorigin=""></script>
 </body>
 </html>

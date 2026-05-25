@@ -14,6 +14,7 @@
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300..700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   <script>
     tailwind.config = {
       darkMode: "class",
@@ -48,6 +49,9 @@
     select::-webkit-scrollbar { width: 8px; }
     select::-webkit-scrollbar-track { background: transparent; }
     select::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+      #pickMap { height: 260px; border-radius: 12px; z-index: 1; }
+    #pickMap .leaflet-container { border-radius: 12px; }
+    #mapPickerSection { display: none; }
   </style>
 </head>
 <body class="font-display text-text-light dark:text-text-dark antialiased bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
@@ -164,17 +168,31 @@
           </div>
           <div class="col-span-1 md:col-span-2">
             <label class="block text-sm font-bold mb-2">Specific Area / Location</label>
-            <div class="relative flex items-center">
+            <div class="relative flex items-center mb-3">
               <span class="material-symbols-outlined absolute left-3 text-gray-400">location_on</span>
-              
-              <input type="text" id="specificLocation" class="w-full pl-10 pr-32 rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4" placeholder="e.g. Indiranagar, Bengaluru">
-              
+              <input type="text" id="specificLocation" class="w-full pl-10 pr-32 rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4" placeholder="e.g. Indiranagar, Bengaluru" oninput="geocodeInput(this.value)">
               <button type="button" onclick="detectLocation()" class="absolute right-2 bg-secondary/10 hover:bg-secondary/20 text-secondary text-xs font-bold py-1.5 px-3 rounded-lg transition-colors flex items-center gap-1">
                 <span class="material-symbols-outlined text-sm">my_location</span>
                 Auto-Detect
               </button>
             </div>
             <p id="locationStatus" class="text-xs text-gray-500 dark:text-gray-400 mt-2 ml-1 hidden"></p>
+            <!-- Map Picker -->
+            <div class="mt-2">
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[14px] text-primary">map</span> Drop pin on map for exact location
+                </p>
+                <button type="button" onclick="toggleMapPicker()" id="mapToggleBtn" class="text-xs text-secondary font-bold hover:underline">Show Map</button>
+              </div>
+              <div id="mapPickerSection">
+                <div id="pickMap" class="border border-gray-200 dark:border-gray-700 shadow-inner"></div>
+                <p class="text-[10px] text-gray-400 mt-1 text-center">Click anywhere on the map to drop a pin and set your exact location.</p>
+              </div>
+            </div>
+            <!-- Hidden lat/lng -->
+            <input type="hidden" id="pickedLat" name="lat">
+            <input type="hidden" id="pickedLng" name="lng">
           </div>
         </div>
       </div>
@@ -651,6 +669,8 @@
         state: document.getElementById('stateSelect').value,
         city: document.getElementById('citySelect').value,
         specificLocation: document.getElementById('specificLocation').value,
+        lat: parseFloat(document.getElementById('pickedLat').value) || null,
+        lng: parseFloat(document.getElementById('pickedLng').value) || null,
         location: `${document.getElementById('citySelect').value}, ${document.getElementById('stateSelect').value}`,
         image: uploadedImages[0] || 'https://via.placeholder.com/400',
         images: uploadedImages,
@@ -765,5 +785,6 @@
   };
 })();
   </script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/abKU=" crossorigin=""></script>
 </body>
 </html>
