@@ -4,341 +4,876 @@
   <script>
     if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-    }
+    } else { document.documentElement.classList.remove('dark'); }
   </script>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ZipZapZoi - Buy, Sell, Connect</title>
-  <meta name="description" content="ZipZapZoi is the safest way to buy, sell and connect with your local community. No fees, no hassle."/>
-
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>ZipZapZoi — Post Free Ads, Buy & Sell Locally in India</title>
+  <meta name="description" content="Post 6 ads FREE for your first month on ZipZapZoi! India's fastest growing classifieds platform for Tier-2 & Tier-3 cities. Sell anything — vehicles, mobiles, jobs, property and more."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
-
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: "class",
+      darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: { sans: ["Spline Sans", "sans-serif"] },
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
           colors: {
-            "primary": "#019863",
-            "secondary": "#4D96A9",
-            "accent": "#FFD166",
-            "background-light": "#f0f4f8",
-            "background-dark": "#0f172a",
-            "card-dark": "#1e293b"
-          },
-          boxShadow: {
-            "bouncy": "0 10px 20px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-            "glow": "0 0 20px rgba(1, 152, 99, 0.3)"
+            primary: '#019863', secondary: '#4D96A9', brand: '#f47b25',
+            'bg-light': '#f4f7f4', 'bg-dark': '#0a0f1a', 'card-dark': '#111827'
           },
           animation: {
-            'float': 'float 6s ease-in-out infinite',
-            'fade-up': 'fadeUp 0.8s ease-out forwards',
+            'float': 'float 7s ease-in-out infinite',
+            'float2': 'float 5s ease-in-out infinite',
+            'slide-up': 'slideUp 0.7s ease-out forwards',
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4,0,0.6,1) infinite',
+            'ticker': 'ticker 30s linear infinite',
           },
           keyframes: {
-            float: {
-              '0%, 100%': { transform: 'translateY(0)' },
-              '50%': { transform: 'translateY(-20px)' },
-            },
-            fadeUp: {
-              '0%': { opacity: '0', transform: 'translateY(20px)' },
-              '100%': { opacity: '1', transform: 'translateY(0)' },
-            }
+            float: { '0%,100%': {transform:'translateY(0)'}, '50%': {transform:'translateY(-18px)'} },
+            slideUp: { '0%': {opacity:'0',transform:'translateY(30px)'}, '100%': {opacity:'1',transform:'translateY(0)'} },
+            ticker: { '0%': {transform:'translateX(0)'}, '100%': {transform:'translateX(-50%)'} },
           }
         }
       }
     }
   </script>
   <style>
-    .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-    .hero-bg {
-      background-image: radial-gradient(#019863 1px, transparent 1px);
-      background-size: 30px 30px;
-      opacity: 0.05;
-    }
-    .how-card { background: #f0f4f8; }
-    .dark .how-card { background: #1e1e1e; }
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .material-symbols-outlined { font-variation-settings:'FILL' 1,'wght' 500,'GRAD' 0,'opsz' 24; }
+    .gradient-text { background: linear-gradient(135deg, #019863 0%, #4D96A9 50%, #f47b25 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero-glow { background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(1,152,99,0.22) 0%, transparent 70%); }
+    .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12); }
+    .glass-light { background: rgba(255,255,255,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.6); }
+    .plan-hover { transition: all 0.35s cubic-bezier(0.175,0.885,0.32,1.275); }
+    .plan-hover:hover { transform: translateY(-8px) scale(1.02); }
+    .trust-bar { background: linear-gradient(90deg, #019863, #4D96A9, #f47b25, #019863); background-size: 300%; animation: gradientMove 6s linear infinite; }
+    @keyframes gradientMove { 0%{background-position:0%} 100%{background-position:300%} }
+    .stat-card:hover .stat-icon { transform: scale(1.2) rotate(-5deg); transition: transform 0.3s; }
+    .cat-card:hover { background: linear-gradient(135deg, #019863, #4D96A9); }
+    .cat-card:hover span, .cat-card:hover p { color: white !important; }
+    .cat-card { transition: all 0.25s ease; }
+    details summary::-webkit-details-marker { display:none; }
+    .hero-mesh { background-image: radial-gradient(circle at 1px 1px, rgba(1,152,99,0.12) 1px, transparent 0); background-size: 36px 36px; }
+    .nav-scrolled { box-shadow: 0 2px 30px rgba(0,0,0,0.08); }
+    .btn-primary { background: linear-gradient(135deg, #019863, #017a50); transition: all 0.3s; }
+    .btn-primary:hover { background: linear-gradient(135deg, #017a50, #015f3d); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(1,152,99,0.35); }
+    .btn-brand { background: linear-gradient(135deg, #f47b25, #d6671c); transition: all 0.3s; }
+    .btn-brand:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(244,123,37,0.35); }
+    .scroll-reveal { opacity: 0; transform: translateY(28px); transition: all 0.7s ease; }
+    .scroll-reveal.visible { opacity: 1; transform: translateY(0); }
+    .free-badge { animation: badgePulse 2s ease-in-out infinite; }
+    @keyframes badgePulse { 0%,100%{box-shadow:0 0 0 0 rgba(1,152,99,0.4)} 50%{box-shadow:0 0 0 12px rgba(1,152,99,0)} }
+    .ticker-wrap { overflow: hidden; white-space: nowrap; }
+    .ticker-content { display: inline-block; }
   </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 font-sans overflow-x-hidden transition-colors duration-300">
+<body class="bg-bg-light dark:bg-bg-dark text-gray-800 dark:text-gray-100 overflow-x-hidden transition-colors duration-300">
 
-  <!-- NAV -->
-  <nav class="fixed w-full z-50 bg-white/80 dark:bg-card-dark/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 transition-all duration-300" id="navbar">
-    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <span class="material-symbols-outlined text-primary text-4xl">all_inclusive</span>
-        <span class="text-2xl font-bold tracking-tight text-gray-800 dark:text-white">ZipZapZoi</span>
+<!-- ═══════════════════════════════════════════
+     NAVBAR
+═══════════════════════════════════════════ -->
+<nav id="navbar" class="fixed top-0 w-full z-50 bg-white/90 dark:bg-card-dark/90 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 transition-all duration-300">
+  <div class="max-w-7xl mx-auto px-5 h-[68px] flex items-center justify-between">
+    <a href="Classifieds LandingPage.html" class="flex items-center gap-2 group">
+      <span class="material-symbols-outlined text-primary text-[38px] group-hover:rotate-12 transition-transform duration-300">all_inclusive</span>
+      <span class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">ZipZapZoi</span>
+    </a>
+    <div class="hidden md:flex items-center gap-7 text-sm font-semibold text-gray-600 dark:text-gray-300">
+      <a href="classifieds.html" class="hover:text-primary transition-colors">Browse Ads</a>
+      <a href="Classifieds Plans.html" class="hover:text-primary transition-colors flex items-center gap-1">
+        <span class="material-symbols-outlined text-[15px] text-brand">price_change</span> Plans
+      </a>
+      <a href="help.html" class="hover:text-primary transition-colors">Help</a>
+      <div class="w-px h-5 bg-gray-200 dark:bg-gray-700"></div>
+      <button onclick="toggleDarkMode()" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500">
+        <span class="material-symbols-outlined text-[22px]" id="themeIcon">dark_mode</span>
+      </button>
+      <a href="Login Page.html" id="loginLink" class="hover:text-primary transition-colors">Log In</a>
+      <a href="User Registration.html" id="signupBtn" class="btn-primary text-white px-5 py-2.5 rounded-xl font-bold shadow-md">
+        Get Started Free
+      </a>
+    </div>
+    <button id="mobileMenuBtn" class="md:hidden p-2 text-gray-600 dark:text-gray-300">
+      <span class="material-symbols-outlined text-3xl">menu</span>
+    </button>
+  </div>
+  <div id="mobileMenu" class="md:hidden hidden bg-white dark:bg-card-dark border-t border-gray-100 dark:border-gray-800 px-5 py-5 space-y-3">
+    <a href="classifieds.html" class="block py-2 font-semibold hover:text-primary transition-colors">Browse Ads</a>
+    <a href="Classifieds Plans.html" class="block py-2 font-semibold hover:text-primary transition-colors">Plans & Pricing</a>
+    <a href="help.html" class="block py-2 font-semibold hover:text-primary transition-colors">Help</a>
+    <a href="Login Page.html" id="mobileLoginLink" class="block py-2 font-semibold hover:text-primary transition-colors">Log In</a>
+    <a href="User Registration.html" id="mobileSignupBtn" class="block text-center btn-primary text-white py-3 rounded-xl font-bold">Get Started Free</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     HERO
+═══════════════════════════════════════════ -->
+<header class="relative min-h-screen flex items-center pt-[68px] overflow-hidden">
+  <div class="absolute inset-0 hero-glow pointer-events-none"></div>
+  <div class="absolute inset-0 hero-mesh pointer-events-none opacity-60 dark:opacity-30"></div>
+  <!-- Blobs -->
+  <div class="absolute top-32 right-10 w-80 h-80 bg-primary/10 dark:bg-primary/20 rounded-full blur-[80px] animate-float pointer-events-none"></div>
+  <div class="absolute bottom-20 left-10 w-64 h-64 bg-secondary/10 dark:bg-secondary/20 rounded-full blur-[70px] animate-float2 pointer-events-none"></div>
+  <div class="absolute top-1/2 left-1/3 w-48 h-48 bg-brand/10 rounded-full blur-[60px] pointer-events-none"></div>
+
+  <div class="max-w-7xl mx-auto px-5 py-20 w-full grid lg:grid-cols-2 gap-16 items-center">
+    <!-- Left: Copy -->
+    <div class="space-y-7 text-center lg:text-left animate-slide-up">
+
+      <!-- Free badge -->
+      <div class="inline-flex items-center gap-2 bg-green-50 dark:bg-green-900/30 border-2 border-green-200 dark:border-green-700 text-green-700 dark:text-green-400 px-5 py-2.5 rounded-full text-sm font-black free-badge">
+        <span class="text-xl">🎉</span> Post 6 Ads ABSOLUTELY FREE — First Month
       </div>
 
-      <div class="hidden md:flex items-center gap-8 font-medium text-gray-600 dark:text-gray-300">
-        <a href="classifieds.html" class="hover:text-primary transition-colors">Browse</a>
-        <a href="help.html" class="hover:text-primary transition-colors">Help</a>
-        <div class="h-6 w-px bg-gray-200 dark:bg-gray-700"></div>
-        <button onclick="toggleDarkMode()" class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Toggle Dark Mode">
-          <span class="material-symbols-outlined text-xl" id="themeIcon">dark_mode</span>
-        </button>
-        <a href="Login Page.html" class="hover:text-primary transition-colors" id="loginLink">Log In</a>
-        <a href="User Registration.html" class="bg-primary hover:bg-green-700 text-white px-6 py-2.5 rounded-full font-bold shadow-bouncy transition-transform hover:-translate-y-0.5" id="signupBtn">
-          Get Started
+      <h1 class="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.08] text-gray-900 dark:text-white">
+        Buy, Sell &<br>
+        <span class="gradient-text">Connect</span><br>
+        <span class="text-4xl md:text-5xl font-extrabold text-gray-500 dark:text-gray-400">Locally in India</span>
+      </h1>
+
+      <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+        ZipZapZoi is built for <strong class="text-gray-700 dark:text-gray-300">Tier-2 & Tier-3 India</strong>. Local sellers, small businesses, and rural communities — sell anything, starting free.
+      </p>
+
+      <!-- Stats row -->
+      <div class="flex items-center justify-center lg:justify-start gap-6 flex-wrap">
+        <div class="text-center">
+          <p class="text-3xl font-black text-gray-900 dark:text-white" id="statUsers">12k+</p>
+          <p class="text-xs text-gray-500 font-semibold">Sellers</p>
+        </div>
+        <div class="w-px h-10 bg-gray-200 dark:bg-gray-700"></div>
+        <div class="text-center">
+          <p class="text-3xl font-black text-gray-900 dark:text-white" id="statListings">8.5k</p>
+          <p class="text-xs text-gray-500 font-semibold">Live Ads</p>
+        </div>
+        <div class="w-px h-10 bg-gray-200 dark:bg-gray-700"></div>
+        <div class="text-center">
+          <p class="text-3xl font-black text-primary">₹19</p>
+          <p class="text-xs text-gray-500 font-semibold">Extra Ad Only</p>
+        </div>
+        <div class="w-px h-10 bg-gray-200 dark:bg-gray-700"></div>
+        <div class="text-center">
+          <p class="text-3xl font-black text-brand">FREE</p>
+          <p class="text-xs text-gray-500 font-semibold">To Start</p>
+        </div>
+      </div>
+
+      <!-- CTAs -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
+        <a href="Post Listing.html" class="btn-brand text-white text-lg px-8 py-4 rounded-2xl font-black shadow-xl flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined">add_circle</span> Post Free Ad Now
+        </a>
+        <a href="classifieds.html" class="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-white text-lg px-8 py-4 rounded-2xl font-bold shadow-sm hover:border-primary hover:text-primary dark:hover:border-primary transition-all flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined">search</span> Browse Listings
         </a>
       </div>
 
-      <button id="mobileMenuBtn" class="md:hidden text-gray-600 dark:text-gray-300"><span class="material-symbols-outlined text-3xl">menu</span></button>
-    </div>
-
-    <!-- Mobile Menu -->
-    <div id="mobileMenu" class="md:hidden hidden bg-white dark:bg-card-dark border-t border-gray-100 dark:border-gray-800 absolute w-full px-6 py-4 shadow-bouncy">
-      <div class="flex flex-col gap-4 font-medium text-gray-700 dark:text-gray-200">
-        <a href="classifieds.html" class="hover:text-primary transition-colors py-2">Browse</a>
-        <a href="help.html" class="hover:text-primary transition-colors py-2">Help</a>
-        <a href="Login Page.html" class="hover:text-primary transition-colors py-2" id="mobileLoginLink">Log In</a>
-        <a href="User Registration.html" class="bg-primary text-center text-white px-6 py-2.5 rounded-full font-bold shadow-bouncy" id="mobileSignupBtn">Get Started</a>
+      <!-- Trust chips -->
+      <div class="flex flex-wrap gap-2 justify-center lg:justify-start pt-1">
+        <span class="flex items-center gap-1 text-xs font-bold text-gray-500 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full">
+          <span class="material-symbols-outlined text-[14px] text-green-500">verified_user</span> No Hidden Charges
+        </span>
+        <span class="flex items-center gap-1 text-xs font-bold text-gray-500 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full">
+          <span class="material-symbols-outlined text-[14px] text-blue-500">shield</span> Spam Protected
+        </span>
+        <span class="flex items-center gap-1 text-xs font-bold text-gray-500 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full">
+          <span class="material-symbols-outlined text-[14px] text-brand">bolt</span> Live in 2 Hours
+        </span>
+        <span class="flex items-center gap-1 text-xs font-bold text-gray-500 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full">
+          <span class="material-symbols-outlined text-[14px] text-purple-500">refresh</span> 1 Free Ad/Month Forever
+        </span>
       </div>
     </div>
-  </nav>
 
-  <!-- HERO -->
-  <header class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
-    <div class="absolute inset-0 hero-bg z-0 pointer-events-none"></div>
-
-    <div class="max-w-7xl mx-auto px-6 relative z-10 grid lg:grid-cols-2 gap-12 items-center">
-
-      <div class="text-center lg:text-left space-y-6 opacity-0 animate-fade-up" style="animation-delay: 0.1s;">
-        <div class="inline-flex items-center gap-2 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-4 py-2 rounded-full text-sm font-bold border border-green-100 dark:border-green-800">
-          <span class="material-symbols-outlined text-sm">rocket_launch</span> The Future of Classifieds
+    <!-- Right: Floating UI cards -->
+    <div class="relative hidden lg:flex items-center justify-center h-[560px]">
+      <!-- Main listing card -->
+      <div class="absolute w-[320px] bg-white dark:bg-card-dark rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden animate-float z-10" style="top:60px;left:60px;">
+        <div class="h-44 bg-cover bg-center relative" style="background-image:url('https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=600&q=80')">
+          <span class="absolute top-3 left-3 bg-primary text-white text-[10px] font-black px-3 py-1 rounded-full">VEHICLES</span>
+          <span class="absolute top-3 right-3 bg-white/90 text-gray-800 text-[10px] font-black px-3 py-1 rounded-full">🔥 Featured</span>
         </div>
-        <h1 class="text-5xl lg:text-7xl font-bold leading-tight text-gray-900 dark:text-white">
-          Buy, Sell, &amp; <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Connect.</span>
-        </h1>
-        <p class="text-lg text-gray-500 dark:text-gray-400 max-w-xl mx-auto lg:mx-0">
-          ZipZapZoi is the safest way to find great deals, sell unused items, and connect with your local community. No fees, no hassle.
-        </p>
-
-        <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
-          <a href="classifieds.html" class="bg-primary hover:bg-green-700 text-white text-lg px-8 py-4 rounded-full font-bold shadow-glow transition-transform hover:-translate-y-1 flex items-center justify-center gap-2">
-            Start Browsing <span class="material-symbols-outlined">arrow_forward</span>
-          </a>
-          <a href="Post Listing.html" class="bg-white dark:bg-card-dark hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 text-lg px-8 py-4 rounded-full font-bold shadow-sm transition-transform hover:-translate-y-1 flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined">add_circle</span> Post an Ad
-          </a>
-        </div>
-
-        <div class="pt-8 flex items-center justify-center lg:justify-start gap-8 opacity-70">
-           <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400"><span class="font-bold text-2xl text-gray-800 dark:text-white">12k+</span> Users</div>
-           <div class="w-px h-8 bg-gray-200 dark:bg-gray-700"></div>
-           <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400"><span class="font-bold text-2xl text-gray-800 dark:text-white">8.5k</span> Listings</div>
-           <div class="w-px h-8 bg-gray-200 dark:bg-gray-700"></div>
-           <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400"><span class="font-bold text-2xl text-gray-800 dark:text-white">4.9</span> Rating</div>
-        </div>
-      </div>
-
-      <div class="relative hidden lg:block opacity-0 animate-fade-up" style="animation-delay: 0.3s;">
-        <div class="absolute top-0 right-10 w-64 h-64 bg-secondary/10 rounded-full blur-3xl animate-float"></div>
-        <div class="absolute bottom-0 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
-
-        <div class="relative bg-white dark:bg-card-dark p-4 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800 transform rotate-[-2deg] hover:rotate-0 transition-transform duration-500 w-[400px] mx-auto animate-float">
-          <div class="h-48 bg-gray-100 dark:bg-gray-800 rounded-2xl bg-cover bg-center mb-4 relative" style="background-image: url('https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80');">
-             <span class="absolute top-3 left-3 bg-white/90 dark:bg-card-dark/90 text-gray-800 dark:text-white backdrop-blur px-3 py-1 rounded-full text-xs font-bold shadow-sm">Vehicles</span>
-          </div>
-          <div class="space-y-2">
-            <div class="h-6 bg-gray-100 dark:bg-gray-800 rounded w-3/4"></div>
-            <div class="h-4 bg-gray-50 dark:bg-gray-700 rounded w-1/2"></div>
-            <div class="flex justify-between items-center pt-2">
-              <div class="h-8 w-24 bg-green-100 dark:bg-green-900/40 rounded-full"></div>
-              <div class="h-10 w-10 bg-primary rounded-full flex items-center justify-center text-white shadow-lg">
-                <span class="material-symbols-outlined">chat</span>
-              </div>
+        <div class="p-4">
+          <p class="font-black text-gray-900 dark:text-white text-sm">Honda Activa 6G — 2023</p>
+          <p class="text-xs text-gray-500 mt-0.5 flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-primary">location_on</span> Nagpur, Maharashtra</p>
+          <div class="flex items-center justify-between mt-3">
+            <p class="font-black text-primary text-lg">₹72,000</p>
+            <div class="flex gap-2">
+              <button class="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center"><span class="material-symbols-outlined text-[16px] text-red-400">favorite</span></button>
+              <button class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-md"><span class="material-symbols-outlined text-[16px] text-white">chat</span></button>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div class="absolute -right-6 top-10 bg-white dark:bg-card-dark p-3 rounded-2xl shadow-xl flex items-center gap-3 animate-bounce" style="animation-duration: 3s;">
-             <div class="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center text-green-600"><span class="material-symbols-outlined">verified</span></div>
-             <div><p class="text-xs text-gray-500 dark:text-gray-400">Status</p><p class="font-bold text-sm text-gray-800 dark:text-white">Sold!</p></div>
+      <!-- Stats badge -->
+      <div class="absolute right-8 top-16 glass-light dark:glass p-4 rounded-2xl shadow-xl z-20 animate-float2" style="animation-delay:1.5s">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined text-green-600 text-[20px]">trending_up</span>
+          </div>
+          <div>
+            <p class="text-[10px] font-bold text-gray-400 uppercase">Today</p>
+            <p class="font-black text-gray-900 dark:text-white text-sm">+142 New Ads</p>
           </div>
         </div>
       </div>
 
-    </div>
-  </header>
-
-  <!-- HOW IT WORKS -->
-  <section class="py-24 bg-white dark:bg-card-dark">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="text-center max-w-2xl mx-auto mb-16">
-        <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">How it Works</h2>
-        <p class="text-gray-500 dark:text-gray-400">Buying and selling has never been this simple. We built ZipZapZoi to be fast, secure, and user-friendly.</p>
+      <!-- Plan badge -->
+      <div class="absolute left-4 bottom-28 glass-light dark:glass p-4 rounded-2xl shadow-xl z-20 animate-float" style="animation-delay:2s">
+        <p class="text-[10px] font-black text-gray-400 uppercase mb-2">Your Plan</p>
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center"><span class="material-symbols-outlined text-white text-[16px]">workspace_premium</span></div>
+          <div>
+            <p class="font-black text-sm text-gray-900 dark:text-white">New User Free</p>
+            <p class="text-[10px] text-primary font-bold">6 Ads · 30 Days</p>
+          </div>
+        </div>
+        <div class="mt-2 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+          <div class="bg-primary h-1.5 rounded-full" style="width:25%"></div>
+        </div>
+        <p class="text-[10px] text-gray-400 mt-0.5">5 ads remaining</p>
       </div>
-      <div class="grid md:grid-cols-3 gap-10">
-        <div class="how-card p-8 rounded-3xl border border-gray-100 dark:border-gray-700 text-center hover:shadow-bouncy transition-shadow group">
-          <div class="w-16 h-16 mx-auto bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-            <span class="material-symbols-outlined text-3xl">add_a_photo</span>
-          </div>
-          <h3 class="text-xl font-bold mb-2 text-gray-800 dark:text-white">1. Post a Listing</h3>
-          <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Snap a photo, add a description, and set your price. Your ad goes live instantly.</p>
-        </div>
-        <div class="how-card p-8 rounded-3xl border border-gray-100 dark:border-gray-700 text-center hover:shadow-bouncy transition-shadow group">
-          <div class="w-16 h-16 mx-auto bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-            <span class="material-symbols-outlined text-3xl">chat</span>
-          </div>
-          <h3 class="text-xl font-bold mb-2 text-gray-800 dark:text-white">2. Chat &amp; Negotiate</h3>
-          <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Connect with buyers securely through our built-in chat. No need to share personal info.</p>
-        </div>
-        <div class="how-card p-8 rounded-3xl border border-gray-100 dark:border-gray-700 text-center hover:shadow-bouncy transition-shadow group">
-          <div class="w-16 h-16 mx-auto bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-            <span class="material-symbols-outlined text-3xl">handshake</span>
-          </div>
-          <h3 class="text-xl font-bold mb-2 text-gray-800 dark:text-white">3. Seal the Deal</h3>
-          <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Meet up, inspect the item, and get paid. Mark your item as sold and celebrate!</p>
+
+      <!-- Sold chip -->
+      <div class="absolute right-4 bottom-24 bg-green-500 text-white p-3 rounded-2xl shadow-xl z-20 flex items-center gap-2 animate-float2" style="animation-delay:0.5s">
+        <span class="material-symbols-outlined text-[20px]">check_circle</span>
+        <div>
+          <p class="text-[10px] font-bold opacity-80">Item Status</p>
+          <p class="font-black text-sm">Sold! 🎉</p>
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- CATEGORIES -->
-  <section class="py-24 bg-gray-50 dark:bg-background-dark">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="flex justify-between items-end mb-10">
-        <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Explore Categories</h2>
-        <a href="classifieds.html" class="text-primary font-bold hover:underline flex items-center gap-1">View All <span class="material-symbols-outlined">arrow_forward</span></a>
+      <!-- Decoration circle -->
+      <div class="absolute w-72 h-72 border-2 border-dashed border-primary/20 rounded-full" style="top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════
+     TRUST TICKER
+═══════════════════════════════════════════ -->
+<div class="trust-bar py-3 overflow-hidden">
+  <div class="ticker-wrap">
+    <div class="ticker-content animate-ticker text-white text-sm font-bold opacity-90 flex gap-12 select-none">
+      <span>🎉 Post 6 Ads FREE &nbsp;•&nbsp;</span>
+      <span>📱 Anti-Spam Protected &nbsp;•&nbsp;</span>
+      <span>⚡ Extra Ad Just ₹19 &nbsp;•&nbsp;</span>
+      <span>🔄 Renew for ₹16 &nbsp;•&nbsp;</span>
+      <span>🚀 Live in 2 Hours &nbsp;•&nbsp;</span>
+      <span>🏪 10 Ads at ₹149 &nbsp;•&nbsp;</span>
+      <span>🤝 1 Free Ad Every Month &nbsp;•&nbsp;</span>
+      <span>🇮🇳 Built for Bharat &nbsp;•&nbsp;</span>
+      <span>🎉 Post 6 Ads FREE &nbsp;•&nbsp;</span>
+      <span>📱 Anti-Spam Protected &nbsp;•&nbsp;</span>
+      <span>⚡ Extra Ad Just ₹19 &nbsp;•&nbsp;</span>
+      <span>🔄 Renew for ₹16 &nbsp;•&nbsp;</span>
+      <span>🚀 Live in 2 Hours &nbsp;•&nbsp;</span>
+      <span>🏪 10 Ads at ₹149 &nbsp;•&nbsp;</span>
+      <span>🤝 1 Free Ad Every Month &nbsp;•&nbsp;</span>
+      <span>🇮🇳 Built for Bharat &nbsp;•&nbsp;</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     HOW IT WORKS
+═══════════════════════════════════════════ -->
+<section class="py-24 bg-white dark:bg-card-dark">
+  <div class="max-w-7xl mx-auto px-5">
+    <div class="text-center mb-16 scroll-reveal">
+      <span class="text-xs font-black uppercase tracking-widest text-primary bg-green-50 dark:bg-green-900/20 px-4 py-2 rounded-full border border-green-100 dark:border-green-800">Simple. Fast. Free.</span>
+      <h2 class="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mt-5 mb-4">Sell in 3 Easy Steps</h2>
+      <p class="text-gray-500 dark:text-gray-400 max-w-xl mx-auto text-lg">No complicated sign-ups. No listing fees. Just snap, post, and sell.</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-8 relative">
+      <!-- Connector line -->
+      <div class="hidden md:block absolute top-16 left-[calc(16.67%+2rem)] right-[calc(16.67%+2rem)] h-0.5 bg-gradient-to-r from-primary via-secondary to-brand"></div>
+
+      <!-- Step 1 -->
+      <div class="scroll-reveal text-center group">
+        <div class="relative w-28 h-28 mx-auto mb-6">
+          <div class="w-28 h-28 bg-gradient-to-br from-blue-400 to-blue-600 rounded-3xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300 rotate-3 group-hover:rotate-0">
+            <span class="material-symbols-outlined text-white text-5xl">add_a_photo</span>
+          </div>
+          <span class="absolute -top-3 -right-3 w-8 h-8 bg-white dark:bg-card-dark border-2 border-blue-400 text-blue-600 font-black text-sm rounded-full flex items-center justify-center shadow-md">1</span>
+        </div>
+        <h3 class="text-xl font-black text-gray-900 dark:text-white mb-3">Register & Get 6 Free Ads</h3>
+        <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed max-w-xs mx-auto">Sign up with your mobile number and instantly get 6 free ad credits for your first 30 days. No credit card needed.</p>
+        <div class="mt-4 inline-block bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-xs font-black px-4 py-1.5 rounded-full border border-blue-200 dark:border-blue-800">₹0 to Start</div>
       </div>
-      <div id="categoriesGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        <!-- Rendered via JS -->
+
+      <!-- Step 2 -->
+      <div class="scroll-reveal text-center group" style="transition-delay:0.15s">
+        <div class="relative w-28 h-28 mx-auto mb-6">
+          <div class="w-28 h-28 bg-gradient-to-br from-primary to-green-700 rounded-3xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300 -rotate-2 group-hover:rotate-0">
+            <span class="material-symbols-outlined text-white text-5xl">edit_document</span>
+          </div>
+          <span class="absolute -top-3 -right-3 w-8 h-8 bg-white dark:bg-card-dark border-2 border-primary text-primary font-black text-sm rounded-full flex items-center justify-center shadow-md">2</span>
+        </div>
+        <h3 class="text-xl font-black text-gray-900 dark:text-white mb-3">Post Your Ad in 60 Seconds</h3>
+        <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed max-w-xs mx-auto">Add photos, set your price, pick a category and location. Your listing goes for review and is live within 2 hours.</p>
+        <div class="mt-4 inline-block bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-xs font-black px-4 py-1.5 rounded-full border border-green-200 dark:border-green-800">Live in &lt;2 hrs</div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="scroll-reveal text-center group" style="transition-delay:0.3s">
+        <div class="relative w-28 h-28 mx-auto mb-6">
+          <div class="w-28 h-28 bg-gradient-to-br from-brand to-orange-700 rounded-3xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300 rotate-2 group-hover:rotate-0">
+            <span class="material-symbols-outlined text-white text-5xl">handshake</span>
+          </div>
+          <span class="absolute -top-3 -right-3 w-8 h-8 bg-white dark:bg-card-dark border-2 border-brand text-brand font-black text-sm rounded-full flex items-center justify-center shadow-md">3</span>
+        </div>
+        <h3 class="text-xl font-black text-gray-900 dark:text-white mb-3">Chat, Meet & Sell</h3>
+        <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed max-w-xs mx-auto">Buyers chat directly through our secure inbox. Meet locally, inspect the item, and close the deal. Mark it Sold!</p>
+        <div class="mt-4 inline-block bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 text-xs font-black px-4 py-1.5 rounded-full border border-orange-200 dark:border-orange-800">Safe & Local</div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- CTA -->
-  <section class="py-20 px-6">
-    <div class="max-w-5xl mx-auto bg-gradient-to-r from-primary to-secondary rounded-[3rem] p-12 text-center text-white relative overflow-hidden">
-      <div class="relative z-10">
-        <h2 class="text-4xl font-bold mb-4">Ready to start selling?</h2>
-        <p class="text-lg opacity-90 mb-8 max-w-xl mx-auto">Join thousands of people who are decluttering their homes and making extra cash today.</p>
-        <a href="User Registration.html" class="bg-white dark:bg-card-dark text-primary text-lg px-10 py-4 rounded-full font-bold shadow-lg hover:bg-gray-100 transition-transform hover:scale-105 inline-block">Create Free Account</a>
+<!-- ═══════════════════════════════════════════
+     CATEGORIES
+═══════════════════════════════════════════ -->
+<section class="py-24 bg-bg-light dark:bg-bg-dark">
+  <div class="max-w-7xl mx-auto px-5">
+    <div class="flex justify-between items-end mb-12 scroll-reveal">
+      <div>
+        <span class="text-xs font-black uppercase tracking-widest text-secondary">What's on ZipZapZoi?</span>
+        <h2 class="text-4xl font-black text-gray-900 dark:text-white mt-2">Explore Categories</h2>
       </div>
-      <div class="absolute top-0 left-0 w-64 h-64 bg-white dark:bg-card-dark opacity-10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-      <div class="absolute bottom-0 right-0 w-64 h-64 bg-white dark:bg-card-dark opacity-10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+      <a href="classifieds.html" class="text-primary font-bold hover:underline flex items-center gap-1 text-sm">
+        View All <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+      </a>
     </div>
-  </section>
+    <div id="categoriesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <!-- Rendered by JS -->
+    </div>
+  </div>
+</section>
 
-  <!-- FOOTER -->
-  <footer class="bg-white dark:bg-card-dark border-t border-gray-200 dark:border-gray-700 pt-16 pb-8">
-    <div class="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-      <div class="col-span-2 md:col-span-1">
+<!-- ═══════════════════════════════════════════
+     PRICING PLANS
+═══════════════════════════════════════════ -->
+<section class="py-24 bg-white dark:bg-card-dark relative overflow-hidden">
+  <div class="absolute inset-0 hero-mesh opacity-40 dark:opacity-20 pointer-events-none"></div>
+  <div class="max-w-7xl mx-auto px-5 relative">
+    <div class="text-center mb-16 scroll-reveal">
+      <span class="text-xs font-black uppercase tracking-widest text-brand bg-orange-50 dark:bg-orange-900/20 px-4 py-2 rounded-full border border-orange-100 dark:border-orange-800">Pricing Built for Bharat</span>
+      <h2 class="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mt-5 mb-4">Simple, Affordable Plans</h2>
+      <p class="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto text-lg">Start free. Upgrade only when you need more. No subscriptions, no lock-ins — just pay for what you use.</p>
+    </div>
+
+    <!-- Free Plans -->
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+      <!-- New User Free -->
+      <div class="plan-hover bg-gradient-to-br from-primary to-green-700 rounded-3xl p-6 text-white shadow-2xl relative overflow-hidden scroll-reveal">
+        <div class="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/10 -translate-x-4 -translate-y-12"></div>
+        <div class="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-white/10 translate-x-0 translate-y-10"></div>
+        <span class="relative inline-block bg-yellow-300 text-green-900 text-[10px] font-black px-3 py-1 rounded-full mb-4">⭐ BEST FOR STARTERS</span>
+        <h3 class="relative text-xl font-black mb-1">New User Free</h3>
+        <p class="relative text-green-200 text-xs mb-5">Your first month on us!</p>
+        <div class="relative">
+          <p class="text-5xl font-black">FREE</p>
+          <p class="text-green-200 text-xs mt-1">One per mobile number</p>
+        </div>
+        <div class="relative flex gap-3 mt-5 text-sm">
+          <div class="flex-1 bg-white/15 rounded-xl p-2 text-center">
+            <p class="font-black text-xl">6</p><p class="text-green-200 text-xs">Ads</p>
+          </div>
+          <div class="flex-1 bg-white/15 rounded-xl p-2 text-center">
+            <p class="font-black text-xl">30</p><p class="text-green-200 text-xs">Days</p>
+          </div>
+        </div>
+        <a href="User Registration.html" class="relative mt-5 block text-center bg-white text-primary font-black py-3 rounded-xl hover:bg-gray-100 transition-all active:scale-95 text-sm">
+          Get Started Free →
+        </a>
+      </div>
+
+      <!-- Monthly Free -->
+      <div class="plan-hover bg-white dark:bg-bg-dark rounded-3xl p-6 shadow-xl border-2 border-gray-100 dark:border-gray-800 scroll-reveal" style="transition-delay:0.1s">
+        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-4">
+          <span class="material-symbols-outlined text-blue-500 text-[22px]">calendar_month</span>
+        </div>
+        <h3 class="text-lg font-black text-gray-900 dark:text-white mb-1">Monthly Free</h3>
+        <p class="text-gray-400 text-xs mb-5">1 free ad every month, always</p>
+        <p class="text-4xl font-black text-gray-900 dark:text-white">FREE</p>
+        <p class="text-gray-400 text-xs mt-1">Recurring — every month</p>
+        <div class="flex gap-3 mt-5">
+          <div class="flex-1 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-2 text-center">
+            <p class="font-black text-xl text-blue-600">1</p><p class="text-xs text-gray-500">Ad</p>
+          </div>
+          <div class="flex-1 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-2 text-center">
+            <p class="font-black text-xl text-blue-600">30</p><p class="text-xs text-gray-500">Days</p>
+          </div>
+        </div>
+        <div class="mt-5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-xs font-black text-center py-3 rounded-xl border border-blue-200 dark:border-blue-800">
+          Auto-granted on login ✓
+        </div>
+      </div>
+
+      <!-- Extra Ad -->
+      <div class="plan-hover bg-white dark:bg-bg-dark rounded-3xl p-6 shadow-xl border-2 border-gray-100 dark:border-gray-800 scroll-reveal" style="transition-delay:0.2s">
+        <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-2xl flex items-center justify-center mb-4">
+          <span class="material-symbols-outlined text-brand text-[22px]">add_circle</span>
+        </div>
+        <h3 class="text-lg font-black text-gray-900 dark:text-white mb-1">Extra Ad</h3>
+        <p class="text-gray-400 text-xs mb-5">Need just 1 more? Pay ₹19.</p>
+        <div class="flex items-baseline gap-1">
+          <span class="text-gray-400 text-xl">₹</span>
+          <span class="text-4xl font-black text-gray-900 dark:text-white">19</span>
+        </div>
+        <p class="text-gray-400 text-xs mt-1">Per extra listing</p>
+        <div class="flex gap-3 mt-5">
+          <div class="flex-1 bg-orange-50 dark:bg-orange-900/20 rounded-xl p-2 text-center">
+            <p class="font-black text-xl text-brand">1</p><p class="text-xs text-gray-500">Ad</p>
+          </div>
+          <div class="flex-1 bg-orange-50 dark:bg-orange-900/20 rounded-xl p-2 text-center">
+            <p class="font-black text-xl text-brand">30</p><p class="text-xs text-gray-500">Days</p>
+          </div>
+        </div>
+        <a href="Classifieds Plans.html" class="mt-5 block text-center bg-brand text-white font-black py-3 rounded-xl hover:bg-orange-600 transition-all text-sm">
+          Buy Extra Ad →
+        </a>
+      </div>
+
+      <!-- Renewal -->
+      <div class="plan-hover bg-white dark:bg-bg-dark rounded-3xl p-6 shadow-xl border-2 border-gray-100 dark:border-gray-800 scroll-reveal" style="transition-delay:0.3s">
+        <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center mb-4">
+          <span class="material-symbols-outlined text-purple-500 text-[22px]">refresh</span>
+        </div>
+        <h3 class="text-lg font-black text-gray-900 dark:text-white mb-1">Renewal</h3>
+        <p class="text-gray-400 text-xs mb-5">Renew an expired ad for ₹16</p>
+        <div class="flex items-baseline gap-1">
+          <span class="text-gray-400 text-xl">₹</span>
+          <span class="text-4xl font-black text-gray-900 dark:text-white">16</span>
+        </div>
+        <p class="text-gray-400 text-xs mt-1">Cheaper than reposting!</p>
+        <div class="flex gap-3 mt-5">
+          <div class="flex-1 bg-purple-50 dark:bg-purple-900/20 rounded-xl p-2 text-center">
+            <p class="font-black text-xl text-purple-600">1</p><p class="text-xs text-gray-500">Ad</p>
+          </div>
+          <div class="flex-1 bg-purple-50 dark:bg-purple-900/20 rounded-xl p-2 text-center">
+            <p class="font-black text-xl text-purple-600">30</p><p class="text-xs text-gray-500">Days</p>
+          </div>
+        </div>
+        <a href="Classifieds Plans.html" class="mt-5 block text-center bg-purple-600 text-white font-black py-3 rounded-xl hover:bg-purple-700 transition-all text-sm">
+          Renew Ad →
+        </a>
+      </div>
+    </div>
+
+    <!-- Business Packs Banner -->
+    <div class="bg-gradient-to-r from-gray-900 to-gray-800 rounded-3xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6 scroll-reveal">
+      <div>
+        <span class="text-xs font-black uppercase tracking-widest text-yellow-400">For Dealers, Resellers & Businesses</span>
+        <h3 class="text-3xl font-black text-white mt-2 mb-2">Business Packages</h3>
+        <div class="flex flex-wrap gap-4 mt-3">
+          <div class="text-center">
+            <p class="text-2xl font-black text-white">₹149</p>
+            <p class="text-xs text-gray-400">10 Ads · 30 Days</p>
+            <p class="text-[10px] text-primary font-bold">Starter Pack</p>
+          </div>
+          <div class="w-px h-12 bg-gray-700"></div>
+          <div class="text-center">
+            <p class="text-2xl font-black text-white">₹299</p>
+            <p class="text-xs text-gray-400">25 Ads · 45 Days</p>
+            <p class="text-[10px] text-secondary font-bold">Growth Pack</p>
+          </div>
+          <div class="w-px h-12 bg-gray-700"></div>
+          <div class="text-center">
+            <p class="text-2xl font-black text-white">₹599</p>
+            <p class="text-xs text-gray-400">50 Ads · 60 Days</p>
+            <p class="text-[10px] text-brand font-bold">Business Pack</p>
+          </div>
+          <div class="w-px h-12 bg-gray-700"></div>
+          <div class="text-center">
+            <p class="text-2xl font-black text-white">₹999</p>
+            <p class="text-xs text-gray-400">100 Ads · 90 Days</p>
+            <p class="text-[10px] text-yellow-400 font-bold">Pro Pack</p>
+          </div>
+        </div>
+      </div>
+      <a href="Classifieds Plans.html" class="btn-brand text-white font-black px-8 py-4 rounded-2xl shadow-xl whitespace-nowrap flex items-center gap-2">
+        <span class="material-symbols-outlined">upgrade</span> View All Plans
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     WHY ZIPZAPZOI
+═══════════════════════════════════════════ -->
+<section class="py-24 bg-bg-light dark:bg-bg-dark">
+  <div class="max-w-7xl mx-auto px-5">
+    <div class="grid lg:grid-cols-2 gap-16 items-center">
+      <div class="scroll-reveal">
+        <span class="text-xs font-black uppercase tracking-widest text-primary">Why ZipZapZoi?</span>
+        <h2 class="text-4xl font-black text-gray-900 dark:text-white mt-4 mb-6 leading-tight">Built for<br><span class="gradient-text">Real India</span></h2>
+        <p class="text-gray-500 dark:text-gray-400 mb-10 text-lg leading-relaxed">Most classifieds platforms are built for metros. We built ZipZapZoi for the other Bharat — Tier-2, Tier-3 cities, towns, and villages where the real buying and selling happens.</p>
+        <div class="space-y-5">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <span class="material-symbols-outlined text-primary text-[22px]">verified_user</span>
+            </div>
+            <div>
+              <h4 class="font-black text-gray-900 dark:text-white mb-1">Trust & Spam Control</h4>
+              <p class="text-gray-500 dark:text-gray-400 text-sm">One free trial per mobile number — no duplicate accounts, no spam listings.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <span class="material-symbols-outlined text-secondary text-[22px]">speed</span>
+            </div>
+            <div>
+              <h4 class="font-black text-gray-900 dark:text-white mb-1">Fast Moderation</h4>
+              <p class="text-gray-500 dark:text-gray-400 text-sm">Every listing is reviewed and goes live within 2 hours. No waiting for days.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <span class="material-symbols-outlined text-brand text-[22px]">currency_rupee</span>
+            </div>
+            <div>
+              <h4 class="font-black text-gray-900 dark:text-white mb-1">Affordable for All</h4>
+              <p class="text-gray-500 dark:text-gray-400 text-sm">Extra ads at ₹19, renewals at ₹16 — because every rupee matters here.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <span class="material-symbols-outlined text-purple-500 text-[22px]">location_on</span>
+            </div>
+            <div>
+              <h4 class="font-black text-gray-900 dark:text-white mb-1">Local Reach</h4>
+              <p class="text-gray-500 dark:text-gray-400 text-sm">Pinpoint location on every listing with interactive maps. Buyers find you faster.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats grid -->
+      <div class="grid grid-cols-2 gap-5 scroll-reveal">
+        <div class="stat-card bg-white dark:bg-card-dark rounded-3xl p-6 shadow-xl border border-gray-100 dark:border-gray-800 hover:border-primary transition-colors">
+          <span class="stat-icon material-symbols-outlined text-4xl text-primary block mb-3">group</span>
+          <p class="text-4xl font-black text-gray-900 dark:text-white">12k+</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Active Sellers</p>
+        </div>
+        <div class="stat-card bg-gradient-to-br from-primary to-green-700 rounded-3xl p-6 shadow-xl">
+          <span class="stat-icon material-symbols-outlined text-4xl text-white block mb-3">sell</span>
+          <p class="text-4xl font-black text-white">8.5k</p>
+          <p class="text-sm text-green-200 mt-1">Live Listings</p>
+        </div>
+        <div class="stat-card bg-gradient-to-br from-brand to-orange-700 rounded-3xl p-6 shadow-xl">
+          <span class="stat-icon material-symbols-outlined text-4xl text-white block mb-3">timer</span>
+          <p class="text-4xl font-black text-white">&lt;2hr</p>
+          <p class="text-sm text-orange-200 mt-1">Moderation Time</p>
+        </div>
+        <div class="stat-card bg-white dark:bg-card-dark rounded-3xl p-6 shadow-xl border border-gray-100 dark:border-gray-800 hover:border-brand transition-colors">
+          <span class="stat-icon material-symbols-outlined text-4xl text-brand block mb-3">currency_rupee</span>
+          <p class="text-4xl font-black text-gray-900 dark:text-white">₹16</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Cheapest Renewal</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     TESTIMONIALS
+═══════════════════════════════════════════ -->
+<section class="py-24 bg-white dark:bg-card-dark">
+  <div class="max-w-7xl mx-auto px-5">
+    <div class="text-center mb-14 scroll-reveal">
+      <h2 class="text-4xl font-black text-gray-900 dark:text-white mb-3">What Sellers Say</h2>
+      <p class="text-gray-500 dark:text-gray-400">Real stories from real sellers across India</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="scroll-reveal bg-bg-light dark:bg-bg-dark rounded-3xl p-7 border border-gray-100 dark:border-gray-800">
+        <div class="flex gap-1 mb-4">
+          <span class="text-yellow-400 text-xl">★★★★★</span>
+        </div>
+        <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-5">"Sold my old scooter in just 2 days! Posted for free and the buyer messaged me within hours. Much better than OLX — simpler and faster."</p>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-black text-sm">R</div>
+          <div>
+            <p class="font-black text-sm text-gray-900 dark:text-white">Ramesh Kumar</p>
+            <p class="text-xs text-gray-400">Nagpur, Maharashtra</p>
+          </div>
+        </div>
+      </div>
+      <div class="scroll-reveal bg-gradient-to-br from-primary/5 to-secondary/5 dark:bg-bg-dark rounded-3xl p-7 border-2 border-primary/20" style="transition-delay:0.15s">
+        <div class="flex gap-1 mb-4">
+          <span class="text-yellow-400 text-xl">★★★★★</span>
+        </div>
+        <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-5">"I run a small furniture shop and the Starter Pack (₹149 for 10 ads) is amazing value. Posted all my stock and got enquiries from the same area. Local reach is 🔥"</p>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-secondary rounded-full flex items-center justify-center text-white font-black text-sm">P</div>
+          <div>
+            <p class="font-black text-sm text-gray-900 dark:text-white">Priya Deshpande</p>
+            <p class="text-xs text-gray-400">Aurangabad, Maharashtra</p>
+          </div>
+        </div>
+      </div>
+      <div class="scroll-reveal bg-bg-light dark:bg-bg-dark rounded-3xl p-7 border border-gray-100 dark:border-gray-800" style="transition-delay:0.3s">
+        <div class="flex gap-1 mb-4">
+          <span class="text-yellow-400 text-xl">★★★★★</span>
+        </div>
+        <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-5">"The anti-spam system is great. I know the buyers I get are real people. And renewing an expired ad for just ₹16 is brilliant — I didn't have to repost everything."</p>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-brand rounded-full flex items-center justify-center text-white font-black text-sm">S</div>
+          <div>
+            <p class="font-black text-sm text-gray-900 dark:text-white">Suresh Verma</p>
+            <p class="text-xs text-gray-400">Jabalpur, Madhya Pradesh</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FAQ
+═══════════════════════════════════════════ -->
+<section class="py-24 bg-bg-light dark:bg-bg-dark">
+  <div class="max-w-3xl mx-auto px-5">
+    <div class="text-center mb-14 scroll-reveal">
+      <h2 class="text-4xl font-black text-gray-900 dark:text-white mb-3">Frequently Asked Questions</h2>
+      <p class="text-gray-500 dark:text-gray-400">Everything you need to know before posting your first ad.</p>
+    </div>
+    <div class="space-y-4">
+      <details class="scroll-reveal bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm group" open>
+        <summary class="flex justify-between items-center px-6 py-5 cursor-pointer list-none font-black text-gray-900 dark:text-white">
+          Can I really post 6 ads for free?
+          <span class="material-symbols-outlined text-gray-400 group-open:rotate-180 transition-transform duration-300">expand_more</span>
+        </summary>
+        <p class="px-6 pb-5 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Yes! Every new user gets 6 free ad credits in their first 30 days — no credit card, no catch. After that, you continue to get 1 free ad every month forever.</p>
+      </details>
+      <details class="scroll-reveal bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm group" style="transition-delay:0.1s">
+        <summary class="flex justify-between items-center px-6 py-5 cursor-pointer list-none font-black text-gray-900 dark:text-white">
+          What happens after my 6 free ads are used?
+          <span class="material-symbols-outlined text-gray-400 group-open:rotate-180 transition-transform duration-300">expand_more</span>
+        </summary>
+        <p class="px-6 pb-5 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">You'll still get 1 free ad every month automatically. For more ads, choose Extra Ad (₹19), Renewal (₹16), or a Business Pack starting at ₹149 for 10 ads.</p>
+      </details>
+      <details class="scroll-reveal bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm group" style="transition-delay:0.2s">
+        <summary class="flex justify-between items-center px-6 py-5 cursor-pointer list-none font-black text-gray-900 dark:text-white">
+          Can I create multiple accounts to get more free ads?
+          <span class="material-symbols-outlined text-gray-400 group-open:rotate-180 transition-transform duration-300">expand_more</span>
+        </summary>
+        <p class="px-6 pb-5 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">No. Our anti-spam system tracks one free trial per mobile number and device. Duplicate accounts are detected and suspended automatically.</p>
+      </details>
+      <details class="scroll-reveal bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm group" style="transition-delay:0.3s">
+        <summary class="flex justify-between items-center px-6 py-5 cursor-pointer list-none font-black text-gray-900 dark:text-white">
+          Is ZipZapZoi available in my city?
+          <span class="material-symbols-outlined text-gray-400 group-open:rotate-180 transition-transform duration-300">expand_more</span>
+        </summary>
+        <p class="px-6 pb-5 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">ZipZapZoi works all across India. Just set your location when posting and buyers near you will find your listing. We especially focus on Tier-2 & Tier-3 cities.</p>
+      </details>
+      <details class="scroll-reveal bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm group" style="transition-delay:0.4s">
+        <summary class="flex justify-between items-center px-6 py-5 cursor-pointer list-none font-black text-gray-900 dark:text-white">
+          How long does it take for my ad to go live?
+          <span class="material-symbols-outlined text-gray-400 group-open:rotate-180 transition-transform duration-300">expand_more</span>
+        </summary>
+        <p class="px-6 pb-5 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Our moderation team reviews every listing within 2 hours. You'll get a notification when your ad is live and visible to buyers.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FINAL CTA
+═══════════════════════════════════════════ -->
+<section class="py-20 px-5">
+  <div class="max-w-5xl mx-auto scroll-reveal">
+    <div class="relative bg-gradient-to-br from-gray-900 via-green-950 to-gray-900 rounded-[3rem] p-12 md:p-16 text-center text-white overflow-hidden shadow-2xl">
+      <!-- Decorations -->
+      <div class="absolute top-0 left-1/4 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute bottom-0 right-1/4 w-64 h-64 bg-brand/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute top-4 left-6 bg-white/10 rounded-2xl px-4 py-2 text-xs font-black border border-white/20">🇮🇳 Made for Bharat</div>
+
+      <div class="relative">
+        <div class="inline-flex items-center gap-2 bg-yellow-300 text-gray-900 px-5 py-2 rounded-full text-sm font-black mb-6">
+          🎉 Limited Time — 6 Ads FREE for New Users!
+        </div>
+        <h2 class="text-4xl md:text-6xl font-black mb-4 leading-tight">
+          Ready to Start<br>
+          <span class="gradient-text">Selling Today?</span>
+        </h2>
+        <p class="text-lg text-white/70 mb-10 max-w-xl mx-auto">
+          Join thousands of sellers from across India. Post your first ad free — no credit card, no paperwork, no hassle.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="User Registration.html" class="btn-brand text-white text-lg px-10 py-4 rounded-2xl font-black shadow-xl flex items-center justify-center gap-2 hover:gap-3 transition-all">
+            <span class="material-symbols-outlined">rocket_launch</span> Create Free Account
+          </a>
+          <a href="classifieds.html" class="bg-white/10 border border-white/25 text-white text-lg px-10 py-4 rounded-2xl font-bold hover:bg-white/20 transition-all flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined">search</span> Browse First
+          </a>
+        </div>
+        <p class="text-white/40 text-xs mt-6">No credit card required • 1 free ad every month • Cancel anytime</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════ -->
+<footer class="bg-white dark:bg-card-dark border-t border-gray-100 dark:border-gray-800">
+  <div class="max-w-7xl mx-auto px-5 pt-16 pb-8">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-10 mb-12">
+      <!-- Brand -->
+      <div class="col-span-2">
         <div class="flex items-center gap-2 mb-4">
           <span class="material-symbols-outlined text-primary text-3xl">all_inclusive</span>
-          <span class="font-bold text-xl text-gray-800 dark:text-white">ZipZapZoi</span>
+          <span class="font-black text-xl text-gray-900 dark:text-white">ZipZapZoi</span>
         </div>
-        <p class="text-sm text-gray-500 dark:text-gray-400">The smart way to buy and sell locally. Safe, fast, and free.</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 max-w-xs leading-relaxed mb-5">India's growth-first classifieds platform. Built for Tier-2 & Tier-3 cities. Start free, grow local.</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="text-xs bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-3 py-1 rounded-full font-bold border border-green-100 dark:border-green-800">6 Free Ads</span>
+          <span class="text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full font-bold border border-blue-100 dark:border-blue-800">₹19 Extra Ad</span>
+          <span class="text-xs bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 px-3 py-1 rounded-full font-bold border border-orange-100 dark:border-orange-800">₹16 Renewal</span>
+        </div>
       </div>
+      <!-- Marketplace -->
       <div>
-        <h4 class="font-bold text-gray-900 dark:text-white mb-4">Marketplace</h4>
-        <ul class="space-y-2 text-sm text-gray-500 dark:text-gray-400">
+        <h4 class="font-black text-gray-900 dark:text-white mb-4">Marketplace</h4>
+        <ul class="space-y-2.5 text-sm text-gray-500 dark:text-gray-400">
           <li><a href="classifieds.html" class="hover:text-primary transition-colors">Browse Listings</a></li>
           <li><a href="Post Listing.html" class="hover:text-primary transition-colors">Post an Ad</a></li>
-          <li><a href="Seller Dashboard.html" class="hover:text-primary transition-colors">Seller Dashboard</a></li>
+          <li><a href="SearchResult.html" class="hover:text-primary transition-colors">Search</a></li>
+          <li><a href="favorites.html" class="hover:text-primary transition-colors">My Favorites</a></li>
         </ul>
       </div>
+      <!-- Pricing -->
       <div>
-        <h4 class="font-bold text-gray-900 dark:text-white mb-4">Company</h4>
-        <ul class="space-y-2 text-sm text-gray-500 dark:text-gray-400">
-          <li><a href="help.html" class="hover:text-primary transition-colors">Help Center</a></li>
-          <li><a href="legal.html" class="hover:text-primary transition-colors">Terms &amp; Privacy</a></li>
-          <li id="footerAdminLinkContainer" class="hidden"><a href="AdminConsoleV2.html" class="hover:text-primary transition-colors">Admin</a></li>
+        <h4 class="font-black text-gray-900 dark:text-white mb-4">Pricing</h4>
+        <ul class="space-y-2.5 text-sm text-gray-500 dark:text-gray-400">
+          <li><a href="Classifieds Plans.html" class="hover:text-primary transition-colors">All Plans</a></li>
+          <li><a href="Classifieds Plans.html#plans" class="hover:text-primary transition-colors">Extra Ad — ₹19</a></li>
+          <li><a href="Classifieds Plans.html#plans" class="hover:text-primary transition-colors">Renewal — ₹16</a></li>
+          <li><a href="Classifieds Plans.html#plans" class="hover:text-primary transition-colors">Business Packs</a></li>
         </ul>
       </div>
+      <!-- Account -->
       <div>
-        <h4 class="font-bold text-gray-900 dark:text-white mb-4">Account</h4>
-        <ul class="space-y-2 text-sm text-gray-500 dark:text-gray-400">
+        <h4 class="font-black text-gray-900 dark:text-white mb-4">Account</h4>
+        <ul class="space-y-2.5 text-sm text-gray-500 dark:text-gray-400">
+          <li><a href="User Registration.html" class="hover:text-primary transition-colors">Sign Up Free</a></li>
           <li><a href="Login Page.html" class="hover:text-primary transition-colors">Log In</a></li>
-          <li><a href="User Registration.html" class="hover:text-primary transition-colors">Sign Up</a></li>
-          <li><a href="favorites.html" class="hover:text-primary transition-colors">Favorites</a></li>
+          <li><a href="Seller Dashboard.html" class="hover:text-primary transition-colors">Dashboard</a></li>
+          <li><a href="help.html" class="hover:text-primary transition-colors">Help Center</a></li>
+          <li><a href="legal.html" class="hover:text-primary transition-colors">Terms & Privacy</a></li>
+          <li id="footerAdminLinkContainer" class="hidden"><a href="AdminConsoleV2.html" class="hover:text-primary transition-colors">Admin Console</a></li>
         </ul>
       </div>
     </div>
-    <div class="max-w-7xl mx-auto px-6 pt-8 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-4">
-      <p class="text-sm text-gray-400">© 2026 ZipZapZoi. All Rights Reserved.</p>
-      <div class="flex gap-4 text-sm text-gray-400">
-        <a href="legal.html" class="hover:text-primary transition-colors">Privacy Policy</a>
-        <a href="legal.html" class="hover:text-primary transition-colors">Terms of Service</a>
-      </div>
+    <div class="border-t border-gray-100 dark:border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <p class="text-sm text-gray-400 zzz-copyright">© 2025 ZipZapZoi. All Rights Reserved.</p>
+      <p class="text-sm text-gray-400">🇮🇳 Built for Bharat — Trust • Simplicity • Local Reach</p>
     </div>
-  </footer>
+  </div>
+</footer>
 
-  <script src="js/schema.js"></script>
-  <script src="js/utils.js"></script>
-  <script>
-    // Toggle Dark Mode
-    function toggleDarkMode() {
-        const doc = document.documentElement;
-        const icon = document.getElementById('themeIcon');
-        if (doc.classList.contains('dark')) {
-            doc.classList.remove('dark');
-            localStorage.setItem('zzz_theme', 'light');
-            if(icon) icon.textContent = 'dark_mode';
-        } else {
-            doc.classList.add('dark');
-            localStorage.setItem('zzz_theme', 'dark');
-            if(icon) icon.textContent = 'light_mode';
-        }
+<!-- ═══════════════════════════════════════════
+     SCRIPTS
+═══════════════════════════════════════════ -->
+<script src="js/schema.js"></script>
+<script src="js/utils.js"></script>
+<script>
+  // ─── Dark Mode ───────────────────────────────
+  function toggleDarkMode() {
+    const doc = document.documentElement;
+    const icon = document.getElementById('themeIcon');
+    if (doc.classList.contains('dark')) {
+      doc.classList.remove('dark'); localStorage.setItem('zzz_theme', 'light');
+      if (icon) icon.textContent = 'dark_mode';
+    } else {
+      doc.classList.add('dark'); localStorage.setItem('zzz_theme', 'dark');
+      if (icon) icon.textContent = 'light_mode';
     }
+  }
+  if (document.documentElement.classList.contains('dark')) {
+    document.getElementById('themeIcon').textContent = 'light_mode';
+  }
 
-    // Render Dynamic Categories from Schema
-    function renderCategories() {
-        const grid = document.getElementById('categoriesGrid');
-        const classifiedsSchema = window.ZZZ ? window.ZZZ.getClassifiedsSchema() : window.ZZZ_SCHEMA;
-        if (!grid || !classifiedsSchema) return;
+  // ─── Mobile Menu ─────────────────────────────
+  document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+    document.getElementById('mobileMenu').classList.toggle('hidden');
+  });
 
-        // Take up to 6 categories
-        const cats = window.ZZZ_SCHEMA.categories.slice(0, 6);
-        
-        // Dynamic color mappings for visual flair based on index
-        const colors = ['cyan', 'blue', 'green', 'pink', 'purple', 'orange'];
+  // ─── Navbar Scroll Effect ────────────────────
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('nav-scrolled', window.scrollY > 20);
+  });
 
-        grid.innerHTML = cats.map((c, index) => {
-            const colorClass = `text-${colors[index % colors.length]}-500`;
-            return `
-                <a href="SearchResult.html?q=&cat=${c.id}" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-center flex flex-col items-center gap-3 group">
-                    <span class="material-symbols-outlined text-4xl ${colorClass} group-hover:-translate-y-1 transition-transform">${c.icon}</span>
-                    <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">${c.label}</span>
-                </a>
-            `;
-        }).join('');
+  // ─── Scroll Reveal ───────────────────────────
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+
+  // ─── Auth-Aware Nav ──────────────────────────
+  const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+  if (user) {
+    const firstName = user.name ? user.name.split(' ')[0] : 'Me';
+    document.getElementById('loginLink').textContent = firstName;
+    document.getElementById('loginLink').href = 'Seller Dashboard.html';
+    document.getElementById('signupBtn').textContent = 'My Dashboard';
+    document.getElementById('signupBtn').href = 'Seller Dashboard.html';
+    if (document.getElementById('mobileLoginLink')) {
+      document.getElementById('mobileLoginLink').textContent = firstName;
+      document.getElementById('mobileSignupBtn').textContent = 'My Dashboard';
+      document.getElementById('mobileSignupBtn').href = 'Seller Dashboard.html';
     }
-
-    document.addEventListener('DOMContentLoaded', renderCategories);
-    // Mobile menu toggle
-    document.getElementById('mobileMenuBtn').addEventListener('click', () => {
-      document.getElementById('mobileMenu').classList.toggle('hidden');
-    });
-
-    // Sync dark mode icon on load
-    if (document.documentElement.classList.contains('dark')) {
-      document.getElementById('themeIcon').textContent = 'light_mode';
+    // Grant monthly free ad
+    if (window.ZZZ && window.ZZZ.Plans) {
+      window.ZZZ.Plans.grantMonthlyFreeAd(user.id);
     }
+    // Show live stats from localStorage
+    const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+    const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+    if (listings.length > 0) document.getElementById('statListings').textContent = listings.length.toLocaleString('en-IN') + '+';
+    if (users.length > 0) document.getElementById('statUsers').textContent = users.length.toLocaleString('en-IN') + '+';
+  }
 
-    // Auth-aware nav
-    const user = JSON.parse(localStorage.getItem('zzz_user'));
-    if (user) {
-      document.getElementById('loginLink').textContent = user.name.split(' ')[0];
-      document.getElementById('loginLink').href = 'Seller Dashboard.html';
-      document.getElementById('signupBtn').textContent = 'Dashboard';
-      document.getElementById('signupBtn').href = 'Seller Dashboard.html';
-      if (document.getElementById('mobileLoginLink')) {
-        document.getElementById('mobileLoginLink').textContent = user.name.split(' ')[0];
-        document.getElementById('mobileSignupBtn').textContent = 'Dashboard';
-        document.getElementById('mobileSignupBtn').href = 'Seller Dashboard.html';
-      }
-    }
+  // Admin link
+  if (typeof isAdmin === 'function' && isAdmin()) {
+    const el = document.getElementById('footerAdminLinkContainer');
+    if (el) el.classList.remove('hidden');
+  }
 
-    // Show admin link in footer if user is admin
-    if (typeof isAdmin === 'function' && isAdmin()) {
-      const container = document.getElementById('footerAdminLinkContainer');
-      if (container) container.classList.remove('hidden');
-    }
-  </script>
+  // ─── Categories Grid ─────────────────────────
+  function renderCategories() {
+    const grid = document.getElementById('categoriesGrid');
+    const schema = window.ZZZ_SCHEMA || (window.ZZZ ? window.ZZZ.getClassifiedsSchema() : null);
+    if (!grid || !schema) return;
+
+    const gradients = [
+      'from-blue-400 to-blue-600', 'from-purple-400 to-purple-600',
+      'from-green-400 to-green-600', 'from-pink-400 to-pink-600',
+      'from-yellow-400 to-orange-500', 'from-cyan-400 to-cyan-600',
+      'from-red-400 to-red-600', 'from-indigo-400 to-indigo-600'
+    ];
+
+    const cats = schema.categories.slice(0, 8);
+    grid.innerHTML = cats.map((c, i) => `
+      <a href="SearchResult.html?q=&cat=${c.id}" class="cat-card bg-white dark:bg-card-dark rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col items-center gap-3 group cursor-pointer">
+        <div class="w-14 h-14 bg-gradient-to-br ${gradients[i % gradients.length]} rounded-2xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
+          <span class="material-symbols-outlined text-white text-3xl">${c.icon}</span>
+        </div>
+        <p class="font-black text-gray-700 dark:text-gray-200 text-sm text-center group-hover:text-white transition-colors">${c.label}</p>
+        <p class="text-[10px] text-gray-400 group-hover:text-white/70 transition-colors font-semibold">Browse →</p>
+      </a>
+    `).join('');
+  }
+
+  document.addEventListener('DOMContentLoaded', renderCategories);
+</script>
 </body>
 </html>
