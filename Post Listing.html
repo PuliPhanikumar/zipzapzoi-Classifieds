@@ -129,6 +129,23 @@
     </div>
 
     <div id="detailsSection" class="hidden flex-col gap-6">
+
+      <!-- ── CHARITY DECLARATION BANNER ── -->
+      <div id="charityBanner" class="hidden bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-2xl p-5">
+        <div class="flex items-start gap-3">
+          <span class="material-symbols-outlined text-amber-500 text-3xl flex-shrink-0">volunteer_activism</span>
+          <div class="flex-1">
+            <h4 class="font-black text-amber-800 dark:text-amber-300 mb-1">🆓 Charity / Donation — FREE Post (No Quota Deducted)</h4>
+            <p class="text-sm text-amber-700 dark:text-amber-400 mb-3">Charity listings are completely FREE. However, misuse is strictly monitored. <strong>Fake charity posts will result in immediate account suspension.</strong></p>
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" id="charityDeclaration" class="mt-1 w-5 h-5 flex-shrink-0 accent-amber-500"/>
+              <span class="text-sm font-bold text-amber-800 dark:text-amber-300">
+                I solemnly declare that this is a <u>genuine</u> charity / donation / NGO post. I understand that false information may result in permanent ban and legal action.
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
       
       <div class="bg-card-light dark:bg-card-dark rounded-2xl shadow-bouncy p-6 border border-border-light dark:border-border-dark">
         <div class="flex justify-between items-center mb-6">
@@ -247,6 +264,18 @@
         <div>
           <p class="font-bold text-sm text-text-light dark:text-text-dark">Hide my phone number</p>
           <p class="text-xs text-gray-500 dark:text-gray-400">Buyers will only contact you via ZipZapZoi Chat.</p>
+        </div>
+      </div>
+
+      <!-- Quota Status Bar (non-charity only) -->
+      <div id="quotaStatusBar" class="hidden p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-green-600 text-[22px]">inventory_2</span>
+          <div class="flex-1">
+            <p class="text-sm font-bold text-green-800 dark:text-green-300" id="quotaStatusText">Loading...</p>
+            <p class="text-xs text-green-600 dark:text-green-500">After posting, 1 ad credit will be deducted from your balance.</p>
+          </div>
+          <a href="Classifieds Plans.html" class="text-xs font-black text-green-700 dark:text-green-400 hover:underline whitespace-nowrap">Get More →</a>
         </div>
       </div>
 
@@ -409,6 +438,120 @@
     document.getElementById('stepIndicator').className = "text-secondary font-bold";
     categoryTitle.textContent = `${currentCategory.label} Details`;
     
+    brain.categories.forEach(cat => {
+      // 1. Create Category Object
+      schema[cat.id] = {
+        label: cat.label,
+        icon: cat.icon,
+        color: cat.color || 'text-gray-500 dark:text-gray-400',
+        priceLabel: cat.priceLabel, // Custom Price Label
+        hidePrice: cat.hidePrice,   // Charity logic
+        photoLimit: cat.photoLimit, // Photo limits
+        note: cat.note,             // Notes
+        subs: [],
+        fields: [] 
+      };
+
+      // 2. Find Subcategories
+      const mySubs = brain.subcategories.filter(s => s.categoryId === cat.id);
+      schema[cat.id].subs = mySubs.map(s => s.label);
+      
+      // 3. Store ID mapping for field retrieval later
+      schema[cat.id].subIds = mySubs; // Store objects {id, label}
+    });
+  }
+
+  // Load the brain immediately
+  loadSchemaFromBrain();
+
+  // --- 2. MOCK DATA FOR INDIA LOCATIONS ---
+  const indiaData = {
+    "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Tirupati"],
+    "Karnataka": ["Bengaluru", "Mysuru", "Mangaluru", "Hubballi", "Belagavi"],
+    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad"],
+    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem"],
+    "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam"],
+    "Delhi": ["New Delhi", "North Delhi", "South Delhi", "East Delhi", "West Delhi"],
+    "West Bengal": ["Kolkata", "Howrah", "Durgapur", "Asansol", "Siliguri"],
+    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar"],
+    "Uttar Pradesh": ["Lucknow", "Kanpur", "Ghaziabad", "Agra", "Varanasi"],
+    "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Ajmer"]
+  };
+
+  // --- 3. DOM ELEMENTS ---
+  const categoryGrid = document.getElementById('categoryGrid');
+  const detailsSection = document.getElementById('detailsSection');
+  const dynamicFieldsArea = document.getElementById('dynamicFieldsArea');
+  const subCategorySelect = document.getElementById('subCategorySelect');
+  const categoryTitle = document.getElementById('categoryTitle');
+  const changeCatBtn = document.getElementById('changeCatBtn');
+  const progressBar = document.getElementById('progressBar');
+  const stateSelect = document.getElementById('stateSelect');
+  const citySelect = document.getElementById('citySelect');
+  const priceRow = document.getElementById('priceRow');
+  const priceLabel = document.getElementById('priceLabel');
+  const photoSection = document.getElementById('photoSection');
+  const photoLimitText = document.getElementById('photoLimitText');
+  const finalSubmitBtn = document.getElementById('finalSubmitBtn');
+  const confirmPostBtn = document.getElementById('confirmPostBtn');
+
+  let currentCategory = null;
+  let currentCategoryKey = null;
+  let uploadedImages = []; // Array to store image data URLs
+
+  // --- 4. INITIALIZATION ---
+  
+  // Render Categories
+  Object.keys(schema).forEach(key => {
+    const cat = schema[key];
+    const div = document.createElement('div');
+    div.className = `cursor-pointer flex flex-col items-center justify-center p-4 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-gray-800 hover:border-secondary hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 transition-all gap-2 group`;
+    div.innerHTML = `
+      <span class="material-symbols-outlined text-4xl ${cat.color} group-hover:scale-110 transition-transform">${cat.icon}</span>
+      <span class="text-sm font-bold text-center">${cat.label}</span>
+    `;
+    div.onclick = () => selectCategory(key);
+    categoryGrid.appendChild(div);
+  });
+
+  // Populate States
+  Object.keys(indiaData).forEach(state => {
+    const opt = document.createElement('option');
+    opt.value = state;
+    opt.textContent = state;
+    stateSelect.appendChild(opt);
+  });
+
+  stateSelect.addEventListener('change', (e) => {
+    const state = e.target.value;
+    citySelect.innerHTML = '<option value="">Select City</option>';
+    if (state && indiaData[state]) {
+      indiaData[state].forEach(city => {
+        const opt = document.createElement('option');
+        opt.value = city;
+        opt.textContent = city;
+        citySelect.appendChild(opt);
+      });
+      citySelect.disabled = false;
+    } else {
+      citySelect.disabled = true;
+    }
+  });
+
+  // --- 5. LOGIC FUNCTIONS ---
+
+  function selectCategory(key) {
+    currentCategoryKey = key;
+    currentCategory = schema[key];
+    
+    // UI Updates
+    document.getElementById('catSection').classList.add('hidden'); // Hide category grid
+    detailsSection.classList.remove('hidden');
+    detailsSection.classList.add('flex');
+    progressBar.style.width = '66%';
+    document.getElementById('stepIndicator').className = "text-secondary font-bold";
+    categoryTitle.textContent = `${currentCategory.label} Details`;
+    
     // Reset & Populate Subcategories
     subCategorySelect.innerHTML = '<option value="">Select Subcategory...</option>';
     currentCategory.subs.forEach(sub => {
@@ -418,22 +561,43 @@
       subCategorySelect.appendChild(opt);
     });
 
-    // Handle Price & Photo Limits Logic immediately upon category selection
-    if (currentCategory.hidePrice) {
+    const limit = currentCategory.photoLimit || 8;
+    photoLimitText.textContent = `Add up to ${limit} photos. First photo is cover.`;
+
+    // Charity vs normal
+    const isCharityCategory = !!(currentCategory.hidePrice || key === 'charity');
+    const charityBanner = document.getElementById('charityBanner');
+    const quotaBar = document.getElementById('quotaStatusBar');
+
+    if (isCharityCategory) {
       priceRow.classList.add('hidden');
-      dynamicFieldsArea.innerHTML = ''; 
-      const note = document.createElement('p');
-      note.className = "col-span-1 md:col-span-2 text-green-600 font-bold text-sm bg-green-100 p-2 rounded-lg";
-      note.textContent = currentCategory.note || "This listing is free.";
-      dynamicFieldsArea.appendChild(note);
+      if (charityBanner) charityBanner.classList.remove('hidden');
+      if (quotaBar) quotaBar.classList.add('hidden');
+      dynamicFieldsArea.innerHTML = '';
+      if(currentCategory.note) {
+         const note = document.createElement('p');
+         note.className = "col-span-1 md:col-span-2 text-green-600 font-bold text-sm bg-green-100 p-2 rounded-lg";
+         note.textContent = currentCategory.note;
+         dynamicFieldsArea.appendChild(note);
+      }
     } else {
       priceRow.classList.remove('hidden');
       priceLabel.textContent = currentCategory.priceLabel ? `${currentCategory.priceLabel} (₹) *` : 'Price (₹) *';
-      dynamicFieldsArea.innerHTML = ''; // Clear notes
+      if (charityBanner) charityBanner.classList.add('hidden');
+      dynamicFieldsArea.innerHTML = '';
+      // Show quota bar
+      if (quotaBar) {
+        const cUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if (cUser && window.ZZZ && window.ZZZ.Plans) {
+          const q = window.ZZZ.Plans.getUserQuota(cUser.id);
+          if (q) {
+            quotaBar.classList.remove('hidden');
+            document.getElementById('quotaStatusText').textContent =
+              `You have ${q.adsRemaining} ad${q.adsRemaining !== 1 ? 's' : ''} remaining (${q.planName || 'Free Plan'})`;
+          }
+        }
+      }
     }
-
-    const limit = currentCategory.photoLimit || 8;
-    photoLimitText.textContent = `Add up to ${limit} photos. First photo is cover.`;
 
     // Setup Listener for Subcategory Change -> Populate Fields
     subCategorySelect.onchange = (e) => {
@@ -663,77 +827,150 @@
   }
 
   // --- 8. SUBMIT HANDLER ---
+  function showToast(msg, type) {
+    let c = document.getElementById('toastCont');
+    if (!c) { c = document.createElement('div'); c.id = 'toastCont'; c.className = 'fixed bottom-6 right-6 z-[200] flex flex-col gap-2'; document.body.appendChild(c); }
+    const t = document.createElement('div');
+    t.className = `flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl translate-y-4 opacity-0 transition-all duration-300 text-white font-bold text-sm ${type === 'error' ? 'bg-red-500' : 'bg-primary'}`;
+    t.innerHTML = `<span class="material-symbols-outlined text-[18px]">${type === 'error' ? 'error' : 'check_circle'}</span>${msg}`;
+    c.appendChild(t);
+    requestAnimationFrame(() => t.classList.remove('translate-y-4', 'opacity-0'));
+    setTimeout(() => { t.classList.add('translate-y-4', 'opacity-0'); setTimeout(() => t.remove(), 300); }, 4000);
+  }
+
+  function showPostSuccess(isEdit, isCharity) {
+    document.querySelector('main').innerHTML = `
+      <div class="min-h-[60vh] flex flex-col items-center justify-center text-center px-4 py-16">
+        <div class="w-24 h-24 rounded-full ${isCharity ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-green-100 dark:bg-green-900/30'} flex items-center justify-center mx-auto mb-6">
+          <span class="material-symbols-outlined text-6xl ${isCharity ? 'text-amber-500' : 'text-green-500'}">${isCharity ? 'volunteer_activism' : 'check_circle'}</span>
+        </div>
+        <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-3">
+          ${isEdit ? 'Listing Updated! ✅' : isCharity ? 'Charity Post Submitted! 💛' : 'Ad Posted Successfully! 🎉'}
+        </h2>
+        <p class="text-gray-500 dark:text-gray-400 max-w-md mb-4 text-base">
+          ${isEdit ? 'Your listing has been updated.' : isCharity ? 'Your charity post is under review. Our team will verify and approve it within 24 hours.' : 'Your ad is under moderation review and will go live within 2 hours.'}
+        </p>
+        ${isCharity ? '<p class="text-sm font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-5 py-3 rounded-xl mb-6 max-w-sm">⚠️ Charity posts are verified by our moderation team. Fake posts will lead to permanent account suspension.</p>' : ''}
+        <div class="flex flex-col sm:flex-row gap-4 mt-2">
+          <a href="Seller Dashboard.html" class="bg-primary hover:bg-green-700 text-white font-black px-8 py-3.5 rounded-xl shadow-lg transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined">dashboard</span> Go to Dashboard
+          </a>
+          <a href="classifieds.html" class="border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold px-8 py-3.5 rounded-xl hover:border-primary hover:text-primary transition-all">
+            Browse Listings
+          </a>
+          ${!isEdit && !isCharity ? '<a href="Post Listing.html" class="border-2 border-primary text-primary font-bold px-8 py-3.5 rounded-xl hover:bg-primary hover:text-white transition-all">Post Another Ad</a>' : ''}
+        </div>
+      </div>`;
+  }
+
   function handleSubmit() {
     const currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-    if(!currentCategory || !currentCategoryKey) return alert('Please choose a category.');
-    if(!subCategorySelect.value) return alert('Please choose a subcategory.');
-    
-    // Gather Dynamic Data
+    if (!currentCategory || !currentCategoryKey) { showToast('Please choose a category.', 'error'); return; }
+    if (!subCategorySelect.value) { showToast('Please choose a subcategory.', 'error'); return; }
+    if (!document.getElementById('postTitle').value.trim()) { showToast('Please enter an ad title.', 'error'); return; }
+    if (!document.getElementById('postDescription').value.trim()) { showToast('Please enter a description.', 'error'); return; }
+    if (!document.getElementById('stateSelect').value) { showToast('Please select your state.', 'error'); return; }
+    if (!document.getElementById('citySelect').value) { showToast('Please select your city.', 'error'); return; }
+
+    const isCharity = !!(currentCategory.hidePrice || currentCategoryKey === 'charity');
+
+    // Charity: require declaration
+    if (isCharity) {
+      const decl = document.getElementById('charityDeclaration');
+      if (!decl || !decl.checked) {
+        showToast('Please tick the charity declaration checkbox first.', 'error');
+        document.getElementById('charityBanner').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+    }
+
+    // Non-charity: quota check
+    if (!isCharity && !editId) {
+      if (window.ZZZ && window.ZZZ.Plans) {
+        const q = window.ZZZ.Plans.getUserQuota(currentUser ? currentUser.id : null);
+        if (!q || q.adsRemaining <= 0) {
+          document.getElementById('zzz-quota-gate').classList.remove('hidden');
+          return;
+        }
+      }
+    }
+
+    // Non-charity: price required
+    if (!isCharity && !document.getElementById('postPrice').value) {
+      showToast('Please enter a price for your listing.', 'error'); return;
+    }
+
+    // Gather dynamic fields
     const dynamicData = {};
     const brain = window.ZZZ && window.ZZZ.getClassifiedsSchema ? window.ZZZ.getClassifiedsSchema() : (window.ZZZ_SCHEMA || { fields: [] });
-    
-    // Find fields for current selection to scrape data
-    const subLabel = subCategorySelect.value;
-    const subObj = currentCategory.subIds.find(s => s.label === subLabel);
-    if(subObj) {
-         const specificFields = brain.fields.filter(f => f.subcategoryId === subObj.id);
-         specificFields.forEach(f => {
-            const el = document.getElementById('dyn_' + f.id);
-            if(el) dynamicData[f.id] = el.value;
-         });
+    const subObj = currentCategory.subIds ? currentCategory.subIds.find(s => s.label === subCategorySelect.value) : null;
+    if (subObj) {
+      brain.fields.filter(f => f.subcategoryId === subObj.id).forEach(f => {
+        const el = document.getElementById('dyn_' + f.id);
+        if (el) dynamicData[f.id] = el.value;
+      });
     }
 
-    const previousItem = editId ? (JSON.parse(localStorage.getItem('zzz_listings') || '[]').find(l => l.id === editId) || {}) : {};
-    const postedAt = previousItem.postedAt || previousItem.createdAt || new Date().toISOString();
+    const prev = editId ? (JSON.parse(localStorage.getItem('zzz_listings') || '[]').find(l => l.id === editId) || {}) : {};
     const newItem = {
-        id: editId || 'item_' + Date.now(),
-        userId: currentUser ? currentUser.id : 'guest',
-        userName: currentUser ? currentUser.name : 'Guest User',
-        userEmail: currentUser ? currentUser.email : '',
-        categoryId: currentCategoryKey,
-        category: schema[currentCategoryKey].label,
-        subcategory: subCategorySelect.value,
-        title: document.getElementById('postTitle').value,
-        price: parseFloat(document.getElementById('postPrice').value) || 0,
-        negotiable: document.getElementById('postNegotiable') ? document.getElementById('postNegotiable').checked : false,
-        hidePhone: document.getElementById('hidePhone') ? document.getElementById('hidePhone').checked : false,
-        phone: currentUser ? (currentUser.phone || '') : '',
-        description: document.getElementById('postDescription').value,
-        state: document.getElementById('stateSelect').value,
-        city: document.getElementById('citySelect').value,
-        specificLocation: document.getElementById('specificLocation').value,
-        lat: parseFloat(document.getElementById('pickedLat').value) || null,
-        lng: parseFloat(document.getElementById('pickedLng').value) || null,
-        location: `${document.getElementById('citySelect').value}, ${document.getElementById('stateSelect').value}`,
-        image: uploadedImages[0] || 'https://via.placeholder.com/400',
-        images: uploadedImages,
-        dynamicData: dynamicData,
-        time: postedAt,
-        createdAt: postedAt,
-        updatedAt: new Date().toISOString(),
-        status: previousItem.status || 'active',
-        views: previousItem.views || 0,
-        promoted: previousItem.promoted || false
+      id: editId || ('item_' + Date.now()),
+      userId: currentUser ? currentUser.id : 'guest',
+      userName: currentUser ? currentUser.name : 'Guest',
+      userEmail: currentUser ? (currentUser.email || '') : '',
+      categoryId: currentCategoryKey,
+      category: schema[currentCategoryKey].label,
+      subcategory: subCategorySelect.value,
+      title: document.getElementById('postTitle').value.trim(),
+      price: isCharity ? 0 : (parseFloat(document.getElementById('postPrice').value) || 0),
+      negotiable: !!(document.getElementById('postNegotiable') && document.getElementById('postNegotiable').checked),
+      hidePhone: !!(document.getElementById('hidePhone') && document.getElementById('hidePhone').checked),
+      phone: currentUser ? (currentUser.phone || '') : '',
+      description: document.getElementById('postDescription').value.trim(),
+      state: document.getElementById('stateSelect').value,
+      city: document.getElementById('citySelect').value,
+      specificLocation: document.getElementById('specificLocation').value,
+      lat: parseFloat(document.getElementById('pickedLat').value) || null,
+      lng: parseFloat(document.getElementById('pickedLng').value) || null,
+      location: [document.getElementById('citySelect').value, document.getElementById('stateSelect').value].filter(Boolean).join(', '),
+      image: uploadedImages[0] || '',
+      images: uploadedImages,
+      dynamicData,
+      isCharity,
+      isFree: isCharity,
+      charityDeclared: isCharity,
+      createdAt: prev.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      status: editId ? (prev.status || 'active') : 'pending_review',
+      moderationStatus: 'pending_review',
+      views: prev.views || 0,
+      promoted: prev.promoted || false
     };
 
-    // --- REDIRECT TO MONETIZATION / PLANS PAGE ---
-    if(editId) {
-        // If editing an existing ad, save directly and skip payment
-        const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-        const idx = listings.findIndex(l => l.id === editId);
-        if(idx !== -1) listings[idx] = newItem;
-        localStorage.setItem('zzz_listings', JSON.stringify(listings));
-        showToast("Listing Updated Successfully!");
-        window.location.href = 'Seller Dashboard.html';
+    // SAVE DIRECTLY TO localStorage
+    const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+    if (editId) {
+      const idx = listings.findIndex(l => l.id === editId);
+      if (idx !== -1) { listings[idx] = { ...listings[idx], ...newItem }; }
+      else { listings.unshift(newItem); }
     } else {
-        // If new ad, store in session and go to Plans page for checkout
-        // Deduct 1 ad from quota when submitting
-      if (window.ZZZ && window.ZZZ.Plans) {
-        window.ZZZ.Plans.deductQuota(currentUser ? currentUser.id : null);
-      }
-      sessionStorage.setItem('zzz_pending_listing', JSON.stringify(newItem));
-        window.location.href = 'Classifieds Plans.html';
+      listings.unshift(newItem);
     }
+    localStorage.setItem('zzz_listings', JSON.stringify(listings));
+    localStorage.setItem('zzz_data_updated_at', String(Date.now()));
+
+    // Deduct quota only for non-charity new posts
+    if (!isCharity && !editId && window.ZZZ && window.ZZZ.Plans && currentUser) {
+      window.ZZZ.Plans.deductQuota(currentUser.id);
+    }
+
+    // Add charity to moderation queue
+    if (isCharity && !editId) {
+      const queue = JSON.parse(localStorage.getItem('zzz_charity_queue') || '[]');
+      queue.unshift({ listingId: newItem.id, userId: newItem.userId, userName: newItem.userName, title: newItem.title, submittedAt: new Date().toISOString(), status: 'pending_review' });
+      localStorage.setItem('zzz_charity_queue', JSON.stringify(queue));
+    }
+
+    showPostSuccess(!!editId, isCharity);
   }
 
   // BIND EVENTS
