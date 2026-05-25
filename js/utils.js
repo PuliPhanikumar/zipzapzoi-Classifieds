@@ -240,3 +240,159 @@ window.addEventListener('storage', (e) => {
         window.ZZZ.updateUnreadBadge();
     }
 });
+
+// ============================================
+// Plans & Quota Engine
+// ============================================
+(function() {
+
+  // Default plan definitions — overridable by admin via zzz_plan_config
+  const DEFAULT_PLANS = [
+    { id: 'new_user_free', name: 'New User Free',  price: 0,   ads: 6,   days: 30, tag: 'First Month Only', tagColor: 'bg-green-500',  icon: 'celebration',   desc: 'Post 6 ads absolutely FREE for your first month.' },
+    { id: 'monthly_free',  name: 'Monthly Free',   price: 0,   ads: 1,   days: 30, tag: 'Always Free',      tagColor: 'bg-blue-500',   icon: 'refresh',       desc: 'Every user gets 1 free ad per month, always.' },
+    { id: 'extra_ad',      name: 'Extra Ad',       price: 19,  ads: 1,   days: 30, tag: 'Best Value',       tagColor: 'bg-orange-400', icon: 'add_circle',    desc: 'Need more visibility? Post extra ads for just ₹19.' },
+    { id: 'renewal',       name: 'Renewal',        price: 16,  ads: 1,   days: 30, tag: 'Renewal',          tagColor: 'bg-purple-500', icon: 'autorenew',     desc: 'Renew your expired ad for only ₹16.' },
+    { id: 'starter',       name: 'Starter Pack',   price: 149, ads: 10,  days: 30, tag: 'Popular',          tagColor: 'bg-teal-500',   icon: 'rocket_launch', desc: 'Perfect for small sellers. 10 ads for 30 days.' },
+    { id: 'growth',        name: 'Growth Pack',    price: 299, ads: 25,  days: 45, tag: 'Most Popular',     tagColor: 'bg-primary',    icon: 'trending_up',   desc: 'Grow your business. 25 ads, 45 days validity.' },
+    { id: 'business',      name: 'Business Pack',  price: 599, ads: 50,  days: 60, tag: 'Business',         tagColor: 'bg-indigo-600', icon: 'business_center', desc: 'Perfect for dealers & resellers. 50 ads, 60 days.' },
+    { id: 'pro',           name: 'Pro Pack',       price: 999, ads: 100, days: 90, tag: 'Pro',              tagColor: 'bg-yellow-600', icon: 'workspace_premium', desc: 'Maximum power. 100 ads with 90-day validity.' },
+  ];
+
+  // Get plans (admin can override via zzz_plan_config)
+  function getPlans() {
+    const override = window.ZZZ.read('zzz_plan_config', null);
+    if (override && Array.isArray(override) && override.length > 0) return override;
+    return DEFAULT_PLANS;
+  }
+
+  // Get a single plan by id
+  function getPlanById(id) {
+    return getPlans().find(p => p.id === id) || null;
+  }
+
+  // Get user quota object: { adsRemaining, planName, planId, expiresAt, totalGranted }
+  function getUserQuota(userId) {
+    if (!userId) return null;
+    const allQuotas = window.ZZZ.read('zzz_user_quotas', {});
+    return allQuotas[userId] || null;
+  }
+
+  // Assign a plan to a user (adds ads to existing balance)
+  function assignPlan(userId, planId, opts = {}) {
+    if (!userId || !planId) return false;
+    const plan = getPlanById(planId);
+    if (!plan) return false;
+
+    const allQuotas = window.ZZZ.read('zzz_user_quotas', {});
+    const existing = allQuotas[userId] || { adsRemaining: 0, totalGranted: 0, planId: null, planName: null, expiresAt: null, history: [] };
+
+    const adsToAdd = opts.adsOverride || plan.ads;
+    const daysToAdd = opts.daysOverride || plan.days;
+    const expiresAt = new Date(Date.now() + daysToAdd * 86400000).toISOString();
+
+    existing.adsRemaining = (existing.adsRemaining || 0) + adsToAdd;
+    existing.totalGranted = (existing.totalGranted || 0) + adsToAdd;
+    existing.planId = planId;
+    existing.planName = plan.name;
+    existing.expiresAt = expiresAt;
+    existing.history = existing.history || [];
+    existing.history.push({
+      planId, planName: plan.name, ads: adsToAdd, days: daysToAdd,
+      price: opts.price !== undefined ? opts.price : plan.price,
+      grantedAt: new Date().toISOString(), expiresAt
+    });
+
+    allQuotas[userId] = existing;
+    window.ZZZ.write('zzz_user_quotas', allQuotas);
+
+    // Track anti-spam for free plans
+    if (planId === 'new_user_free') {
+      const user = window.ZZZ.read('zzz_users', []).find(u => u.id === userId);
+      if (user && user.phone) {
+        const registry = window.ZZZ.read('zzz_phone_registry', {});
+        registry[user.phone] = { userId, hadFreeTrial: true, registeredAt: new Date().toISOString() };
+        window.ZZZ.write('zzz_phone_registry', registry);
+      }
+    }
+
+    // Record transaction if paid plan
+    if (plan.price > 0 || opts.price > 0) {
+      const txns = window.ZZZ.read('zzz_transactions', []);
+      const user = window.ZZZ.read('zzz_users', []).find(u => u.id === userId)
+                || window.ZZZ.getCurrentUser();
+      txns.unshift({
+        id: 'txn_' + Date.now(),
+        userId,
+        userName: user ? user.name : 'User',
+        planId, planName: plan.name,
+        amount: opts.price !== undefined ? opts.price : plan.price,
+        status: 'success',
+        date: Date.now()
+      });
+      window.ZZZ.write('zzz_transactions', txns);
+    }
+
+    return true;
+  }
+
+  // Deduct 1 ad from user's quota. Returns true if successful.
+  function deductQuota(userId) {
+    if (!userId) return false;
+    const allQuotas = window.ZZZ.read('zzz_user_quotas', {});
+    const q = allQuotas[userId];
+    if (!q || q.adsRemaining <= 0) return false;
+    q.adsRemaining -= 1;
+    window.ZZZ.write('zzz_user_quotas', allQuotas);
+    return true;
+  }
+
+  // Check if user can post (has quota)
+  function canPost(userId) {
+    if (!userId) return false;
+    const q = getUserQuota(userId);
+    return q && q.adsRemaining > 0;
+  }
+
+  // Anti-spam: check if phone number was already used for free trial
+  function phoneHadFreeTrial(phone) {
+    if (!phone) return false;
+    const registry = window.ZZZ.read('zzz_phone_registry', {});
+    return !!(registry[phone] && registry[phone].hadFreeTrial);
+  }
+
+  // Grant monthly free ad to all users (call this from admin or on login)
+  function grantMonthlyFreeAd(userId) {
+    const allQuotas = window.ZZZ.read('zzz_user_quotas', {});
+    const q = allQuotas[userId];
+    const now = new Date();
+    const monthKey = now.getFullYear() + '-' + (now.getMonth() + 1);
+    if (q && q.monthlyFreeGranted === monthKey) return false; // Already granted this month
+    if (!q) { allQuotas[userId] = { adsRemaining: 0, totalGranted: 0, planId: null, planName: null, expiresAt: null, history: [] }; }
+    allQuotas[userId].adsRemaining = (allQuotas[userId].adsRemaining || 0) + 1;
+    allQuotas[userId].totalGranted = (allQuotas[userId].totalGranted || 0) + 1;
+    allQuotas[userId].monthlyFreeGranted = monthKey;
+    window.ZZZ.write('zzz_user_quotas', allQuotas);
+    return true;
+  }
+
+  // Expose publicly
+  window.ZZZ.Plans = {
+    getAll: getPlans,
+    getById: getPlanById,
+    getUserQuota,
+    assignPlan,
+    deductQuota,
+    canPost,
+    phoneHadFreeTrial,
+    grantMonthlyFreeAd,
+    DEFAULT_PLANS
+  };
+
+  // Auto-grant monthly free ad on load
+  document.addEventListener('DOMContentLoaded', () => {
+    const user = window.ZZZ.getCurrentUser();
+    if (user && user.id) {
+      window.ZZZ.Plans.grantMonthlyFreeAd(user.id);
+    }
+  });
+})();

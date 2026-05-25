@@ -225,6 +225,18 @@
     setTimeout(() => {
       // Check existing
       const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+
+      // ─── ANTI-SPAM: Check if phone already had free trial ───
+      if (window.ZZZ && window.ZZZ.Plans && window.ZZZ.Plans.phoneHadFreeTrial(phone)) {
+        btn.disabled = false;
+        btnText.textContent = 'Create Account';
+        btnIcon.className = 'material-symbols-outlined text-[20px]';
+        btnIcon.textContent = 'arrow_forward';
+        showToast('This mobile number was already used for a free trial. Each phone number gets only 1 free trial.', 'error');
+        return;
+      }
+      // ─── END ANTI-SPAM ───────────────────────────────────────
+
       if (users.some(u => u.email.toLowerCase() === email)) {
         btn.disabled = false;
         btnText.textContent = 'Create Account';

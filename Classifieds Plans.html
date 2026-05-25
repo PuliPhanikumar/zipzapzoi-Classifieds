@@ -8,10 +8,10 @@
         document.documentElement.classList.remove('dark');
     }
   </script>
-  
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>ZipZapZoi - Choose Your Plan</title>
+  <title>ZipZapZoi - Plans & Pricing</title>
+  <meta name="description" content="Choose the right plan for your selling needs. Start free, upgrade anytime. Best classifieds platform for India Tier-2/Tier-3 markets."/>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300..700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
@@ -27,11 +27,9 @@
             "brandDark": "#d6671c",
             "background-light": "#F8F9FA",
             "background-dark": "#0f172a",
-            "card-dark": "#1e293b"},
+            "card-dark": "#1e293b"
+          },
           fontFamily: { "display": ["Spline Sans", "sans-serif"] },
-          boxShadow: {
-            'bouncy': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
-          }
         }
       }
     }
@@ -39,284 +37,588 @@
   <style>
     body { font-family: 'Spline Sans', sans-serif; }
     .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-    
-    .loading-spinner {
-        border: 4px solid rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
-        border-top: 4px solid white;
-        width: 24px;
-        height: 24px;
-        animation: spin 1s linear infinite;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .plan-card { transition: all 0.3s cubic-bezier(0.175,0.885,0.32,1.275); }
+    .plan-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px -12px rgba(0,0,0,0.15); }
+    .plan-card.selected { border-color: #019863 !important; box-shadow: 0 0 0 3px rgba(1,152,99,0.2); transform: translateY(-4px); }
+    .plan-card.selected .select-btn { background: #019863; color: white; }
+    .loading-spinner { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top: 3px solid white; width: 20px; height: 20px; animation: spin 0.8s linear infinite; }
+    @keyframes spin { 0%{transform:rotate(0deg)}100%{transform:rotate(360deg)} }
+    .fade-in { animation: fadeIn 0.5s ease forwards; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    .quota-bar-fill { transition: width 1s ease; }
+    .glow-green { box-shadow: 0 0 30px rgba(1,152,99,0.3); }
+    .hero-pattern { background: linear-gradient(135deg, #019863 0%, #0a7a52 50%, #1e293b 100%); }
   </style>
 </head>
 <body class="min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
 
   <!-- Header -->
   <header class="bg-white dark:bg-card-dark shadow-sm border-b sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-      <a href="classifieds.html" class="flex items-center gap-2 text-primary font-bold text-xl transition-transform active:scale-95">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <a href="classifieds.html" class="flex items-center gap-2 text-primary font-bold text-xl">
         <span class="material-symbols-outlined text-3xl">all_inclusive</span> ZipZapZoi
       </a>
-      <a href="Post Listing.html" class="text-sm font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:text-white transition-colors">Cancel & Return</a>
+      <div class="flex items-center gap-3">
+        <button onclick="if(typeof toggleDarkMode==='function')toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400">
+          <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+        </button>
+        <a href="Seller Dashboard.html" class="text-sm font-semibold text-gray-500 dark:text-gray-400 hover:text-primary transition-colors">My Dashboard</a>
+        <a href="Post Listing.html" class="text-sm font-bold bg-primary text-white px-4 py-2 rounded-xl hover:bg-green-700 transition-all">Post Ad</a>
+      </div>
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="flex-1 max-w-4xl mx-auto w-full px-4 py-12 flex flex-col items-center">
-    
-    <div class="text-center mb-10">
-      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">Boost Your Ad</h1>
-      <p class="text-gray-500 dark:text-gray-400 max-w-lg mx-auto">Get maximum visibility for your listing. Choose a secure payment method to publish your ad immediately.</p>
-    </div>
+  <main class="flex-1">
 
-    <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-      
-      <!-- Order Summary Card -->
-      <div class="bg-white dark:bg-card-dark rounded-2xl shadow-bouncy p-6 border border-gray-100 dark:border-gray-800">
-        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-          <span class="material-symbols-outlined text-primary">receipt_long</span> Order Summary
-        </h2>
-        
-        <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-6 border border-gray-100 dark:border-gray-800">
-          <div class="flex items-center gap-3 mb-3">
-             <div class="w-12 h-12 bg-white dark:bg-card-dark rounded-lg flex items-center justify-center shadow-sm text-gray-400">
-                <span class="material-symbols-outlined" id="summaryIcon">image</span>
-             </div>
-             <div class="flex-1 min-w-0">
-               <h3 class="font-bold text-gray-900 dark:text-white truncate" id="summaryTitle">Loading...</h3>
-               <p class="text-sm text-gray-500 dark:text-gray-400" id="summaryCategory">Category</p>
-             </div>
+    <!-- ─── SECTION 1: HERO — FREE PLAN ─── -->
+    <section class="hero-pattern text-white py-16 px-4 relative overflow-hidden">
+      <div class="absolute inset-0 opacity-10" style="background-image:radial-gradient(circle at 2px 2px, white 1px, transparent 0);background-size:32px 32px;"></div>
+      <div class="max-w-4xl mx-auto text-center relative">
+        <div class="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-5 py-2 text-sm font-bold mb-6 border border-white/30">
+          <span class="material-symbols-outlined text-[18px]">celebration</span>
+          Growth-First Strategy — No Aggressive Monetization
+        </div>
+        <h1 class="text-4xl md:text-5xl font-black mb-4 leading-tight">
+          Post 6 Ads Absolutely<br><span class="text-yellow-300">FREE</span> for Your First Month
+        </h1>
+        <p class="text-lg text-white/80 max-w-2xl mx-auto mb-8">
+          ZipZapZoi is built for India's Tier-2 & Tier-3 markets. Local sellers, small businesses, and rural classifieds — we grow together.
+        </p>
+
+        <!-- User Quota Widget (shown if logged in) -->
+        <div id="quotaWidget" class="hidden bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 max-w-md mx-auto mb-8">
+          <p class="text-xs font-bold uppercase tracking-widest text-white/60 mb-3">Your Current Plan</p>
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <p class="text-xl font-black" id="qPlanName">—</p>
+              <p class="text-sm text-white/70" id="qExpiry">—</p>
+            </div>
+            <div class="text-right">
+              <p class="text-3xl font-black" id="qRemaining">—</p>
+              <p class="text-xs text-white/70">Ads Remaining</p>
+            </div>
+          </div>
+          <div class="bg-white/20 rounded-full h-2 overflow-hidden">
+            <div id="qBar" class="quota-bar-fill bg-yellow-400 h-2 rounded-full" style="width:0%"></div>
           </div>
         </div>
 
-        <div class="space-y-3 text-sm border-b pb-4 mb-4">
-           <div class="flex justify-between text-gray-600 dark:text-gray-300">
-             <span>Listing Duration</span>
-             <span class="font-semibold text-gray-900 dark:text-white">30 Days</span>
-           </div>
-           <div class="flex justify-between text-gray-600 dark:text-gray-300">
-             <span>Category Fee</span>
-             <span class="font-semibold text-gray-900 dark:text-white" id="summaryFee">₹0</span>
-           </div>
-           <div class="flex justify-between text-gray-600 dark:text-gray-300">
-             <span>GST (18%)</span>
-             <span class="font-semibold text-gray-900 dark:text-white" id="summaryGst">₹0</span>
-           </div>
-           <div id="discountRow" class="flex justify-between text-pink-500 hidden">
-             <span>Promo Discount</span>
-             <span class="font-semibold" id="summaryDiscount">-₹0</span>
-           </div>
-        </div>
-
-        <!-- Promo Code Input -->
-        <div class="mb-6">
-           <label class="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase mb-2">Promo Code</label>
-           <div class="flex gap-2">
-             <input type="text" id="promoCodeInput" placeholder="Enter coupon code" class="flex-1 uppercase bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand dark:text-white">
-             <button onclick="applyPromoCode()" class="bg-slate-800 dark:bg-white dark:text-slate-800 hover:bg-black dark:hover:bg-gray-200 text-white font-bold px-4 py-2 rounded-xl text-xs transition-colors">Apply</button>
-           </div>
-           <p id="promoMessage" class="text-xs mt-1 hidden"></p>
-        </div>
-
-        <div class="flex justify-between items-end">
-           <div>
-             <p class="text-sm text-gray-500 dark:text-gray-400">Total Amount</p>
-             <p class="text-xs text-gray-400">Secure Payment</p>
-           </div>
-           <p class="text-3xl font-black text-primary" id="summaryTotal">₹0</p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="Post Listing.html" class="bg-white text-primary font-black py-4 px-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all text-lg hover:-translate-y-1 active:scale-95">
+            🚀 Start Posting Free
+          </a>
+          <a href="#plans" class="border-2 border-white/40 text-white font-bold py-4 px-8 rounded-2xl hover:bg-white/10 transition-all text-lg">
+            View All Plans ↓
+          </a>
         </div>
       </div>
+    </section>
 
-      <!-- Payment Method -->
-      <div class="bg-white dark:bg-card-dark rounded-2xl shadow-bouncy p-6 border border-gray-100 dark:border-gray-800">
-        <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-          <span class="material-symbols-outlined text-brand">lock</span> Secure Checkout
-        </h2>
-        
-        <div class="space-y-4 mb-8">
-           <label class="flex items-center p-4 border-2 border-brand bg-brand/5 rounded-xl cursor-pointer transition-all">
-             <input type="radio" name="payment" class="w-5 h-5 text-brand focus:ring-brand" checked>
-             <div class="ml-4 flex-1 flex justify-between items-center">
-                <span class="font-bold text-gray-900 dark:text-white">Mock Razorpay</span>
-                <span class="material-symbols-outlined text-brand">credit_card</span>
-             </div>
-           </label>
-
-           <label class="flex items-center p-4 border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 rounded-xl cursor-pointer transition-all opacity-50">
-             <input type="radio" name="payment" class="w-5 h-5 text-gray-400" disabled>
-             <div class="ml-4 flex-1 flex justify-between items-center">
-                <span class="font-bold text-gray-500 dark:text-gray-400">UPI / QR Code (Coming Soon)</span>
-                <span class="material-symbols-outlined text-gray-400">qr_code_scanner</span>
-             </div>
-           </label>
+    <!-- ─── SECTION 2: QUICK PICKS ─── -->
+    <section class="bg-white dark:bg-card-dark border-b dark:border-gray-800 py-6 px-4">
+      <div class="max-w-7xl mx-auto flex flex-wrap gap-3 justify-center">
+        <div class="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-4 py-2 rounded-full text-sm font-bold border border-green-200 dark:border-green-800">
+          <span class="material-symbols-outlined text-[16px]">check_circle</span> One Free Trial Per Mobile Number
         </div>
-
-        <button id="payBtn" onclick="processMockPayment()" class="w-full bg-brand hover:bg-brandDark text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-          <span id="payBtnText">Pay Now</span>
-          <span class="material-symbols-outlined text-xl" id="payBtnIcon">arrow_forward</span>
-        </button>
-
-        <p class="text-center text-xs text-gray-400 mt-4 flex items-center justify-center gap-1">
-          <span class="material-symbols-outlined text-[14px]">verified_user</span> Encrypted & Secure
-        </p>
-
+        <div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-4 py-2 rounded-full text-sm font-bold border border-blue-200 dark:border-blue-800">
+          <span class="material-symbols-outlined text-[16px]">verified_user</span> No Hidden Charges
+        </div>
+        <div class="flex items-center gap-2 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 px-4 py-2 rounded-full text-sm font-bold border border-orange-200 dark:border-orange-800">
+          <span class="material-symbols-outlined text-[16px]">refresh</span> 1 Free Ad Every Month, Always
+        </div>
+        <div class="flex items-center gap-2 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-4 py-2 rounded-full text-sm font-bold border border-purple-200 dark:border-purple-800">
+          <span class="material-symbols-outlined text-[16px]">support_agent</span> Fast Moderation
+        </div>
       </div>
+    </section>
 
-    </div>
+    <!-- ─── SECTION 3: MONTHLY PLANS ─── -->
+    <section id="plans" class="py-16 px-4">
+      <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-3">Monthly Plans</h2>
+          <p class="text-gray-500 dark:text-gray-400 max-w-lg mx-auto">Affordable ads for individual sellers and small businesses. Buy only what you need.</p>
+        </div>
+        <div id="monthlyPlansGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION 4: BUSINESS PACKAGES ─── -->
+    <section class="py-16 px-4 bg-gray-50 dark:bg-background-dark/80">
+      <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-12">
+          <span class="inline-block bg-primary/10 text-primary font-bold text-xs uppercase tracking-widest px-4 py-2 rounded-full mb-4 border border-primary/20">For Dealers, Resellers & Businesses</span>
+          <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-3">Business Packages</h2>
+          <p class="text-gray-500 dark:text-gray-400 max-w-lg mx-auto">Scale your listings, grow your reach. The more ads, the better your savings per ad.</p>
+        </div>
+        <div id="businessPlansGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION 5: CHECKOUT PANEL ─── -->
+    <section id="checkoutSection" class="py-16 px-4">
+      <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-10">
+          <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-2" id="checkoutTitle">Complete Your Order</h2>
+          <p class="text-gray-500 dark:text-gray-400" id="checkoutSubtitle">Review your selected plan and proceed to pay securely.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+
+          <!-- Order Summary -->
+          <div class="bg-white dark:bg-card-dark rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-gray-800">
+            <h3 class="text-lg font-bold mb-5 flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary">receipt_long</span> Order Summary
+            </h3>
+            <div id="planSummaryCard" class="bg-primary/5 dark:bg-primary/10 rounded-xl p-4 mb-5 border border-primary/20">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow">
+                  <span class="material-symbols-outlined text-white" id="sumIcon">category</span>
+                </div>
+                <div>
+                  <p class="font-black text-gray-900 dark:text-white" id="sumPlanName">Select a Plan</p>
+                  <p class="text-sm text-gray-500" id="sumPlanDesc">Choose one of the plans above</p>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-3 mt-4 text-sm">
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-2 text-center">
+                  <p class="font-black text-xl text-primary" id="sumAds">—</p>
+                  <p class="text-xs text-gray-500">Ads</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-2 text-center">
+                  <p class="font-black text-xl text-secondary" id="sumDays">—</p>
+                  <p class="text-xs text-gray-500">Days Validity</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- If there's also a pending listing -->
+            <div id="pendingListingRow" class="hidden bg-gray-50 dark:bg-gray-800 rounded-xl p-3 mb-5 border border-gray-200 dark:border-gray-700">
+              <p class="text-xs font-bold text-gray-500 uppercase mb-1">Listing being posted</p>
+              <p class="font-bold text-gray-900 dark:text-white truncate" id="sumListingTitle">—</p>
+              <p class="text-sm text-gray-500" id="sumListingCat">—</p>
+            </div>
+
+            <div class="space-y-2 text-sm border-b dark:border-gray-700 pb-4 mb-4">
+              <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                <span>Plan Price</span>
+                <span class="font-bold text-gray-900 dark:text-white" id="sumBasePrice">₹0</span>
+              </div>
+              <div class="flex justify-between text-gray-600 dark:text-gray-300">
+                <span>GST (18%)</span>
+                <span class="font-bold text-gray-900 dark:text-white" id="sumGst">₹0</span>
+              </div>
+              <div id="sumDiscountRow" class="flex justify-between text-pink-500 hidden">
+                <span>Promo Discount</span>
+                <span class="font-bold" id="sumDiscount">-₹0</span>
+              </div>
+            </div>
+
+            <!-- Promo Code -->
+            <div class="mb-5">
+              <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Promo Code</label>
+              <div class="flex gap-2">
+                <input type="text" id="promoCodeInput" placeholder="e.g. ZOI50" class="flex-1 uppercase bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary dark:text-white">
+                <button onclick="applyPromoCode()" class="bg-gray-800 dark:bg-white dark:text-gray-800 text-white font-bold px-4 py-2 rounded-xl text-xs hover:bg-black dark:hover:bg-gray-100 transition-colors">Apply</button>
+              </div>
+              <p id="promoMessage" class="text-xs mt-1 hidden"></p>
+            </div>
+
+            <div class="flex justify-between items-end">
+              <div>
+                <p class="text-sm text-gray-500">Total Amount</p>
+                <p class="text-xs text-gray-400">Incl. GST</p>
+              </div>
+              <p class="text-4xl font-black text-primary" id="sumTotal">₹0</p>
+            </div>
+          </div>
+
+          <!-- Payment -->
+          <div class="bg-white dark:bg-card-dark rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-gray-800">
+            <h3 class="text-lg font-bold mb-5 flex items-center gap-2">
+              <span class="material-symbols-outlined text-brand">lock</span> Secure Checkout
+            </h3>
+            <div class="space-y-3 mb-6">
+              <label class="flex items-center p-4 border-2 border-brand bg-brand/5 rounded-xl cursor-pointer">
+                <input type="radio" name="payment" class="w-4 h-4 text-brand" checked>
+                <div class="ml-3 flex-1 flex justify-between items-center">
+                  <div>
+                    <p class="font-bold text-gray-900 dark:text-white">Mock Razorpay</p>
+                    <p class="text-xs text-gray-500">Credit Card / Debit Card / NetBanking</p>
+                  </div>
+                  <span class="material-symbols-outlined text-brand">credit_card</span>
+                </div>
+              </label>
+              <label class="flex items-center p-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer opacity-50">
+                <input type="radio" name="payment" disabled class="w-4 h-4">
+                <div class="ml-3 flex-1 flex justify-between items-center">
+                  <div>
+                    <p class="font-bold text-gray-500">UPI / QR Code</p>
+                    <p class="text-xs text-gray-400">Coming Soon</p>
+                  </div>
+                  <span class="material-symbols-outlined text-gray-400">qr_code_scanner</span>
+                </div>
+              </label>
+            </div>
+
+            <button id="payBtn" onclick="processMockPayment()" class="w-full bg-brand hover:bg-brandDark text-white font-black py-4 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-lg">
+              <span id="payBtnText">Select a Plan to Pay</span>
+              <span class="material-symbols-outlined" id="payBtnIcon">arrow_forward</span>
+            </button>
+
+            <div class="mt-5 space-y-2">
+              <p class="text-center text-xs text-gray-400 flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-[14px] text-green-500">verified_user</span> 256-bit SSL Encrypted & Secure
+              </p>
+              <div class="flex items-center justify-center gap-4 text-xs text-gray-400 mt-3">
+                <span>📞 Helpline: 1800-ZOI-HELP</span>
+                <span>✉ support@zipzapzoi.com</span>
+              </div>
+            </div>
+
+            <!-- Marketing Taglines -->
+            <div class="mt-6 pt-5 border-t dark:border-gray-700 space-y-2">
+              <p class="text-xs text-center font-bold text-gray-400 uppercase tracking-widest mb-3">Why ZipZapZoi?</p>
+              <div class="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <span class="material-symbols-outlined text-[14px] text-primary mt-0.5 flex-shrink-0">shield</span>
+                Trust & spam control — verified sellers only
+              </div>
+              <div class="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <span class="material-symbols-outlined text-[14px] text-primary mt-0.5 flex-shrink-0">speed</span>
+                Fast moderation — listed within 2 hours
+              </div>
+              <div class="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <span class="material-symbols-outlined text-[14px] text-primary mt-0.5 flex-shrink-0">location_on</span>
+                Built for local reach — Tier-2 & Tier-3 India
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION 6: FEATURED BOOSTS ─── -->
+    <section class="py-12 px-4 bg-gradient-to-br from-primary to-secondary text-white">
+      <div class="max-w-4xl mx-auto text-center">
+        <span class="material-symbols-outlined text-5xl mb-4 block text-yellow-300">bolt</span>
+        <h2 class="text-2xl font-black mb-2">Cheap Featured Boosts</h2>
+        <p class="text-white/80 mb-6">Get 10x more visibility! Feature your listing on the homepage and top of search results.</p>
+        <div class="grid grid-cols-3 gap-4 max-w-xl mx-auto text-center">
+          <div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/20">
+            <p class="text-2xl font-black text-yellow-300" id="featPrice1d">₹29</p>
+            <p class="text-sm font-bold mt-1">1 Day Boost</p>
+          </div>
+          <div class="bg-white/20 backdrop-blur rounded-xl p-4 border border-white/30 scale-105">
+            <p class="text-xs font-bold text-yellow-300 mb-1">BEST</p>
+            <p class="text-2xl font-black text-yellow-300" id="featPrice7d">₹149</p>
+            <p class="text-sm font-bold">7 Day Boost</p>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/20">
+            <p class="text-2xl font-black text-yellow-300" id="featPrice30d">₹399</p>
+            <p class="text-sm font-bold mt-1">30 Day Boost</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── FAQ ─── -->
+    <section class="py-12 px-4">
+      <div class="max-w-2xl mx-auto">
+        <h2 class="text-2xl font-black text-center text-gray-900 dark:text-white mb-8">Frequently Asked Questions</h2>
+        <div class="space-y-4">
+          <details class="bg-white dark:bg-card-dark rounded-xl p-5 border border-gray-100 dark:border-gray-800 group">
+            <summary class="font-bold cursor-pointer flex justify-between items-center list-none">
+              Can I really post 6 ads for free?
+              <span class="material-symbols-outlined text-gray-400 group-open:rotate-180 transition-transform">expand_more</span>
+            </summary>
+            <p class="text-gray-500 dark:text-gray-400 mt-3 text-sm">Yes! Every new user gets 6 free ads in their first 30 days. After that, you get 1 free ad per month plus affordable paid plans starting at just ₹16.</p>
+          </details>
+          <details class="bg-white dark:bg-card-dark rounded-xl p-5 border border-gray-100 dark:border-gray-800 group">
+            <summary class="font-bold cursor-pointer flex justify-between items-center list-none">
+              What happens after my free trial ends?
+              <span class="material-symbols-outlined text-gray-400 group-open:rotate-180 transition-transform">expand_more</span>
+            </summary>
+            <p class="text-gray-500 dark:text-gray-400 mt-3 text-sm">You continue to get 1 free ad per month. If you need more, our Extra Ad plan at ₹19/ad is one of the most affordable in India. Expired ads can be renewed for just ₹16.</p>
+          </details>
+          <details class="bg-white dark:bg-card-dark rounded-xl p-5 border border-gray-100 dark:border-gray-800 group">
+            <summary class="font-bold cursor-pointer flex justify-between items-center list-none">
+              Can I create multiple accounts to get more free ads?
+              <span class="material-symbols-outlined text-gray-400 group-open:rotate-180 transition-transform">expand_more</span>
+            </summary>
+            <p class="text-gray-500 dark:text-gray-400 mt-3 text-sm">No. Our anti-spam system allows only one free trial per mobile number and device. Duplicate accounts will be automatically flagged and suspended.</p>
+          </details>
+          <details class="bg-white dark:bg-card-dark rounded-xl p-5 border border-gray-100 dark:border-gray-800 group">
+            <summary class="font-bold cursor-pointer flex justify-between items-center list-none">
+              Do paid plans expire if I don't use all ads?
+              <span class="material-symbols-outlined text-gray-400 group-open:rotate-180 transition-transform">expand_more</span>
+            </summary>
+            <p class="text-gray-500 dark:text-gray-400 mt-3 text-sm">Unused ads do not expire as long as your plan validity is active. After validity ends, you'll need to renew or purchase a new plan.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
   </main>
+
+  <footer class="bg-gray-900 text-white text-center py-6 text-sm">
+    <p class="zzz-copyright">© 2025 ZipZapZoi. All Rights Reserved.</p>
+    <p class="text-gray-500 text-xs mt-1">Built for Bharat 🇮🇳 • Secure • Simple • Local</p>
+  </footer>
 
   <script src="js/schema.js"></script>
   <script src="js/utils.js"></script>
   <script>
-    // 1. Load Pending Listing
-    const pendingJSON = sessionStorage.getItem('zzz_pending_listing');
+    // ─── State ───────────────────────────
+    let selectedPlan = null;
     let pendingListing = null;
+    let baseFee = 0;
+    let currentDiscount = 0;
+    const MONTHLY_PLAN_IDS = ['extra_ad', 'renewal', 'starter', 'monthly_free'];
+    const BUSINESS_PLAN_IDS = ['growth', 'business', 'pro'];
 
-    if(!pendingJSON) {
-        window.location.href = 'Post Listing.html';
-    } else {
+    // ─── Init ────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
+
+      // Load pending listing if from Post Listing page
+      const pendingJSON = sessionStorage.getItem('zzz_pending_listing');
+      if (pendingJSON) {
         pendingListing = JSON.parse(pendingJSON);
-        setupCheckout(pendingListing);
+        document.getElementById('pendingListingRow').classList.remove('hidden');
+        document.getElementById('sumListingTitle').textContent = pendingListing.title;
+        document.getElementById('sumListingCat').textContent = pendingListing.category;
+        document.getElementById('checkoutTitle').textContent = 'Almost Done! Choose Your Plan';
+        document.getElementById('checkoutSubtitle').textContent = 'Select a plan to publish your listing.';
+      }
+
+      // Show user quota widget
+      const user = window.ZZZ ? window.ZZZ.getCurrentUser() : null;
+      if (user && window.ZZZ.Plans) {
+        const q = window.ZZZ.Plans.getUserQuota(user.id);
+        if (q) {
+          document.getElementById('quotaWidget').classList.remove('hidden');
+          document.getElementById('qPlanName').textContent = q.planName || 'Free';
+          document.getElementById('qRemaining').textContent = q.adsRemaining || 0;
+          const expDate = q.expiresAt ? new Date(q.expiresAt).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) : '—';
+          document.getElementById('qExpiry').textContent = 'Valid till ' + expDate;
+          const pct = Math.round(((q.adsRemaining||0) / Math.max(q.totalGranted||1, 1)) * 100);
+          setTimeout(() => { document.getElementById('qBar').style.width = pct + '%'; }, 300);
+        }
+      }
+
+      renderPlans();
+    });
+
+    // ─── Render Plan Cards ───────────────
+    function renderPlans() {
+      const plans = window.ZZZ && window.ZZZ.Plans ? window.ZZZ.Plans.getAll() : [];
+      const cfg = window.ZZZ ? window.ZZZ.read('zzz_plan_config_extras', {}) : {};
+
+      // Update featured boost prices from admin config
+      if (cfg.feat1d) document.getElementById('featPrice1d').textContent = '₹' + cfg.feat1d;
+      if (cfg.feat7d) document.getElementById('featPrice7d').textContent = '₹' + cfg.feat7d;
+      if (cfg.feat30d) document.getElementById('featPrice30d').textContent = '₹' + cfg.feat30d;
+
+      const monthlyGrid = document.getElementById('monthlyPlansGrid');
+      const businessGrid = document.getElementById('businessPlansGrid');
+
+      plans.filter(p => MONTHLY_PLAN_IDS.includes(p.id)).forEach(plan => {
+        monthlyGrid.appendChild(buildPlanCard(plan, false));
+      });
+
+      plans.filter(p => BUSINESS_PLAN_IDS.includes(p.id)).forEach(plan => {
+        businessGrid.appendChild(buildPlanCard(plan, plan.id === 'growth'));
+      });
     }
 
-    // 2. Pricing Logic & Coupon Validation
-    let baseFee = 10;
-    let currentDiscount = 0; // percentage discount (e.g. 50 for 50%)
+    function buildPlanCard(plan, featured = false) {
+      const div = document.createElement('div');
+      div.id = 'card-' + plan.id;
+      div.className = 'plan-card bg-white dark:bg-card-dark rounded-2xl p-6 border-2 border-gray-100 dark:border-gray-800 cursor-pointer relative overflow-hidden fade-in';
+      if (featured) div.className += ' border-primary shadow-xl';
 
-    function setupCheckout(listing) {
-        document.getElementById('summaryTitle').textContent = listing.title;
-        document.getElementById('summaryCategory').textContent = listing.category;
-
-        // Pricing Rules
-        baseFee = 10;
-        if(listing.category === 'Real Estate' || listing.category === 'Vehicles') {
-            baseFee = 20;
-        }
-
-        document.getElementById('summaryFee').textContent = `₹${baseFee}`;
-        updatePrices();
-
-        // Look up Category Icon from Master Schema
-        let categoryIcon = 'category'; // Default fallback
-        const schema = window.ZZZ ? window.ZZZ.getClassifiedsSchema() : window.ZZZ_SCHEMA;
-        if (schema && schema.categories) {
-            const catDef = schema.categories.find(c => c.label === listing.category || c.id === listing.categoryId);
-            if (catDef && catDef.icon) {
-                categoryIcon = catDef.icon;
-            }
-        }
-        document.getElementById('summaryIcon').textContent = categoryIcon;
+      div.innerHTML = `
+        ${featured ? `<div class="absolute top-0 right-0 bg-primary text-white text-xs font-black px-3 py-1 rounded-bl-xl">⭐ MOST POPULAR</div>` : ''}
+        <div class="flex items-start justify-between mb-4">
+          <div class="w-12 h-12 ${plan.tagColor || 'bg-primary'} rounded-xl flex items-center justify-center shadow">
+            <span class="material-symbols-outlined text-white text-[22px]">${plan.icon || 'category'}</span>
+          </div>
+          <span class="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${plan.tagColor || 'bg-primary'} text-white">${plan.tag || ''}</span>
+        </div>
+        <h3 class="text-lg font-black text-gray-900 dark:text-white mb-1">${plan.name}</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">${plan.desc || ''}</p>
+        <div class="flex items-baseline gap-1 mb-4">
+          ${plan.price === 0
+            ? `<span class="text-4xl font-black text-primary">FREE</span>`
+            : `<span class="text-gray-400 text-lg">₹</span><span class="text-4xl font-black text-gray-900 dark:text-white">${plan.price}</span>`
+          }
+        </div>
+        <div class="flex gap-3 text-sm mb-5">
+          <div class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-2 text-center">
+            <p class="font-black text-primary text-lg">${plan.ads}</p>
+            <p class="text-xs text-gray-500">${plan.ads === 1 ? 'Ad' : 'Ads'}</p>
+          </div>
+          <div class="flex-1 bg-gray-50 dark:bg-gray-800 rounded-lg p-2 text-center">
+            <p class="font-black text-secondary text-lg">${plan.days}</p>
+            <p class="text-xs text-gray-500">Days</p>
+          </div>
+        </div>
+        <button class="select-btn w-full py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 font-bold text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-all text-sm"
+          onclick="selectPlan('${plan.id}')">
+          ${plan.price === 0 ? 'Get Free' : 'Select Plan'}
+        </button>
+      `;
+      return div;
     }
 
+    // ─── Plan Selection ──────────────────
+    function selectPlan(planId) {
+      selectedPlan = window.ZZZ.Plans.getById(planId);
+      if (!selectedPlan) return;
+
+      // Remove highlight from all cards
+      document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+      const card = document.getElementById('card-' + planId);
+      if (card) card.classList.add('selected');
+
+      // Update checkout summary
+      document.getElementById('sumIcon').textContent = selectedPlan.icon || 'category';
+      document.getElementById('sumPlanName').textContent = selectedPlan.name;
+      document.getElementById('sumPlanDesc').textContent = selectedPlan.desc;
+      document.getElementById('sumAds').textContent = selectedPlan.ads;
+      document.getElementById('sumDays').textContent = selectedPlan.days + 'd';
+
+      baseFee = selectedPlan.price;
+      currentDiscount = 0;
+      document.getElementById('promoCodeInput').value = '';
+      document.getElementById('promoMessage').classList.add('hidden');
+      document.getElementById('sumDiscountRow').classList.add('hidden');
+      updatePrices();
+
+      // Scroll to checkout
+      document.getElementById('checkoutSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ─── Promo Code ──────────────────────
     function applyPromoCode() {
-        const input = document.getElementById('promoCodeInput').value.trim().toUpperCase();
-        const msg = document.getElementById('promoMessage');
-        const discountRow = document.getElementById('discountRow');
-        
-        if(!input) {
-            msg.textContent = "Please enter a code.";
-            msg.className = "text-xs mt-1 text-red-500 font-bold";
-            msg.classList.remove('hidden');
-            return;
-        }
+      const input = document.getElementById('promoCodeInput').value.trim().toUpperCase();
+      const msg = document.getElementById('promoMessage');
+      if (!input) { msg.textContent = 'Please enter a code.'; msg.className = 'text-xs mt-1 text-red-500 font-bold'; msg.classList.remove('hidden'); return; }
 
-        const coupons = JSON.parse(localStorage.getItem('zzz_coupons') || '[]');
-        const coupon = coupons.find(c => c.code.toUpperCase() === input);
-
-        if(!coupon) {
-            msg.textContent = "Invalid coupon code.";
-            msg.className = "text-xs mt-1 text-red-500 font-bold";
-            msg.classList.remove('hidden');
-            
-            currentDiscount = 0;
-            discountRow.classList.add('hidden');
-            updatePrices();
-            return;
-        }
-
-        // Apply discount
-        currentDiscount = coupon.discount;
-        msg.textContent = `Coupon ${coupon.code} applied: ${currentDiscount}% discount!`;
-        msg.className = "text-xs mt-1 text-green-500 font-bold";
+      const coupons = window.ZZZ.read('zzz_coupons', []);
+      const coupon = coupons.find(c => c.code.toUpperCase() === input);
+      if (!coupon) {
+        msg.textContent = 'Invalid coupon code.';
+        msg.className = 'text-xs mt-1 text-red-500 font-bold';
         msg.classList.remove('hidden');
-        
+        currentDiscount = 0;
+        document.getElementById('sumDiscountRow').classList.add('hidden');
         updatePrices();
+        return;
+      }
+      currentDiscount = coupon.discount;
+      msg.textContent = `✅ Coupon ${coupon.code} applied: ${currentDiscount}% off!`;
+      msg.className = 'text-xs mt-1 text-green-500 font-bold';
+      msg.classList.remove('hidden');
+      updatePrices();
     }
 
+    // ─── Price Calculation ───────────────
     function updatePrices() {
-        const discountAmount = parseFloat(((baseFee * currentDiscount) / 100).toFixed(2));
-        const finalBase = baseFee - discountAmount;
-        const gst = parseFloat((finalBase * 0.18).toFixed(2));
-        const total = parseFloat((finalBase + gst).toFixed(2));
+      const discountAmt = parseFloat(((baseFee * currentDiscount) / 100).toFixed(2));
+      const afterDiscount = parseFloat((baseFee - discountAmt).toFixed(2));
+      const gst = parseFloat((afterDiscount * 0.18).toFixed(2));
+      const total = parseFloat((afterDiscount + gst).toFixed(2));
 
-        const discountRow = document.getElementById('discountRow');
-        const summaryDiscount = document.getElementById('summaryDiscount');
+      document.getElementById('sumBasePrice').textContent = '₹' + baseFee;
+      document.getElementById('sumGst').textContent = baseFee === 0 ? '₹0' : '₹' + gst;
+      document.getElementById('sumTotal').textContent = baseFee === 0 ? 'FREE' : '₹' + total;
 
-        if(currentDiscount > 0) {
-            discountRow.classList.remove('hidden');
-            summaryDiscount.textContent = `-₹${discountAmount}`;
-        } else {
-            discountRow.classList.add('hidden');
+      if (currentDiscount > 0) {
+        document.getElementById('sumDiscountRow').classList.remove('hidden');
+        document.getElementById('sumDiscount').textContent = '-₹' + discountAmt;
+      } else {
+        document.getElementById('sumDiscountRow').classList.add('hidden');
+      }
+
+      const payBtn = document.getElementById('payBtn');
+      const payText = document.getElementById('payBtnText');
+      if (!selectedPlan) {
+        payText.textContent = 'Select a Plan to Pay';
+        payBtn.disabled = true;
+        payBtn.classList.add('opacity-60', 'cursor-not-allowed');
+      } else if (baseFee === 0) {
+        payText.textContent = 'Activate Free Plan →';
+        payBtn.disabled = false;
+        payBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+      } else {
+        payText.textContent = `Pay ₹${total} Securely`;
+        payBtn.disabled = false;
+        payBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+      }
+    }
+
+    // ─── Mock Payment ────────────────────
+    function processMockPayment() {
+      if (!selectedPlan) { showToast('Please select a plan first', 'error'); return; }
+
+      const user = window.ZZZ ? window.ZZZ.getCurrentUser() : null;
+      if (!user) { window.location.href = 'Login Page.html?redirect=Classifieds Plans.html'; return; }
+
+      const btn = document.getElementById('payBtn');
+      const btnText = document.getElementById('payBtnText');
+      const btnIcon = document.getElementById('payBtnIcon');
+
+      btn.disabled = true;
+      btn.classList.add('opacity-80', 'cursor-not-allowed');
+      btnText.textContent = 'Processing Payment...';
+      btnIcon.className = 'loading-spinner';
+
+      setTimeout(() => {
+        btn.classList.remove('bg-brand', 'hover:bg-brandDark');
+        btn.classList.add('bg-green-500');
+        btnText.textContent = 'Payment Successful! 🎉';
+        btnIcon.className = 'material-symbols-outlined text-xl';
+        btnIcon.textContent = 'check_circle';
+
+        // Assign plan to user quota
+        if (window.ZZZ && window.ZZZ.Plans) {
+          const discountAmt = parseFloat(((baseFee * currentDiscount) / 100).toFixed(2));
+          const finalPrice = Math.round((baseFee - discountAmt) * 1.18 * 100) / 100;
+          window.ZZZ.Plans.assignPlan(user.id, selectedPlan.id, { price: baseFee > 0 ? finalPrice : 0 });
         }
 
-        document.getElementById('summaryGst').textContent = `₹${gst}`;
-        document.getElementById('summaryTotal').textContent = `₹${total}`;
-        document.getElementById('payBtnText').textContent = `Pay ₹${total}`;
-    }
+        // Save pending listing if any
+        if (pendingListing) {
+          savePendingListing();
+        }
 
-    // 3. Process Mock Payment
-    function processMockPayment() {
-        const btn = document.getElementById('payBtn');
-        const btnText = document.getElementById('payBtnText');
-        const btnIcon = document.getElementById('payBtnIcon');
-
-        btn.disabled = true;
-        btn.classList.add('opacity-80', 'cursor-not-allowed');
-        btnText.textContent = "Processing...";
-        btnIcon.className = "loading-spinner";
+        showToast('Plan activated! Your ads are ready.', 'success');
 
         setTimeout(() => {
-            btn.classList.remove('bg-brand', 'hover:bg-brandDark');
-            btn.classList.add('bg-green-500', 'hover:bg-green-600');
-            btnText.textContent = "Payment Successful!";
-            btnIcon.className = "material-symbols-outlined text-xl";
-            btnIcon.textContent = "check_circle";
-
-            saveListing();
-
-            setTimeout(() => {
-                window.location.href = 'Seller Dashboard.html';
-            }, 1500);
-
-        }, 2000);
+          window.location.href = pendingListing ? 'Seller Dashboard.html' : 'Seller Dashboard.html';
+        }, 1800);
+      }, 2000);
     }
 
-    // 4. Save to LocalStorage
-    function saveListing() {
-        if(!pendingListing) return;
+    function savePendingListing() {
+      if (!pendingListing) return;
+      pendingListing.status = 'pending_review';
+      pendingListing.moderationStatus = 'pending_review';
+      pendingListing.datePosted = new Date().toISOString();
+      pendingListing.time = 'Just now';
 
-        // Finalize metadata with moderation review required
-        pendingListing.status = 'pending_review';
-        pendingListing.moderationStatus = 'pending_review';
-        pendingListing.datePosted = new Date().toISOString();
-        pendingListing.time = "Just now";
-
-        // Get existing listings
-        let allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-        
-        // Add new listing to front
-        allListings.unshift(pendingListing);
-        
-        // Save back
-        if(window.ZZZ && window.ZZZ.write) window.ZZZ.write('zzz_listings', allListings);
-        else localStorage.setItem('zzz_listings', JSON.stringify(allListings));
-
-        // Clear session
-        sessionStorage.removeItem('zzz_pending_listing');
+      let all = window.ZZZ.read('zzz_listings', []);
+      all.unshift(pendingListing);
+      window.ZZZ.write('zzz_listings', all);
+      sessionStorage.removeItem('zzz_pending_listing');
     }
 
+    // Init prices
+    updatePrices();
   </script>
 </body>
 </html>

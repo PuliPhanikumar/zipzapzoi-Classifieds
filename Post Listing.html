@@ -70,7 +70,40 @@
   </div>
 </header>
 
-<main class="max-w-5xl mx-auto px-4 py-8 pb-24">
+
+  <!-- ─── QUOTA GATE OVERLAY ─── -->
+  <div id="zzz-quota-gate" class="hidden fixed inset-0 bg-white dark:bg-slate-900 z-50 flex flex-col items-center justify-center p-6 text-center">
+    <span class="material-symbols-outlined text-7xl text-orange-400 mb-4">inventory</span>
+    <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-2">You've Used All Your Ads</h2>
+    <p class="text-gray-500 dark:text-gray-400 max-w-md mb-2">You have <strong>0 ads remaining</strong> in your current plan. Upgrade to continue posting.</p>
+    <p id="quotaGateExpiry" class="text-xs text-gray-400 mb-8"></p>
+    <div class="flex flex-col sm:flex-row gap-4">
+      <a href="Classifieds Plans.html" class="bg-primary hover:bg-green-700 text-white font-black py-4 px-8 rounded-2xl shadow-lg transition-all text-lg">
+        🚀 Upgrade Plan
+      </a>
+      <a href="Seller Dashboard.html" class="border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold py-4 px-8 rounded-2xl hover:border-primary hover:text-primary transition-all text-lg">
+        Back to Dashboard
+      </a>
+    </div>
+    <div class="mt-8 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800 max-w-sm">
+      <p class="text-sm font-bold text-green-700 dark:text-green-400">💡 Extra Ad for just ₹19 • Renewal ₹16 • Starter Pack ₹149 for 10 ads</p>
+    </div>
+  </div>
+
+  <!-- ─── ADS REMAINING BADGE ─── -->
+  <div id="zzz-ads-banner" class="hidden w-full bg-primary/10 dark:bg-primary/20 border-b border-primary/20">
+    <div class="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between">
+      <div class="flex items-center gap-2 text-primary text-sm font-bold">
+        <span class="material-symbols-outlined text-[18px]">inventory_2</span>
+        <span id="adsBannerText">Loading...</span>
+      </div>
+      <a href="Classifieds Plans.html" class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+        <span class="material-symbols-outlined text-[14px]">upgrade</span> Get More Ads
+      </a>
+    </div>
+  </div>
+
+  <main class="max-w-5xl mx-auto px-4 py-8 pb-24">
   
   <div class="mb-8">
     <div class="flex justify-between text-sm font-medium mb-2">
@@ -694,7 +727,11 @@
         window.location.href = 'Seller Dashboard.html';
     } else {
         // If new ad, store in session and go to Plans page for checkout
-        sessionStorage.setItem('zzz_pending_listing', JSON.stringify(newItem));
+        // Deduct 1 ad from quota when submitting
+      if (window.ZZZ && window.ZZZ.Plans) {
+        window.ZZZ.Plans.deductQuota(currentUser ? currentUser.id : null);
+      }
+      sessionStorage.setItem('zzz_pending_listing', JSON.stringify(newItem));
         window.location.href = 'Classifieds Plans.html';
     }
   }

@@ -100,6 +100,40 @@
 
     <div class="flex-1 overflow-y-auto p-4 md:p-8">
       
+
+      <!-- ─── PLAN & QUOTA WIDGET ─── -->
+      <div id="zzz-plan-widget" class="bg-gradient-to-br from-primary to-green-700 rounded-2xl p-6 text-white shadow-xl mb-6 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-40 h-40 rounded-full bg-white/5 -translate-x-8 -translate-y-16"></div>
+        <div class="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-white/5 translate-x-4 translate-y-10"></div>
+        <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <p class="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">Current Plan</p>
+            <h3 class="text-2xl font-black mb-1" id="widgetPlanName">Free Plan</h3>
+            <p class="text-white/80 text-sm" id="widgetExpiry">—</p>
+          </div>
+          <div class="flex items-center gap-6">
+            <div class="text-center">
+              <p class="text-4xl font-black" id="widgetRemaining">—</p>
+              <p class="text-white/70 text-xs">Ads Left</p>
+            </div>
+            <div class="text-center">
+              <p class="text-4xl font-black" id="widgetTotal">—</p>
+              <p class="text-white/70 text-xs">Total Ads</p>
+            </div>
+          </div>
+          <a href="Classifieds Plans.html" class="bg-white text-primary font-black py-3 px-6 rounded-xl shadow-md hover:bg-gray-100 transition-all active:scale-95 text-sm flex items-center gap-2 whitespace-nowrap">
+            <span class="material-symbols-outlined text-[18px]">upgrade</span> Upgrade Plan
+          </a>
+        </div>
+        <!-- Progress bar -->
+        <div class="mt-5 bg-white/20 rounded-full h-2 overflow-hidden">
+          <div id="widgetBar" class="bg-yellow-300 h-2 rounded-full transition-all duration-1000" style="width:0%"></div>
+        </div>
+        <div class="flex justify-between mt-1">
+          <p class="text-[11px] text-white/60" id="widgetBarLabel">Loading...</p>
+          <a href="Classifieds Plans.html" class="text-[11px] text-yellow-300 font-bold hover:underline">Get More Ads →</a>
+        </div>
+      </div>
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Hello, <span id="userName">User</span>! 👋</h1>
@@ -256,6 +290,7 @@
     window.addEventListener('storage', (event) => {
       if(event.key === 'zzz_listings' || event.key === 'zzz_messages' || event.key === 'zzz_data_updated_at') {
         loadDashboard();
+      loadPlanWidget();
       }
     });
 

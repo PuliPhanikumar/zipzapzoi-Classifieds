@@ -55,6 +55,7 @@
     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4 mb-2 ml-2">Revenue</div>
     <a href="#" onclick="switchTab('payments')" id="nav-payments" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 text-sm text-slate-600 dark:text-gray-300"><span class="material-symbols-outlined text-[20px] text-emerald-500">payments</span> Payments & Refunds</a>
     <a href="#" onclick="switchTab('coupons')" id="nav-coupons" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 text-sm text-slate-600 dark:text-gray-300"><span class="material-symbols-outlined text-[20px] text-pink-500">local_offer</span> Promo Coupons</a>
+    <a href="#" onclick="switchTab('pricing')" id="nav-pricing" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 text-sm text-slate-600 dark:text-gray-300"><span class="material-symbols-outlined text-[20px] text-yellow-500">price_change</span> Pricing & Plans</a>
     
     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4 mb-2 ml-2">Content & Moderation</div>
     <a href="#" onclick="switchTab('moderation')" id="nav-moderation" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 text-sm text-slate-600 dark:text-gray-300 relative"><span class="material-symbols-outlined text-[20px] text-red-500">gavel</span> Reports & AI Mod <span id="badge-moderation" class="tab-badge hidden">0</span></a>
@@ -899,6 +900,115 @@ function seedMockData(forceReset = false) {
     }
     loadDashboard();
 }
+
+
+    <!-- PRICING & PLANS TAB -->
+    <div id="tab-pricing" class="tab-content hidden space-y-6">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm"><p class="text-xs font-bold text-slate-400 uppercase">Total Revenue</p><h3 class="text-3xl font-bold mt-1 text-emerald-500" id="priceStatRev">&#8377;0</h3><p class="text-xs text-slate-400 mt-1">All paid plans</p></div>
+        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm"><p class="text-xs font-bold text-slate-400 uppercase">Plans Sold</p><h3 class="text-3xl font-bold mt-1 text-blue-500" id="priceStatPlans">0</h3><p class="text-xs text-slate-400 mt-1">Paid purchases</p></div>
+        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm"><p class="text-xs font-bold text-slate-400 uppercase">Free Accounts</p><h3 class="text-3xl font-bold mt-1 text-green-500" id="priceStatFree">0</h3><p class="text-xs text-slate-400 mt-1">New user free</p></div>
+        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm"><p class="text-xs font-bold text-slate-400 uppercase">Flagged</p><h3 class="text-3xl font-bold mt-1 text-red-500" id="priceStatFlagged">0</h3><p class="text-xs text-slate-400 mt-1">Anti-spam blocked</p></div>
+      </div>
+      <div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-800 flex items-center justify-between">
+          <h3 class="font-bold flex items-center gap-2"><span class="material-symbols-outlined text-yellow-500">price_change</span> Plan Pricing Editor</h3>
+          <div class="flex gap-2">
+            <button onclick="resetPlansToDefault()" class="text-xs font-bold text-slate-500 border border-slate-200 dark:border-gray-700 px-3 py-1.5 rounded-lg">Reset Default</button>
+            <button onclick="savePlansConfig()" class="text-xs font-bold text-white bg-brand px-4 py-1.5 rounded-lg flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">save</span> Save All</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm"><thead><tr class="bg-slate-50 dark:bg-gray-800"><th class="text-left px-4 py-3 font-bold text-slate-500 text-xs uppercase">Plan</th><th class="text-left px-4 py-3 font-bold text-slate-500 text-xs uppercase">Tag</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Price (&#8377;)</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Ads</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Days</th><th class="text-left px-4 py-3 font-bold text-slate-500 text-xs uppercase">Description</th></tr></thead>
+          <tbody id="planEditorBody"><tr><td colspan="6" class="text-center py-8 text-slate-400">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm p-6">
+        <h3 class="font-bold flex items-center gap-2 mb-5"><span class="material-symbols-outlined text-yellow-500">bolt</span> Featured Boost Pricing</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">1-Day Boost (&#8377;)</label><input type="number" id="featPrice1d" value="29" class="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 font-bold text-lg outline-none focus:ring-2 focus:ring-brand"></div>
+          <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">7-Day Boost (&#8377;) <span class="text-brand">Best</span></label><input type="number" id="featPrice7d" value="149" class="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 font-bold text-lg outline-none focus:ring-2 focus:ring-brand"></div>
+          <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">30-Day Boost (&#8377;)</label><input type="number" id="featPrice30d" value="399" class="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 font-bold text-lg outline-none focus:ring-2 focus:ring-brand"></div>
+        </div>
+        <button onclick="saveFeaturedPrices()" class="mt-4 bg-brand text-white font-bold px-6 py-2.5 rounded-xl hover:bg-green-700 text-sm flex items-center gap-2"><span class="material-symbols-outlined text-[16px]">save</span> Save Boost Prices</button>
+      </div>
+      <div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-800 flex items-center justify-between">
+          <h3 class="font-bold flex items-center gap-2"><span class="material-symbols-outlined text-red-500">security</span> Anti-Spam Phone Registry</h3>
+          <label class="flex items-center gap-2 text-sm font-bold cursor-pointer"><input type="checkbox" id="antiSpamToggle" class="w-4 h-4" checked onchange="toggleAntiSpam()"> Enable Anti-Spam</label>
+        </div>
+        <div class="p-3 bg-orange-50 dark:bg-orange-900/10 border-b border-orange-100"><p class="text-xs text-orange-700 font-bold">One free trial per mobile number. Duplicates are auto-blocked.</p></div>
+        <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-slate-50 dark:bg-gray-800"><th class="text-left px-4 py-3 font-bold text-slate-500 text-xs uppercase">Phone</th><th class="text-left px-4 py-3 font-bold text-slate-500 text-xs uppercase">User</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Free Trial</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Date</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Action</th></tr></thead>
+        <tbody id="phoneRegistryBody"><tr><td colspan="5" class="text-center py-8 text-slate-400">No registrations yet</td></tr></tbody></table></div>
+      </div>
+      <div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-800 flex items-center justify-between">
+          <h3 class="font-bold flex items-center gap-2"><span class="material-symbols-outlined text-blue-500">manage_accounts</span> User Ad Quotas</h3>
+          <input type="text" id="quotaSearch" placeholder="Search user..." onkeyup="renderQuotaTable()" class="text-xs border border-slate-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-slate-50 dark:bg-gray-800 outline-none">
+        </div>
+        <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-slate-50 dark:bg-gray-800"><th class="text-left px-4 py-3 font-bold text-slate-500 text-xs uppercase">User</th><th class="text-left px-4 py-3 font-bold text-slate-500 text-xs uppercase">Plan</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Left</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Total</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Expires</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Grant</th></tr></thead>
+        <tbody id="quotaTableBody"><tr><td colspan="6" class="text-center py-8 text-slate-400">No quota data yet</td></tr></tbody></table></div>
+      </div>
+    </div>
+
+// PRICING TAB
+let editablePlans = null;
+function loadPricingTab() {
+  const plans = window.ZZZ && window.ZZZ.Plans ? window.ZZZ.Plans.getAll() : [];
+  editablePlans = JSON.parse(JSON.stringify(plans));
+  const txns = safeJSON('zzz_transactions', []);
+  const paid = txns.filter(t => t.amount > 0 && t.status === 'success');
+  document.getElementById('priceStatRev').textContent = '\u20B9' + Math.round(paid.reduce((s,t)=>s+(parseFloat(t.amount)||0),0)).toLocaleString('en-IN');
+  document.getElementById('priceStatPlans').textContent = paid.length;
+  const q = safeJSON('zzz_user_quotas', {});
+  document.getElementById('priceStatFree').textContent = Object.values(q).filter(x=>x.planId==='new_user_free').length;
+  const reg = safeJSON('zzz_phone_registry', {});
+  document.getElementById('priceStatFlagged').textContent = Object.values(reg).filter(r=>r.hadFreeTrial).length;
+  const cfg = safeJSON('zzz_plan_config_extras', {feat1d:29,feat7d:149,feat30d:399});
+  document.getElementById('featPrice1d').value = cfg.feat1d||29;
+  document.getElementById('featPrice7d').value = cfg.feat7d||149;
+  document.getElementById('featPrice30d').value = cfg.feat30d||399;
+  renderPlanEditor(); renderPhoneRegistry(); renderQuotaTable();
+}
+function renderPlanEditor() {
+  const tbody = document.getElementById('planEditorBody');
+  if (!editablePlans) return;
+  tbody.innerHTML = editablePlans.map((p, i) => `<tr class="border-b border-slate-50 dark:border-gray-800 hover:bg-slate-50/50">
+    <td class="px-4 py-3"><input data-i="${i}" data-f="name" value="${p.name}" class="pei bg-transparent border border-slate-200 rounded-lg px-2 py-1 font-bold text-sm w-36 outline-none"></td>
+    <td class="px-4 py-3"><input data-i="${i}" data-f="tag" value="${p.tag||''}" class="pei bg-transparent border border-slate-200 rounded-lg px-2 py-1 text-xs w-28 outline-none"></td>
+    <td class="px-4 py-3 text-center">${p.price===0?'<span class="text-green-500 font-black text-sm">FREE</span>':`<input data-i="${i}" data-f="price" type="number" value="${p.price}" class="pei bg-transparent border border-slate-200 rounded-lg px-2 py-1 font-black text-sm w-20 text-center outline-none">`}</td>
+    <td class="px-4 py-3 text-center"><input data-i="${i}" data-f="ads" type="number" value="${p.ads}" class="pei bg-transparent border border-slate-200 rounded-lg px-2 py-1 font-black text-sm w-20 text-center outline-none"></td>
+    <td class="px-4 py-3 text-center"><input data-i="${i}" data-f="days" type="number" value="${p.days}" class="pei bg-transparent border border-slate-200 rounded-lg px-2 py-1 font-black text-sm w-20 text-center outline-none"></td>
+    <td class="px-4 py-3"><input data-i="${i}" data-f="desc" value="${(p.desc||'').replace(/"/g,'&quot;')}" class="pei bg-transparent border border-slate-200 rounded-lg px-2 py-1 text-xs w-64 outline-none"></td>
+  </tr>`).join('');
+  document.querySelectorAll('.pei').forEach(inp=>inp.addEventListener('input',()=>{
+    const i=parseInt(inp.dataset.i),f=inp.dataset.f;
+    editablePlans[i][f]=['price','ads','days'].includes(f)?parseFloat(inp.value)||0:inp.value;
+  }));
+}
+function savePlansConfig(){localStorage.setItem('zzz_plan_config',JSON.stringify(editablePlans));logAction('PLAN_UPDATE','Pricing updated');showToast('Plan config saved! Live immediately.');}
+function resetPlansToDefault(){confirmAction('Reset','Restore factory defaults?',()=>{localStorage.removeItem('zzz_plan_config');if(window.ZZZ&&window.ZZZ.Plans){editablePlans=JSON.parse(JSON.stringify(window.ZZZ.Plans.DEFAULT_PLANS));}renderPlanEditor();showToast('Reset to defaults');});}
+function saveFeaturedPrices(){const c={feat1d:parseFloat(document.getElementById('featPrice1d').value)||29,feat7d:parseFloat(document.getElementById('featPrice7d').value)||149,feat30d:parseFloat(document.getElementById('featPrice30d').value)||399};localStorage.setItem('zzz_plan_config_extras',JSON.stringify(c));logAction('FEAT_PRICE','Updated featured prices');showToast('Featured prices saved!');}
+function renderPhoneRegistry(){
+  const reg=safeJSON('zzz_phone_registry',{}),users=safeJSON('zzz_users',[]),tbody=document.getElementById('phoneRegistryBody'),ent=Object.entries(reg);
+  if(!ent.length){tbody.innerHTML='<tr><td colspan="5" class="text-center py-8 text-slate-400">No registrations yet</td></tr>';return;}
+  tbody.innerHTML=ent.map(([ph,d])=>{const u=users.find(x=>x.id===d.userId),dt=d.registeredAt?new Date(d.registeredAt).toLocaleDateString('en-IN'):'—';
+    return `<tr class="border-b border-slate-50 hover:bg-slate-50"><td class="px-4 py-3 font-mono font-bold text-sm">${ph}</td><td class="px-4 py-3 text-sm">${u?u.name:d.userId}</td><td class="px-4 py-3 text-center">${d.hadFreeTrial?'<span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded-full">YES</span>':'<span class="bg-green-100 text-green-600 text-xs font-bold px-2 py-1 rounded-full">NO</span>'}</td><td class="px-4 py-3 text-center text-xs text-slate-400">${dt}</td><td class="px-4 py-3 text-center"><button onclick="clearPhoneReg('${ph}')" class="text-xs text-red-500 font-bold">Remove</button></td></tr>`;
+  }).join('');
+}
+function clearPhoneReg(ph){confirmAction('Remove Phone','Allow this number to register again?',()=>{const r=safeJSON('zzz_phone_registry',{});delete r[ph];localStorage.setItem('zzz_phone_registry',JSON.stringify(r));logAction('PHONE_REMOVE','Removed: '+ph);renderPhoneRegistry();showToast('Removed');});}
+function renderQuotaTable(){
+  const q=safeJSON('zzz_user_quotas',{}),users=safeJSON('zzz_users',[]),s=(document.getElementById('quotaSearch')?.value||'').toLowerCase(),tbody=document.getElementById('quotaTableBody');
+  const ent=Object.entries(q).filter(([uid])=>!s||(users.find(u=>u.id===uid)?.name||uid).toLowerCase().includes(s));
+  if(!ent.length){tbody.innerHTML='<tr><td colspan="6" class="text-center py-8 text-slate-400">No data</td></tr>';return;}
+  tbody.innerHTML=ent.map(([uid,d])=>{const u=users.find(x=>x.id===uid),exp=d.expiresAt?new Date(d.expiresAt).toLocaleDateString('en-IN'):'—',expired=d.expiresAt&&new Date(d.expiresAt)<Date.now();
+    return `<tr class="border-b border-slate-50 hover:bg-slate-50"><td class="px-4 py-3"><p class="font-bold text-sm">${u?u.name:'Unknown'}</p><p class="text-xs text-slate-400">${uid}</p></td><td class="px-4 py-3"><span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">${d.planName||'—'}</span></td><td class="px-4 py-3 text-center font-black ${d.adsRemaining<=0?'text-red-500':'text-brand'}">${d.adsRemaining}</td><td class="px-4 py-3 text-center font-bold text-slate-500">${d.totalGranted}</td><td class="px-4 py-3 text-center text-xs ${expired?'text-red-400 font-bold':'text-slate-400'}">${exp}</td><td class="px-4 py-3 text-center"><button onclick="grantAdminQ('${uid}')" class="text-xs text-brand font-bold border border-brand/30 px-2 py-1 rounded-lg">+Grant</button></td></tr>`;
+  }).join('');
+}
+function grantAdminQ(uid){const n=parseInt(prompt('Ads to grant?','5')||'0');if(!n||n<=0)return;const q=safeJSON('zzz_user_quotas',{});if(!q[uid])q[uid]={adsRemaining:0,totalGranted:0,planId:'admin_grant',planName:'Admin Grant',expiresAt:new Date(Date.now()+30*86400000).toISOString(),history:[]};q[uid].adsRemaining=(q[uid].adsRemaining||0)+n;q[uid].totalGranted=(q[uid].totalGranted||0)+n;(q[uid].history=q[uid].history||[]).push({planId:'admin_grant',ads:n,grantedAt:new Date().toISOString()});localStorage.setItem('zzz_user_quotas',JSON.stringify(q));logAction('QUOTA_GRANT',n+' ads to '+uid);renderQuotaTable();showToast(n+' ads granted!');}
+function toggleAntiSpam(){const e=document.getElementById('antiSpamToggle').checked;localStorage.setItem('zzz_antispam_enabled',JSON.stringify(e));showToast('Anti-spam '+(e?'enabled':'disabled'));}
+// END PRICING TAB
+
 </script>
 </body>
 </html>
