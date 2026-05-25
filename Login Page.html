@@ -252,6 +252,11 @@
     if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(user);
     else {
       localStorage.setItem('zzz_user', JSON.stringify(user));
+
+          // Grant monthly free ad if eligible
+          if (window.ZZZ && window.ZZZ.Plans) {
+            window.ZZZ.Plans.grantMonthlyFreeAd(user.id);
+          }
       localStorage.setItem('zipzapzoi_current_user', JSON.stringify(user));
     }
     showToast('Welcome back, ' + user.name.split(' ')[0] + '! 🎉');

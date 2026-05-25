@@ -257,7 +257,10 @@
         
         if(currentUser) {
           authArea.innerHTML = toggleBtn + `
-            <a href="Post Listing.html" class="hidden md:flex items-center gap-2 py-2 px-4 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white font-bold text-sm transition-colors">
+            <a href="Classifieds Plans.html" class="hidden md:flex items-center gap-2 text-sm font-bold text-primary hover:underline transition-colors mr-1">
+              <span class="material-symbols-outlined text-[16px]">upgrade</span> Plans &amp; Pricing
+            </a>
+            <a href="#" onclick="quotaAwarePost(); return false;" class="hidden md:flex items-center gap-2 py-2 px-4 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white font-bold text-sm transition-colors">
               <span class="material-symbols-outlined text-lg">add_circle</span> Post Ad
             </a>
             <div class="flex items-center gap-2">
@@ -449,6 +452,24 @@
           btn.classList.add('active');
         }
       }
-    </script>
+    
+    // ─── QUOTA-AWARE POST AD ──────────────────────
+    window.quotaAwarePost = function() {
+      const user = window.ZZZ ? window.ZZZ.getCurrentUser() : null;
+      if (!user) { window.location.href = 'Login Page.html'; return; }
+      if (window.ZZZ && window.ZZZ.Plans) {
+        const q = window.ZZZ.Plans.getUserQuota(user.id);
+        if (!q || q.adsRemaining <= 0) {
+          if (confirm('You have 0 ads remaining.\n\nUpgrade your plan to continue posting.\n\nGo to Plans & Pricing?')) {
+            window.location.href = 'Classifieds Plans.html';
+          }
+          return;
+        }
+      }
+      window.location.href = 'Post Listing.html';
+    };
+    // ─── END QUOTA-AWARE ─────────────────────────
+
+  </script>
 </body>
 </html>

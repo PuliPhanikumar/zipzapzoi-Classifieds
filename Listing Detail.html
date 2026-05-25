@@ -337,6 +337,24 @@
         document.getElementById('detailCategory').textContent = currentListing.category;
         document.getElementById('detailPrice').textContent = `₹${parseFloat(currentListing.price).toLocaleString()}`;
         document.getElementById('detailLocation').textContent = currentListing.location || 'Local';
+
+        // ─── SELLER PLAN BADGE ────────────────────────────
+        if (window.ZZZ && window.ZZZ.Plans && currentListing.userId) {
+          const sellerQuota = window.ZZZ.Plans.getUserQuota(currentListing.userId);
+          if (sellerQuota && sellerQuota.planId && sellerQuota.planId !== 'new_user_free' && sellerQuota.planId !== 'monthly_free') {
+            const plan = window.ZZZ.Plans.getById(sellerQuota.planId);
+            if (plan) {
+              const badge = document.createElement('span');
+              badge.id = 'zzz-seller-plan-badge';
+              badge.className = 'inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded-full border border-primary/20 ml-2';
+              badge.innerHTML = '<span class="material-symbols-outlined text-[12px]">workspace_premium</span>' + plan.name + ' Seller';
+              const titleEl = document.getElementById('detailLocation');
+              if (titleEl && titleEl.parentNode) titleEl.parentNode.appendChild(badge);
+            }
+          }
+        }
+        // ─── END SELLER PLAN BADGE ───────────────────────
+
         // Init map if coords available
         if (typeof L !== 'undefined') {
           initListingMap(currentListing.lat, currentListing.lng, currentListing.title);

@@ -267,7 +267,13 @@
       // Auto login
       localStorage.setItem('zzz_user', JSON.stringify(newUser));
 
-      showToast('Account created successfully! 🎉');
+      // ─── AUTO-ASSIGN NEW USER FREE PLAN (6 ads) ────────────
+      if (window.ZZZ && window.ZZZ.Plans) {
+        window.ZZZ.Plans.assignPlan(newUser.id, 'new_user_free', { price: 0 });
+      }
+      // ─── END AUTO-ASSIGN ─────────────────────────────────────
+
+      showToast('Account created! 🎉 You have 6 FREE ads for your first month!', 'success');
       
       setTimeout(() => {
         window.location.href = role === 'admin' ? 'AdminConsoleV2.html' : 'classifieds.html';

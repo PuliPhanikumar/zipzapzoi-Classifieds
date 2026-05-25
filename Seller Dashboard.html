@@ -62,7 +62,7 @@
           <button onclick="if(typeof toggleDarkMode === 'function') toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400">
              <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
           </button>
-<a href="Post Listing.html" class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-800 hover:text-gray-900 dark:text-white font-medium rounded-xl transition-colors">
+<a href="#" onclick="quotaAwarePost(); return false;" class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-800 hover:text-gray-900 dark:text-white font-medium rounded-xl transition-colors">
         <span class="material-symbols-outlined">add_circle</span> Post New Ad
       </a></div>
       <a href="#" onclick="requestVerification()" class="flex items-center gap-3 px-4 py-3 text-blue-500 hover:bg-blue-50 font-bold rounded-xl transition-colors" id="navVerifyBtn">
@@ -94,7 +94,7 @@
     <div id="mobileMenu" class="hidden md:hidden bg-white dark:bg-card-dark border-b shadow-lg absolute top-16 left-0 right-0 z-10 p-4 space-y-2">
       <a href="classifieds.html" class="block p-3 hover:bg-gray-50 dark:bg-gray-800 rounded-lg">Browse Market</a>
       <a href="Inbox.html" class="block p-3 hover:bg-gray-50 dark:bg-gray-800 rounded-lg">Messages</a>
-      <a href="Post Listing.html" class="block p-3 hover:bg-gray-50 dark:bg-gray-800 rounded-lg text-brand font-bold">Post New Ad</a>
+      <a href="#" onclick="quotaAwarePost(); return false;" class="block p-3 hover:bg-gray-50 dark:bg-gray-800 rounded-lg text-brand font-bold">Post New Ad</a>
       <button onclick="handleLogout()" class="block w-full text-left p-3 text-red-500 font-bold">Log Out</button>
     </div>
 
@@ -260,13 +260,43 @@
       window.location.href = 'Login Page.html';
     }
 
+    // ─── PLAN WIDGET ─────────────────────────────────────
+    function loadPlanWidget() {
+      if (!window.ZZZ || !window.ZZZ.Plans || !currentUser) return;
+      const q = window.ZZZ.Plans.getUserQuota(currentUser.id);
+      const widget = document.getElementById('zzz-plan-widget');
+      if (!widget) return;
+
+      if (!q) {
+        document.getElementById('widgetPlanName').textContent = 'No Active Plan';
+        document.getElementById('widgetRemaining').textContent = '0';
+        document.getElementById('widgetTotal').textContent = '0';
+        document.getElementById('widgetBarLabel').textContent = 'Purchase a plan to start posting';
+        document.getElementById('widgetExpiry').textContent = 'No active plan';
+        return;
+      }
+      const remaining = q.adsRemaining || 0;
+      const total = q.totalGranted || 0;
+      const pct = total > 0 ? Math.min(100, Math.round((remaining / total) * 100)) : 0;
+      document.getElementById('widgetPlanName').textContent = q.planName || 'Free';
+      document.getElementById('widgetRemaining').textContent = remaining;
+      document.getElementById('widgetTotal').textContent = total;
+      document.getElementById('widgetBarLabel').textContent = remaining + ' of ' + total + ' ads remaining';
+      if (q.expiresAt) {
+        const days = Math.max(0, Math.round((new Date(q.expiresAt) - Date.now()) / 86400000));
+        document.getElementById('widgetExpiry').textContent = days > 0
+          ? 'Expires in ' + days + ' day' + (days !== 1 ? 's' : '') + ' (' + new Date(q.expiresAt).toLocaleDateString('en-IN') + ')'
+          : '⚠ Plan Expired — Renew Now';
+      }
+      setTimeout(() => {
+        const bar = document.getElementById('widgetBar');
+        if (bar) bar.style.width = pct + '%';
+      }, 400);
+    }
+    // ─── END PLAN WIDGET ────────────────────────────────
+
     // --- 2. LOAD DATA ---
     function loadDashboard() {
-      const allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-      const myListings = allListings.filter(item => item.userId === currentUser.id);
-      
-      const allMsgs = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
-      const unreadCount = allMsgs.filter(m => m.toUserId === currentUser.id && !m.read).length;
 
       // Update Stats
       document.getElementById('statActive').textContent = myListings.filter(i => (i.status || 'active') === 'active').length;
@@ -638,6 +668,21 @@ function showToast(message, type = 'success') {
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
+
+  
+    // ─── QUOTA-AWARE POST AD ──────────────────────
+    window.quotaAwarePost = function() {
+      if (!window.ZZZ || !window.ZZZ.Plans || !currentUser) { window.location.href = 'Post Listing.html'; return; }
+      const q = window.ZZZ.Plans.getUserQuota(currentUser.id);
+      if (!q || q.adsRemaining <= 0) {
+        if (confirm('You have 0 ads remaining.\nUpgrade your plan to continue posting?')) {
+          window.location.href = 'Classifieds Plans.html';
+        }
+        return;
+      }
+      window.location.href = 'Post Listing.html';
+    };
+    // ─── END QUOTA-AWARE ─────────────────────────
 
   </script>
 </body>

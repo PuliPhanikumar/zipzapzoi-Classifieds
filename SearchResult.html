@@ -622,6 +622,23 @@
       });
       // ===== END MAP VIEW =====
 
+    
+    // ─── QUOTA-AWARE POST AD ──────────────────────
+    window.quotaAwarePost = function() {
+      const user = window.ZZZ ? window.ZZZ.getCurrentUser() : null;
+      if (!user) { window.location.href = 'Login Page.html'; return; }
+      if (window.ZZZ && window.ZZZ.Plans) {
+        const q = window.ZZZ.Plans.getUserQuota(user.id);
+        if (!q || q.adsRemaining <= 0) {
+          if (confirm('You have 0 ads remaining.\nUpgrade your plan to continue posting.\n\nGo to Plans & Pricing?')) {
+            window.location.href = 'Classifieds Plans.html';
+          }
+          return;
+        }
+      }
+      window.location.href = 'Post Listing.html';
+    };
+
     </script>
 </body>
 </html>
