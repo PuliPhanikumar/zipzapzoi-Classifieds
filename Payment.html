@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ZipZapZoi — Secure Payment</title>
+  <meta name="description" content="Complete your ZipZapZoi plan purchase securely via UPI, Card, Net Banking or Wallet."/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+          colors: {
+            primary: '#019863',
+            secondary: '#4D96A9',
+            brand: '#019863',
+            'bg-light': '#f4f7f5',
+            'bg-dark': '#0a0f1a',
+            'card-dark': '#111827'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24; }
+    .tab-btn { transition: all 0.2s; }
+    .tab-btn.active { background: #019863; color: white; }
+    .tab-btn:not(.active) { background: #f3f4f6; color: #6b7280; }
+    .dark .tab-btn:not(.active) { background: #1f2937; color: #9ca3af; }
+    .payment-panel { display: none; }
+    .payment-panel.active { display: block; }
+    .upi-option { transition: all 0.2s; border: 2px solid transparent; cursor: pointer; }
+    .upi-option.selected { border-color: #019863; background: #f0fdf4; }
+    .dark .upi-option.selected { background: rgba(1,152,99,0.1); }
+    .bank-option { transition: all 0.2s; border: 2px solid transparent; cursor: pointer; }
+    .bank-option.selected { border-color: #019863; background: #f0fdf4; }
+    .dark .bank-option.selected { background: rgba(1,152,99,0.1); }
+    .card-input { background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 12px; padding: 12px 16px; width: 100%; font-size: 15px; outline: none; transition: border-color 0.2s; }
+    .dark .card-input { background: #1f2937; border-color: #374151; color: #f9fafb; }
+    .card-input:focus { border-color: #019863; }
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .pulse-dot { animation: pulseDot 1.5s ease-in-out infinite; }
+    @keyframes pulseDot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.7); } }
+    .success-bg { animation: successPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+    @keyframes successPop { from { opacity:0; transform:scale(0.5); } to { opacity:1; transform:scale(1); } }
+    .qr-box { background: repeating-conic-gradient(#000 0% 25%, #fff 0% 50%) 0 0 / 8px 8px; border-radius: 4px; }
+    #receiptPage { display: none; }
+    @media print {
+      body > *:not(#receiptPage) { display: none !important; }
+      #receiptPage { display: block !important; }
+    }
+  </style>
+</head>
+
+<body class="bg-bg-light dark:bg-bg-dark text-gray-800 dark:text-gray-100 min-h-screen transition-colors duration-300">
+
+  <!-- ═══════════════════ HEADER ═══════════════════ -->
+  <header class="bg-white dark:bg-card-dark border-b border-gray-100 dark:border-gray-800 sticky top-0 z-30">
+    <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+      <a href="Classifieds Plans.html" class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary text-3xl">all_inclusive</span>
+        <span class="font-black text-lg text-gray-900 dark:text-white">ZipZapZoi</span>
+      </a>
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1.5 text-xs font-bold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-3 py-1.5 rounded-full border border-green-200 dark:border-green-800">
+          <span class="material-symbols-outlined text-[14px]">lock</span> 256-bit SSL Secured
+        </div>
+        <a href="Classifieds Plans.html" class="text-sm font-bold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════ PAYMENT PAGE ═══════════════════ -->
+  <div id="paymentPage" class="max-w-5xl mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+      <!-- LEFT: Payment Methods -->
+      <div class="lg:col-span-3">
+        <h1 class="text-2xl font-black text-gray-900 dark:text-white mb-6">Complete Your Payment</h1>
+
+        <!-- Payment Method Tabs -->
+        <div class="grid grid-cols-4 gap-2 mb-6">
+          <button class="tab-btn active rounded-xl py-3 text-xs font-black flex flex-col items-center gap-1" onclick="switchTab('upi', this)">
+            <span class="material-symbols-outlined text-[22px]">qr_code_2</span> UPI
+          </button>
+          <button class="tab-btn rounded-xl py-3 text-xs font-black flex flex-col items-center gap-1" onclick="switchTab('card', this)">
+            <span class="material-symbols-outlined text-[22px]">credit_card</span> Card
+          </button>
+          <button class="tab-btn rounded-xl py-3 text-xs font-black flex flex-col items-center gap-1" onclick="switchTab('netbanking', this)">
+            <span class="material-symbols-outlined text-[22px]">account_balance</span> Net Banking
+          </button>
+          <button class="tab-btn rounded-xl py-3 text-xs font-black flex flex-col items-center gap-1" onclick="switchTab('wallet', this)">
+            <span class="material-symbols-outlined text-[22px]">account_balance_wallet</span> Wallet
+          </button>
+        </div>
+
+        <!-- ── UPI TAB ── -->
+        <div id="panel-upi" class="payment-panel active">
+          <div class="bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
+            <h3 class="font-black text-gray-900 dark:text-white mb-4">Pay via UPI</h3>
+
+            <!-- UPI ID Input -->
+            <div class="mb-5">
+              <label class="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Enter UPI ID</label>
+              <div class="flex gap-2">
+                <input type="text" id="upiId" placeholder="yourname@upi" class="card-input flex-1" oninput="validateUpi()"/>
+                <button onclick="verifyUpi()" class="bg-primary text-white font-black px-4 rounded-xl text-sm hover:bg-green-700 transition-colors whitespace-nowrap">Verify</button>
+              </div>
+              <p id="upiStatus" class="text-xs mt-2 font-bold hidden"></p>
+            </div>
+
+            <!-- OR Divider -->
+            <div class="flex items-center gap-3 my-5">
+              <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+              <span class="text-xs font-bold text-gray-400">OR SCAN QR CODE</span>
+              <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+            </div>
+
+            <!-- QR Code -->
+            <div class="flex flex-col items-center">
+              <div class="bg-white p-3 rounded-2xl border-2 border-gray-200 dark:border-gray-700 shadow-md mb-3">
+                <!-- Simulated QR Pattern -->
+                <svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="160" height="160" fill="white"/>
+                  <!-- Top-left finder pattern -->
+                  <rect x="10" y="10" width="50" height="50" rx="4" fill="black"/>
+                  <rect x="18" y="18" width="34" height="34" rx="2" fill="white"/>
+                  <rect x="24" y="24" width="22" height="22" rx="1" fill="black"/>
+                  <!-- Top-right finder pattern -->
+                  <rect x="100" y="10" width="50" height="50" rx="4" fill="black"/>
+                  <rect x="108" y="18" width="34" height="34" rx="2" fill="white"/>
+                  <rect x="114" y="24" width="22" height="22" rx="1" fill="black"/>
+                  <!-- Bottom-left finder pattern -->
+                  <rect x="10" y="100" width="50" height="50" rx="4" fill="black"/>
+                  <rect x="18" y="108" width="34" height="34" rx="2" fill="white"/>
+                  <rect x="24" y="114" width="22" height="22" rx="1" fill="black"/>
+                  <!-- Data modules -->
+                  <rect x="70" y="10" width="22" height="6" rx="1" fill="black"/>
+                  <rect x="70" y="20" width="6" height="6" rx="1" fill="black"/>
+                  <rect x="82" y="20" width="10" height="6" rx="1" fill="black"/>
+                  <rect x="70" y="30" width="14" height="6" rx="1" fill="black"/>
+                  <rect x="88" y="30" width="6" height="6" rx="1" fill="black"/>
+                  <rect x="70" y="40" width="22" height="6" rx="1" fill="black"/>
+                  <rect x="70" y="50" width="10" height="6" rx="1" fill="black"/>
+                  <rect x="84" y="50" width="8" height="6" rx="1" fill="black"/>
+                  <rect x="10" y="70" width="6" height="6" rx="1" fill="black"/>
+                  <rect x="20" y="70" width="10" height="6" rx="1" fill="black"/>
+                  <rect x="36" y="70" width="14" height="6" rx="1" fill="black"/>
+                  <rect x="55" y="70" width="6" height="6" rx="1" fill="black"/>
+                  <rect x="70" y="70" width="14" height="6" rx="1" fill="black"/>
+                  <rect x="90" y="70" width="6" height="6" rx="1" fill="black"/>
+                  <rect x="102" y="70" width="14" height="6" rx="1" fill="black"/>
+                  <rect x="120" y="70" width="6" height="6" rx="1" fill="black"/>
+                  <rect x="132" y="70" width="18" height="6" rx="1" fill="black"/>
+                  <rect x="10" y="80" width="14" height="6" rx="1" fill="black"/>
+                  <rect x="30" y="80" width="6" height="6" rx="1" fill="black"/>
+                  <rect x="44" y="80" width="10" height="6" rx="1" fill="black"/>
+                  <rect x="60" y="80" width="14" height="6" rx="1" fill="black"/>
+                  <rect x="80" y="80" width="6" height="6" rx="1" fill="black"/>
+                  <rect x="94" y="80" width="18" height="6" rx="1" fill="black"/>
+                  <rect x="120" y="80" width="10" height="6" rx="1" fill="black"/>
+                  <rect x="136" y="80" width="14" height="6" rx="1" fill="black"/>
+                  <rect x="10" y="90" width="22" height="6" rx="1" fill="black"/>
+                  <rect x="40" y="90" width="8" height="6" rx="1" fill="black"/>
+                  <rect x="56" y="90" width="12" height="6" rx="1" fill="black"/>
+                  <rect x="76" y="90" width="8" height="6" rx="1" fill="black"/>
+                  <rect x="92" y="90" width="14" height="6" rx="1" fill="black"/>
+                  <rect x="114" y="90" width="6" height="6" rx="1" fill="black"/>
+                  <rect x="128" y="90" width="22" height="6" rx="1" fill="black"/>
+                  <rect x="70" y="100" width="6" height="6" rx="1" fill="black"/>
+                  <rect x="84" y="100" width="14" height="6" rx="1" fill="black"/>
+                  <rect x="106" y="100" width="6" height="6" rx="1" fill="black"/>
+                  <rect x="120" y="100" width="14" height="6" rx="1" fill="black"/>
+                  <rect x="140" y="100" width="10" height="6" rx="1" fill="black"/>
+                  <rect x="70" y="110" width="22" height="6" rx="1" fill="black"/>
+                  <rect x="100" y="110" width="10" height="6" rx="1" fill="black"/>
+                  <rect x="118" y="110" width="6" height="6" rx="1" fill="black"/>
+                  <rect x="130" y="110" width="14" height="6" rx="1" fill="black"/>
+                  <rect x="70" y="120" width="10" height="6" rx="1" fill="black"/>
+                  <rect x="86" y="120" width="6" height="6" rx="1" fill="black"/>
+                  <rect x="100" y="120" width="18" height="6" rx="1" fill="black"/>
+                  <rect x="126" y="120" width="24" height="6" rx="1" fill="black"/>
+                  <rect x="70" y="130" width="6" height="6" rx="1" fill="black"/>
+                  <rect x="82" y="130" width="14" height="6" rx="1" fill="black"/>
+                  <rect x="104" y="130" width="8" height="6" rx="1" fill="black"/>
+                  <rect x="120" y="130" width="6" height="6" rx="1" fill="black"/>
+                  <rect x="134" y="130" width="16" height="6" rx="1" fill="black"/>
+                  <rect x="70" y="140" width="22" height="6" rx="1" fill="black"/>
+                  <rect x="100" y="140" width="14" height="6" rx="1" fill="black"/>
+                  <rect x="122" y="140" width="28" height="6" rx="1" fill="black"/>
+                  <!-- Center ZipZapZoi Logo area -->
+                  <rect x="66" y="66" width="28" height="28" rx="6" fill="white"/>
+                  <text x="80" y="85" text-anchor="middle" font-size="14" font-weight="900" fill="#019863">Z</text>
+                </svg>
+              </div>
+              <p class="text-sm font-bold text-gray-700 dark:text-gray-300">zipzapzoi@upi</p>
+              <p class="text-xs text-gray-400 mt-1">Scan with any UPI app</p>
+              <!-- App icons row -->
+              <div class="flex items-center gap-3 mt-3">
+                <span class="text-xs bg-blue-100 text-blue-700 font-black px-3 py-1 rounded-full">GPay</span>
+                <span class="text-xs bg-purple-100 text-purple-700 font-black px-3 py-1 rounded-full">PhonePe</span>
+                <span class="text-xs bg-orange-100 text-orange-700 font-black px-3 py-1 rounded-full">Paytm</span>
+                <span class="text-xs bg-blue-100 text-blue-700 font-black px-3 py-1 rounded-full">BHIM</span>
+              </div>
+            </div>
+
+            <!-- UPI Timer -->
+            <div class="mt-5 flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+              <span class="material-symbols-outlined text-[16px] text-orange-400">timer</span>
+              QR expires in <span id="qrTimer" class="font-black text-orange-500">09:59</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── CARD TAB ── -->
+        <div id="panel-card" class="payment-panel">
+          <div class="bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
+            <h3 class="font-black text-gray-900 dark:text-white mb-5">Debit / Credit Card</h3>
+
+            <!-- Card Visual -->
+            <div id="cardVisual" class="relative w-full h-48 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 mb-6 overflow-hidden shadow-xl">
+              <div class="absolute top-0 right-0 w-40 h-40 rounded-full bg-white/5 -translate-x-4 -translate-y-16"></div>
+              <div class="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-white/5 translate-x-2 translate-y-10"></div>
+              <div class="relative">
+                <div class="flex justify-between items-start mb-6">
+                  <span class="text-white/60 text-xs font-bold uppercase tracking-widest">ZipZapZoi</span>
+                  <div class="flex gap-1">
+                    <div class="w-8 h-8 rounded-full bg-red-500 opacity-90"></div>
+                    <div class="w-8 h-8 rounded-full bg-yellow-400 opacity-90 -ml-3"></div>
+                  </div>
+                </div>
+                <p class="text-white font-mono text-lg tracking-widest mb-4" id="cardNumDisplay">•••• •••• •••• ••••</p>
+                <div class="flex justify-between items-end">
+                  <div>
+                    <p class="text-white/50 text-[10px] uppercase mb-0.5">Cardholder</p>
+                    <p class="text-white font-bold text-sm" id="cardNameDisplay">YOUR NAME</p>
+                  </div>
+                  <div>
+                    <p class="text-white/50 text-[10px] uppercase mb-0.5">Expires</p>
+                    <p class="text-white font-bold text-sm" id="cardExpDisplay">MM/YY</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-bold mb-1.5 text-gray-700 dark:text-gray-300">Card Number</label>
+                <input type="text" id="cardNum" maxlength="19" placeholder="1234 5678 9012 3456" class="card-input" oninput="formatCard(this); updateCardVisual()"/>
+              </div>
+              <div>
+                <label class="block text-sm font-bold mb-1.5 text-gray-700 dark:text-gray-300">Cardholder Name</label>
+                <input type="text" id="cardName" placeholder="Name as on card" class="card-input" oninput="updateCardVisual()"/>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-bold mb-1.5 text-gray-700 dark:text-gray-300">Expiry (MM/YY)</label>
+                  <input type="text" id="cardExp" maxlength="5" placeholder="MM/YY" class="card-input" oninput="formatExpiry(this); updateCardVisual()"/>
+                </div>
+                <div>
+                  <label class="block text-sm font-bold mb-1.5 text-gray-700 dark:text-gray-300">CVV</label>
+                  <input type="password" id="cardCvv" maxlength="3" placeholder="•••" class="card-input"/>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── NET BANKING TAB ── -->
+        <div id="panel-netbanking" class="payment-panel">
+          <div class="bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
+            <h3 class="font-black text-gray-900 dark:text-white mb-5">Net Banking</h3>
+            <div class="grid grid-cols-2 gap-3 mb-5">
+              <div class="bank-option p-4 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center gap-3" onclick="selectBank(this, 'SBI')">
+                <div class="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-xs">SBI</div>
+                <span class="font-bold text-sm">State Bank of India</span>
+              </div>
+              <div class="bank-option p-4 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center gap-3" onclick="selectBank(this, 'HDFC')">
+                <div class="w-10 h-10 rounded-lg bg-red-600 flex items-center justify-center text-white font-black text-xs">HDFC</div>
+                <span class="font-bold text-sm">HDFC Bank</span>
+              </div>
+              <div class="bank-option p-4 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center gap-3" onclick="selectBank(this, 'ICICI')">
+                <div class="w-10 h-10 rounded-lg bg-orange-500 flex items-center justify-center text-white font-black text-xs">ICICI</div>
+                <span class="font-bold text-sm">ICICI Bank</span>
+              </div>
+              <div class="bank-option p-4 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center gap-3" onclick="selectBank(this, 'Axis')">
+                <div class="w-10 h-10 rounded-lg bg-purple-600 flex items-center justify-center text-white font-black text-xs">AXIS</div>
+                <span class="font-bold text-sm">Axis Bank</span>
+              </div>
+              <div class="bank-option p-4 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center gap-3" onclick="selectBank(this, 'Kotak')">
+                <div class="w-10 h-10 rounded-lg bg-red-500 flex items-center justify-center text-white font-black text-xs">KMB</div>
+                <span class="font-bold text-sm">Kotak Mahindra</span>
+              </div>
+              <div class="bank-option p-4 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center gap-3" onclick="selectBank(this, 'PNB')">
+                <div class="w-10 h-10 rounded-lg bg-green-700 flex items-center justify-center text-white font-black text-xs">PNB</div>
+                <span class="font-bold text-sm">Punjab National Bank</span>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-1.5 text-gray-700 dark:text-gray-300">Or select other bank</label>
+              <select id="otherBank" class="card-input" onchange="selectBankFromDropdown(this.value)">
+                <option value="">Choose your bank...</option>
+                <option>Bank of Baroda</option><option>Canara Bank</option><option>Union Bank</option>
+                <option>Indian Bank</option><option>Bank of India</option><option>Yes Bank</option>
+                <option>IndusInd Bank</option><option>Federal Bank</option><option>South Indian Bank</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── WALLET TAB ── -->
+        <div id="panel-wallet" class="payment-panel">
+          <div class="bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
+            <h3 class="font-black text-gray-900 dark:text-white mb-5">Mobile Wallets</h3>
+            <div class="grid grid-cols-1 gap-3">
+              <div class="upi-option p-4 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-between" onclick="selectWallet(this, 'Paytm')">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center text-white font-black text-sm">Pay</div>
+                  <div>
+                    <p class="font-black">Paytm Wallet</p>
+                    <p class="text-xs text-gray-400">Balance: ₹0</p>
+                  </div>
+                </div>
+                <span class="material-symbols-outlined text-gray-300">chevron_right</span>
+              </div>
+              <div class="upi-option p-4 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-between" onclick="selectWallet(this, 'MobiKwik')">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-xl bg-indigo-500 flex items-center justify-center text-white font-black text-sm">Mob</div>
+                  <div>
+                    <p class="font-black">MobiKwik</p>
+                    <p class="text-xs text-gray-400">Balance: ₹0</p>
+                  </div>
+                </div>
+                <span class="material-symbols-outlined text-gray-300">chevron_right</span>
+              </div>
+              <div class="upi-option p-4 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-between" onclick="selectWallet(this, 'Freecharge')">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-xl bg-green-500 flex items-center justify-center text-white font-black text-sm">FC</div>
+                  <div>
+                    <p class="font-black">Freecharge</p>
+                    <p class="text-xs text-gray-400">Balance: ₹0</p>
+                  </div>
+                </div>
+                <span class="material-symbols-outlined text-gray-300">chevron_right</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pay Button -->
+        <button id="payNowBtn" onclick="initiatePayment()" class="w-full mt-5 bg-primary hover:bg-green-700 text-white font-black py-4 rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3 text-lg">
+          <span class="material-symbols-outlined text-[22px]">lock</span>
+          <span id="payNowText">Pay Securely</span>
+        </button>
+        <p class="text-center text-xs text-gray-400 mt-3 flex items-center justify-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">verified_user</span>
+          Payments are 100% secure. We do not store your card details.
+        </p>
+      </div>
+
+      <!-- RIGHT: Order Summary -->
+      <div class="lg:col-span-2">
+        <div class="bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm sticky top-24">
+          <h3 class="font-black text-gray-900 dark:text-white mb-5 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-[22px]">receipt_long</span>
+            Order Summary
+          </h3>
+
+          <!-- Plan Card -->
+          <div class="bg-gradient-to-br from-primary to-green-700 rounded-xl p-4 text-white mb-5">
+            <p class="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">Selected Plan</p>
+            <h4 class="text-xl font-black" id="summaryPlanName">—</h4>
+            <p class="text-white/75 text-sm mt-1" id="summaryPlanDesc">—</p>
+          </div>
+
+          <!-- Price Breakdown -->
+          <div class="space-y-3 text-sm border-b border-gray-100 dark:border-gray-800 pb-4 mb-4">
+            <div class="flex justify-between">
+              <span class="text-gray-500">Plan Price</span>
+              <span class="font-bold" id="summaryBase">₹0</span>
+            </div>
+            <div class="flex justify-between hidden" id="summaryDiscountRow">
+              <span class="text-green-600">Discount</span>
+              <span class="font-bold text-green-600" id="summaryDiscount">-₹0</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">GST (18%)</span>
+              <span class="font-bold" id="summaryGst">₹0</span>
+            </div>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="font-black text-gray-900 dark:text-white">Total</span>
+            <span class="text-2xl font-black text-primary" id="summaryTotal">₹0</span>
+          </div>
+
+          <!-- Trust badges -->
+          <div class="mt-5 space-y-2">
+            <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <span class="material-symbols-outlined text-green-500 text-[16px]">check_circle</span>
+              Instant plan activation after payment
+            </div>
+            <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <span class="material-symbols-outlined text-green-500 text-[16px]">check_circle</span>
+              Downloadable invoice sent to your email
+            </div>
+            <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <span class="material-symbols-outlined text-green-500 text-[16px]">check_circle</span>
+              Refund within 48 hrs if plan not activated
+            </div>
+          </div>
+
+          <!-- Order History Link -->
+          <a href="javascript:void(0)" onclick="showOrderHistory()" class="mt-5 w-full flex items-center justify-center gap-2 text-xs font-bold text-primary hover:underline">
+            <span class="material-symbols-outlined text-[16px]">history</span> View Order History
+          </a>
+        </div>
+      </div>
+
+    </div><!-- end grid -->
+  </div><!-- end paymentPage -->
+
+  <!-- ═══════════════════ PROCESSING OVERLAY ═══════════════════ -->
+  <div id="processingOverlay" class="hidden fixed inset-0 bg-white dark:bg-bg-dark z-50 flex flex-col items-center justify-center">
+    <div class="text-center">
+      <div class="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+        <span class="material-symbols-outlined text-5xl text-primary spin">refresh</span>
+      </div>
+      <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-2">Processing Payment</h2>
+      <p class="text-gray-500 dark:text-gray-400 mb-6" id="processingMsg">Connecting to payment gateway...</p>
+      <div class="flex items-center justify-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-primary pulse-dot" style="animation-delay:0s"></span>
+        <span class="w-2 h-2 rounded-full bg-primary pulse-dot" style="animation-delay:0.3s"></span>
+        <span class="w-2 h-2 rounded-full bg-primary pulse-dot" style="animation-delay:0.6s"></span>
+      </div>
+      <p class="text-xs text-gray-400 mt-6 flex items-center justify-center gap-1">
+        <span class="material-symbols-outlined text-[14px]">lock</span> Do not press back or close this window
+      </p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ SUCCESS SCREEN ═══════════════════ -->
+  <div id="successScreen" class="hidden fixed inset-0 bg-white dark:bg-bg-dark z-50 flex flex-col items-center justify-center p-6">
+    <div class="text-center max-w-sm">
+      <div class="success-bg w-28 h-28 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-6">
+        <span class="material-symbols-outlined text-6xl text-green-500">check_circle</span>
+      </div>
+      <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-2">Payment Successful! 🎉</h2>
+      <p class="text-gray-500 dark:text-gray-400 mb-1">Transaction ID: <span id="txnId" class="font-black text-gray-700 dark:text-gray-300"></span></p>
+      <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">Plan activated instantly. Start posting your ads now!</p>
+
+      <!-- Receipt Card -->
+      <div class="bg-gray-50 dark:bg-gray-900 rounded-2xl p-5 text-left mb-6 border border-gray-200 dark:border-gray-700">
+        <div class="flex justify-between items-center mb-3">
+          <span class="font-black text-gray-900 dark:text-white">Receipt</span>
+          <span class="text-xs text-gray-400" id="receiptDate"></span>
+        </div>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between">
+            <span class="text-gray-500">Plan</span>
+            <span class="font-bold" id="receiptPlan">—</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">Amount Paid</span>
+            <span class="font-black text-primary" id="receiptAmount">₹0</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">Payment Method</span>
+            <span class="font-bold" id="receiptMethod">—</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">Status</span>
+            <span class="font-black text-green-600">✅ Success</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-3">
+        <button onclick="downloadReceipt()" class="w-full bg-primary hover:bg-green-700 text-white font-black py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-[20px]">download</span> Download Receipt
+        </button>
+        <a href="Post Listing.html" class="w-full border-2 border-primary text-primary font-black py-3 rounded-xl hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-[20px]">add_circle</span> Post Your Ad Now
+        </a>
+        <a href="Seller Dashboard.html" class="text-sm text-gray-500 hover:text-primary font-bold text-center hover:underline">
+          Go to Dashboard →
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ ORDER HISTORY MODAL ═══════════════════ -->
+  <div id="orderHistoryModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-card-dark w-full max-w-lg rounded-3xl shadow-2xl max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-800">
+        <h3 class="font-black text-xl text-gray-900 dark:text-white flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary text-[24px]">history</span> Order History
+        </h3>
+        <button onclick="closeOrderHistory()" class="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-gray-200 transition-colors">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </div>
+      <div id="orderHistoryList" class="flex-1 overflow-y-auto p-6 space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PRINT RECEIPT ═══════════════════ -->
+  <div id="receiptPage" class="p-8 max-w-2xl mx-auto">
+    <div class="border-2 border-gray-200 rounded-2xl p-8">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-3xl font-black text-green-700">ZipZapZoi</h1>
+          <p class="text-gray-500 text-sm">India's Local Classifieds Platform</p>
+        </div>
+        <div class="text-right">
+          <p class="text-xs text-gray-400 uppercase font-bold tracking-widest">Invoice</p>
+          <p class="font-black text-gray-900 text-lg" id="printTxnId"></p>
+        </div>
+      </div>
+      <div class="border-t border-b border-gray-200 py-6 mb-6">
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div><p class="text-gray-400 text-xs mb-1">BILLED TO</p><p class="font-black" id="printUserName"></p><p class="text-gray-500" id="printUserEmail"></p></div>
+          <div class="text-right"><p class="text-gray-400 text-xs mb-1">DATE</p><p class="font-bold" id="printDate"></p><p class="text-gray-400 text-xs mt-1">PAYMENT METHOD</p><p class="font-bold" id="printMethod"></p></div>
+        </div>
+      </div>
+      <table class="w-full text-sm mb-6">
+        <thead><tr class="text-left text-gray-400 text-xs uppercase"><th class="pb-2">Description</th><th class="pb-2 text-right">Amount</th></tr></thead>
+        <tbody>
+          <tr class="border-t border-gray-100"><td class="py-3" id="printPlanName"></td><td class="py-3 text-right font-bold" id="printBaseAmt"></td></tr>
+          <tr class="border-t border-gray-100"><td class="py-3 text-gray-500">GST @18%</td><td class="py-3 text-right font-bold" id="printGst"></td></tr>
+        </tbody>
+        <tfoot><tr class="border-t-2 border-gray-900"><td class="py-3 font-black text-base">Total Paid</td><td class="py-3 text-right font-black text-base text-green-700" id="printTotal"></td></tr></tfoot>
+      </table>
+      <div class="bg-green-50 rounded-xl p-4 text-sm text-green-700 text-center font-bold">
+        ✅ Payment Successful — Plan Activated | Thank you for using ZipZapZoi!
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/schema.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    // ═══════════════════════════════════════════
+    //  INIT — Read plan from URL / sessionStorage
+    // ═══════════════════════════════════════════
+    const currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+    if (!currentUser) {
+      window.location.href = 'Login Page.html?redirect=Payment.html';
+      throw new Error('Not authenticated');
+    }
+
+    // Read plan from URL params
+    const params = new URLSearchParams(window.location.search);
+    const planId = params.get('plan') || sessionStorage.getItem('zzz_pending_plan_id');
+    const discountPct = parseFloat(params.get('discount') || '0');
+
+    let selectedPlan = null;
+    let baseFee = 0;
+    let discountAmt = 0;
+    let gstAmt = 0;
+    let totalAmt = 0;
+    let paymentMethod = 'UPI';
+    let selectedBank = '';
+
+    function loadPlan() {
+      if (!planId || !window.ZZZ || !window.ZZZ.Plans) return;
+      selectedPlan = window.ZZZ.Plans.getById(planId);
+      if (!selectedPlan) return;
+
+      baseFee = selectedPlan.price || 0;
+      discountAmt = Math.round((baseFee * discountPct) / 100);
+      const afterDiscount = baseFee - discountAmt;
+      gstAmt = baseFee > 0 ? Math.round(afterDiscount * 0.18) : 0;
+      totalAmt = afterDiscount + gstAmt;
+
+      // Update summary
+      document.getElementById('summaryPlanName').textContent = selectedPlan.name;
+      document.getElementById('summaryPlanDesc').textContent = `${selectedPlan.ads} ads · ${selectedPlan.days} days validity`;
+      document.getElementById('summaryBase').textContent = '₹' + baseFee;
+      document.getElementById('summaryGst').textContent = baseFee > 0 ? '₹' + gstAmt : '₹0 (Exempt)';
+      document.getElementById('summaryTotal').textContent = totalAmt > 0 ? '₹' + totalAmt : 'FREE';
+
+      if (discountAmt > 0) {
+        document.getElementById('summaryDiscountRow').classList.remove('hidden');
+        document.getElementById('summaryDiscount').textContent = '-₹' + discountAmt;
+      }
+
+      // Update pay button
+      document.getElementById('payNowText').textContent = totalAmt > 0 ? `Pay ₹${totalAmt} Securely` : 'Activate Free Plan';
+    }
+
+    // ── TAB SWITCHING ──
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.payment-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('panel-' + tab).classList.add('active');
+      paymentMethod = tab.toUpperCase().replace('NETBANKING', 'Net Banking').replace('WALLET', 'Wallet');
+    }
+
+    // ── UPI ──
+    function validateUpi() {
+      const val = document.getElementById('upiId').value;
+      const status = document.getElementById('upiStatus');
+      if (val.length === 0) { status.classList.add('hidden'); return; }
+      if (/^[a-zA-Z0-9._-]+@[a-zA-Z]+$/.test(val)) {
+        status.textContent = '✓ Valid UPI format';
+        status.className = 'text-xs mt-2 font-bold text-green-600';
+        status.classList.remove('hidden');
+      } else {
+        status.textContent = '✗ Enter valid UPI ID (e.g. name@upi)';
+        status.className = 'text-xs mt-2 font-bold text-red-500';
+        status.classList.remove('hidden');
+      }
+    }
+
+    function verifyUpi() {
+      const val = document.getElementById('upiId').value;
+      const status = document.getElementById('upiStatus');
+      if (!val) { status.textContent = 'Enter a UPI ID first'; status.className = 'text-xs mt-2 font-bold text-red-500'; status.classList.remove('hidden'); return; }
+      status.textContent = '⏳ Verifying...';
+      status.className = 'text-xs mt-2 font-bold text-orange-500';
+      status.classList.remove('hidden');
+      setTimeout(() => {
+        status.textContent = '✅ UPI ID Verified — ' + val;
+        status.className = 'text-xs mt-2 font-bold text-green-600';
+      }, 1200);
+    }
+
+    // ── QR TIMER ──
+    let qrSeconds = 599;
+    const timerEl = document.getElementById('qrTimer');
+    const qrTimerInterval = setInterval(() => {
+      qrSeconds--;
+      if (qrSeconds <= 0) { clearInterval(qrTimerInterval); timerEl.textContent = 'Expired'; return; }
+      const m = String(Math.floor(qrSeconds / 60)).padStart(2, '0');
+      const s = String(qrSeconds % 60).padStart(2, '0');
+      timerEl.textContent = `${m}:${s}`;
+    }, 1000);
+
+    // ── CARD ──
+    function formatCard(input) {
+      let v = input.value.replace(/\D/g, '').slice(0, 16);
+      input.value = v.replace(/(.{4})/g, '$1 ').trim();
+    }
+    function formatExpiry(input) {
+      let v = input.value.replace(/\D/g, '').slice(0, 4);
+      if (v.length >= 2) v = v.slice(0, 2) + '/' + v.slice(2);
+      input.value = v;
+    }
+    function updateCardVisual() {
+      const num = document.getElementById('cardNum').value || '•••• •••• •••• ••••';
+      const name = document.getElementById('cardName').value || 'YOUR NAME';
+      const exp = document.getElementById('cardExp').value || 'MM/YY';
+      document.getElementById('cardNumDisplay').textContent = num || '•••• •••• •••• ••••';
+      document.getElementById('cardNameDisplay').textContent = name.toUpperCase();
+      document.getElementById('cardExpDisplay').textContent = exp;
+      // Change card gradient by card type
+      const visual = document.getElementById('cardVisual');
+      const firstDigit = num.replace(/\s/g, '')[0];
+      if (firstDigit === '4') visual.className = visual.className.replace(/from-\S+\s+to-\S+/, 'from-blue-700 to-blue-900');
+      else if (firstDigit === '5') visual.className = visual.className.replace(/from-\S+\s+to-\S+/, 'from-red-700 to-red-900');
+      else visual.className = visual.className.replace(/from-\S+\s+to-\S+/, 'from-gray-800 to-gray-900');
+    }
+
+    // ── NET BANKING ──
+    function selectBank(el, bankName) {
+      document.querySelectorAll('.bank-option').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedBank = bankName;
+      document.getElementById('otherBank').value = '';
+    }
+    function selectBankFromDropdown(val) {
+      document.querySelectorAll('.bank-option').forEach(b => b.classList.remove('selected'));
+      selectedBank = val;
+    }
+
+    // ── WALLET ──
+    function selectWallet(el, name) {
+      document.querySelectorAll('.upi-option').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedBank = name;
+    }
+
+    // ═══════════════════════════════════════════
+    //  PAYMENT FLOW
+    // ═══════════════════════════════════════════
+    const processingMsgs = [
+      'Connecting to payment gateway...',
+      'Verifying payment details...',
+      'Authenticating transaction...',
+      'Confirming with bank...',
+      'Activating your plan...'
+    ];
+
+    function initiatePayment() {
+      if (!selectedPlan) { showToast('No plan selected. Go back and choose a plan.', 'error'); return; }
+
+      // Validate based on tab
+      const activeTab = document.querySelector('.tab-btn.active').textContent.trim().toLowerCase();
+      if (activeTab.includes('upi')) {
+        const upiVal = document.getElementById('upiId').value;
+        if (!upiVal && !confirm('You haven\'t entered a UPI ID. Pay via QR code?')) return;
+        paymentMethod = upiVal ? `UPI (${upiVal})` : 'UPI QR Code';
+      } else if (activeTab.includes('card')) {
+        const num = document.getElementById('cardNum').value.replace(/\s/g, '');
+        if (num.length < 16) { showToast('Please enter a valid 16-digit card number.', 'error'); return; }
+        if (!document.getElementById('cardExp').value) { showToast('Please enter card expiry date.', 'error'); return; }
+        if (!document.getElementById('cardCvv').value) { showToast('Please enter CVV.', 'error'); return; }
+        paymentMethod = `Card (•••• ${num.slice(-4)})`;
+      } else if (activeTab.includes('net banking') || activeTab.includes('banking')) {
+        if (!selectedBank) { showToast('Please select your bank.', 'error'); return; }
+        paymentMethod = `Net Banking (${selectedBank})`;
+      } else if (activeTab.includes('wallet')) {
+        if (!selectedBank) { showToast('Please select a wallet.', 'error'); return; }
+        paymentMethod = `Wallet (${selectedBank})`;
+      }
+
+      // Show processing
+      document.getElementById('processingOverlay').classList.remove('hidden');
+      let step = 0;
+      const msgEl = document.getElementById('processingMsg');
+      const msgInterval = setInterval(() => {
+        if (step < processingMsgs.length) {
+          msgEl.textContent = processingMsgs[step++];
+        }
+      }, 600);
+
+      // Simulate payment success
+      setTimeout(() => {
+        clearInterval(msgInterval);
+        document.getElementById('processingOverlay').classList.add('hidden');
+        completePayment();
+      }, 3200);
+    }
+
+    function completePayment() {
+      // Assign plan
+      if (window.ZZZ && window.ZZZ.Plans) {
+        window.ZZZ.Plans.assignPlan(currentUser.id, planId, {
+          price: totalAmt
+        });
+      }
+
+      const txnId = 'ZZZ' + Date.now().toString().slice(-10).toUpperCase();
+      const now = new Date();
+
+      // Save transaction to order history
+      const orders = JSON.parse(localStorage.getItem('zzz_orders') || '[]');
+      const order = {
+        txnId,
+        planId,
+        planName: selectedPlan.name,
+        baseAmt: baseFee,
+        discountAmt,
+        gstAmt,
+        totalAmt,
+        paymentMethod,
+        userId: currentUser.id,
+        userName: currentUser.name,
+        userEmail: currentUser.email || '',
+        date: now.toISOString(),
+        status: 'success'
+      };
+      orders.unshift(order);
+      localStorage.setItem('zzz_orders', JSON.stringify(orders));
+      localStorage.setItem('zzz_data_updated_at', String(Date.now()));
+
+      // Populate success screen
+      document.getElementById('txnId').textContent = '#' + txnId;
+      document.getElementById('receiptDate').textContent = now.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+      document.getElementById('receiptPlan').textContent = selectedPlan.name;
+      document.getElementById('receiptAmount').textContent = totalAmt > 0 ? '₹' + totalAmt : 'FREE';
+      document.getElementById('receiptMethod').textContent = paymentMethod;
+
+      // Populate print receipt
+      document.getElementById('printTxnId').textContent = '#' + txnId;
+      document.getElementById('printUserName').textContent = currentUser.name;
+      document.getElementById('printUserEmail').textContent = currentUser.email || '';
+      document.getElementById('printDate').textContent = now.toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      document.getElementById('printMethod').textContent = paymentMethod;
+      document.getElementById('printPlanName').textContent = selectedPlan.name + ' — ' + selectedPlan.ads + ' ads, ' + selectedPlan.days + ' days';
+      document.getElementById('printBaseAmt').textContent = '₹' + baseFee;
+      document.getElementById('printGst').textContent = '₹' + gstAmt;
+      document.getElementById('printTotal').textContent = totalAmt > 0 ? '₹' + totalAmt : 'FREE';
+
+      // Show success
+      document.getElementById('successScreen').classList.remove('hidden');
+    }
+
+    function downloadReceipt() {
+      window.print();
+    }
+
+    // ═══════════════════════════════════════════
+    //  ORDER HISTORY MODAL
+    // ═══════════════════════════════════════════
+    function showOrderHistory() {
+      const modal = document.getElementById('orderHistoryModal');
+      const list = document.getElementById('orderHistoryList');
+      const orders = JSON.parse(localStorage.getItem('zzz_orders') || '[]')
+        .filter(o => o.userId === currentUser.id);
+
+      if (orders.length === 0) {
+        list.innerHTML = `
+          <div class="text-center py-12">
+            <span class="material-symbols-outlined text-5xl text-gray-300 dark:text-gray-600 block mb-3">receipt_long</span>
+            <p class="text-gray-400 font-semibold">No orders yet</p>
+            <p class="text-xs text-gray-400 mt-1">Your payment history will appear here.</p>
+          </div>`;
+      } else {
+        list.innerHTML = orders.map(o => `
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
+            <div class="flex items-start justify-between mb-2">
+              <div>
+                <p class="font-black text-gray-900 dark:text-white text-sm">${o.planName}</p>
+                <p class="text-xs text-gray-400">${new Date(o.date).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}</p>
+              </div>
+              <div class="text-right">
+                <p class="font-black text-primary">${o.totalAmt > 0 ? '₹' + o.totalAmt : 'FREE'}</p>
+                <span class="text-[10px] font-black text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full">✓ ${o.status}</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between text-xs text-gray-400">
+              <span>Txn: <span class="font-bold text-gray-600 dark:text-gray-300">#${o.txnId}</span></span>
+              <span>${o.paymentMethod}</span>
+            </div>
+          </div>`).join('');
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeOrderHistory() {
+      document.getElementById('orderHistoryModal').classList.add('hidden');
+    }
+
+    // ── TOAST ──
+    function showToast(message, type = 'success') {
+      let c = document.getElementById('toastCont');
+      if (!c) { c = document.createElement('div'); c.id = 'toastCont'; c.className = 'fixed bottom-6 right-6 z-[200] flex flex-col gap-2'; document.body.appendChild(c); }
+      const t = document.createElement('div');
+      t.className = `flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl translate-y-4 opacity-0 transition-all duration-300 text-white font-bold text-sm ${type === 'error' ? 'bg-red-500' : 'bg-primary'}`;
+      t.innerHTML = `<span class="material-symbols-outlined text-[18px]">${type === 'error' ? 'error' : 'check_circle'}</span>${message}`;
+      c.appendChild(t);
+      requestAnimationFrame(() => t.classList.remove('translate-y-4', 'opacity-0'));
+      setTimeout(() => { t.classList.add('translate-y-4', 'opacity-0'); setTimeout(() => t.remove(), 300); }, 4000);
+    }
+
+    // ── INIT ──
+    loadPlan();
+
+    // Auto-open order history if redirected from dashboard
+    if (params.get('view') === 'history') {
+      // Show the order history page style
+      document.getElementById('paymentPage').innerHTML = `
+        <div class="max-w-xl mx-auto py-6">
+          <div class="flex items-center gap-3 mb-6">
+            <a href="Seller Dashboard.html" class="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-gray-200 transition-colors">
+              <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+            </a>
+            <h1 class="text-2xl font-black text-gray-900 dark:text-white">Order History</h1>
+          </div>
+          <div id="fullOrderList" class="space-y-4"></div>
+        </div>`;
+
+      const orders = JSON.parse(localStorage.getItem('zzz_orders') || '[]')
+        .filter(o => o.userId === currentUser.id);
+      const listEl = document.getElementById('fullOrderList');
+
+      if (orders.length === 0) {
+        listEl.innerHTML = `
+          <div class="text-center py-16 bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800">
+            <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 block mb-3">receipt_long</span>
+            <p class="font-black text-gray-400 text-lg">No orders yet</p>
+            <p class="text-sm text-gray-400 mt-1 mb-6">Purchase a plan to start posting ads.</p>
+            <a href="Classifieds Plans.html" class="bg-primary text-white font-black px-6 py-3 rounded-xl hover:bg-green-700 transition-colors">Browse Plans</a>
+          </div>`;
+      } else {
+        listEl.innerHTML = orders.map(o => `
+          <div class="bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 p-5 shadow-sm">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h3 class="font-black text-gray-900 dark:text-white">${o.planName}</h3>
+                <p class="text-xs text-gray-400 mt-0.5">${new Date(o.date).toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'long', year:'numeric' })}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-xl font-black text-primary">${o.totalAmt > 0 ? '₹' + o.totalAmt : 'FREE'}</p>
+                <span class="text-[10px] font-black text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full">✓ ${o.status}</span>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-sm border-t border-gray-100 dark:border-gray-700 pt-3">
+              <div>
+                <p class="text-xs text-gray-400">Transaction ID</p>
+                <p class="font-bold text-gray-700 dark:text-gray-300">#${o.txnId}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-400">Payment Method</p>
+                <p class="font-bold text-gray-700 dark:text-gray-300">${o.paymentMethod}</p>
+              </div>
+              ${o.gstAmt > 0 ? `<div><p class="text-xs text-gray-400">Base Price</p><p class="font-bold">₹${o.baseAmt}</p></div>
+              <div><p class="text-xs text-gray-400">GST (18%)</p><p class="font-bold">₹${o.gstAmt}</p></div>` : ''}
+            </div>
+          </div>`).join('');
+      }
+    }
+  </script>
+</body>
+</html>

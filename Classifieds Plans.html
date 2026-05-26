@@ -561,47 +561,30 @@
       }
     }
 
-    // ─── Mock Payment ────────────────────
+    // ─── Redirect to Payment Page ────────────────────
     function processMockPayment() {
       if (!selectedPlan) { showToast('Please select a plan first', 'error'); return; }
 
       const user = window.ZZZ ? window.ZZZ.getCurrentUser() : null;
       if (!user) { window.location.href = 'Login Page.html?redirect=Classifieds Plans.html'; return; }
 
-      const btn = document.getElementById('payBtn');
-      const btnText = document.getElementById('payBtnText');
-      const btnIcon = document.getElementById('payBtnIcon');
-
-      btn.disabled = true;
-      btn.classList.add('opacity-80', 'cursor-not-allowed');
-      btnText.textContent = 'Processing Payment...';
-      btnIcon.className = 'loading-spinner';
-
-      setTimeout(() => {
-        btn.classList.remove('bg-brand', 'hover:bg-brandDark');
-        btn.classList.add('bg-green-500');
-        btnText.textContent = 'Payment Successful! 🎉';
-        btnIcon.className = 'material-symbols-outlined text-xl';
-        btnIcon.textContent = 'check_circle';
-
-        // Assign plan to user quota
+      // Free plans: activate immediately without payment page
+      if (selectedPlan.price === 0) {
         if (window.ZZZ && window.ZZZ.Plans) {
-          const discountAmt = parseFloat(((baseFee * currentDiscount) / 100).toFixed(2));
-          const finalPrice = Math.round((baseFee - discountAmt) * 1.18 * 100) / 100;
-          window.ZZZ.Plans.assignPlan(user.id, selectedPlan.id, { price: baseFee > 0 ? finalPrice : 0 });
+          window.ZZZ.Plans.assignPlan(user.id, selectedPlan.id, { price: 0 });
         }
+        if (pendingListing) savePendingListing();
+        showToast('Free plan activated! Start posting.', 'success');
+        setTimeout(() => { window.location.href = 'Seller Dashboard.html'; }, 1500);
+        return;
+      }
 
-        // Save pending listing if any
-        if (pendingListing) {
-          savePendingListing();
-        }
+      // Save pending listing reference
+      sessionStorage.setItem('zzz_pending_plan_id', selectedPlan.id);
 
-        showToast('Plan activated! Your ads are ready.', 'success');
-
-        setTimeout(() => {
-          window.location.href = pendingListing ? 'Seller Dashboard.html' : 'Seller Dashboard.html';
-        }, 1800);
-      }, 2000);
+      // Redirect to payment page with plan details
+      const url = `Payment.html?plan=${encodeURIComponent(selectedPlan.id)}&discount=${currentDiscount}`;
+      window.location.href = url;
     }
 
     function savePendingListing() {
