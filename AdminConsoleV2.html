@@ -60,6 +60,7 @@
     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4 mb-2 ml-2">Content & Moderation</div>
     <a href="#" onclick="switchTab('moderation')" id="nav-moderation" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 text-sm text-slate-600 dark:text-gray-300 relative"><span class="material-symbols-outlined text-[20px] text-red-500">gavel</span> Reports & AI Mod <span id="badge-moderation" class="tab-badge hidden">0</span></a>
     <a href="#" onclick="switchTab('support')" id="nav-support" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 text-sm text-slate-600 dark:text-gray-300 relative"><span class="material-symbols-outlined text-[20px]">support_agent</span> Tickets & SLA <span id="badge-support" class="tab-badge hidden">0</span></a>
+    <a href="#" onclick="switchTab('charity')" id="nav-charity" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 text-sm text-slate-600 dark:text-gray-300 relative"><span class="material-symbols-outlined text-[20px] text-amber-500">volunteer_activism</span> Charity Queue <span id="badge-charity" class="tab-badge hidden">0</span></a>
     
     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4 mb-2 ml-2">System Config</div>
     <a href="#" onclick="switchTab('schema')" id="nav-schema" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 text-sm text-slate-600 dark:text-gray-300"><span class="material-symbols-outlined text-[20px] text-brand">account_tree</span> Schema Builder</a>
@@ -216,12 +217,102 @@
               <p class="text-[10px] text-slate-500 mb-3 border-b border-slate-100 dark:border-gray-800 pb-2">Users who frequently submit false reports.</p>
               <div class="overflow-y-auto flex-1"><table class="w-full text-xs text-left"><thead class="text-slate-400 sticky top-0 bg-white dark:bg-card-dark"><tr><th class="pb-2">User Name</th><th class="pb-2 text-center">Reports Filed</th><th class="pb-2 text-right">Action</th></tr></thead><tbody id="abuseTableBody" class="divide-y divide-slate-100 dark:divide-gray-800"></tbody></table></div>
           </div>
-      </div>
       <div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-100 dark:border-gray-800 p-6 shadow-sm border-t-4 border-t-purple-500">
         <h3 class="font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-purple-500">memory</span> Z.O.I Nexus AI Auto-Moderation Engine</h3>
         <label class="block text-xs font-bold text-slate-500 uppercase mb-2">High-Risk Keyword Blacklist (Auto-Reject Listings)</label>
         <textarea id="autoRejectKeywords" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500" rows="3" placeholder="scam, wire transfer, western union, send money..."></textarea>
         <button onclick="showToast('Z.O.I Nexus Rules Saved')" class="mt-4 bg-purple-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-purple-700 transition-colors">Deploy AI Rules</button>
+      </div>
+    </div>
+
+    <!-- ═══ CHARITY MODERATION QUEUE TAB ═══ -->
+    <div id="tab-charity" class="tab-content hidden space-y-6">
+
+      <!-- Stats Row -->
+      <div class="grid grid-cols-4 gap-4">
+        <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 flex items-center justify-between">
+          <div><p class="text-xs font-bold text-amber-600 uppercase">Pending Review</p><h3 class="text-2xl font-black text-amber-700 dark:text-amber-400" id="charityStatPending">0</h3></div>
+          <span class="material-symbols-outlined text-amber-400 text-3xl opacity-40">pending</span>
+        </div>
+        <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl p-4 flex items-center justify-between">
+          <div><p class="text-xs font-bold text-green-600 uppercase">Approved</p><h3 class="text-2xl font-black text-green-700 dark:text-green-400" id="charityStatApproved">0</h3></div>
+          <span class="material-symbols-outlined text-green-400 text-3xl opacity-40">check_circle</span>
+        </div>
+        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl p-4 flex items-center justify-between">
+          <div><p class="text-xs font-bold text-red-600 uppercase">Rejected</p><h3 class="text-2xl font-black text-red-700 dark:text-red-400" id="charityStatRejected">0</h3></div>
+          <span class="material-symbols-outlined text-red-400 text-3xl opacity-40">cancel</span>
+        </div>
+        <div class="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-xl p-4 flex items-center justify-between">
+          <div><p class="text-xs font-bold text-purple-600 uppercase">Users Flagged</p><h3 class="text-2xl font-black text-purple-700 dark:text-purple-400" id="charityStatFlagged">0</h3></div>
+          <span class="material-symbols-outlined text-purple-400 text-3xl opacity-40">flag</span>
+        </div>
+      </div>
+
+      <!-- Filter + Table Card -->
+      <div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm">
+        <div class="p-4 border-b border-slate-100 dark:border-gray-800 flex flex-wrap gap-3 items-center bg-slate-50 dark:bg-gray-800/50">
+          <span class="material-symbols-outlined text-amber-500 text-[22px]">volunteer_activism</span>
+          <h3 class="font-black text-slate-800 dark:text-white">Charity / Donation Post Queue</h3>
+          <div class="flex-1"></div>
+          <input type="text" id="charitySearch" oninput="loadCharityQueue()" placeholder="Search by title or user..." class="border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-lg px-3 py-1.5 text-sm w-56 focus:ring-2 focus:ring-amber-400">
+          <select id="charityFilter" onchange="loadCharityQueue()" class="border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-amber-400">
+            <option value="">All Statuses</option>
+            <option value="pending_review">&#x23f3; Pending</option>
+            <option value="approved">&#x2705; Approved</option>
+            <option value="rejected">&#x274c; Rejected</option>
+            <option value="flagged">&#x1f6a9; Flagged</option>
+          </select>
+          <button onclick="bulkApproveCharity()" class="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-1.5 rounded-lg text-sm flex items-center gap-1 transition-colors">
+            <span class="material-symbols-outlined text-[16px]">done_all</span> Approve All Pending
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left">
+            <thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 font-bold uppercase text-xs sticky top-0">
+              <tr>
+                <th class="px-4 py-3">Post Details</th>
+                <th class="px-4 py-3">Seller</th>
+                <th class="px-4 py-3">Submitted</th>
+                <th class="px-4 py-3">Status</th>
+                <th class="px-4 py-3">Admin Reason</th>
+                <th class="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="charityQueueBody" class="divide-y divide-slate-100 dark:divide-gray-800"></tbody>
+          </table>
+        </div>
+        <div id="charityEmptyState" class="hidden py-16 text-center">
+          <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 block mb-2">volunteer_activism</span>
+          <p class="font-bold text-slate-400">No charity posts found</p>
+          <p class="text-xs text-slate-400">User submissions will appear here for review.</p>
+        </div>
+      </div>
+
+      <!-- Policy Box -->
+      <div class="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-2xl p-5">
+        <h4 class="font-black text-amber-800 dark:text-amber-300 flex items-center gap-2 mb-3">
+          <span class="material-symbols-outlined text-[20px]">policy</span> Charity Verification Policy
+        </h4>
+        <ul class="text-sm text-amber-700 dark:text-amber-400 space-y-1.5 list-disc ml-5">
+          <li>Verify title &amp; description are consistent with charitable purpose (food, clothing, blood donation, NGO drives).</li>
+          <li>Check if the seller has prior charity posts — repeat offenders using charity to avoid fees should be <strong>Flagged</strong>.</li>
+          <li>Posts with pricing, phone numbers for sales, or commercial language must be <strong>Rejected</strong> immediately.</li>
+          <li>Genuine posts should be <strong>Approved</strong> and moved to active status within 24 hours of submission.</li>
+          <li>Repeat abusers: use <strong>Flag &amp; Suspend User</strong> to restrict their account and add to blacklist.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Reason Modal (shared) -->
+    <div id="charityReasonModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-card-dark rounded-2xl shadow-2xl w-full max-w-md p-6">
+        <h3 class="font-black text-lg text-slate-800 dark:text-white mb-1" id="charityReasonTitle">Add Reason</h3>
+        <p class="text-xs text-slate-500 mb-4" id="charityReasonSubtitle">This reason will be visible to the user.</p>
+        <textarea id="charityReasonText" rows="4" placeholder="Enter reason for this decision..." class="w-full border border-slate-300 dark:border-gray-600 dark:bg-gray-800 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-amber-400 resize-none mb-4"></textarea>
+        <div class="flex gap-3">
+          <button onclick="closeCharityReasonModal()" class="flex-1 border border-slate-200 dark:border-gray-700 text-slate-600 dark:text-gray-300 font-bold py-2.5 rounded-xl hover:bg-slate-50 transition-colors">Cancel</button>
+          <button id="charityReasonConfirmBtn" class="flex-1 bg-brand text-white font-black py-2.5 rounded-xl hover:bg-green-700 transition-colors">Confirm</button>
+        </div>
       </div>
     </div>
 
@@ -468,10 +559,206 @@ function switchTab(id) {
     if(id==='payments') loadPayments();
     if(id==='coupons') loadCoupons();
     if(id==='moderation') loadReports();
+    if(id==='charity') loadCharityQueue();
     if(id==='support') loadSupport(); 
     if(id==='schema') renderSchemaBuilder();
     if(id==='settings' || id==='security') loadSettingsUI();
 }
+
+// ──────────────────────────────────────────────
+//  CHARITY MODERATION QUEUE
+// ──────────────────────────────────────────────
+
+let _charityReasonCallback = null;
+
+function openCharityReasonModal(title, subtitle, confirmLabel, confirmClass, callback) {
+  const modal = document.getElementById('charityReasonModal');
+  document.getElementById('charityReasonTitle').textContent = title;
+  document.getElementById('charityReasonSubtitle').textContent = subtitle;
+  document.getElementById('charityReasonText').value = '';
+  const btn = document.getElementById('charityReasonConfirmBtn');
+  btn.textContent = confirmLabel;
+  btn.className = `flex-1 ${confirmClass} text-white font-black py-2.5 rounded-xl transition-colors`;
+  _charityReasonCallback = callback;
+  modal.classList.remove('hidden');
+}
+
+function closeCharityReasonModal() {
+  document.getElementById('charityReasonModal').classList.add('hidden');
+  _charityReasonCallback = null;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('charityReasonConfirmBtn');
+  if (btn) btn.addEventListener('click', () => {
+    const reason = document.getElementById('charityReasonText').value.trim();
+    if (_charityReasonCallback) _charityReasonCallback(reason);
+    closeCharityReasonModal();
+  });
+});
+
+function loadCharityQueue() {
+  const queue = safeJSON('zzz_charity_queue');
+  const listings = safeJSON('zzz_listings');
+  const search = (document.getElementById('charitySearch')?.value || '').toLowerCase();
+  const filter = document.getElementById('charityFilter')?.value || '';
+
+  // Stats
+  document.getElementById('charityStatPending').textContent = queue.filter(q => q.status === 'pending_review').length;
+  document.getElementById('charityStatApproved').textContent = queue.filter(q => q.status === 'approved').length;
+  document.getElementById('charityStatRejected').textContent = queue.filter(q => q.status === 'rejected').length;
+  document.getElementById('charityStatFlagged').textContent = queue.filter(q => q.status === 'flagged').length;
+
+  // Badge on nav
+  const pending = queue.filter(q => q.status === 'pending_review').length;
+  const badge = document.getElementById('badge-charity');
+  if (badge) { badge.textContent = pending; badge.classList.toggle('hidden', pending === 0); }
+
+  let rows = queue;
+  if (filter) rows = rows.filter(q => q.status === filter);
+  if (search) rows = rows.filter(q =>
+    (q.title || '').toLowerCase().includes(search) ||
+    (q.userName || '').toLowerCase().includes(search)
+  );
+
+  const tbody = document.getElementById('charityQueueBody');
+  const empty = document.getElementById('charityEmptyState');
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  const statusBadge = (s) => {
+    const map = {
+      pending_review: 'bg-amber-100 text-amber-700',
+      approved: 'bg-green-100 text-green-700',
+      rejected: 'bg-red-100 text-red-700',
+      flagged: 'bg-purple-100 text-purple-700'
+    };
+    const label = { pending_review: '⏳ Pending', approved: '✅ Approved', rejected: '❌ Rejected', flagged: '🚩 Flagged' };
+    return `<span class="px-2 py-0.5 rounded-full text-[11px] font-black ${map[s] || 'bg-gray-100 text-gray-600'}">${label[s] || s}</span>`;
+  };
+
+  tbody.innerHTML = rows.map(q => {
+    const listing = listings.find(l => l.id === q.listingId) || {};
+    const date = q.submittedAt ? new Date(q.submittedAt).toLocaleDateString('en-IN', { day:'numeric', month:'short' }) : '—';
+    return `<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/50">
+      <td class="px-4 py-3">
+        <p class="font-bold text-slate-800 dark:text-white text-sm max-w-[200px] truncate">${escapeHTML(q.title || listing.title || 'Untitled')}</p>
+        <p class="text-xs text-slate-400">${escapeHTML(listing.subcategory || listing.category || 'Charity')}</p>
+      </td>
+      <td class="px-4 py-3">
+        <p class="font-bold text-sm">${escapeHTML(q.userName || '—')}</p>
+        <p class="text-xs text-slate-400">${q.userId || ''}</p>
+      </td>
+      <td class="px-4 py-3 text-sm text-slate-500">${date}</td>
+      <td class="px-4 py-3">${statusBadge(q.status)}</td>
+      <td class="px-4 py-3 text-xs text-slate-500 max-w-[140px] truncate" title="${escapeHTML(q.adminReason || '')}">${escapeHTML(q.adminReason || '—')}</td>
+      <td class="px-4 py-3 text-right">
+        <div class="flex items-center justify-end gap-1.5 flex-wrap">
+          ${q.status !== 'approved' ? `<button onclick="approveCharity('${q.listingId}')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">check</span> Approve</button>` : ''}
+          ${q.status !== 'rejected' ? `<button onclick="rejectCharity('${q.listingId}')" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">close</span> Reject</button>` : ''}
+          ${q.status !== 'flagged' ? `<button onclick="flagCharity('${q.listingId}', '${q.userId}')" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">flag</span> Flag+Ban</button>` : ''}
+          ${listing.id ? `<a href="classifieds.html?id=${listing.id}" target="_blank" class="text-slate-400 hover:text-brand border border-slate-200 dark:border-gray-700 text-xs font-bold px-2 py-1.5 rounded-lg transition-colors"><span class="material-symbols-outlined text-[13px]">open_in_new</span></a>` : ''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function _updateCharityItem(listingId, newStatus, reason) {
+  const queue = safeJSON('zzz_charity_queue');
+  const listings = safeJSON('zzz_listings');
+  const idx = queue.findIndex(q => q.listingId === listingId);
+  if (idx !== -1) {
+    queue[idx].status = newStatus;
+    queue[idx].adminReason = reason || '';
+    queue[idx].reviewedAt = new Date().toISOString();
+    localStorage.setItem('zzz_charity_queue', JSON.stringify(queue));
+  }
+  // Update corresponding listing status
+  const lIdx = listings.findIndex(l => l.id === listingId);
+  if (lIdx !== -1) {
+    listings[lIdx].status = newStatus === 'approved' ? 'active' : newStatus === 'rejected' ? 'rejected' : 'flagged';
+    listings[lIdx].moderationStatus = newStatus;
+    listings[lIdx].moderationReason = reason || '';
+    localStorage.setItem('zzz_listings', JSON.stringify(listings));
+  }
+  adminLog(`Charity ${newStatus.toUpperCase()}`, `Listing: ${listingId} | Reason: ${reason || 'None'}`);
+  loadCharityQueue();
+}
+
+function approveCharity(listingId) {
+  openCharityReasonModal(
+    '✅ Approve Charity Post',
+    'Optionally add a note. The post will go live immediately.',
+    'Approve Post',
+    'bg-green-600 hover:bg-green-700',
+    (reason) => {
+      _updateCharityItem(listingId, 'approved', reason || 'Genuine charity post — Approved by admin');
+      showToast('Charity post approved & made live!', 'success');
+    }
+  );
+}
+
+function rejectCharity(listingId) {
+  openCharityReasonModal(
+    '❌ Reject Charity Post',
+    'Provide a reason — this will be shown to the user.',
+    'Reject Post',
+    'bg-red-500 hover:bg-red-600',
+    (reason) => {
+      if (!reason) { showToast('Please enter a rejection reason.', 'error'); return; }
+      _updateCharityItem(listingId, 'rejected', reason);
+      showToast('Charity post rejected.', 'error');
+    }
+  );
+}
+
+function flagCharity(listingId, userId) {
+  openCharityReasonModal(
+    '🚩 Flag Post & Suspend User',
+    'This will flag the post AND suspend the user account. Enter reason.',
+    'Flag & Suspend',
+    'bg-purple-600 hover:bg-purple-700',
+    (reason) => {
+      if (!reason) { showToast('Please enter a reason for flagging.', 'error'); return; }
+      _updateCharityItem(listingId, 'flagged', reason);
+      // Suspend the user
+      const users = safeJSON('zzz_users');
+      const uIdx = users.findIndex(u => u.id === userId);
+      if (uIdx !== -1) {
+        users[uIdx].suspended = true;
+        users[uIdx].suspendedReason = `Charity abuse: ${reason}`;
+        users[uIdx].suspendedAt = new Date().toISOString();
+        localStorage.setItem('zzz_users', JSON.stringify(users));
+      }
+      adminLog('USER_SUSPENDED', `User ${userId} suspended for charity abuse. Listing: ${listingId}`);
+      showToast('Post flagged & user suspended!', 'error');
+    }
+  );
+}
+
+function bulkApproveCharity() {
+  const queue = safeJSON('zzz_charity_queue');
+  const pending = queue.filter(q => q.status === 'pending_review');
+  if (pending.length === 0) { showToast('No pending charity posts to approve.', 'error'); return; }
+  if (!confirm(`Approve all ${pending.length} pending charity posts?`)) return;
+  pending.forEach(q => _updateCharityItem(q.listingId, 'approved', 'Bulk approved by admin'));
+  showToast(`${pending.length} charity post(s) approved!`, 'success');
+}
+
+function updateCharityBadge() {
+  const queue = safeJSON('zzz_charity_queue');
+  const pending = queue.filter(q => q.status === 'pending_review').length;
+  const badge = document.getElementById('badge-charity');
+  if (badge) { badge.textContent = pending; badge.classList.toggle('hidden', pending === 0); }
+}
+
+
 
 function refreshData() { showToast('Syncing with database...', 'success'); setTimeout(()=>{ location.reload(); }, 500); }
 
@@ -899,6 +1186,7 @@ function seedMockData(forceReset = false) {
         logAction('SYSTEM_INIT', 'Bootstrapped mock database.');
     }
     loadDashboard();
+    updateCharityBadge();
 }
 
 
