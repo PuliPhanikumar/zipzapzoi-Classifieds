@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -277,11 +277,12 @@
             </div>
           `;
         } else {
-          let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-          if(favs.includes(id)) favs = favs.filter(f => f !== id);
-          else favs.push(id);
-          localStorage.setItem('zzz_favorites', JSON.stringify(favs));
-          isFav = favs.includes(id);
+          // Guest — show Login / Sign Up buttons
+          authArea.innerHTML = toggleBtn + `
+            <a href="Login Page.html?redirect=classifieds.html" class="px-4 py-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Log In</a>
+            <a href="User Registration.html" class="px-5 py-2.5 bg-primary hover:bg-green-700 text-white rounded-full text-sm font-bold shadow-md transition-transform active:scale-95">Sign Up</a>
+            <a href="Post Listing.html" class="hidden md:flex items-center gap-1 py-2 px-4 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold text-sm transition-colors ml-1"><span class="material-symbols-outlined text-lg">add_circle</span> Post Free</a>
+          `;
         }
         
         // Update the icon immediately based on current state
@@ -440,11 +441,12 @@
         if(window.ZZZ) {
           isFav = window.ZZZ.toggleFavorite(id);
         } else {
-          let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-          if(favs.includes(id)) favs = favs.filter(f => f !== id);
-          else favs.push(id);
-          localStorage.setItem('zzz_favorites', JSON.stringify(favs));
-          isFav = favs.includes(id);
+          // Guest — show Login / Sign Up buttons
+          authArea.innerHTML = toggleBtn + `
+            <a href="Login Page.html?redirect=classifieds.html" class="px-4 py-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Log In</a>
+            <a href="User Registration.html" class="px-5 py-2.5 bg-primary hover:bg-green-700 text-white rounded-full text-sm font-bold shadow-md transition-transform active:scale-95">Sign Up</a>
+            <a href="Post Listing.html" class="hidden md:flex items-center gap-1 py-2 px-4 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold text-sm transition-colors ml-1"><span class="material-symbols-outlined text-lg">add_circle</span> Post Free</a>
+          `;
         }
         if(!isFav) {
           btn.classList.remove('active');

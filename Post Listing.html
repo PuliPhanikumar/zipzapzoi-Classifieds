@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -128,7 +128,7 @@
         </div>
     </div>
 
-    <div id="detailsSection" class="hidden flex-col gap-6">
+    <div id="detailsSection" style="display:none" class="flex flex-col gap-6">
 
       <!-- ── CHARITY DECLARATION BANNER ── -->
       <div id="charityBanner" class="hidden bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-2xl p-5">
@@ -432,8 +432,7 @@
     
     // UI Updates
     document.getElementById('catSection').classList.add('hidden'); // Hide category grid
-    detailsSection.classList.remove('hidden');
-    detailsSection.classList.add('flex');
+    detailsSection.style.display = 'flex';
     progressBar.style.width = '66%';
     document.getElementById('stepIndicator').className = "text-secondary font-bold";
     categoryTitle.textContent = `${currentCategory.label} Details`;
@@ -546,8 +545,7 @@
     
     // UI Updates
     document.getElementById('catSection').classList.add('hidden'); // Hide category grid
-    detailsSection.classList.remove('hidden');
-    detailsSection.classList.add('flex');
+    detailsSection.style.display = 'flex';
     progressBar.style.width = '66%';
     document.getElementById('stepIndicator').className = "text-secondary font-bold";
     categoryTitle.textContent = `${currentCategory.label} Details`;
@@ -650,8 +648,7 @@
 
   // Change Category Handler
   changeCatBtn.addEventListener('click', () => {
-    detailsSection.classList.add('hidden');
-    detailsSection.classList.remove('flex');
+    detailsSection.style.display = 'none';
     document.getElementById('catSection').classList.remove('hidden');
     progressBar.style.width = '33%';
   });

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -49,6 +49,8 @@
     .glow-green { box-shadow: 0 0 30px rgba(1,152,99,0.3); }
     .hero-pattern { background: linear-gradient(135deg, #019863 0%, #0a7a52 50%, #1e293b 100%); }
   </style>
+  <!-- Razorpay Payment Gateway SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body class="min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
 
@@ -236,50 +238,62 @@
             </div>
           </div>
 
-          <!-- Payment -->
+          <!-- Payment Method Selection -->
           <div class="bg-white dark:bg-card-dark rounded-2xl shadow-lg p-6 border border-gray-100 dark:border-gray-800">
             <h3 class="text-lg font-bold mb-5 flex items-center gap-2">
               <span class="material-symbols-outlined text-brand">lock</span> Secure Checkout
             </h3>
-            <div class="space-y-3 mb-6">
-              <label class="flex items-center p-4 border-2 border-brand bg-brand/5 rounded-xl cursor-pointer">
-                <input type="radio" name="payment" class="w-4 h-4 text-brand" checked>
-                <div class="ml-3 flex-1 flex justify-between items-center">
-                  <div>
-                    <p class="font-bold text-gray-900 dark:text-white">Mock Razorpay</p>
-                    <p class="text-xs text-gray-500">Credit Card / Debit Card / NetBanking</p>
-                  </div>
-                  <span class="material-symbols-outlined text-brand">credit_card</span>
-                </div>
+
+            <!-- Payment Method Pills -->
+            <div class="grid grid-cols-2 gap-3 mb-6">
+              <label id="pm-upi" class="pay-method-card flex flex-col items-center p-4 border-2 border-brand bg-brand/5 rounded-xl cursor-pointer transition-all">
+                <input type="radio" name="payment" value="upi" class="hidden" checked onchange="selectPayMethod('upi')">
+                <span class="text-2xl mb-1">📱</span>
+                <p class="font-black text-sm text-gray-900 dark:text-white">UPI</p>
+                <p class="text-[10px] text-gray-500">GPay, PhonePe, Paytm</p>
               </label>
-              <label class="flex items-center p-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer opacity-50">
-                <input type="radio" name="payment" disabled class="w-4 h-4">
-                <div class="ml-3 flex-1 flex justify-between items-center">
-                  <div>
-                    <p class="font-bold text-gray-500">UPI / QR Code</p>
-                    <p class="text-xs text-gray-400">Coming Soon</p>
-                  </div>
-                  <span class="material-symbols-outlined text-gray-400">qr_code_scanner</span>
-                </div>
+
+              <label id="pm-card" class="pay-method-card flex flex-col items-center p-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer transition-all hover:border-brand">
+                <input type="radio" name="payment" value="card" class="hidden" onchange="selectPayMethod('card')">
+                <span class="text-2xl mb-1">💳</span>
+                <p class="font-black text-sm text-gray-900 dark:text-white">Card</p>
+                <p class="text-[10px] text-gray-500">Debit / Credit</p>
+              </label>
+
+              <label id="pm-netbanking" class="pay-method-card flex flex-col items-center p-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer transition-all hover:border-brand">
+                <input type="radio" name="payment" value="netbanking" class="hidden" onchange="selectPayMethod('netbanking')">
+                <span class="text-2xl mb-1">🏦</span>
+                <p class="font-black text-sm text-gray-900 dark:text-white">Net Banking</p>
+                <p class="text-[10px] text-gray-500">All major banks</p>
+              </label>
+
+              <label id="pm-wallet" class="pay-method-card flex flex-col items-center p-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer transition-all hover:border-brand">
+                <input type="radio" name="payment" value="wallet" class="hidden" onchange="selectPayMethod('wallet')">
+                <span class="text-2xl mb-1">👛</span>
+                <p class="font-black text-sm text-gray-900 dark:text-white">Wallets</p>
+                <p class="text-[10px] text-gray-500">Paytm, Mobikwik</p>
               </label>
             </div>
 
-            <button id="payBtn" onclick="processMockPayment()" class="w-full bg-brand hover:bg-brandDark text-white font-black py-4 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-lg">
+            <!-- Pay Button -->
+            <button id="payBtn" onclick="initiatePayment()" class="w-full bg-brand hover:bg-green-700 text-white font-black py-4 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-lg">
+              <span class="material-symbols-outlined">lock</span>
               <span id="payBtnText">Select a Plan to Pay</span>
-              <span class="material-symbols-outlined" id="payBtnIcon">arrow_forward</span>
             </button>
 
+            <!-- Trust Badges -->
             <div class="mt-5 space-y-2">
               <p class="text-center text-xs text-gray-400 flex items-center justify-center gap-1">
-                <span class="material-symbols-outlined text-[14px] text-green-500">verified_user</span> 256-bit SSL Encrypted & Secure
+                <span class="material-symbols-outlined text-[14px] text-green-500">verified_user</span> Powered by Razorpay · 256-bit SSL Encrypted
               </p>
-              <div class="flex items-center justify-center gap-4 text-xs text-gray-400 mt-3">
-                <span>📞 Helpline: 1800-ZOI-HELP</span>
+              <div class="flex items-center justify-center gap-4 flex-wrap mt-2">
+                <img src="https://razorpay.com/assets/razorpay-logo.svg" alt="Razorpay" class="h-5 opacity-60 dark:invert">
+              </div>
+              <div class="flex items-center justify-center gap-4 text-xs text-gray-400 mt-2">
+                <span>📞 1800-ZOI-HELP</span>
                 <span>✉ support@zipzapzoi.com</span>
               </div>
             </div>
-
-            <!-- Marketing Taglines -->
             <div class="mt-6 pt-5 border-t dark:border-gray-700 space-y-2">
               <p class="text-xs text-center font-bold text-gray-400 uppercase tracking-widest mb-3">Why ZipZapZoi?</p>
               <div class="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
@@ -561,31 +575,137 @@
       }
     }
 
-    // ─── Redirect to Payment Page ────────────────────
-    function processMockPayment() {
+    // ─── Real Razorpay Payment Integration ──────────────────
+    let selectedPayMethod = 'upi';
+
+    function selectPayMethod(method) {
+      selectedPayMethod = method;
+      document.querySelectorAll('.pay-method-card').forEach(el => {
+        el.classList.remove('border-brand', 'bg-brand/5');
+        el.classList.add('border-gray-200', 'dark:border-gray-700');
+      });
+      const active = document.getElementById('pm-' + method);
+      if (active) {
+        active.classList.add('border-brand', 'bg-brand/5');
+        active.classList.remove('border-gray-200', 'dark:border-gray-700');
+      }
+    }
+
+    function initiatePayment() {
       if (!selectedPlan) { showToast('Please select a plan first', 'error'); return; }
 
-      const user = window.ZZZ ? window.ZZZ.getCurrentUser() : null;
+      const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
       if (!user) { window.location.href = 'Login Page.html?redirect=Classifieds Plans.html'; return; }
 
-      // Free plans: activate immediately without payment page
+      // Free plan — activate immediately
       if (selectedPlan.price === 0) {
-        if (window.ZZZ && window.ZZZ.Plans) {
-          window.ZZZ.Plans.assignPlan(user.id, selectedPlan.id, { price: 0 });
-        }
+        if (window.ZZZ && window.ZZZ.Plans) window.ZZZ.Plans.assignPlan(user.id, selectedPlan.id, { price: 0 });
         if (pendingListing) savePendingListing();
         showToast('Free plan activated! Start posting.', 'success');
         setTimeout(() => { window.location.href = 'Seller Dashboard.html'; }, 1500);
         return;
       }
 
-      // Save pending listing reference
-      sessionStorage.setItem('zzz_pending_plan_id', selectedPlan.id);
+      // Calculate final amount
+      const discount = currentDiscount || 0;
+      const originalPrice = selectedPlan.price;
+      const discountAmount = Math.round(originalPrice * discount / 100);
+      const finalAmount = originalPrice - discountAmount;
+      const amountInPaise = finalAmount * 100; // Razorpay requires paise
 
-      // Redirect to payment page with plan details
-      const url = `Payment.html?plan=${encodeURIComponent(selectedPlan.id)}&discount=${currentDiscount}`;
-      window.location.href = url;
+      // ── RAZORPAY CHECKOUT OPTIONS ────────────────────────
+      // ⚠️ PRODUCTION: Replace 'rzp_test_XXXXXXXXXX' with your live key from Razorpay Dashboard
+      // ⚠️ PRODUCTION: Order ID must be generated server-side via Razorpay Orders API
+      // See: https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/
+      const options = {
+        key: 'rzp_test_XXXXXXXXXX', // 🔑 REPLACE WITH YOUR RAZORPAY KEY ID
+        amount: amountInPaise,
+        currency: 'INR',
+        name: 'ZipZapZoi',
+        description: `${selectedPlan.name} Plan`,
+        image: 'Assets/logo.png', // Your logo
+        // order_id: 'order_XXXX', // ⚠️ For production, generate server-side
+        prefill: {
+          name: user.name || '',
+          email: user.email || '',
+          contact: user.phone || ''
+        },
+        notes: {
+          plan_id: selectedPlan.id,
+          user_id: user.id,
+          discount: discount
+        },
+        theme: { color: '#019863' },
+        method: {
+          upi: selectedPayMethod === 'upi' || selectedPayMethod === 'wallet',
+          card: selectedPayMethod === 'card',
+          netbanking: selectedPayMethod === 'netbanking',
+          wallet: selectedPayMethod === 'wallet'
+        },
+        handler: function(response) {
+          // ✅ Payment Successful
+          onPaymentSuccess(response, user, finalAmount);
+        },
+        modal: {
+          ondismiss: function() {
+            showToast('Payment cancelled. Your plan was not activated.', 'error');
+          }
+        }
+      };
+
+      // Check if Razorpay is loaded
+      if (typeof Razorpay === 'undefined') {
+        showToast('Razorpay SDK not loaded. Redirecting to payment page...', 'error');
+        // Fallback to Payment.html
+        const url = `Payment.html?plan=${encodeURIComponent(selectedPlan.id)}&discount=${currentDiscount}`;
+        setTimeout(() => window.location.href = url, 1500);
+        return;
+      }
+
+      const rzp = new Razorpay(options);
+      rzp.on('payment.failed', function(response) {
+        showToast('Payment failed: ' + (response.error.description || 'Unknown error'), 'error');
+        console.error('Razorpay Error:', response.error);
+      });
+      rzp.open();
     }
+
+    // Called after Razorpay confirms payment
+    function onPaymentSuccess(response, user, amount) {
+      // Save order to localStorage
+      const order = {
+        id: response.razorpay_payment_id || ('zzz_' + Date.now()),
+        plan: selectedPlan.id,
+        planName: selectedPlan.name,
+        amount: amount,
+        paymentId: response.razorpay_payment_id || '',
+        orderId: response.razorpay_order_id || '',
+        signature: response.razorpay_signature || '',
+        userId: user.id,
+        userName: user.name,
+        date: new Date().toLocaleString('en-IN'),
+        status: 'success'
+      };
+
+      const orders = JSON.parse(localStorage.getItem('zzz_orders') || '[]');
+      orders.unshift(order);
+      localStorage.setItem('zzz_orders', JSON.stringify(orders));
+
+      // Assign plan quota
+      if (window.ZZZ && window.ZZZ.Plans) {
+        window.ZZZ.Plans.assignPlan(user.id, selectedPlan.id, order);
+      }
+
+      if (pendingListing) savePendingListing();
+
+      showToast('🎉 Payment successful! Plan activated.', 'success');
+      setTimeout(() => {
+        window.location.href = `Payment.html?success=1&txn=${order.id}&plan=${selectedPlan.id}&amount=${amount}`;
+      }, 1000);
+    }
+
+    // Legacy alias for any remaining references
+    function processMockPayment() { initiatePayment(); }
 
     function savePendingListing() {
       if (!pendingListing) return;
