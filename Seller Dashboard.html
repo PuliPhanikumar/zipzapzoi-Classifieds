@@ -84,7 +84,7 @@
       <a href="#" onclick="requestVerification(); return false;" class="sidebar-link text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20" id="navVerifyBtn">
         <span class="material-symbols-outlined text-[20px]">verified</span> Get Verified
       </a>
-      <a href="profile.html" id="navProfileLink" class="sidebar-link">
+      <a href="#" onclick="openEditProfile(); return false;" id="navProfileLink" class="sidebar-link">
         <span class="material-symbols-outlined text-[20px]">person</span> My Profile
       </a>
       <a href="favorites.html" class="sidebar-link">
@@ -301,6 +301,88 @@
       <div class="flex gap-3">
         <button onclick="closeDeleteModal()" class="flex-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-700 dark:text-gray-200 font-bold py-3 rounded-xl transition-colors">Cancel</button>
         <button onclick="confirmDelete()" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-black py-3 rounded-xl shadow-md transition-all active:scale-95">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ EDIT PROFILE MODAL ═══ -->
+  <div id="editProfileModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-card-dark w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-200" id="editProfileModalContent">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary text-[22px]">manage_accounts</span>
+          </div>
+          <h3 class="text-lg font-black text-gray-900 dark:text-white">Edit Profile</h3>
+        </div>
+        <button onclick="closeEditProfile()" class="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </div>
+
+      <!-- Avatar Preview -->
+      <div class="flex justify-center pt-6 pb-2">
+        <div class="relative">
+          <div id="epAvatarPreview" class="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-3xl font-black shadow-lg">U</div>
+          <div class="absolute bottom-0 right-0 w-7 h-7 bg-primary rounded-full flex items-center justify-center shadow">
+            <span class="material-symbols-outlined text-white text-[14px]">edit</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div class="px-6 pb-6 space-y-4">
+
+        <!-- Name -->
+        <div>
+          <label class="block text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">Full Name *</label>
+          <input id="epName" type="text" placeholder="Your full name"
+            class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all"
+            oninput="document.getElementById('epAvatarPreview').textContent = this.value.charAt(0).toUpperCase() || 'U'"/>
+        </div>
+
+        <!-- Phone + City row -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">Phone</label>
+            <input id="epPhone" type="tel" placeholder="+91 9999999999"
+              class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all"/>
+          </div>
+          <div>
+            <label class="block text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">City</label>
+            <input id="epCity" type="text" placeholder="Bangalore, Mumbai..."
+              class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all"/>
+          </div>
+        </div>
+
+        <!-- Bio -->
+        <div>
+          <label class="block text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">Bio <span class="normal-case font-normal">(optional)</span></label>
+          <textarea id="epBio" rows="3" placeholder="Tell buyers a little about yourself..."
+            class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none resize-none transition-all"></textarea>
+        </div>
+
+        <!-- Email (read-only) -->
+        <div>
+          <label class="block text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1.5">Email <span class="normal-case font-normal">(cannot change)</span></label>
+          <input id="epEmail" type="email" disabled
+            class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-400 dark:text-gray-500 cursor-not-allowed"/>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-3 pt-2">
+          <button onclick="closeEditProfile()" class="flex-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold py-3 rounded-xl transition-colors">Cancel</button>
+          <button onclick="saveProfile()" class="flex-1 bg-primary hover:bg-green-700 text-white font-black py-3 rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">save</span> Save Changes
+          </button>
+        </div>
+
+        <!-- View public profile link -->
+        <a id="epViewPublicLink" href="#" class="flex items-center justify-center gap-1 text-xs font-bold text-primary hover:underline mt-1">
+          <span class="material-symbols-outlined text-[14px]">open_in_new</span> View your public profile
+        </a>
       </div>
     </div>
   </div>
@@ -794,6 +876,81 @@
 
     // ── INIT ──────────────────────────────────
     loadDashboard();
+
+    // ═══════════════════════════════════════════
+    //  11. EDIT PROFILE
+    // ═══════════════════════════════════════════
+    function openEditProfile() {
+      const user = window.ZZZ ? window.ZZZ.getCurrentUser()
+                              : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      if (!user) return;
+
+      // Pre-fill form
+      document.getElementById('epName').value  = user.name  || '';
+      document.getElementById('epPhone').value = user.phone || user.mobile || '';
+      document.getElementById('epCity').value  = user.city  || '';
+      document.getElementById('epBio').value   = user.bio   || '';
+      document.getElementById('epEmail').value = user.email || '';
+      document.getElementById('epAvatarPreview').textContent = (user.name || 'U').charAt(0).toUpperCase();
+      document.getElementById('epViewPublicLink').href = 'profile.html?sellerId=' + user.id;
+
+      // Show modal
+      const modal = document.getElementById('editProfileModal');
+      const content = document.getElementById('editProfileModalContent');
+      modal.classList.remove('hidden');
+      content.classList.add('scale-95');
+      requestAnimationFrame(() => content.classList.remove('scale-95'));
+    }
+
+    function closeEditProfile() {
+      const content = document.getElementById('editProfileModalContent');
+      content.classList.add('scale-95');
+      setTimeout(() => document.getElementById('editProfileModal').classList.add('hidden'), 180);
+    }
+
+    function saveProfile() {
+      const name  = document.getElementById('epName').value.trim();
+      const phone = document.getElementById('epPhone').value.trim();
+      const city  = document.getElementById('epCity').value.trim();
+      const bio   = document.getElementById('epBio').value.trim();
+
+      if (!name) { showToast('Name cannot be empty.', 'error'); return; }
+
+      // Load current user
+      const user = window.ZZZ ? window.ZZZ.getCurrentUser()
+                              : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      if (!user) { showToast('Session expired. Please log in again.', 'error'); return; }
+
+      // Merge updated fields
+      const updatedUser = { ...user, name, phone, mobile: phone, city, bio, updatedAt: new Date().toISOString() };
+
+      // Save to zzz_user (active session)
+      localStorage.setItem('zzz_user', JSON.stringify(updatedUser));
+
+      // Also update in zzz_users registry (the full user list)
+      const allUsers = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+      const idx = allUsers.findIndex(u => u.id === user.id || u.email === user.email);
+      if (idx !== -1) {
+        allUsers[idx] = { ...allUsers[idx], name, phone, mobile: phone, city, bio, updatedAt: updatedUser.updatedAt };
+      } else {
+        allUsers.push(updatedUser); // Add if somehow missing
+      }
+      localStorage.setItem('zzz_users', JSON.stringify(allUsers));
+
+      // Sync via ZZZ if available
+      if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(updatedUser);
+
+      // Update UI immediately — name in header
+      document.getElementById('userName').textContent = name.split(' ')[0];
+
+      showToast('✅ Profile saved successfully!', 'success');
+      closeEditProfile();
+    }
+
+    // Close on backdrop click
+    document.getElementById('editProfileModal').addEventListener('click', function(e) {
+      if (e.target === this) closeEditProfile();
+    });
 
   </script>
 </body>
