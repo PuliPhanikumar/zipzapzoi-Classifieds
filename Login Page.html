@@ -15,6 +15,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  <!-- EmailJS SDK (for real OTP emails once configured) -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script>
     tailwind.config = {
       darkMode: "class",
@@ -31,7 +33,6 @@
         }
       }
     }
-    // Init dark mode BEFORE render to prevent flash
     if (localStorage.getItem('zzz_theme') === 'dark' || (!localStorage.getItem('zzz_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark');
     }
@@ -60,8 +61,30 @@
 
     @keyframes slideUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
     .animate-in { animation: slideUp 0.5s ease-out forwards; }
+    @keyframes fadeIn { from { opacity:0; transform: scale(0.97); } to { opacity:1; transform: scale(1); } }
+    .animate-fade-in { animation: fadeIn 0.35s ease-out forwards; }
 
     #toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+
+    /* OTP Input Boxes */
+    .otp-input {
+      width: 52px; height: 60px; text-align: center; font-size: 1.6rem; font-weight: 800;
+      border-radius: 0.85rem; border: 2px solid #e5e7eb;
+      background: #f9fafb; outline: none; transition: all 0.2s;
+      font-family: inherit; color: #1f2937; caret-color: #019863;
+    }
+    .dark .otp-input { background: #252525; border-color: #3f3f3f; color: #f3f4f6; }
+    .otp-input:focus { border-color: #019863; box-shadow: 0 0 0 3px rgba(1,152,99,0.18); background: #fff; }
+    .dark .otp-input:focus { background: #1e293b; }
+    .otp-input.filled { border-color: #019863; background: #f0fdf4; color: #019863; }
+    .dark .otp-input.filled { background: rgba(1,152,99,0.12); }
+
+    /* Dev OTP Banner */
+    .dev-otp-banner {
+      background: linear-gradient(135deg, #1e3a5f, #0f2844);
+      border: 1px solid rgba(99,179,237,0.3);
+      border-radius: 1rem; padding: 1rem 1.25rem;
+    }
   </style>
 </head>
 <body class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 font-sans transition-colors duration-300 min-h-screen flex items-center justify-center p-4">
@@ -98,8 +121,8 @@
           <span class="text-white text-sm font-medium">Chat with buyers in real-time</span>
         </div>
         <div class="flex items-center gap-3 bg-white/10 rounded-xl p-3">
-          <span class="material-symbols-outlined text-white text-2xl">favorite</span>
-          <span class="text-white text-sm font-medium">View your saved favorites</span>
+          <span class="material-symbols-outlined text-white text-2xl">verified_user</span>
+          <span class="text-white text-sm font-medium">Secured with OTP verification</span>
         </div>
       </div>
     </div>
@@ -115,63 +138,124 @@
       <span class="material-symbols-outlined text-3xl">all_inclusive</span> ZipZapZoi
     </a>
 
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">Sign In</h1>
-      <p class="text-gray-400 dark:text-gray-500">Enter your credentials to access your account.</p>
-    </div>
-
-    <form id="loginForm" class="space-y-5" novalidate>
-
-      <div>
-        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="email">Email Address</label>
-        <div class="relative">
-          <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">mail</span>
-          <input type="email" id="email" class="input-field" placeholder="name@example.com" required autocomplete="email"/>
-        </div>
+    <!-- ══════════════ STEP 1: LOGIN FORM ══════════════ -->
+    <div id="stepLogin" class="animate-fade-in">
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">Sign In</h1>
+        <p class="text-gray-400 dark:text-gray-500">Enter your credentials to receive your OTP.</p>
       </div>
 
-      <div>
-        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="password">Password</label>
-        <div class="relative">
-          <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">lock</span>
-          <input type="password" id="password" class="input-field" placeholder="••••••••" required autocomplete="current-password"/>
-          <button type="button" onclick="togglePass()" class="absolute right-3 top-3.5 text-gray-400 hover:text-primary transition-colors">
-            <span id="eyeIcon" class="material-symbols-outlined text-[20px]">visibility</span>
+      <form id="loginForm" class="space-y-5" novalidate>
+        <div>
+          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="email">Email Address</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">mail</span>
+            <input type="email" id="email" class="input-field" placeholder="name@example.com" required autocomplete="email"/>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="password">Password</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">lock</span>
+            <input type="password" id="password" class="input-field" placeholder="••••••••" required autocomplete="current-password"/>
+            <button type="button" onclick="togglePass()" class="absolute right-3 top-3.5 text-gray-400 hover:text-primary transition-colors">
+              <span id="eyeIcon" class="material-symbols-outlined text-[20px]">visibility</span>
+            </button>
+          </div>
+          <div class="flex justify-end mt-2">
+            <a href="forgot password.html" class="text-sm font-semibold text-primary hover:underline">Forgot Password?</a>
+          </div>
+        </div>
+
+        <button type="submit" id="loginBtn" class="btn-primary mt-2">
+          <span id="btnText">Send OTP & Sign In</span>
+          <span class="material-symbols-outlined text-[20px]" id="btnIcon">send</span>
+        </button>
+      </form>
+
+      <div class="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800 text-center">
+        <p class="text-gray-500 dark:text-gray-400 text-sm">Don't have an account? 
+          <a href="User Registration.html" class="text-primary font-bold hover:underline ml-1">Create Account</a>
+        </p>
+      </div>
+
+      <!-- Demo Credentials -->
+      <div class="mt-5 p-4 bg-gray-50 dark:bg-gray-800/60 rounded-2xl text-xs text-gray-400 dark:text-gray-500">
+        <p class="font-bold text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">info</span> Demo Credentials (No OTP needed)
+        </p>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="fillDemo('admin@zipzapzoi.com','admin123')" class="text-left p-2 bg-white dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600 hover:border-primary transition-colors">
+            <p class="font-bold text-gray-600 dark:text-gray-300">Admin</p>
+            <p class="text-gray-400">admin@zipzapzoi.com</p>
+          </button>
+          <button onclick="fillDemo('user@zipzapzoi.com','user123')" class="text-left p-2 bg-white dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600 hover:border-primary transition-colors">
+            <p class="font-bold text-gray-600 dark:text-gray-300">User</p>
+            <p class="text-gray-400">user@zipzapzoi.com</p>
           </button>
         </div>
-        <div class="flex justify-end mt-2">
-          <a href="forgot password.html" class="text-sm font-semibold text-primary hover:underline">Forgot Password?</a>
+      </div>
+    </div>
+
+    <!-- ══════════════ STEP 2: OTP VERIFICATION ══════════════ -->
+    <div id="stepOTP" class="hidden animate-fade-in">
+      <button onclick="backToLogin()" class="flex items-center gap-1 text-sm font-bold text-gray-400 hover:text-primary mb-6 transition-colors">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Back
+      </button>
+
+      <!-- Lock icon -->
+      <div class="flex justify-center mb-6">
+        <div class="w-20 h-20 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary text-4xl">shield_lock</span>
         </div>
       </div>
 
-      <button type="submit" id="loginBtn" class="btn-primary mt-2">
-        <span id="btnText">Sign In</span>
-        <span class="material-symbols-outlined text-[20px]" id="btnIcon">arrow_forward</span>
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Verify It's You</h2>
+        <p class="text-gray-500 dark:text-gray-400 text-sm">We sent a 6-digit code to</p>
+        <p class="font-bold text-gray-800 dark:text-white text-sm mt-1" id="otpSentTo">your email</p>
+      </div>
+
+      <!-- Dev OTP Banner (shown when EmailJS not configured) -->
+      <div id="devOtpBanner" class="dev-otp-banner mb-6 hidden">
+        <div class="flex items-start gap-3">
+          <span class="material-symbols-outlined text-blue-400 text-xl mt-0.5">developer_mode</span>
+          <div>
+            <p class="text-blue-300 text-xs font-bold uppercase tracking-wider mb-1">Dev Mode — OTP Preview</p>
+            <p class="text-white font-mono text-2xl font-black tracking-[0.3em]" id="devOtpCode">------</p>
+            <p class="text-blue-400 text-xs mt-1">This banner is only visible in development. Configure EmailJS to send real emails.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6 OTP boxes -->
+      <div class="flex justify-center gap-2 mb-2" id="otpBoxes">
+        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp0" oninput="onOtpInput(0)" onkeydown="onOtpKeydown(event,0)" onpaste="onOtpPaste(event)">
+        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp1" oninput="onOtpInput(1)" onkeydown="onOtpKeydown(event,1)">
+        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp2" oninput="onOtpInput(2)" onkeydown="onOtpKeydown(event,2)">
+        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp3" oninput="onOtpInput(3)" onkeydown="onOtpKeydown(event,3)">
+        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp4" oninput="onOtpInput(4)" onkeydown="onOtpKeydown(event,4)">
+        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp5" oninput="onOtpInput(5)" onkeydown="onOtpKeydown(event,5)">
+      </div>
+
+      <!-- Countdown -->
+      <p class="text-center text-sm text-gray-400 mb-6">
+        Code expires in <span id="otpCountdown" class="font-bold text-primary">10:00</span>
+      </p>
+
+      <button id="verifyBtn" onclick="verifyOtp()" class="btn-primary">
+        <span id="verifyBtnText">Verify & Sign In</span>
+        <span class="material-symbols-outlined text-[20px]" id="verifyBtnIcon">verified</span>
       </button>
 
-    </form>
-
-    <div class="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800 text-center">
-      <p class="text-gray-500 dark:text-gray-400 text-sm">Don't have an account? 
-        <a href="User Registration.html" class="text-primary font-bold hover:underline ml-1">Create Account</a>
-      </p>
-    </div>
-
-    <!-- Demo Credentials -->
-    <div class="mt-5 p-4 bg-gray-50 dark:bg-gray-800/60 rounded-2xl text-xs text-gray-400 dark:text-gray-500">
-      <p class="font-bold text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1">
-        <span class="material-symbols-outlined text-sm">info</span> Demo Credentials
-      </p>
-      <div class="grid grid-cols-2 gap-2">
-        <button onclick="fillDemo('admin@zipzapzoi.com','admin123')" class="text-left p-2 bg-white dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600 hover:border-primary transition-colors">
-          <p class="font-bold text-gray-600 dark:text-gray-300">Admin</p>
-          <p class="text-gray-400">admin@zipzapzoi.com</p>
+      <p class="text-center text-sm text-gray-400 mt-5">
+        Didn't receive it? 
+        <button id="resendBtn" onclick="resendOtp()" class="font-bold text-primary hover:underline ml-1 disabled:opacity-40" disabled>
+          Resend Code
         </button>
-        <button onclick="fillDemo('user@zipzapzoi.com','user123')" class="text-left p-2 bg-white dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600 hover:border-primary transition-colors">
-          <p class="font-bold text-gray-600 dark:text-gray-300">User</p>
-          <p class="text-gray-400">user@zipzapzoi.com</p>
-        </button>
-      </div>
+        <span id="resendTimer" class="text-gray-400 ml-1">(30s)</span>
+      </p>
     </div>
 
   </div>
@@ -179,93 +263,50 @@
 
 <script src="js/utils.js"></script>
 <script>
-  // Sync icon
-  if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
+  // ═══════════════════════════════════════════════════════════
+  // EmailJS Config — fill these in when you get your account
+  // 1. Sign up at https://www.emailjs.com (free: 200 emails/month)
+  // 2. Create a service (Gmail recommended)
+  // 3. Create a template with variables: {{to_email}}, {{to_name}}, {{otp_code}}, {{expiry_mins}}
+  // 4. Fill the values below and set EMAILJS_CONFIGURED = true
+  // ═══════════════════════════════════════════════════════════
+  const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';
+  const EMAILJS_TEMPLATE_ID = 'YOUR_OTP_TEMPLATE_ID';
+  const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';
+  const EMAILJS_CONFIGURED  = false; // → set to true after filling above
 
-  function fillDemo(email, pass) {
-    document.getElementById('email').value = email;
-    document.getElementById('password').value = pass;
-    document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+  if (EMAILJS_CONFIGURED) {
+    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
   }
 
+  // Sync dark mode icon
+  if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
+
+  // ─── State ────────────────────────────────────────────────
+  let _pendingUser = null;    // user object pending OTP confirm
+  let _currentOtp  = null;   // 6-digit string
+  let _otpExpiry   = null;   // Date when OTP expires
+  let _countdownId = null;
+  let _resendId    = null;
+
+  // ─── Utilities ────────────────────────────────────────────
   function showToast(msg, type = 'success') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     const isErr = type === 'error';
-    toast.className = `flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-white text-sm font-semibold translate-y-8 opacity-0 transition-all duration-300 ${isErr ? 'bg-red-500' : 'bg-primary'}`;
-    toast.innerHTML = `<span class="material-symbols-outlined text-base">${isErr ? 'error' : 'check_circle'}</span><span>${msg}</span>`;
+    const isInfo = type === 'info';
+    const bg = isErr ? 'bg-red-500' : isInfo ? 'bg-blue-600' : 'bg-primary';
+    toast.className = `flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-white text-sm font-semibold translate-y-8 opacity-0 transition-all duration-300 ${bg}`;
+    toast.innerHTML = `<span class="material-symbols-outlined text-base">${isErr ? 'error' : isInfo ? 'info' : 'check_circle'}</span><span>${msg}</span>`;
     container.appendChild(toast);
     requestAnimationFrame(() => toast.classList.remove('translate-y-8', 'opacity-0'));
-    setTimeout(() => { toast.classList.add('translate-y-8', 'opacity-0'); setTimeout(() => toast.remove(), 400); }, 3500);
+    setTimeout(() => { toast.classList.add('translate-y-8', 'opacity-0'); setTimeout(() => toast.remove(), 400); }, 4000);
   }
 
-  document.getElementById('loginForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const email = document.getElementById('email').value.trim().toLowerCase();
-    const password = document.getElementById('password').value;
-    const btn = document.getElementById('loginBtn');
-    const btnText = document.getElementById('btnText');
-    const btnIcon = document.getElementById('btnIcon');
-
-    if (!email || !password) { showToast('Please fill in all fields.', 'error'); return; }
-
-    btn.disabled = true;
-    btnText.textContent = 'Signing in...';
-    btnIcon.className = 'material-symbols-outlined text-[20px] animate-spin';
-    btnIcon.textContent = 'refresh';
-
-    setTimeout(() => {
-      // 1. Registered users
-      const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-      const found = users.find(u => u.email.toLowerCase() === email && u.password === password);
-      if (found) { loginSuccess(found); return; }
-
-      // 2. Demo Admin
-      if (email === 'admin@zipzapzoi.com' && password === 'admin123') {
-        loginSuccess({ id: 'admin_01', name: 'Super Admin', email, role: 'admin', avatar: '' });
-        return;
-      }
-      // 3. Demo User
-      if (email === 'user@zipzapzoi.com' && password === 'user123') {
-        loginSuccess({ id: 'user_01', name: 'Demo User', email, role: 'user', phone: '', avatar: '' });
-        return;
-      }
-
-      // 4. Failed
-      btn.disabled = false;
-      btnText.textContent = 'Sign In';
-      btnIcon.className = 'material-symbols-outlined text-[20px]';
-      btnIcon.textContent = 'arrow_forward';
-      showToast('Incorrect email or password. Please try again.', 'error');
-    }, 700);
-  });
-
-  function loginSuccess(user) {
-    const banned = JSON.parse(localStorage.getItem('zzz_banned_users') || '[]');
-    if (banned.includes(user.name) || banned.includes(user.id)) {
-      showToast('Your account has been suspended. Contact support.', 'error');
-      document.getElementById('loginBtn').disabled = false;
-      document.getElementById('btnText').textContent = 'Sign In';
-      document.getElementById('btnIcon').textContent = 'arrow_forward';
-      return;
-    }
-    if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(user);
-    else {
-      localStorage.setItem('zzz_user', JSON.stringify(user));
-
-          // Grant monthly free ad if eligible
-          if (window.ZZZ && window.ZZZ.Plans) {
-            window.ZZZ.Plans.grantMonthlyFreeAd(user.id);
-          }
-      localStorage.setItem('zipzapzoi_current_user', JSON.stringify(user));
-    }
-    showToast('Welcome back, ' + user.name.split(' ')[0] + '! 🎉');
-    const redirect = new URLSearchParams(window.location.search).get('redirect');
-    setTimeout(() => {
-      if (redirect) window.location.href = redirect;
-      else if (user.role === 'admin' || user.role === 'super_admin') window.location.href = 'AdminConsoleV2.html';
-      else window.location.href = 'classifieds.html';
-    }, 800);
+  function toggleDarkMode() {
+    const dark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('zzz_theme', dark ? 'dark' : 'light');
+    document.getElementById('themeIcon').textContent = dark ? 'light_mode' : 'dark_mode';
   }
 
   function togglePass() {
@@ -274,6 +315,306 @@
     input.type = input.type === 'password' ? 'text' : 'password';
     icon.textContent = input.type === 'password' ? 'visibility' : 'visibility_off';
   }
+
+  function fillDemo(email, pass) {
+    document.getElementById('email').value = email;
+    document.getElementById('password').value = pass;
+    document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+  }
+
+  // ─── OTP Generation ───────────────────────────────────────
+  function generateOtp() {
+    return String(Math.floor(100000 + Math.random() * 900000));
+  }
+
+  // ─── Send OTP via EmailJS (or show in dev banner) ─────────
+  async function sendOtpEmail(userObj, otpCode) {
+    if (EMAILJS_CONFIGURED) {
+      try {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_email:    userObj.email,
+          to_name:     userObj.name || 'there',
+          otp_code:    otpCode,
+          expiry_mins: '10',
+        });
+        showToast(`OTP sent to ${userObj.email} 📧`, 'success');
+      } catch (err) {
+        console.error('EmailJS error:', err);
+        showToast('Email failed — check EmailJS config. OTP shown in dev banner.', 'error');
+        showDevBanner(otpCode);
+      }
+    } else {
+      // Dev mode — show OTP on screen
+      showDevBanner(otpCode);
+      showToast(`OTP generated (dev mode) 🔐`, 'info');
+    }
+  }
+
+  function showDevBanner(code) {
+    document.getElementById('devOtpCode').textContent = code;
+    document.getElementById('devOtpBanner').classList.remove('hidden');
+  }
+
+  // ─── Countdown Timer ──────────────────────────────────────
+  function startCountdown(durationMs) {
+    clearInterval(_countdownId);
+    const el = document.getElementById('otpCountdown');
+    const end = Date.now() + durationMs;
+    _countdownId = setInterval(() => {
+      const rem = end - Date.now();
+      if (rem <= 0) {
+        clearInterval(_countdownId);
+        el.textContent = '00:00';
+        el.classList.remove('text-primary');
+        el.classList.add('text-red-500');
+        _currentOtp = null; // Expire OTP
+        return;
+      }
+      const m = Math.floor(rem / 60000);
+      const s = Math.floor((rem % 60000) / 1000);
+      el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }, 1000);
+  }
+
+  function startResendTimer(seconds) {
+    clearInterval(_resendId);
+    const btn = document.getElementById('resendBtn');
+    const timer = document.getElementById('resendTimer');
+    btn.disabled = true;
+    let rem = seconds;
+    _resendId = setInterval(() => {
+      rem--;
+      timer.textContent = rem > 0 ? `(${rem}s)` : '';
+      if (rem <= 0) {
+        clearInterval(_resendId);
+        btn.disabled = false;
+        timer.textContent = '';
+      }
+    }, 1000);
+  }
+
+  // ─── OTP Box Input Handling ────────────────────────────────
+  function onOtpInput(i) {
+    const el = document.getElementById(`otp${i}`);
+    el.value = el.value.replace(/\D/, '').slice(-1);
+    if (el.value) {
+      el.classList.add('filled');
+      if (i < 5) document.getElementById(`otp${i+1}`).focus();
+      else tryAutoVerify();
+    } else {
+      el.classList.remove('filled');
+    }
+  }
+
+  function onOtpKeydown(e, i) {
+    if (e.key === 'Backspace') {
+      const el = document.getElementById(`otp${i}`);
+      if (!el.value && i > 0) {
+        document.getElementById(`otp${i-1}`).focus();
+        document.getElementById(`otp${i-1}`).value = '';
+        document.getElementById(`otp${i-1}`).classList.remove('filled');
+      }
+    }
+    if (e.key === 'ArrowLeft' && i > 0) document.getElementById(`otp${i-1}`).focus();
+    if (e.key === 'ArrowRight' && i < 5) document.getElementById(`otp${i+1}`).focus();
+  }
+
+  function onOtpPaste(e) {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+    text.split('').forEach((ch, i) => {
+      const el = document.getElementById(`otp${i}`);
+      if (el) { el.value = ch; el.classList.add('filled'); }
+    });
+    if (text.length === 6) {
+      document.getElementById('otp5').focus();
+      tryAutoVerify();
+    } else {
+      const next = document.getElementById(`otp${text.length}`);
+      if (next) next.focus();
+    }
+  }
+
+  function getEnteredOtp() {
+    return [0,1,2,3,4,5].map(i => document.getElementById(`otp${i}`).value).join('');
+  }
+
+  function clearOtpBoxes() {
+    [0,1,2,3,4,5].forEach(i => {
+      const el = document.getElementById(`otp${i}`);
+      el.value = '';
+      el.classList.remove('filled');
+    });
+    document.getElementById('otp0').focus();
+  }
+
+  function tryAutoVerify() {
+    if (getEnteredOtp().length === 6) {
+      setTimeout(verifyOtp, 200);
+    }
+  }
+
+  // ─── Show / Hide Steps ────────────────────────────────────
+  function showOtpStep(user) {
+    _pendingUser = user;
+    document.getElementById('stepLogin').classList.add('hidden');
+    const otpStep = document.getElementById('stepOTP');
+    otpStep.classList.remove('hidden');
+    otpStep.classList.add('animate-fade-in');
+    document.getElementById('otpSentTo').textContent = user.email;
+    document.getElementById('otp0').focus();
+    // Reset countdown style
+    const el = document.getElementById('otpCountdown');
+    el.classList.remove('text-red-500');
+    el.classList.add('text-primary');
+  }
+
+  function backToLogin() {
+    clearInterval(_countdownId);
+    clearInterval(_resendId);
+    _currentOtp = null;
+    _pendingUser = null;
+    clearOtpBoxes();
+    document.getElementById('devOtpBanner').classList.add('hidden');
+    document.getElementById('stepOTP').classList.add('hidden');
+    document.getElementById('stepLogin').classList.remove('hidden');
+    // Reset button
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = false;
+    document.getElementById('btnText').textContent = 'Send OTP & Sign In';
+    document.getElementById('btnIcon').textContent = 'send';
+    document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px]';
+  }
+
+  // ─── Resend OTP ───────────────────────────────────────────
+  async function resendOtp() {
+    _currentOtp = generateOtp();
+    _otpExpiry  = new Date(Date.now() + 10 * 60 * 1000);
+    clearOtpBoxes();
+    document.getElementById('devOtpBanner').classList.add('hidden');
+    startCountdown(10 * 60 * 1000);
+    startResendTimer(30);
+    await sendOtpEmail(_pendingUser, _currentOtp);
+  }
+
+  // ─── Verify OTP ───────────────────────────────────────────
+  function verifyOtp() {
+    const entered = getEnteredOtp();
+    if (entered.length < 6) { showToast('Please enter all 6 digits.', 'error'); return; }
+
+    const btn = document.getElementById('verifyBtn');
+    btn.disabled = true;
+    document.getElementById('verifyBtnText').textContent = 'Verifying...';
+    document.getElementById('verifyBtnIcon').className = 'material-symbols-outlined text-[20px] animate-spin';
+    document.getElementById('verifyBtnIcon').textContent = 'refresh';
+
+    setTimeout(() => {
+      // Check expiry
+      if (!_currentOtp || Date.now() > _otpExpiry.getTime()) {
+        showToast('OTP has expired. Please request a new one.', 'error');
+        btn.disabled = false;
+        document.getElementById('verifyBtnText').textContent = 'Verify & Sign In';
+        document.getElementById('verifyBtnIcon').className = 'material-symbols-outlined text-[20px]';
+        document.getElementById('verifyBtnIcon').textContent = 'verified';
+        return;
+      }
+
+      if (entered === _currentOtp) {
+        clearInterval(_countdownId);
+        showToast(`Welcome back, ${_pendingUser.name.split(' ')[0]}! 🎉`);
+        loginSuccess(_pendingUser);
+      } else {
+        showToast('Incorrect OTP. Please try again.', 'error');
+        clearOtpBoxes();
+        btn.disabled = false;
+        document.getElementById('verifyBtnText').textContent = 'Verify & Sign In';
+        document.getElementById('verifyBtnIcon').className = 'material-symbols-outlined text-[20px]';
+        document.getElementById('verifyBtnIcon').textContent = 'verified';
+        // Shake animation on boxes
+        const boxes = document.getElementById('otpBoxes');
+        boxes.style.animation = 'none';
+        boxes.offsetHeight; // reflow
+        boxes.style.animation = 'shake 0.4s ease';
+      }
+    }, 600);
+  }
+
+  // ─── Final Login ──────────────────────────────────────────
+  function loginSuccess(user) {
+    const banned = JSON.parse(localStorage.getItem('zzz_banned_users') || '[]');
+    if (banned.includes(user.name) || banned.includes(user.id)) {
+      showToast('Your account has been suspended. Contact support.', 'error');
+      backToLogin();
+      return;
+    }
+    if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(user);
+    else {
+      localStorage.setItem('zzz_user', JSON.stringify(user));
+      if (window.ZZZ && window.ZZZ.Plans) window.ZZZ.Plans.grantMonthlyFreeAd(user.id);
+      localStorage.setItem('zipzapzoi_current_user', JSON.stringify(user));
+    }
+    const redirect = new URLSearchParams(window.location.search).get('redirect');
+    setTimeout(() => {
+      if (redirect) window.location.href = redirect;
+      else if (user.role === 'admin' || user.role === 'super_admin') window.location.href = 'AdminConsoleV2.html';
+      else window.location.href = 'classifieds.html';
+    }, 800);
+  }
+
+  // ─── Form Submit (Step 1) ─────────────────────────────────
+  document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const email    = document.getElementById('email').value.trim().toLowerCase();
+    const password = document.getElementById('password').value;
+    const btn      = document.getElementById('loginBtn');
+
+    if (!email || !password) { showToast('Please fill in all fields.', 'error'); return; }
+
+    btn.disabled = true;
+    document.getElementById('btnText').textContent = 'Checking...';
+    document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px] animate-spin';
+    document.getElementById('btnIcon').textContent = 'refresh';
+
+    // Demo accounts — bypass OTP
+    if (email === 'admin@zipzapzoi.com' && password === 'admin123') {
+      showToast('Admin demo login — OTP skipped ✓');
+      loginSuccess({ id: 'admin_01', name: 'Super Admin', email, role: 'admin', avatar: '' });
+      return;
+    }
+    if (email === 'user@zipzapzoi.com' && password === 'user123') {
+      showToast('Demo login — OTP skipped ✓');
+      loginSuccess({ id: 'user_01', name: 'Demo User', email, role: 'user', phone: '', avatar: '' });
+      return;
+    }
+
+    // Real user lookup
+    setTimeout(async () => {
+      const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+      const found = users.find(u => u.email.toLowerCase() === email && u.password === password);
+
+      if (!found) {
+        btn.disabled = false;
+        document.getElementById('btnText').textContent = 'Send OTP & Sign In';
+        document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px]';
+        document.getElementById('btnIcon').textContent = 'send';
+        showToast('Incorrect email or password. Please try again.', 'error');
+        return;
+      }
+
+      // Credentials valid — generate & send OTP
+      _currentOtp = generateOtp();
+      _otpExpiry  = new Date(Date.now() + 10 * 60 * 1000);
+      showOtpStep(found);
+      startCountdown(10 * 60 * 1000);
+      startResendTimer(30);
+      await sendOtpEmail(found, _currentOtp);
+    }, 700);
+  });
+
+  // Shake keyframe
+  const style = document.createElement('style');
+  style.textContent = `@keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }`;
+  document.head.appendChild(style);
 </script>
 </body>
 </html>

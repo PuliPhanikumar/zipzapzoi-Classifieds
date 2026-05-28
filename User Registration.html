@@ -15,6 +15,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script>
     tailwind.config = {
       darkMode: "class",
@@ -31,7 +33,6 @@
         }
       }
     }
-    // Init dark mode BEFORE render to prevent flash
     if (localStorage.getItem('zzz_theme') === 'dark' || (!localStorage.getItem('zzz_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark');
     }
@@ -60,8 +61,34 @@
 
     @keyframes slideUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
     .animate-in { animation: slideUp 0.5s ease-out forwards; }
+    @keyframes fadeIn { from { opacity:0; transform: scale(0.97); } to { opacity:1; transform: scale(1); } }
+    .animate-fade-in { animation: fadeIn 0.35s ease-out forwards; }
 
     #toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+
+    /* OTP Input Boxes */
+    .otp-input {
+      width: 48px; height: 58px; text-align: center; font-size: 1.5rem; font-weight: 800;
+      border-radius: 0.85rem; border: 2px solid #e5e7eb;
+      background: #f9fafb; outline: none; transition: all 0.2s;
+      font-family: inherit; color: #1f2937; caret-color: #019863;
+    }
+    .dark .otp-input { background: #252525; border-color: #3f3f3f; color: #f3f4f6; }
+    .otp-input:focus { border-color: #019863; box-shadow: 0 0 0 3px rgba(1,152,99,0.18); background: #fff; }
+    .dark .otp-input:focus { background: #1e293b; }
+    .otp-input.filled { border-color: #019863; background: #f0fdf4; color: #019863; }
+    .dark .otp-input.filled { background: rgba(1,152,99,0.12); }
+    .dev-otp-banner {
+      background: linear-gradient(135deg, #1e3a5f, #0f2844);
+      border: 1px solid rgba(99,179,237,0.3);
+      border-radius: 1rem; padding: 1rem 1.25rem;
+    }
+
+    /* Progress Steps */
+    .step-dot { width: 10px; height: 10px; border-radius: 9999px; transition: all 0.3s; }
+    .step-dot.active { background: #019863; transform: scale(1.3); }
+    .step-dot.done { background: #019863; }
+    .step-dot.inactive { background: #d1d5db; }
   </style>
 </head>
 <body class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 font-sans transition-colors duration-300 min-h-screen flex items-center justify-center p-4">
@@ -91,15 +118,19 @@
       <h2 class="text-4xl font-bold text-white mb-4 leading-tight">Turn clutter into <span class="text-yellow-300">cash.</span></h2>
       <p class="text-green-50 opacity-90 leading-relaxed mb-8">Join thousands of people buying and selling locally. It's safe, fast, and 100% free to start.</p>
       
-      <div class="flex items-center gap-4 bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
-        <div class="flex -space-x-3">
-           <img class="w-10 h-10 rounded-full border-2 border-primary" src="https://i.pravatar.cc/100?img=1" alt="User">
-           <img class="w-10 h-10 rounded-full border-2 border-primary" src="https://i.pravatar.cc/100?img=5" alt="User">
-           <img class="w-10 h-10 rounded-full border-2 border-primary" src="https://i.pravatar.cc/100?img=8" alt="User">
+      <!-- Steps visual -->
+      <div class="space-y-3">
+        <div class="flex items-center gap-3 bg-white/10 rounded-xl p-3">
+          <div class="w-8 h-8 bg-white/30 rounded-full flex items-center justify-center text-white font-black text-sm">1</div>
+          <span class="text-white text-sm font-medium">Fill in your details</span>
         </div>
-        <div class="text-white">
-          <p class="text-sm font-medium"><span class="font-bold text-yellow-300">4.9/5</span> Rating</p>
-          <p class="text-xs opacity-75">from verified users</p>
+        <div class="flex items-center gap-3 bg-white/10 rounded-xl p-3">
+          <div class="w-8 h-8 bg-white/30 rounded-full flex items-center justify-center text-white font-black text-sm">2</div>
+          <span class="text-white text-sm font-medium">Verify via OTP</span>
+        </div>
+        <div class="flex items-center gap-3 bg-white/10 rounded-xl p-3">
+          <div class="w-8 h-8 bg-white/30 rounded-full flex items-center justify-center text-white font-black text-sm">3</div>
+          <span class="text-white text-sm font-medium">Start posting for free!</span>
         </div>
       </div>
     </div>
@@ -115,69 +146,155 @@
       <span class="material-symbols-outlined text-3xl">all_inclusive</span> ZipZapZoi
     </a>
 
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">Create Account</h1>
-      <p class="text-gray-500 dark:text-gray-400">Start your journey with us today.</p>
+    <!-- Progress dots -->
+    <div class="flex items-center gap-2 mb-8">
+      <div class="step-dot active" id="dot1"></div>
+      <div class="flex-1 h-0.5 bg-gray-200 dark:bg-gray-700 rounded-full" id="line1"></div>
+      <div class="step-dot inactive" id="dot2"></div>
+      <div class="flex-1 h-0.5 bg-gray-200 dark:bg-gray-700 rounded-full" id="line2"></div>
+      <div class="step-dot inactive" id="dot3"></div>
+      <p class="ml-3 text-xs font-bold text-gray-400" id="stepLabel">Step 1 of 2</p>
     </div>
 
-    <form id="regForm" class="space-y-5" novalidate>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div>
-          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="fullName">Full Name</label>
-          <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">person</span>
-            <input type="text" id="fullName" class="input-field" placeholder="John Doe" required autocomplete="name"/>
+    <!-- ══════════════ STEP 1: REGISTRATION FORM ══════════════ -->
+    <div id="stepReg" class="animate-fade-in">
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">Create Account</h1>
+        <p class="text-gray-500 dark:text-gray-400">Start your journey with us today.</p>
+      </div>
+
+      <form id="regForm" class="space-y-5" novalidate>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="fullName">Full Name</label>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">person</span>
+              <input type="text" id="fullName" class="input-field" placeholder="John Doe" required autocomplete="name"/>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="phone">Phone Number</label>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">phone</span>
+              <input type="tel" id="phone" class="input-field" placeholder="10-digit number" required maxlength="10" autocomplete="tel"/>
+            </div>
           </div>
         </div>
 
         <div>
-          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="phone">Phone Number</label>
+          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="email">Email Address</label>
           <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">phone</span>
-            <input type="tel" id="phone" class="input-field" placeholder="10-digit number" required maxlength="10" autocomplete="tel"/>
+            <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">mail</span>
+            <input type="email" id="email" class="input-field" placeholder="name@example.com" required autocomplete="email"/>
           </div>
         </div>
-      </div>
 
-      <div>
-        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="email">Email Address</label>
-        <div class="relative">
-          <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">mail</span>
-          <input type="email" id="email" class="input-field" placeholder="name@example.com" required autocomplete="email"/>
+        <div>
+          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="password">Password</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">lock</span>
+            <input type="password" id="password" class="input-field" placeholder="Create a strong password" required autocomplete="new-password"/>
+            <button type="button" onclick="togglePass()" class="absolute right-3 top-3.5 text-gray-400 hover:text-primary transition-colors">
+              <span id="eyeIcon" class="material-symbols-outlined text-[20px]">visibility</span>
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1.5 ml-1">Must be at least 6 characters</p>
         </div>
-      </div>
 
-      <div>
-        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="password">Password</label>
-        <div class="relative">
-          <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">lock</span>
-          <input type="password" id="password" class="input-field" placeholder="Create a strong password" required autocomplete="new-password"/>
-          <button type="button" onclick="togglePass()" class="absolute right-3 top-3.5 text-gray-400 hover:text-primary transition-colors">
-            <span id="eyeIcon" class="material-symbols-outlined text-[20px]">visibility</span>
-          </button>
+        <div class="flex items-start gap-3 mt-2 pt-2">
+          <input type="checkbox" id="terms" class="mt-1 w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary dark:focus:ring-primary dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer">
+          <label for="terms" class="text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none">
+            I agree to the <a href="legal.html" class="text-primary font-bold hover:underline" onclick="event.stopPropagation()">Terms of Service</a> and <a href="legal.html" class="text-primary font-bold hover:underline" onclick="event.stopPropagation()">Privacy Policy</a>.
+          </label>
         </div>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1.5 ml-1">Must be at least 6 characters</p>
-      </div>
 
-      <div class="flex items-start gap-3 mt-2 pt-2">
-        <input type="checkbox" id="terms" class="mt-1 w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary dark:focus:ring-primary dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer">
-        <label for="terms" class="text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none">
-          I agree to the <a href="legal.html" class="text-primary font-bold hover:underline" onclick="event.stopPropagation()">Terms of Service</a> and <a href="legal.html" class="text-primary font-bold hover:underline" onclick="event.stopPropagation()">Privacy Policy</a>.
-        </label>
-      </div>
+        <button type="submit" id="regBtn" class="btn-primary mt-4">
+          <span id="btnText">Continue →  Verify OTP</span>
+          <span class="material-symbols-outlined text-[20px]" id="btnIcon">send</span>
+        </button>
 
-      <button type="submit" id="regBtn" class="btn-primary mt-4">
-        <span id="btnText">Create Account</span>
-        <span class="material-symbols-outlined text-[20px]" id="btnIcon">arrow_forward</span>
+      </form>
+
+      <div class="mt-8 text-center pt-6 border-t border-gray-100 dark:border-gray-800">
+        <p class="text-gray-500 dark:text-gray-400 font-medium">
+          Already have an account? <a href="Login Page.html" class="text-primary font-bold hover:underline ml-1">Log In</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- ══════════════ STEP 2: OTP VERIFICATION ══════════════ -->
+    <div id="stepOTP" class="hidden animate-fade-in">
+      <button onclick="backToReg()" class="flex items-center gap-1 text-sm font-bold text-gray-400 hover:text-primary mb-6 transition-colors">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Back to Registration
       </button>
 
-    </form>
+      <div class="flex justify-center mb-6">
+        <div class="w-20 h-20 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary text-4xl">mark_email_read</span>
+        </div>
+      </div>
 
-    <div class="mt-8 text-center pt-6 border-t border-gray-100 dark:border-gray-800">
-      <p class="text-gray-500 dark:text-gray-400 font-medium">
-        Already have an account? <a href="Login Page.html" class="text-primary font-bold hover:underline ml-1">Log In</a>
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Verify Your Email</h2>
+        <p class="text-gray-500 dark:text-gray-400 text-sm">We sent a 6-digit code to</p>
+        <p class="font-bold text-gray-800 dark:text-white text-sm mt-1" id="otpSentTo">your email</p>
+        <p class="text-xs text-gray-400 mt-1">Your account will be created after verification</p>
+      </div>
+
+      <!-- Dev OTP Banner -->
+      <div id="devOtpBanner" class="dev-otp-banner mb-6 hidden">
+        <div class="flex items-start gap-3">
+          <span class="material-symbols-outlined text-blue-400 text-xl mt-0.5">developer_mode</span>
+          <div>
+            <p class="text-blue-300 text-xs font-bold uppercase tracking-wider mb-1">Dev Mode — OTP Preview</p>
+            <p class="text-white font-mono text-2xl font-black tracking-[0.3em]" id="devOtpCode">------</p>
+            <p class="text-blue-400 text-xs mt-1">Configure EmailJS to send real emails to users.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6 OTP boxes -->
+      <div class="flex justify-center gap-2 mb-2" id="otpBoxes">
+        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp0" oninput="onOtpInput(0)" onkeydown="onOtpKeydown(event,0)" onpaste="onOtpPaste(event)">
+        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp1" oninput="onOtpInput(1)" onkeydown="onOtpKeydown(event,1)">
+        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp2" oninput="onOtpInput(2)" onkeydown="onOtpKeydown(event,2)">
+        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp3" oninput="onOtpInput(3)" onkeydown="onOtpKeydown(event,3)">
+        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp4" oninput="onOtpInput(4)" onkeydown="onOtpKeydown(event,4)">
+        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp5" oninput="onOtpInput(5)" onkeydown="onOtpKeydown(event,5)">
+      </div>
+
+      <p class="text-center text-sm text-gray-400 mb-6">
+        Code expires in <span id="otpCountdown" class="font-bold text-primary">10:00</span>
       </p>
+
+      <button id="verifyBtn" onclick="verifyOtp()" class="btn-primary">
+        <span id="verifyBtnText">Verify & Create Account</span>
+        <span class="material-symbols-outlined text-[20px]" id="verifyBtnIcon">how_to_reg</span>
+      </button>
+
+      <p class="text-center text-sm text-gray-400 mt-5">
+        Didn't receive it? 
+        <button id="resendBtn" onclick="resendOtp()" class="font-bold text-primary hover:underline ml-1" disabled>
+          Resend Code
+        </button>
+        <span id="resendTimer" class="text-gray-400 ml-1">(30s)</span>
+      </p>
+    </div>
+
+    <!-- ══════════════ STEP 3: SUCCESS ══════════════ -->
+    <div id="stepSuccess" class="hidden animate-fade-in text-center py-8">
+      <div class="w-24 h-24 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+        <span class="material-symbols-outlined text-green-500 text-5xl">celebration</span>
+      </div>
+      <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-3">You're In! 🎉</h2>
+      <p class="text-gray-500 dark:text-gray-400 mb-2">Account successfully verified and created.</p>
+      <p class="text-primary font-bold text-lg mb-6">6 FREE ads waiting for you!</p>
+      <div class="flex items-center justify-center gap-2 text-gray-400 text-sm">
+        <span class="material-symbols-outlined text-[18px] animate-spin">refresh</span>
+        Redirecting to classifieds...
+      </div>
     </div>
 
   </div>
@@ -185,102 +302,47 @@
 
 <script src="js/utils.js"></script>
 <script>
-  // Sync icon
+  // ═══════════════════════════════════════════════════════════
+  // EmailJS Config — fill when ready
+  // ═══════════════════════════════════════════════════════════
+  const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';
+  const EMAILJS_TEMPLATE_ID = 'YOUR_OTP_TEMPLATE_ID';
+  const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';
+  const EMAILJS_CONFIGURED  = false;
+
+  if (EMAILJS_CONFIGURED) {
+    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+  }
+
+  // Sync dark mode icon
   if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
 
+  // ─── State ────────────────────────────────────────────────
+  let _pendingData = null;  // form data waiting for OTP
+  let _currentOtp  = null;
+  let _otpExpiry   = null;
+  let _countdownId = null;
+  let _resendId    = null;
+
+  // ─── Utilities ────────────────────────────────────────────
   function showToast(msg, type = 'success') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     const isErr = type === 'error';
-    toast.className = `flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-white text-sm font-semibold translate-y-8 opacity-0 transition-all duration-300 ${isErr ? 'bg-red-500' : 'bg-primary'}`;
-    toast.innerHTML = `<span class="material-symbols-outlined text-base">${isErr ? 'error' : 'check_circle'}</span><span>${msg}</span>`;
+    const isInfo = type === 'info';
+    const bg = isErr ? 'bg-red-500' : isInfo ? 'bg-blue-600' : 'bg-primary';
+    toast.className = `flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-white text-sm font-semibold translate-y-8 opacity-0 transition-all duration-300 ${bg}`;
+    toast.innerHTML = `<span class="material-symbols-outlined text-base">${isErr ? 'error' : isInfo ? 'info' : 'check_circle'}</span><span>${msg}</span>`;
     container.appendChild(toast);
     requestAnimationFrame(() => toast.classList.remove('translate-y-8', 'opacity-0'));
-    setTimeout(() => { toast.classList.add('translate-y-8', 'opacity-0'); setTimeout(() => toast.remove(), 400); }, 3500);
+    setTimeout(() => { toast.classList.add('translate-y-8', 'opacity-0'); setTimeout(() => toast.remove(), 400); }, 4500);
   }
 
-  document.getElementById('regForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const name = document.getElementById('fullName').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const email = document.getElementById('email').value.trim().toLowerCase();
-    const password = document.getElementById('password').value;
-    const terms = document.getElementById('terms').checked;
-    const btn = document.getElementById('regBtn');
-    const btnText = document.getElementById('btnText');
-    const btnIcon = document.getElementById('btnIcon');
-
-    // Validation
-    if (!name || !phone || !email || !password) { showToast('Please fill in all fields.', 'error'); return; }
-    if (!/^\d{10}$/.test(phone)) { showToast('Please enter a valid 10-digit phone number.', 'error'); return; }
-    if (password.length < 6) { showToast('Password must be at least 6 characters.', 'error'); return; }
-    if (!terms) { showToast('Please agree to the Terms & Conditions.', 'error'); return; }
-
-    btn.disabled = true;
-    btnText.textContent = 'Creating Account...';
-    btnIcon.className = 'material-symbols-outlined text-[20px] animate-spin';
-    btnIcon.textContent = 'refresh';
-
-    setTimeout(() => {
-      // Check existing
-      const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-
-      // ─── ANTI-SPAM: Check if phone already had free trial ───
-      if (window.ZZZ && window.ZZZ.Plans && window.ZZZ.Plans.phoneHadFreeTrial(phone)) {
-        btn.disabled = false;
-        btnText.textContent = 'Create Account';
-        btnIcon.className = 'material-symbols-outlined text-[20px]';
-        btnIcon.textContent = 'arrow_forward';
-        showToast('This mobile number was already used for a free trial. Each phone number gets only 1 free trial.', 'error');
-        return;
-      }
-      // ─── END ANTI-SPAM ───────────────────────────────────────
-
-      if (users.some(u => u.email.toLowerCase() === email)) {
-        btn.disabled = false;
-        btnText.textContent = 'Create Account';
-        btnIcon.className = 'material-symbols-outlined text-[20px]';
-        btnIcon.textContent = 'arrow_forward';
-        showToast("This email is already registered. Please login.", "error");
-        setTimeout(() => window.location.href = 'Login Page.html', 2000);
-        return;
-      }
-
-      // Create new user
-      const role = email.includes('admin') ? 'admin' : 'user';
-      const newUser = {
-        id: 'user_' + Date.now(),
-        name: name,
-        email: email,
-        phone: phone,
-        password: password, // Note: In production, hash this
-        role: role,
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=019863&color=fff`,
-        joined: new Date().toISOString(),
-        createdAt: new Date().toISOString()
-      };
-
-      users.push(newUser);
-      localStorage.setItem('zzz_users', JSON.stringify(users));
-      
-      // Auto login
-      localStorage.setItem('zzz_user', JSON.stringify(newUser));
-
-      // ─── AUTO-ASSIGN NEW USER FREE PLAN (6 ads) ────────────
-      if (window.ZZZ && window.ZZZ.Plans) {
-        window.ZZZ.Plans.assignPlan(newUser.id, 'new_user_free', { price: 0 });
-      }
-      // ─── END AUTO-ASSIGN ─────────────────────────────────────
-
-      showToast('Account created! 🎉 You have 6 FREE ads for your first month!', 'success');
-      
-      setTimeout(() => {
-        window.location.href = role === 'admin' ? 'AdminConsoleV2.html' : 'classifieds.html';
-      }, 1000);
-
-    }, 800);
-  });
+  function toggleDarkMode() {
+    const dark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('zzz_theme', dark ? 'dark' : 'light');
+    document.getElementById('themeIcon').textContent = dark ? 'light_mode' : 'dark_mode';
+  }
 
   function togglePass() {
     const input = document.getElementById('password');
@@ -288,6 +350,260 @@
     input.type = input.type === 'password' ? 'text' : 'password';
     icon.textContent = input.type === 'password' ? 'visibility' : 'visibility_off';
   }
+
+  function setProgress(step) {
+    const dots = ['dot1','dot2','dot3'];
+    const lines = ['line1','line2'];
+    dots.forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (i < step - 1) { el.className = 'step-dot done'; }
+      else if (i === step - 1) { el.className = 'step-dot active'; }
+      else { el.className = 'step-dot inactive'; }
+    });
+    lines.forEach((id, i) => {
+      document.getElementById(id).style.background = i < step - 1 ? '#019863' : '';
+    });
+    document.getElementById('stepLabel').textContent = step < 3 ? `Step ${step} of 2` : 'Complete!';
+  }
+
+  // ─── OTP Helpers ──────────────────────────────────────────
+  function generateOtp() { return String(Math.floor(100000 + Math.random() * 900000)); }
+
+  async function sendOtpEmail(email, name, otpCode) {
+    if (EMAILJS_CONFIGURED) {
+      try {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_email: email, to_name: name, otp_code: otpCode, expiry_mins: '10',
+        });
+        showToast(`OTP sent to ${email} 📧`);
+      } catch (err) {
+        console.error('EmailJS error:', err);
+        showDevBanner(otpCode);
+        showToast('Email failed — OTP shown in dev banner.', 'error');
+      }
+    } else {
+      showDevBanner(otpCode);
+      showToast('OTP generated (dev mode) 🔐', 'info');
+    }
+  }
+
+  function showDevBanner(code) {
+    document.getElementById('devOtpCode').textContent = code;
+    document.getElementById('devOtpBanner').classList.remove('hidden');
+  }
+
+  function startCountdown(durationMs) {
+    clearInterval(_countdownId);
+    const el = document.getElementById('otpCountdown');
+    el.classList.remove('text-red-500'); el.classList.add('text-primary');
+    const end = Date.now() + durationMs;
+    _countdownId = setInterval(() => {
+      const rem = end - Date.now();
+      if (rem <= 0) {
+        clearInterval(_countdownId);
+        el.textContent = '00:00'; el.classList.remove('text-primary'); el.classList.add('text-red-500');
+        _currentOtp = null;
+        return;
+      }
+      const m = Math.floor(rem / 60000), s = Math.floor((rem % 60000) / 1000);
+      el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }, 1000);
+  }
+
+  function startResendTimer(sec) {
+    clearInterval(_resendId);
+    const btn = document.getElementById('resendBtn'), timer = document.getElementById('resendTimer');
+    btn.disabled = true; let rem = sec;
+    _resendId = setInterval(() => {
+      rem--; timer.textContent = rem > 0 ? `(${rem}s)` : '';
+      if (rem <= 0) { clearInterval(_resendId); btn.disabled = false; timer.textContent = ''; }
+    }, 1000);
+  }
+
+  // ─── OTP Box Input ────────────────────────────────────────
+  function onOtpInput(i) {
+    const el = document.getElementById(`otp${i}`);
+    el.value = el.value.replace(/\D/, '').slice(-1);
+    if (el.value) { el.classList.add('filled'); if (i < 5) document.getElementById(`otp${i+1}`).focus(); else tryAutoVerify(); }
+    else el.classList.remove('filled');
+  }
+  function onOtpKeydown(e, i) {
+    if (e.key === 'Backspace') {
+      const el = document.getElementById(`otp${i}`);
+      if (!el.value && i > 0) { const prev = document.getElementById(`otp${i-1}`); prev.focus(); prev.value = ''; prev.classList.remove('filled'); }
+    }
+    if (e.key === 'ArrowLeft' && i > 0) document.getElementById(`otp${i-1}`).focus();
+    if (e.key === 'ArrowRight' && i < 5) document.getElementById(`otp${i+1}`).focus();
+  }
+  function onOtpPaste(e) {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+    text.split('').forEach((ch, i) => { const el = document.getElementById(`otp${i}`); if(el){el.value=ch;el.classList.add('filled');} });
+    if (text.length === 6) { document.getElementById('otp5').focus(); tryAutoVerify(); }
+    else { const next = document.getElementById(`otp${text.length}`); if(next) next.focus(); }
+  }
+  function getEnteredOtp() { return [0,1,2,3,4,5].map(i => document.getElementById(`otp${i}`).value).join(''); }
+  function clearOtpBoxes() { [0,1,2,3,4,5].forEach(i=>{const el=document.getElementById(`otp${i}`);el.value='';el.classList.remove('filled');}); document.getElementById('otp0').focus(); }
+  function tryAutoVerify() { if (getEnteredOtp().length === 6) setTimeout(verifyOtp, 200); }
+
+  // ─── Navigation ───────────────────────────────────────────
+  function showOtpStep() {
+    document.getElementById('stepReg').classList.add('hidden');
+    document.getElementById('stepOTP').classList.remove('hidden');
+    document.getElementById('otpSentTo').textContent = _pendingData.email;
+    setProgress(2);
+    document.getElementById('otp0').focus();
+  }
+
+  function backToReg() {
+    clearInterval(_countdownId); clearInterval(_resendId);
+    _currentOtp = null; clearOtpBoxes();
+    document.getElementById('devOtpBanner').classList.add('hidden');
+    document.getElementById('stepOTP').classList.add('hidden');
+    document.getElementById('stepReg').classList.remove('hidden');
+    setProgress(1);
+    const btn = document.getElementById('regBtn');
+    btn.disabled = false;
+    document.getElementById('btnText').textContent = 'Continue →  Verify OTP';
+    document.getElementById('btnIcon').textContent = 'send';
+    document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px]';
+  }
+
+  async function resendOtp() {
+    _currentOtp = generateOtp();
+    _otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    clearOtpBoxes();
+    document.getElementById('devOtpBanner').classList.add('hidden');
+    startCountdown(10 * 60 * 1000);
+    startResendTimer(30);
+    await sendOtpEmail(_pendingData.email, _pendingData.name, _currentOtp);
+  }
+
+  // ─── Verify OTP → Create Account ─────────────────────────
+  function verifyOtp() {
+    const entered = getEnteredOtp();
+    if (entered.length < 6) { showToast('Please enter all 6 digits.', 'error'); return; }
+
+    const btn = document.getElementById('verifyBtn');
+    btn.disabled = true;
+    document.getElementById('verifyBtnText').textContent = 'Creating Account...';
+    document.getElementById('verifyBtnIcon').className = 'material-symbols-outlined text-[20px] animate-spin';
+    document.getElementById('verifyBtnIcon').textContent = 'refresh';
+
+    setTimeout(() => {
+      if (!_currentOtp || Date.now() > _otpExpiry.getTime()) {
+        showToast('OTP expired. Please request a new one.', 'error');
+        btn.disabled = false;
+        document.getElementById('verifyBtnText').textContent = 'Verify & Create Account';
+        document.getElementById('verifyBtnIcon').className = 'material-symbols-outlined text-[20px]';
+        document.getElementById('verifyBtnIcon').textContent = 'how_to_reg';
+        return;
+      }
+
+      if (entered !== _currentOtp) {
+        showToast('Incorrect OTP. Please try again.', 'error');
+        clearOtpBoxes();
+        btn.disabled = false;
+        document.getElementById('verifyBtnText').textContent = 'Verify & Create Account';
+        document.getElementById('verifyBtnIcon').className = 'material-symbols-outlined text-[20px]';
+        document.getElementById('verifyBtnIcon').textContent = 'how_to_reg';
+        const boxes = document.getElementById('otpBoxes');
+        boxes.style.animation = 'none'; boxes.offsetHeight;
+        boxes.style.animation = 'shake 0.4s ease';
+        return;
+      }
+
+      // OTP correct — create user
+      clearInterval(_countdownId);
+      const { name, phone, email, password } = _pendingData;
+      const role = email.includes('admin') ? 'admin' : 'user';
+      const newUser = {
+        id: 'user_' + Date.now(),
+        name, email, phone, password,
+        role,
+        emailVerified: true,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=019863&color=fff`,
+        joined: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+      };
+
+      const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+      users.push(newUser);
+      localStorage.setItem('zzz_users', JSON.stringify(users));
+      localStorage.setItem('zzz_user', JSON.stringify(newUser));
+      localStorage.setItem('zipzapzoi_current_user', JSON.stringify(newUser));
+
+      if (window.ZZZ && window.ZZZ.Plans) window.ZZZ.Plans.assignPlan(newUser.id, 'new_user_free', { price: 0 });
+
+      // Show success screen
+      document.getElementById('stepOTP').classList.add('hidden');
+      document.getElementById('stepSuccess').classList.remove('hidden');
+      setProgress(3);
+
+      setTimeout(() => {
+        window.location.href = role === 'admin' ? 'AdminConsoleV2.html' : 'classifieds.html';
+      }, 2000);
+    }, 800);
+  }
+
+  // ─── Form Submit (Step 1 → Trigger OTP) ──────────────────
+  document.getElementById('regForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const name     = document.getElementById('fullName').value.trim();
+    const phone    = document.getElementById('phone').value.trim();
+    const email    = document.getElementById('email').value.trim().toLowerCase();
+    const password = document.getElementById('password').value;
+    const terms    = document.getElementById('terms').checked;
+    const btn      = document.getElementById('regBtn');
+
+    if (!name || !phone || !email || !password) { showToast('Please fill in all fields.', 'error'); return; }
+    if (!/^\d{10}$/.test(phone)) { showToast('Please enter a valid 10-digit phone number.', 'error'); return; }
+    if (password.length < 6) { showToast('Password must be at least 6 characters.', 'error'); return; }
+    if (!terms) { showToast('Please agree to the Terms & Conditions.', 'error'); return; }
+
+    btn.disabled = true;
+    document.getElementById('btnText').textContent = 'Sending OTP...';
+    document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px] animate-spin';
+    document.getElementById('btnIcon').textContent = 'refresh';
+
+    setTimeout(async () => {
+      // Anti-spam: phone free trial check
+      if (window.ZZZ && window.ZZZ.Plans && window.ZZZ.Plans.phoneHadFreeTrial(phone)) {
+        btn.disabled = false;
+        document.getElementById('btnText').textContent = 'Continue →  Verify OTP';
+        document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px]';
+        document.getElementById('btnIcon').textContent = 'send';
+        showToast('This mobile number was already used for a free trial.', 'error');
+        return;
+      }
+
+      // Check email uniqueness
+      const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
+      if (users.some(u => u.email.toLowerCase() === email)) {
+        btn.disabled = false;
+        document.getElementById('btnText').textContent = 'Continue →  Verify OTP';
+        document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px]';
+        document.getElementById('btnIcon').textContent = 'send';
+        showToast('This email is already registered. Please login.', 'error');
+        setTimeout(() => window.location.href = 'Login Page.html', 2000);
+        return;
+      }
+
+      // All good — store pending data & send OTP
+      _pendingData = { name, phone, email, password };
+      _currentOtp  = generateOtp();
+      _otpExpiry   = new Date(Date.now() + 10 * 60 * 1000);
+      showOtpStep();
+      startCountdown(10 * 60 * 1000);
+      startResendTimer(30);
+      await sendOtpEmail(email, name, _currentOtp);
+    }, 600);
+  });
+
+  // Shake animation
+  const style = document.createElement('style');
+  style.textContent = `@keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }`;
+  document.head.appendChild(style);
 </script>
 </body>
 </html>
