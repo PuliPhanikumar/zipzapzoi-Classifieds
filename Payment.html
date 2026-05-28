@@ -712,59 +712,110 @@
     function initiatePayment() {
       if (!selectedPlan) { showToast('No plan selected. Go back and choose a plan.', 'error'); return; }
 
-      // Validate based on tab
+      // Determine selected method for prefill (Razorpay shows all anyway)
       const activeTab = document.querySelector('.tab-btn.active').textContent.trim().toLowerCase();
       if (activeTab.includes('upi')) {
         const upiVal = document.getElementById('upiId').value;
-        if (!upiVal && !confirm('You haven\'t entered a UPI ID. Pay via QR code?')) return;
-        paymentMethod = upiVal ? `UPI (${upiVal})` : 'UPI QR Code';
+        paymentMethod = upiVal ? `UPI (${upiVal})` : 'UPI';
       } else if (activeTab.includes('card')) {
         const num = document.getElementById('cardNum').value.replace(/\s/g, '');
-        if (num.length < 16) { showToast('Please enter a valid 16-digit card number.', 'error'); return; }
-        if (!document.getElementById('cardExp').value) { showToast('Please enter card expiry date.', 'error'); return; }
-        if (!document.getElementById('cardCvv').value) { showToast('Please enter CVV.', 'error'); return; }
-        paymentMethod = `Card (•••• ${num.slice(-4)})`;
-      } else if (activeTab.includes('net banking') || activeTab.includes('banking')) {
-        if (!selectedBank) { showToast('Please select your bank.', 'error'); return; }
-        paymentMethod = `Net Banking (${selectedBank})`;
+        paymentMethod = num.length >= 4 ? `Card (•••• ${num.slice(-4)})` : 'Card';
+      } else if (activeTab.includes('net') || activeTab.includes('banking')) {
+        paymentMethod = selectedBank ? `Net Banking (${selectedBank})` : 'Net Banking';
       } else if (activeTab.includes('wallet')) {
-        if (!selectedBank) { showToast('Please select a wallet.', 'error'); return; }
-        paymentMethod = `Wallet (${selectedBank})`;
+        paymentMethod = selectedBank ? `Wallet (${selectedBank})` : 'Wallet';
       }
 
-      // Show processing
-      document.getElementById('processingOverlay').classList.remove('hidden');
-      let step = 0;
-      const msgEl = document.getElementById('processingMsg');
-      const msgInterval = setInterval(() => {
-        if (step < processingMsgs.length) {
-          msgEl.textContent = processingMsgs[step++];
-        }
-      }, 600);
+      // ── RAZORPAY STANDARD CHECKOUT ─────────────────────────
+      if (typeof Razorpay === 'undefined') {
+        showToast('Razorpay SDK not loaded. Please refresh the page.', 'error');
+        return;
+      }
 
-      // Simulate payment success
-      setTimeout(() => {
-        clearInterval(msgInterval);
-        document.getElementById('processingOverlay').classList.add('hidden');
-        completePayment();
-      }, 3200);
+      const amountInPaise = totalAmt * 100; // ₹1 = 100 paise
+
+      // Method ordering based on user tab selection
+      const methodSeq = activeTab.includes('upi')     ? ['block.upi', 'block.card', 'block.netbanking', 'block.wallet']
+                      : activeTab.includes('card')     ? ['block.card', 'block.upi', 'block.netbanking', 'block.wallet']
+                      : activeTab.includes('net')      ? ['block.netbanking', 'block.upi', 'block.card', 'block.wallet']
+                      :                                  ['block.wallet', 'block.upi', 'block.card', 'block.netbanking'];
+
+      const options = {
+        key: 'rzp_test_SufemR5ME8Nbr6',
+        amount: amountInPaise,
+        currency: 'INR',
+        name: 'ZipZapZoi Classifieds',
+        description: `${selectedPlan.name} Plan — ₹${totalAmt}`,
+        // order_id: 'order_XXXX', // Generate server-side for production
+        prefill: {
+          name:    currentUser.name    || '',
+          email:   currentUser.email   || '',
+          contact: currentUser.phone   || currentUser.mobile || '',
+          // Pre-fill UPI ID if entered
+          vpa:     activeTab.includes('upi') ? (document.getElementById('upiId').value || '') : ''
+        },
+        notes: {
+          plan_id:  planId,
+          user_id:  currentUser.id,
+          discount: discountPct + '%'
+        },
+        theme: { color: '#019863' },
+        config: {
+          display: {
+            preferences: { show_default_blocks: true },
+            sequence: methodSeq,
+            blocks: {
+              upi:        { name: 'UPI (GPay / PhonePe / Paytm)', instruments: [{ method: 'upi' }] },
+              card:       { name: 'Debit / Credit Card',          instruments: [{ method: 'card' }] },
+              netbanking: { name: 'Net Banking',                   instruments: [{ method: 'netbanking' }] },
+              wallet:     { name: 'Wallets',                       instruments: [{ method: 'wallet' }] }
+            }
+          }
+        },
+        handler: function(response) {
+          // ✅ Razorpay payment confirmed
+          // response.razorpay_payment_id is always available
+          // response.razorpay_order_id & razorpay_signature available only if order_id was passed
+          completePayment(response);
+        },
+        modal: {
+          ondismiss: function() {
+            showToast('Payment cancelled. Your plan was not activated.', 'error');
+          },
+          escape: true,
+          animation: true
+        }
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.on('payment.failed', function(response) {
+        showToast('Payment failed: ' + (response.error.description || 'Please try again.'), 'error');
+        console.error('[Razorpay] Payment failed:', response.error);
+      });
+      rzp.open();
     }
 
-    function completePayment() {
+    function completePayment(razorpayResponse) {
+      razorpayResponse = razorpayResponse || {};
       // Assign plan
       if (window.ZZZ && window.ZZZ.Plans) {
         window.ZZZ.Plans.assignPlan(currentUser.id, planId, {
-          price: totalAmt
+          price: totalAmt,
+          paymentId: razorpayResponse.razorpay_payment_id || ''
         });
       }
 
-      const txnId = 'ZZZ' + Date.now().toString().slice(-10).toUpperCase();
+      // Use Razorpay payment ID as canonical transaction ID
+      const txnId = razorpayResponse.razorpay_payment_id || ('ZZZ' + Date.now().toString().slice(-10).toUpperCase());
       const now = new Date();
 
       // Save transaction to order history
       const orders = JSON.parse(localStorage.getItem('zzz_orders') || '[]');
       const order = {
         txnId,
+        razorpay_payment_id: razorpayResponse.razorpay_payment_id || txnId,
+        razorpay_order_id:   razorpayResponse.razorpay_order_id   || '',
+        razorpay_signature:  razorpayResponse.razorpay_signature   || '',
         planId,
         planName: selectedPlan.name,
         baseAmt: baseFee,

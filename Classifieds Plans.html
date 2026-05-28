@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -611,45 +611,59 @@
       const originalPrice = selectedPlan.price;
       const discountAmount = Math.round(originalPrice * discount / 100);
       const finalAmount = originalPrice - discountAmount;
-      const amountInPaise = finalAmount * 100; // Razorpay requires paise
+      const amountInPaise = finalAmount * 100; // Razorpay needs paise (₹1 = 100 paise)
 
-      // ── RAZORPAY CHECKOUT OPTIONS ────────────────────────
-      // ⚠️ PRODUCTION: Replace 'rzp_test_XXXXXXXXXX' with your live key from Razorpay Dashboard
-      // ⚠️ PRODUCTION: Order ID must be generated server-side via Razorpay Orders API
-      // See: https://razorpay.com/docs/payments/payment-gateway/web-integration/standard/
+      // ── RAZORPAY STANDARD CHECKOUT ───────────────────────
       const options = {
-        key: 'rzp_test_XXXXXXXXXX', // 🔑 REPLACE WITH YOUR RAZORPAY KEY ID
+        key: 'rzp_test_SufemR5ME8Nbr6',
         amount: amountInPaise,
         currency: 'INR',
-        name: 'ZipZapZoi',
-        description: `${selectedPlan.name} Plan`,
-        image: 'Assets/logo.png', // Your logo
-        // order_id: 'order_XXXX', // ⚠️ For production, generate server-side
+        name: 'ZipZapZoi Classifieds',
+        description: `${selectedPlan.name} Plan — ${finalAmount === originalPrice ? '' : discount + '% OFF · '}₹${finalAmount}`,
+        // order_id is required for production signature verification.
+        // Generate it server-side: POST /v1/orders with your KEY_SECRET.
+        // order_id: 'order_XXXX',
         prefill: {
-          name: user.name || '',
-          email: user.email || '',
-          contact: user.phone || ''
+          name:    user.name    || '',
+          email:   user.email   || '',
+          contact: user.phone   || user.mobile || ''
         },
         notes: {
-          plan_id: selectedPlan.id,
-          user_id: user.id,
-          discount: discount
+          plan_id:  selectedPlan.id,
+          user_id:  user.id,
+          discount: discount + '%'
         },
         theme: { color: '#019863' },
-        method: {
-          upi: selectedPayMethod === 'upi' || selectedPayMethod === 'wallet',
-          card: selectedPayMethod === 'card',
-          netbanking: selectedPayMethod === 'netbanking',
-          wallet: selectedPayMethod === 'wallet'
+        // All payment methods enabled — Razorpay handles method selection internally.
+        // The user's choice (UPI/Card/NetBanking/Wallet) is passed as a preference only.
+        config: {
+          display: {
+            preferences: { show_default_blocks: true },
+            sequence: selectedPayMethod === 'upi'        ? ['block.upi',  'block.card', 'block.netbanking', 'block.wallet']
+                    : selectedPayMethod === 'card'        ? ['block.card', 'block.upi',  'block.netbanking', 'block.wallet']
+                    : selectedPayMethod === 'netbanking'  ? ['block.netbanking', 'block.upi', 'block.card', 'block.wallet']
+                    :                                       ['block.wallet', 'block.upi', 'block.card', 'block.netbanking'],
+            blocks: {
+              upi:        { name: 'UPI (GPay / PhonePe / Paytm)', instruments: [{ method: 'upi' }] },
+              card:       { name: 'Debit / Credit Card',          instruments: [{ method: 'card' }] },
+              netbanking: { name: 'Net Banking',                   instruments: [{ method: 'netbanking' }] },
+              wallet:     { name: 'Wallets',                       instruments: [{ method: 'wallet' }] }
+            }
+          }
         },
         handler: function(response) {
-          // ✅ Payment Successful
+          // ✅ Payment Successful — response contains:
+          // response.razorpay_payment_id
+          // response.razorpay_order_id  (only if order_id was provided)
+          // response.razorpay_signature (only if order_id was provided)
           onPaymentSuccess(response, user, finalAmount);
         },
         modal: {
           ondismiss: function() {
             showToast('Payment cancelled. Your plan was not activated.', 'error');
-          }
+          },
+          escape: true,
+          animation: true
         }
       };
 
