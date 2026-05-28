@@ -70,99 +70,7 @@
 
   <!-- ═══════════════════ HEADER ═══════════════════ -->
   <header class="bg-white dark:bg-card-dark border-b border-gray-100 dark:border-gray-800 sticky top-0 z-30">
-    <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-      <a href="Classifieds Plans.html" class="flex items-center gap-2">
-        <span class="material-symbols-outlined text-primary text-3xl">all_inclusive</span>
-        <span class="font-black text-lg text-gray-900 dark:text-white">ZipZapZoi</span>
-      </a>
-      <div class="flex items-center gap-3">
-        <div class="flex items-center gap-1.5 text-xs font-bold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-3 py-1.5 rounded-full border border-green-200 dark:border-green-800">
-          <span class="material-symbols-outlined text-[14px]">lock</span> 256-bit SSL Secured
-        </div>
-        <a href="Classifieds Plans.html" class="text-sm font-bold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1">
-          <span class="material-symbols-outlined text-[18px]">close</span>
-        </a>
-      </div>
-    </div>
-  </header>
-
-  <!-- ═══════════════════ PAYMENT PAGE ═══════════════════ -->
-  <div id="paymentPage" class="max-w-5xl mx-auto px-4 py-8">
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-
-      <!-- LEFT: Payment Methods -->
-      <div class="lg:col-span-3">
-        <h1 class="text-2xl font-black text-gray-900 dark:text-white mb-6">Complete Your Payment</h1>
-
-        <!-- Payment Method Tabs -->
-        <div class="grid grid-cols-4 gap-2 mb-6">
-          <button class="tab-btn active rounded-xl py-3 text-xs font-black flex flex-col items-center gap-1" onclick="switchTab('upi', this)">
-            <span class="material-symbols-outlined text-[22px]">qr_code_2</span> UPI
-          </button>
-          <button class="tab-btn rounded-xl py-3 text-xs font-black flex flex-col items-center gap-1" onclick="switchTab('card', this)">
-            <span class="material-symbols-outlined text-[22px]">credit_card</span> Card
-          </button>
-          <button class="tab-btn rounded-xl py-3 text-xs font-black flex flex-col items-center gap-1" onclick="switchTab('netbanking', this)">
-            <span class="material-symbols-outlined text-[22px]">account_balance</span> Net Banking
-          </button>
-          <button class="tab-btn rounded-xl py-3 text-xs font-black flex flex-col items-center gap-1" onclick="switchTab('wallet', this)">
-            <span class="material-symbols-outlined text-[22px]">account_balance_wallet</span> Wallet
-          </button>
-        </div>
-
-        <!-- ── UPI TAB ── -->
-        <div id="panel-upi" class="payment-panel active">
-          <div class="bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
-            <h3 class="font-black text-gray-900 dark:text-white mb-4">Pay via UPI</h3>
-
-            <!-- UPI ID Input — PRIMARY method -->
-            <div class="mb-5">
-              <label class="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Enter UPI ID</label>
-              <div class="flex gap-2">
-                <input type="text" id="upiId" placeholder="yourname@upi / yourname@okaxis" class="card-input flex-1" oninput="validateUpi()"/>
-                <button onclick="verifyUpi()" class="bg-primary text-white font-black px-4 rounded-xl text-sm hover:bg-green-700 transition-colors whitespace-nowrap">Verify</button>
-              </div>
-              <p id="upiStatus" class="text-xs mt-2 font-bold hidden"></p>
-              <div class="mt-2 flex items-center gap-2 text-xs text-gray-400">
-                <span class="material-symbols-outlined text-[14px]">info</span>
-                Supported: GPay, PhonePe, Paytm, BHIM — any UPI app
-              </div>
-            </div>
-
-            <!-- App icons -->
-            <div class="flex items-center gap-3 mb-5 flex-wrap">
-              <span class="text-xs bg-blue-100 text-blue-700 font-black px-3 py-1 rounded-full">GPay</span>
-              <span class="text-xs bg-purple-100 text-purple-700 font-black px-3 py-1 rounded-full">PhonePe</span>
-              <span class="text-xs bg-orange-100 text-orange-700 font-black px-3 py-1 rounded-full">Paytm</span>
-              <span class="text-xs bg-blue-100 text-blue-700 font-black px-3 py-1 rounded-full">BHIM</span>
-            </div>
-
-            <!-- OR Divider -->
-            <div class="flex items-center gap-3 my-4">
-              <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
-              <span class="text-xs font-bold text-gray-400">OR SCAN QR CODE</span>
-              <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
-            </div>
-
-            <!-- QR Notice — explains test mode limitation -->
-            <div class="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-700 p-5 text-center">
-              <div class="text-3xl mb-2">📵</div>
-              <p class="font-black text-amber-800 dark:text-amber-400 text-sm mb-1">QR Scanning Not Available in Test Mode</p>
-              <p class="text-xs text-amber-700 dark:text-amber-500 leading-relaxed mb-3">
-                Razorpay test mode does not generate a real scannable QR code.<br>
-                <strong>Real UPI apps (GPay, PhonePe, Paytm) will show "Invalid"</strong> when scanning — this is normal.
-              </p>
-              <div class="bg-white dark:bg-gray-900 rounded-xl p-3 border border-amber-200 text-left">
-                <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1.5">✅ To test UPI — type this ID above instead:</p>
-                <code class="text-sm font-mono font-black text-green-700 dark:text-green-400 select-all">test@razorpay</code>
-                <p class="text-[10px] text-gray-400 mt-1">Type it in the "Enter UPI ID" field above, then click Pay</p>
-              </div>
-              <p class="text-[10px] text-gray-400 mt-3">
-                ℹ️ Real QR code will work automatically after switching to Live Mode
-              </p>
-            </div>
-
-          </div>
+    
         </div>
 
         <!-- ── CARD TAB ── -->
@@ -668,7 +576,7 @@
                       :                                  ['block.wallet', 'block.upi', 'block.card', 'block.netbanking'];
 
       const options = {
-        key: 'rzp_test_SufemR5ME8Nbr6',
+        key: 'rzp_live_SugQ3leLrB2iW6',
         amount: amountInPaise,
         currency: 'INR',
         name: 'ZipZapZoi Classifieds',

@@ -161,41 +161,7 @@
       </div>
     </section>
 
-    <!-- ─── TEST PAYMENT BANNER ─── -->
-    <div id="testPayBanner" class="bg-amber-50 dark:bg-amber-900/20 border-y-2 border-amber-300 dark:border-amber-700 py-4 px-4">
-      <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div class="flex items-start gap-3">
-          <span class="text-2xl">🧪</span>
-          <div>
-            <p class="font-black text-amber-800 dark:text-amber-300 text-sm">TEST MODE — Verify Razorpay Integration with ₹1</p>
-            <p class="text-xs text-amber-700 dark:text-amber-400 mt-0.5">Use the test credentials below. No real money is charged in test mode.</p>
-          </div>
-        </div>
-        <button onclick="runRazorpayTest()" class="flex-shrink-0 bg-amber-500 hover:bg-amber-600 text-white font-black px-6 py-2.5 rounded-xl shadow transition-all active:scale-95 flex items-center gap-2 text-sm">
-          <span class="material-symbols-outlined text-[18px]">bolt</span>
-          Pay ₹1 to Test Now
-        </button>
-      </div>
-
-      <!-- Test Credentials Grid -->
-      <div class="max-w-4xl mx-auto mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div class="bg-white dark:bg-gray-900 rounded-xl p-3 border border-amber-200 dark:border-amber-800">
-          <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">📱 UPI (Success)</p>
-          <code class="text-xs font-mono font-bold text-gray-800 dark:text-gray-200 select-all">test@razorpay</code>
-          <p class="text-[10px] text-gray-400 mt-1">Always succeeds in test mode</p>
-        </div>
-        <div class="bg-white dark:bg-gray-900 rounded-xl p-3 border border-amber-200 dark:border-amber-800">
-          <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">💳 Test Card</p>
-          <code class="text-xs font-mono font-bold text-gray-800 dark:text-gray-200 block select-all">4111 1111 1111 1111</code>
-          <code class="text-xs font-mono text-gray-500 select-all">CVV: 123 · Expiry: 12/26</code>
-        </div>
-        <div class="bg-white dark:bg-gray-900 rounded-xl p-3 border border-amber-200 dark:border-amber-800">
-          <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2">🏦 Net Banking</p>
-          <code class="text-xs font-mono font-bold text-gray-800 dark:text-gray-200">Any bank → OTP: 1234</code>
-          <p class="text-[10px] text-gray-400 mt-1">Simulated bank page</p>
-        </div>
-      </div>
-    </div>
+    <!-- Razorpay Live Payments Active -->
 
     <!-- ─── SECTION 5: CHECKOUT PANEL ─── -->
     <section id="checkoutSection" class="py-16 px-4">
@@ -651,7 +617,7 @@
 
       // ── RAZORPAY STANDARD CHECKOUT ───────────────────────
       const options = {
-        key: 'rzp_test_SufemR5ME8Nbr6',
+        key: 'rzp_live_SugQ3leLrB2iW6',
         amount: amountInPaise,
         currency: 'INR',
         name: 'ZipZapZoi Classifieds',
@@ -754,8 +720,43 @@
       }, 1000);
     }
 
-    // Legacy alias for any remaining references
-    function processMockPayment() { initiatePayment(); }
+    // ─── RAZORPAY INTEGRATION VERIFY (Dev Only) ─────────────────────────────
+    window.runRazorpayTest = function() {
+      const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      if (!user) {
+        if (confirm('You need to be logged in to verify payments.\nGo to Login Page?')) {
+          window.location.href = 'Login Page.html?redirect=Classifieds Plans.html';
+        }
+        return;
+      }
+      const testOptions = {
+        key: 'rzp_live_SugQ3leLrB2iW6',
+        amount: 100, // ₹1 in paise
+        currency: 'INR',
+        name: 'ZipZapZoi',
+        description: 'Payment Gateway Verification',
+        prefill: {
+          name:    user.name  || 'User',
+          email:   user.email || 'user@zipzapzoi.com',
+          contact: user.phone || '',
+        },
+        theme: { color: '#019863' },
+        handler: function(response) {
+          showToast('✅ Payment verified! ID: ' + response.razorpay_payment_id, 'success');
+          console.log('[Razorpay] Verified:', response);
+        },
+        ondismiss: function() { showToast('Verification cancelled.', 'error'); },
+      };
+      if (typeof Razorpay === 'undefined') {
+        showToast('Razorpay SDK not loaded.', 'error'); return;
+      }
+      const rzpTest = new Razorpay(testOptions);
+      rzpTest.on('payment.failed', function(r) {
+        showToast('Payment failed: ' + (r.error.description || 'Unknown'), 'error');
+        console.error('[Razorpay]', r.error);
+      });
+      rzpTest.open();
+    };
 
     function savePendingListing() {
       if (!pendingListing) return;
@@ -773,52 +774,6 @@
     // Init prices
     updatePrices();
 
-    // ─── ₹1 TEST PAYMENT ─────────────────────────────────────
-    window.runRazorpayTest = function() {
-      const user = window.ZZZ ? window.ZZZ.getCurrentUser()
-                              : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-      if (!user) {
-        if (confirm('You need to be logged in to test payments.\nGo to Login Page?')) {
-          window.location.href = 'Login Page.html?redirect=Classifieds Plans.html';
-        }
-        return;
-      }
-
-      if (typeof Razorpay === 'undefined') {
-        showToast('Razorpay SDK not loaded — check your internet connection.', 'error');
-        return;
-      }
-
-      const testOptions = {
-        key: 'rzp_test_SufemR5ME8Nbr6',
-        amount: 100,           // ₹1 in paise (100 paise = ₹1)
-        currency: 'INR',
-        name: 'ZipZapZoi Classifieds',
-        description: '₹1 Integration Test — Not a real charge',
-        prefill: {
-          name:    user.name  || 'Test User',
-          email:   user.email || 'test@zipzapzoi.com',
-          contact: user.phone || '9999999999'
-        },
-        notes: { purpose: 'razorpay_integration_test', user_id: user.id },
-        theme: { color: '#019863' },
-        handler: function(response) {
-          // ✅ Test payment SUCCESS
-          document.getElementById('testPayBanner').style.background = 'linear-gradient(135deg,#d1fae5,#a7f3d0)';
-          document.getElementById('testPayBanner').innerHTML = `
-            <div class="max-w-4xl mx-auto text-center py-4">
-              <div class="text-4xl mb-3">🎉</div>
-              <h3 class="text-xl font-black text-green-800 mb-1">Razorpay Integration Working!</h3>
-              <p class="text-green-700 text-sm mb-2">Payment ID: <strong>${response.razorpay_payment_id}</strong></p>
-              <p class="text-green-600 text-xs">₹1 test charge captured in your Razorpay test dashboard</p>
-              <a href="https://dashboard.razorpay.com/app/payments" target="_blank"
-                 class="inline-flex items-center gap-1 mt-3 text-xs font-bold text-green-700 underline">
-                View in Razorpay Dashboard →
-              </a>
-            </div>`;
-          showToast('✅ Test passed! Payment ID: ' + response.razorpay_payment_id, 'success');
-        },
-        modal: {
           ondismiss: function() { showToast('Test cancelled.', 'error'); },
           animation: true
         }
