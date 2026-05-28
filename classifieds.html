@@ -177,9 +177,9 @@
               <div>
                 <label class="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Price Range</label>
                 <div class="flex items-center gap-2">
-                  <input type="number" id="minPrice" placeholder="Min ₹" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold focus:ring-primary dark:text-white" onchange="renderGrid()">
+                  <input type="number" id="minPrice" placeholder="Min ₹" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold focus:ring-primary dark:text-white" onchange="renderGrid()" oninput="renderGrid()">
                   <span class="text-gray-400">-</span>
-                  <input type="number" id="maxPrice" placeholder="Max ₹" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold focus:ring-primary dark:text-white" onchange="renderGrid()">
+                  <input type="number" id="maxPrice" placeholder="Max ₹" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold focus:ring-primary dark:text-white" onchange="renderGrid()" oninput="renderGrid()">
                 </div>
               </div>
 
@@ -336,24 +336,56 @@
             const publicListings = allListings.filter(l => (l.status || 'active') === 'active');
             let filtered = activeCategory === 'All' ? publicListings : publicListings.filter(l => l.category === activeCategory || l.categoryId === activeCategory);
             
-            // 2. Filter Search Box (for instant filtering if implemented)
-        const q = document.getElementById('searchQuery').value.toLowerCase();
-        if(q) filtered = filtered.filter(l => l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q));
+            // 2. Search query (title + description + category)
+            const q = document.getElementById('searchQuery').value.trim().toLowerCase();
+            if (q) filtered = filtered.filter(l =>
+              (l.title || '').toLowerCase().includes(q) ||
+              (l.description || '').toLowerCase().includes(q) ||
+              (l.category || '').toLowerCase().includes(q)
+            );
+
+            // 2b. Location filter
+            const loc = document.getElementById('searchLoc').value.trim().toLowerCase();
+            if (loc) filtered = filtered.filter(l =>
+              (l.location || '').toLowerCase().includes(loc) ||
+              (l.city || '').toLowerCase().includes(loc)
+            );
 
         // 3. Filter Sidebar
         const minP = document.getElementById('minPrice').value;
         const maxP = document.getElementById('maxPrice').value;
         const cond = document.getElementById('conditionFilter').value;
 
-        if(minP) filtered = filtered.filter(l => l.price >= parseFloat(minP));
-        if(maxP) filtered = filtered.filter(l => l.price <= parseFloat(maxP));
+        if (!isNaN(parseFloat(minP)) && minP !== "") filtered = filtered.filter(l => parseFloat(l.price) >= parseFloat(minP));
+        if (!isNaN(parseFloat(maxP)) && maxP !== "") filtered = filtered.filter(l => parseFloat(l.price) <= parseFloat(maxP));
         if(cond !== 'all') filtered = filtered.filter(l => (l.condition || 'used').toLowerCase() === cond);
 
         // 4. Sort
         const sort = document.getElementById('sortFilter').value;
-        if(sort === 'price_low') filtered.sort((a,b) => a.price - b.price);
-        if(sort === 'price_high') filtered.sort((a,b) => b.price - a.price);
-        if(sort === 'newest') filtered.reverse(); // Simplified newest
+            if (sort === 'price_low')  filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+            if (sort === 'price_high') filtered.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+            if (sort === 'newest')     filtered.sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
+            if (sort === 'oldest')     filtered.sort((a, b) => new Date(a.createdAt || a.date || 0) - new Date(b.createdAt || b.date || 0));
+
+            // Filter badge + result count
+            let activeFilters = 0;
+            if (q) activeFilters++;
+            if (loc) activeFilters++;
+            if (!isNaN(parseFloat(document.getElementById('minPrice').value)) && document.getElementById('minPrice').value !== '') activeFilters++;
+            if (!isNaN(parseFloat(document.getElementById('maxPrice').value)) && document.getElementById('maxPrice').value !== '') activeFilters++;
+            if (document.getElementById('conditionFilter').value !== 'all') activeFilters++;
+            if (sort !== 'newest') activeFilters++;
+            if (activeCategory !== 'All') activeFilters++;
+            const badge = document.getElementById('filterBadge');
+            if (badge) {
+              if (activeFilters > 0) { badge.textContent = activeFilters + (activeFilters === 1 ? ' filter' : ' filters'); badge.classList.remove('hidden'); }
+              else { badge.classList.add('hidden'); }
+            }
+            const rc = document.getElementById('resultCount');
+            if (rc) {
+              if (activeFilters > 0) { rc.textContent = filtered.length + ' listing' + (filtered.length !== 1 ? 's' : '') + ' found'; rc.classList.remove('hidden'); }
+              else { rc.classList.add('hidden'); }
+            }
 
         // 5. Render
         if(filtered.length === 0) {
@@ -416,12 +448,12 @@
       // =====================================
       // 6. ACTIONS
       // =====================================
+      // Live debounced search
+      let _searchDebounce = null;
       function executeSearch() {
-        const q = document.getElementById('searchQuery').value;
-        const loc = document.getElementById('searchLoc').value;
-        if(q || loc) {
-          window.location.href = `SearchResult.html?q=${encodeURIComponent(q)}&loc=${encodeURIComponent(loc)}`;
-        }
+        renderGrid();
+        const grid = document.getElementById('listingsGrid');
+        if (grid) setTimeout(() => grid.scrollIntoView({ behavior: 'smooth', block: 'start' }), 350);
       }
 
       function clearFilters() {
@@ -429,6 +461,11 @@
         document.getElementById('maxPrice').value = '';
         document.getElementById('conditionFilter').value = 'all';
         document.getElementById('searchQuery').value = '';
+        document.getElementById('searchLoc').value = '';
+        document.getElementById('sortFilter').value = 'newest';
+        activeCategory = 'All';
+        document.getElementById('gridTitle').textContent = 'Fresh Recommendations';
+        renderCategories();
         renderGrid();
       }
 
