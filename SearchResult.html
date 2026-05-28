@@ -204,309 +204,202 @@
     <script src="js/utils.js"></script>
     <script>
       let currentQuery = '';
-      let allListings = [];
-      const classifiedsSchema = window.ZZZ ? window.ZZZ.getClassifiedsSchema() : window.ZZZ_SCHEMA;
+      let currentLoc    = '';
+      let allListings   = [];
+      let currentViewMode = 'grid';
+      let searchMap = null, searchMarkers = [];
+
+      function getSchema() {
+        return (window.ZZZ && window.ZZZ.getClassifiedsSchema && window.ZZZ.getClassifiedsSchema())
+          || window.ZZZ_SCHEMA
+          || { categories: [], subcategories: [] };
+      }
 
       document.addEventListener('DOMContentLoaded', () => {
         if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
-        
-        // Populate Dropdown from schema
+
+        const schema = getSchema();
         const catSelect = document.getElementById('catFilter');
-        catSelect.innerHTML = '<option value="all">All Categories</option>' + 
-          classifiedsSchema.categories.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
+        catSelect.innerHTML = '<option value="all">All Categories</option>' +
+          schema.categories.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
 
         allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-        
+
         const params = new URLSearchParams(window.location.search);
-        currentQuery = params.get('q') || '';
+        currentQuery = params.get('q')   || '';
+        currentLoc   = params.get('loc') || '';
         document.getElementById('searchQuery').value = currentQuery;
-        
+
+        const urlCat = params.get('cat');
+        if (urlCat) { catSelect.value = urlCat; updateSubcategories(); }
+
         renderResults();
       });
 
-      window.addEventListener('storage', (event) => {
-        if(event.key === 'zzz_listings' || event.key === 'zzz_favorites_by_user' || event.key === 'zzz_data_updated_at') {
+      window.addEventListener('storage', e => {
+        if (['zzz_listings','zzz_favorites_by_user','zzz_data_updated_at'].includes(e.key)) {
           allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
           renderResults();
         }
       });
 
       function updateSearch() {
-        currentQuery = document.getElementById('searchQuery').value;
-        const newUrl = window.location.pathname + '?q=' + encodeURIComponent(currentQuery);
-        window.history.pushState({path:newUrl}, '', newUrl);
+        currentQuery = document.getElementById('searchQuery').value.trim();
+        const params = new URLSearchParams();
+        if (currentQuery) params.set('q', currentQuery);
+        if (currentLoc)   params.set('loc', currentLoc);
+        window.history.pushState({}, '', window.location.pathname + (params.toString() ? '?' + params.toString() : ''));
         renderResults();
       }
 
       function clearSearch() {
+        currentQuery = ''; currentLoc = '';
         document.getElementById('searchQuery').value = '';
         document.getElementById('catFilter').value = 'all';
         updateSubcategories();
-        updateSearch();
+        window.history.pushState({}, '', window.location.pathname);
+        renderResults();
       }
 
       function updateSubcategories() {
+        const schema = getSchema();
         const cat = document.getElementById('catFilter').value;
         const subcatContainer = document.getElementById('subcatContainer');
-        const subcatSelect = document.getElementById('subcatFilter');
-        
-        if (cat === 'all') {
-            subcatContainer.classList.add('hidden');
-            subcatSelect.value = 'all';
-            return;
-        }
-
-        const catDef = classifiedsSchema.categories.find(c => c.id === cat || c.label === cat);
-        const subcats = classifiedsSchema.subcategories.filter(s => s.categoryId === (catDef ? catDef.id : cat));
-        
+        const subcatSelect    = document.getElementById('subcatFilter');
+        if (cat === 'all') { subcatContainer.classList.add('hidden'); return; }
+        const catDef = schema.categories.find(c => c.id === cat || c.label === cat);
+        const subcats = schema.subcategories.filter(s => s.categoryId === (catDef ? catDef.id : cat));
         if (subcats.length > 0) {
-            subcatSelect.innerHTML = '<option value="all">All in this category</option>' + 
-                subcats.map(s => `<option value="${s.id}">${s.label}</option>`).join('');
-            subcatContainer.classList.remove('hidden');
+          subcatSelect.innerHTML = '<option value="all">All in this category</option>' +
+            subcats.map(s => `<option value="${s.id}">${s.label}</option>`).join('');
+          subcatContainer.classList.remove('hidden');
         } else {
-            subcatContainer.classList.add('hidden');
-            subcatSelect.value = 'all';
+          subcatContainer.classList.add('hidden');
         }
       }
 
       function renderResults() {
-        const grid = document.getElementById('resultsGrid');
+        const schema = getSchema();
+        const grid  = document.getElementById('resultsGrid');
         const empty = document.getElementById('emptyState');
         const count = document.getElementById('resultCount');
 
-        // Show Skeletons
         grid.classList.remove('hidden');
-        empty.classList.add('hidden');
-        empty.classList.remove('flex');
-        
-        let skeletons = '';
-        for(let i=0; i<6; i++) {
-            skeletons += `
-            <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 p-4 animate-pulse">
-                <div class="h-48 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl mb-4"></div>
-                <div class="h-4 w-3/4 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
-                <div class="h-6 w-1/2 bg-gray-200 dark:bg-gray-800 rounded mb-4"></div>
-                <div class="h-3 w-1/3 bg-gray-200 dark:bg-gray-800 rounded"></div>
-            </div>`;
-        }
-        grid.innerHTML = skeletons;
+        empty.classList.add('hidden'); empty.classList.remove('flex');
+
+        grid.innerHTML = Array(6).fill(`
+          <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 p-4 animate-pulse">
+            <div class="h-48 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl mb-4"></div>
+            <div class="h-4 w-3/4 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
+            <div class="h-6 w-1/2 bg-gray-200 dark:bg-gray-800 rounded mb-4"></div>
+            <div class="h-3 w-1/3 bg-gray-200 dark:bg-gray-800 rounded"></div>
+          </div>`).join('');
         count.textContent = 'Searching...';
 
         setTimeout(() => {
-            const q = currentQuery.toLowerCase();
-            const cat = document.getElementById('catFilter').value;
-            const subcat = document.getElementById('subcatContainer').classList.contains('hidden') ? 'all' : document.getElementById('subcatFilter').value;
-            const sort = document.getElementById('sortFilter').value;
+          const q      = currentQuery.trim().toLowerCase();
+          const loc    = currentLoc.trim().toLowerCase();
+          const cat    = document.getElementById('catFilter').value;
+          const subcat = document.getElementById('subcatContainer').classList.contains('hidden')
+                         ? 'all' : document.getElementById('subcatFilter').value;
+          const sort   = document.getElementById('sortFilter').value;
 
-            // Filter
-            let filtered = allListings.filter(l => (l.status || 'active') === 'active').filter(l => {
-                const matchesQuery = !q || l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q);
-                
-                // Allow matching category id or label
-                let listingCatId = l.category;
-                const catObj = classifiedsSchema.categories.find(c => c.label === l.category);
-                if (catObj) listingCatId = catObj.id;
+          let filtered = allListings.filter(l => (l.status || 'active') === 'active');
 
-                const matchesCat = cat === 'all' || listingCatId === cat || l.category === cat;
-                const matchesSubcat = subcat === 'all' || l.subcategory === subcat;
-                return matchesQuery && matchesCat && matchesSubcat;
+          if (q) filtered = filtered.filter(l =>
+            (l.title       || '').toLowerCase().includes(q) ||
+            (l.description || '').toLowerCase().includes(q) ||
+            (l.category    || '').toLowerCase().includes(q)
+          );
+
+          if (loc) filtered = filtered.filter(l =>
+            (l.location || '').toLowerCase().includes(loc) ||
+            (l.city     || '').toLowerCase().includes(loc)
+          );
+
+          if (cat !== 'all') {
+            filtered = filtered.filter(l => {
+              let catId = l.category;
+              const co = schema.categories.find(c => c.label === l.category);
+              if (co) catId = co.id;
+              return catId === cat || l.category === cat;
             });
-
-            // Sort
-            if(sort === 'price_low') filtered.sort((a,b) => a.price - b.price);
-            if(sort === 'price_high') filtered.sort((a,b) => b.price - a.price);
-            if(sort === 'newest') filtered.reverse();
-
-            count.textContent = `Showing ${filtered.length} result${filtered.length === 1 ? '' : 's'} for "${currentQuery || 'All'}"`;
-
-            if(filtered.length === 0) {
-                grid.classList.add('hidden');
-                empty.classList.remove('hidden');
-                empty.classList.add('flex');
-                return;
-            }
-
-            const favs = window.ZZZ ? window.ZZZ.getFavoriteIds() : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-
-            grid.innerHTML = filtered.map((l, index) => {
-          const isFav = favs.includes(l.id);
-          const timeDelay = index * 0.05;
-          return `
-            <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer relative group opacity-0 animate-pop" style="animation-delay: ${timeDelay}s" onclick="window.location.href='Listing Detail.html?id=${l.id}'">
-              
-              <div class="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-900">
-                <img src="${l.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-                
-                <div class="absolute top-4 left-4 bg-white/90 dark:bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-gray-800 dark:text-white uppercase tracking-wider card-image-wrap">
-                  ${l.category}
-                </div>
-
-                <button onclick="event.stopPropagation(); toggleFav('${l.id}', this)" class="fav-btn absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center card-image-wrap ${isFav ? 'active' : ''}">
-                  <span class="material-symbols-outlined text-xl">favorite</span>
-                </button>
-              </div>
-
-              <div class="p-5">
-                <div class="flex justify-between items-start mb-1">
-                  <h3 class="text-base font-bold text-gray-900 dark:text-white truncate pr-2">${l.title}</h3>
-                  <p class="text-lg font-black text-primary">₹${l.price.toLocaleString()}</p>
-                </div>
-                <div class="flex items-center gap-3 text-xs font-bold text-gray-400 dark:text-gray-500 mt-3">
-                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> ${l.location || 'Local'}</span>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
-        }, 500); // Simulated delay
-      }
-
-      function toggleFav(id, btn) {
-        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
-        if(!user) {
-          window.location.href = `Login Page.html?redirect=SearchResult.html?q=${currentQuery}`;
-          return;
-        }
-        let isFav;
-        if(window.ZZZ) {
-          isFav = window.ZZZ.toggleFavorite(id);
-        } else {
-          let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-          if(favs.includes(id)) favs = favs.filter(f => f !== id);
-          else favs.push(id);
-          localStorage.setItem('zzz_favorites', JSON.stringify(favs));
-          isFav = favs.includes(id);
-        }
-      }
-
-      function renderResults() {
-        const grid = document.getElementById('resultsGrid');
-        const empty = document.getElementById('emptyState');
-        const count = document.getElementById('resultCount');
-
-        // Show Skeletons
-        grid.classList.remove('hidden');
-        empty.classList.add('hidden');
-        empty.classList.remove('flex');
-        
-        let skeletons = '';
-        for(let i=0; i<6; i++) {
-            skeletons += `
-            <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 p-4 animate-pulse">
-                <div class="h-48 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl mb-4"></div>
-                <div class="h-4 w-3/4 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
-                <div class="h-6 w-1/2 bg-gray-200 dark:bg-gray-800 rounded mb-4"></div>
-                <div class="h-3 w-1/3 bg-gray-200 dark:bg-gray-800 rounded"></div>
-            </div>`;
-        }
-        grid.innerHTML = skeletons;
-        count.textContent = 'Searching...';
-
-        setTimeout(() => {
-            const q = currentQuery.toLowerCase();
-            const cat = document.getElementById('catFilter').value;
-            const subcat = document.getElementById('subcatContainer').classList.contains('hidden') ? 'all' : document.getElementById('subcatFilter').value;
-            const sort = document.getElementById('sortFilter').value;
-
-            // Filter
-            let filtered = allListings.filter(l => {
-                const matchesQuery = !q || l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q);
-                
-                // Allow matching category id or label
-                let listingCatId = l.category;
-                const catObj = window.ZZZ_SCHEMA.categories.find(c => c.label === l.category);
-                if (catObj) listingCatId = catObj.id;
-
-                const matchesCat = cat === 'all' || listingCatId === cat || l.category === cat;
-                const matchesSubcat = subcat === 'all' || l.subcategory === subcat;
-                return matchesQuery && matchesCat && matchesSubcat;
-            });
-
-            // Sort
-            if(sort === 'price_low') filtered.sort((a,b) => a.price - b.price);
-            if(sort === 'price_high') filtered.sort((a,b) => b.price - a.price);
-            if(sort === 'newest') filtered.reverse();
-
-            count.textContent = `Showing ${filtered.length} result${filtered.length === 1 ? '' : 's'} for "${currentQuery || 'All'}"`;
-
-            if(filtered.length === 0) {
-                grid.classList.add('hidden');
-                empty.classList.remove('hidden');
-                empty.classList.add('flex');
-                return;
-            }
-
-            const favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-
-            grid.innerHTML = filtered.map((l, index) => {
-          const isFav = favs.includes(l.id);
-          const timeDelay = index * 0.05;
-          return `
-            <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer relative group opacity-0 animate-pop" style="animation-delay: ${timeDelay}s" onclick="window.location.href='Listing Detail.html?id=${l.id}'">
-              
-              <div class="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-900">
-                <img src="${l.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-                
-                <div class="absolute top-4 left-4 bg-white/90 dark:bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-gray-800 dark:text-white uppercase tracking-wider card-image-wrap">
-                  ${l.category}
-                </div>
-
-                <button onclick="event.stopPropagation(); toggleFav('${l.id}', this)" class="fav-btn absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center card-image-wrap ${isFav ? 'active' : ''}">
-                  <span class="material-symbols-outlined text-xl">favorite</span>
-                </button>
-              </div>
-
-              <div class="p-5">
-                <div class="flex justify-between items-start mb-1">
-                  <h3 class="text-base font-bold text-gray-900 dark:text-white truncate pr-2">${l.title}</h3>
-                  <p class="text-lg font-black text-primary">₹${l.price.toLocaleString()}</p>
-                </div>
-                <div class="flex items-center gap-3 text-xs font-bold text-gray-400 dark:text-gray-500 mt-3">
-                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> ${l.location || 'Local'}</span>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
-        }, 500); // Simulated delay
-      }
-
-      function toggleFav(id, btn) {
-        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-        if(!user) {
-          window.location.href = `Login Page.html?redirect=SearchResult.html?q=${currentQuery}`;
-          return;
-        }
-        let isFav;
-        if(window.ZZZ) {
-          isFav = window.ZZZ.toggleFavorite(id);
-        } else {
-          let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-          if(favs.includes(id)) {
-            favs = favs.filter(f => f !== id);
-            isFav = false;
-          } else {
-            favs.push(id);
-            isFav = true;
           }
+          if (subcat !== 'all') filtered = filtered.filter(l => l.subcategory === subcat);
+
+          if (sort === 'price_low')  filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+          if (sort === 'price_high') filtered.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+          if (sort === 'newest')     filtered.sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
+
+          let label = '"' + (currentQuery || 'All') + '"';
+          if (currentLoc) label += ' in ' + currentLoc;
+          count.textContent = `${filtered.length} result${filtered.length !== 1 ? 's' : ''} for ${label}`;
+
+          if (filtered.length === 0) {
+            grid.classList.add('hidden');
+            empty.classList.remove('hidden'); empty.classList.add('flex');
+            return;
+          }
+
+          const favs = window.ZZZ ? window.ZZZ.getFavoriteIds()
+                                  : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+
+          grid.innerHTML = filtered.map((l, i) => {
+            const isFav = favs.includes(l.id);
+            const img   = l.images?.[0] || l.image || 'https://via.placeholder.com/400x300?text=No+Image';
+            return `
+              <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer relative group opacity-0 animate-pop"
+                   style="animation-delay:${i * 0.05}s"
+                   onclick="window.location.href='Listing Detail.html?id=${l.id}'">
+                <div class="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-900">
+                  <img src="${img}" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                  <div class="absolute top-4 left-4 bg-white/90 dark:bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-gray-800 dark:text-white uppercase tracking-wider">
+                    ${l.category || 'General'}
+                  </div>
+                  <button onclick="event.stopPropagation(); toggleFav('${l.id}', this)"
+                          class="fav-btn absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center ${isFav ? 'active' : ''}">
+                    <span class="material-symbols-outlined text-xl">favorite</span>
+                  </button>
+                </div>
+                <div class="p-5">
+                  <div class="flex justify-between items-start mb-1">
+                    <h3 class="text-base font-bold text-gray-900 dark:text-white truncate pr-2">${l.title}</h3>
+                    <p class="text-lg font-black text-primary whitespace-nowrap">&#8377;${Number(l.price || 0).toLocaleString('en-IN')}</p>
+                  </div>
+                  <div class="flex items-center gap-2 text-xs font-bold text-gray-400 dark:text-gray-500 mt-3">
+                    <span class="material-symbols-outlined text-[14px]">location_on</span>
+                    <span>${l.location || l.city || 'Local'}</span>
+                  </div>
+                </div>
+              </div>`;
+          }).join('');
+
+          window.dispatchEvent(new Event('zzz:resultsRendered'));
+        }, 400);
+      }
+
+      function toggleFav(id, btn) {
+        const user = window.ZZZ ? window.ZZZ.getCurrentUser()
+                                : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if (!user) {
+          window.location.href = `Login Page.html?redirect=SearchResult.html?q=${encodeURIComponent(currentQuery)}`;
+          return;
+        }
+        let isFav;
+        if (window.ZZZ) {
+          isFav = window.ZZZ.toggleFavorite(id);
+        } else {
+          let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+          isFav = !favs.includes(id);
+          favs  = isFav ? [...favs, id] : favs.filter(f => f !== id);
           localStorage.setItem('zzz_favorites', JSON.stringify(favs));
         }
-        if(isFav) btn.classList.add('active');
-        else btn.classList.remove('active');
+        isFav ? btn.classList.add('active') : btn.classList.remove('active');
       }
-      window.dispatchEvent(new Event('zzz:resultsRendered'));
 
       function toggleMobileFilters() {
-        const sidebar = document.getElementById('filterSidebar');
-        if (sidebar) {
-            sidebar.classList.toggle('hidden');
-        }
+        document.getElementById('filterSidebar')?.classList.toggle('hidden');
       }
-    </script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/abKU=" crossorigin="">
-      // ===== MAP VIEW =====
-      let searchMap = null, searchMarkers = [];
-      let currentViewMode = 'grid';
 
       window.setViewMode = function(mode) {
         currentViewMode = mode;
