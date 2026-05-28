@@ -115,116 +115,53 @@
           <div class="bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm">
             <h3 class="font-black text-gray-900 dark:text-white mb-4">Pay via UPI</h3>
 
-            <!-- UPI ID Input -->
+            <!-- UPI ID Input — PRIMARY method -->
             <div class="mb-5">
               <label class="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Enter UPI ID</label>
               <div class="flex gap-2">
-                <input type="text" id="upiId" placeholder="yourname@upi" class="card-input flex-1" oninput="validateUpi()"/>
+                <input type="text" id="upiId" placeholder="yourname@upi / yourname@okaxis" class="card-input flex-1" oninput="validateUpi()"/>
                 <button onclick="verifyUpi()" class="bg-primary text-white font-black px-4 rounded-xl text-sm hover:bg-green-700 transition-colors whitespace-nowrap">Verify</button>
               </div>
               <p id="upiStatus" class="text-xs mt-2 font-bold hidden"></p>
+              <div class="mt-2 flex items-center gap-2 text-xs text-gray-400">
+                <span class="material-symbols-outlined text-[14px]">info</span>
+                Supported: GPay, PhonePe, Paytm, BHIM — any UPI app
+              </div>
+            </div>
+
+            <!-- App icons -->
+            <div class="flex items-center gap-3 mb-5 flex-wrap">
+              <span class="text-xs bg-blue-100 text-blue-700 font-black px-3 py-1 rounded-full">GPay</span>
+              <span class="text-xs bg-purple-100 text-purple-700 font-black px-3 py-1 rounded-full">PhonePe</span>
+              <span class="text-xs bg-orange-100 text-orange-700 font-black px-3 py-1 rounded-full">Paytm</span>
+              <span class="text-xs bg-blue-100 text-blue-700 font-black px-3 py-1 rounded-full">BHIM</span>
             </div>
 
             <!-- OR Divider -->
-            <div class="flex items-center gap-3 my-5">
+            <div class="flex items-center gap-3 my-4">
               <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
               <span class="text-xs font-bold text-gray-400">OR SCAN QR CODE</span>
               <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
             </div>
 
-            <!-- QR Code -->
-            <div class="flex flex-col items-center">
-              <div class="bg-white p-3 rounded-2xl border-2 border-gray-200 dark:border-gray-700 shadow-md mb-3">
-                <!-- Simulated QR Pattern -->
-                <svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="160" height="160" fill="white"/>
-                  <!-- Top-left finder pattern -->
-                  <rect x="10" y="10" width="50" height="50" rx="4" fill="black"/>
-                  <rect x="18" y="18" width="34" height="34" rx="2" fill="white"/>
-                  <rect x="24" y="24" width="22" height="22" rx="1" fill="black"/>
-                  <!-- Top-right finder pattern -->
-                  <rect x="100" y="10" width="50" height="50" rx="4" fill="black"/>
-                  <rect x="108" y="18" width="34" height="34" rx="2" fill="white"/>
-                  <rect x="114" y="24" width="22" height="22" rx="1" fill="black"/>
-                  <!-- Bottom-left finder pattern -->
-                  <rect x="10" y="100" width="50" height="50" rx="4" fill="black"/>
-                  <rect x="18" y="108" width="34" height="34" rx="2" fill="white"/>
-                  <rect x="24" y="114" width="22" height="22" rx="1" fill="black"/>
-                  <!-- Data modules -->
-                  <rect x="70" y="10" width="22" height="6" rx="1" fill="black"/>
-                  <rect x="70" y="20" width="6" height="6" rx="1" fill="black"/>
-                  <rect x="82" y="20" width="10" height="6" rx="1" fill="black"/>
-                  <rect x="70" y="30" width="14" height="6" rx="1" fill="black"/>
-                  <rect x="88" y="30" width="6" height="6" rx="1" fill="black"/>
-                  <rect x="70" y="40" width="22" height="6" rx="1" fill="black"/>
-                  <rect x="70" y="50" width="10" height="6" rx="1" fill="black"/>
-                  <rect x="84" y="50" width="8" height="6" rx="1" fill="black"/>
-                  <rect x="10" y="70" width="6" height="6" rx="1" fill="black"/>
-                  <rect x="20" y="70" width="10" height="6" rx="1" fill="black"/>
-                  <rect x="36" y="70" width="14" height="6" rx="1" fill="black"/>
-                  <rect x="55" y="70" width="6" height="6" rx="1" fill="black"/>
-                  <rect x="70" y="70" width="14" height="6" rx="1" fill="black"/>
-                  <rect x="90" y="70" width="6" height="6" rx="1" fill="black"/>
-                  <rect x="102" y="70" width="14" height="6" rx="1" fill="black"/>
-                  <rect x="120" y="70" width="6" height="6" rx="1" fill="black"/>
-                  <rect x="132" y="70" width="18" height="6" rx="1" fill="black"/>
-                  <rect x="10" y="80" width="14" height="6" rx="1" fill="black"/>
-                  <rect x="30" y="80" width="6" height="6" rx="1" fill="black"/>
-                  <rect x="44" y="80" width="10" height="6" rx="1" fill="black"/>
-                  <rect x="60" y="80" width="14" height="6" rx="1" fill="black"/>
-                  <rect x="80" y="80" width="6" height="6" rx="1" fill="black"/>
-                  <rect x="94" y="80" width="18" height="6" rx="1" fill="black"/>
-                  <rect x="120" y="80" width="10" height="6" rx="1" fill="black"/>
-                  <rect x="136" y="80" width="14" height="6" rx="1" fill="black"/>
-                  <rect x="10" y="90" width="22" height="6" rx="1" fill="black"/>
-                  <rect x="40" y="90" width="8" height="6" rx="1" fill="black"/>
-                  <rect x="56" y="90" width="12" height="6" rx="1" fill="black"/>
-                  <rect x="76" y="90" width="8" height="6" rx="1" fill="black"/>
-                  <rect x="92" y="90" width="14" height="6" rx="1" fill="black"/>
-                  <rect x="114" y="90" width="6" height="6" rx="1" fill="black"/>
-                  <rect x="128" y="90" width="22" height="6" rx="1" fill="black"/>
-                  <rect x="70" y="100" width="6" height="6" rx="1" fill="black"/>
-                  <rect x="84" y="100" width="14" height="6" rx="1" fill="black"/>
-                  <rect x="106" y="100" width="6" height="6" rx="1" fill="black"/>
-                  <rect x="120" y="100" width="14" height="6" rx="1" fill="black"/>
-                  <rect x="140" y="100" width="10" height="6" rx="1" fill="black"/>
-                  <rect x="70" y="110" width="22" height="6" rx="1" fill="black"/>
-                  <rect x="100" y="110" width="10" height="6" rx="1" fill="black"/>
-                  <rect x="118" y="110" width="6" height="6" rx="1" fill="black"/>
-                  <rect x="130" y="110" width="14" height="6" rx="1" fill="black"/>
-                  <rect x="70" y="120" width="10" height="6" rx="1" fill="black"/>
-                  <rect x="86" y="120" width="6" height="6" rx="1" fill="black"/>
-                  <rect x="100" y="120" width="18" height="6" rx="1" fill="black"/>
-                  <rect x="126" y="120" width="24" height="6" rx="1" fill="black"/>
-                  <rect x="70" y="130" width="6" height="6" rx="1" fill="black"/>
-                  <rect x="82" y="130" width="14" height="6" rx="1" fill="black"/>
-                  <rect x="104" y="130" width="8" height="6" rx="1" fill="black"/>
-                  <rect x="120" y="130" width="6" height="6" rx="1" fill="black"/>
-                  <rect x="134" y="130" width="16" height="6" rx="1" fill="black"/>
-                  <rect x="70" y="140" width="22" height="6" rx="1" fill="black"/>
-                  <rect x="100" y="140" width="14" height="6" rx="1" fill="black"/>
-                  <rect x="122" y="140" width="28" height="6" rx="1" fill="black"/>
-                  <!-- Center ZipZapZoi Logo area -->
-                  <rect x="66" y="66" width="28" height="28" rx="6" fill="white"/>
-                  <text x="80" y="85" text-anchor="middle" font-size="14" font-weight="900" fill="#019863">Z</text>
-                </svg>
+            <!-- QR Notice — explains test mode limitation -->
+            <div class="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-700 p-5 text-center">
+              <div class="text-3xl mb-2">📵</div>
+              <p class="font-black text-amber-800 dark:text-amber-400 text-sm mb-1">QR Scanning Not Available in Test Mode</p>
+              <p class="text-xs text-amber-700 dark:text-amber-500 leading-relaxed mb-3">
+                Razorpay test mode does not generate a real scannable QR code.<br>
+                <strong>Real UPI apps (GPay, PhonePe, Paytm) will show "Invalid"</strong> when scanning — this is normal.
+              </p>
+              <div class="bg-white dark:bg-gray-900 rounded-xl p-3 border border-amber-200 text-left">
+                <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1.5">✅ To test UPI — type this ID above instead:</p>
+                <code class="text-sm font-mono font-black text-green-700 dark:text-green-400 select-all">test@razorpay</code>
+                <p class="text-[10px] text-gray-400 mt-1">Type it in the "Enter UPI ID" field above, then click Pay</p>
               </div>
-              <p class="text-sm font-bold text-gray-700 dark:text-gray-300">zipzapzoi@upi</p>
-              <p class="text-xs text-gray-400 mt-1">Scan with any UPI app</p>
-              <!-- App icons row -->
-              <div class="flex items-center gap-3 mt-3">
-                <span class="text-xs bg-blue-100 text-blue-700 font-black px-3 py-1 rounded-full">GPay</span>
-                <span class="text-xs bg-purple-100 text-purple-700 font-black px-3 py-1 rounded-full">PhonePe</span>
-                <span class="text-xs bg-orange-100 text-orange-700 font-black px-3 py-1 rounded-full">Paytm</span>
-                <span class="text-xs bg-blue-100 text-blue-700 font-black px-3 py-1 rounded-full">BHIM</span>
-              </div>
+              <p class="text-[10px] text-gray-400 mt-3">
+                ℹ️ Real QR code will work automatically after switching to Live Mode
+              </p>
             </div>
 
-            <!-- UPI Timer -->
-            <div class="mt-5 flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-              <span class="material-symbols-outlined text-[16px] text-orange-400">timer</span>
-              QR expires in <span id="qrTimer" class="font-black text-orange-500">09:59</span>
-            </div>
           </div>
         </div>
 
@@ -643,18 +580,8 @@
       }, 1200);
     }
 
-    // ── QR TIMER ──
-    let qrSeconds = 599;
-    const timerEl = document.getElementById('qrTimer');
-    const qrTimerInterval = setInterval(() => {
-      qrSeconds--;
-      if (qrSeconds <= 0) { clearInterval(qrTimerInterval); timerEl.textContent = 'Expired'; return; }
-      const m = String(Math.floor(qrSeconds / 60)).padStart(2, '0');
-      const s = String(qrSeconds % 60).padStart(2, '0');
-      timerEl.textContent = `${m}:${s}`;
-    }, 1000);
-
     // ── CARD ──
+
     function formatCard(input) {
       let v = input.value.replace(/\D/g, '').slice(0, 16);
       input.value = v.replace(/(.{4})/g, '$1 ').trim();
