@@ -111,13 +111,16 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
       
       <!-- 1. Classifieds -->
-      <a href="Classifieds LandingPage.html" class="hub-card animate-in rounded-3xl bg-white dark:bg-card-dark border border-gray-100 dark:border-gray-800 p-8 flex flex-col items-start relative overflow-hidden group" style="animation-delay: 0.2s; opacity: 0;">
+      <a id="classifiedsCard" href="Classifieds LandingPage.html" class="hub-card animate-in rounded-3xl bg-white dark:bg-card-dark border border-gray-100 dark:border-gray-800 p-8 flex flex-col items-start relative overflow-hidden group" style="animation-delay: 0.2s; opacity: 0;">
         <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 dark:bg-blue-500/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
         <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center mb-6 shadow-lg shadow-blue-500/30">
           <span class="material-symbols-outlined text-3xl">storefront</span>
         </div>
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2 relative z-10">Classifieds</h2>
-        <p class="text-gray-500 dark:text-gray-400 text-sm relative z-10">Buy, sell, and discover amazing local deals in your community.</p>
+        <p class="text-gray-500 dark:text-gray-400 text-sm relative z-10 mb-4">Buy, sell, and discover amazing local deals in your community.</p>
+        <span id="classifiedsCta" class="mt-auto text-xs font-black text-blue-500 flex items-center gap-1">
+          Browse Listings <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+        </span>
       </a>
 
       <!-- 2. Food Delivery -->
@@ -196,8 +199,16 @@
           <div class="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
             <span class="material-symbols-outlined text-4xl">rocket_launch</span>
           </div>
-          <h2 id="dynamicTitle" class="text-2xl font-bold text-gray-900 dark:text-white mb-3">MODULE NAME</h2>
-          <p class="text-gray-500 dark:text-gray-400 mb-8">We are actively building this module. It will be rolling out to users very soon!</p>
+          <h2 id="dynamicTitle" class="text-2xl font-bold text-gray-900 dark:text-white mb-3 text-center">MODULE NAME</h2>
+          <p class="text-gray-500 dark:text-gray-400 mb-6 text-center">We're actively building this module and it's almost ready! Get notified the moment it launches.</p>
+          <!-- Notify Me -->
+          <div class="flex gap-2 mb-6">
+            <input id="notifyEmail" type="email" placeholder="your@email.com"
+              class="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              value=""/>
+            <button onclick="submitNotify()" class="bg-primary hover:bg-green-700 text-white font-black px-4 py-2.5 rounded-xl text-sm transition-all active:scale-95 whitespace-nowrap">Notify Me</button>
+          </div>
+          <div id="notifySuccess" class="hidden text-center text-xs text-green-600 dark:text-green-400 font-bold mb-4">✅ You're on the list! We'll email you at launch.</div>
           <div class="flex flex-col sm:flex-row gap-3">
             <button onclick="closeVideo()" class="flex-1 py-3 px-6 rounded-xl border border-gray-200 dark:border-gray-700 font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Go Back</button>
             <button onclick="replayVideo()" class="flex-1 py-3 px-6 rounded-xl bg-primary hover:bg-[#e06512] font-bold text-white shadow-lg shadow-primary/30 transition-colors">Replay Video</button>
@@ -259,6 +270,37 @@
       window.location.reload();
     }
 
+    // Smart Classifieds card — goes to Seller Dashboard if logged in
+    (function() {
+      const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      if (user) {
+        const card = document.getElementById('classifiedsCard');
+        const cta  = document.getElementById('classifiedsCta');
+        if (card) card.href = 'Seller Dashboard.html';
+        if (cta)  cta.innerHTML = 'My Dashboard <span class="material-symbols-outlined text-[16px]">arrow_forward</span>';
+      }
+    })();
+
+    // Notify Me
+    let currentModule = '';
+    function submitNotify() {
+      const emailEl = document.getElementById('notifyEmail');
+      const email   = emailEl.value.trim().toLowerCase();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        emailEl.style.borderColor = '#ef4444';
+        setTimeout(() => emailEl.style.borderColor = '', 1500);
+        return;
+      }
+      const list = JSON.parse(localStorage.getItem('zzz_notify_list') || '[]');
+      const already = list.find(e => e.email === email && e.module === currentModule);
+      if (!already) {
+        list.push({ email, module: currentModule, date: new Date().toISOString() });
+        localStorage.setItem('zzz_notify_list', JSON.stringify(list));
+      }
+      document.getElementById('notifySuccess').classList.remove('hidden');
+      emailEl.value = '';
+    }
+
     // Video Overlay Logic
     const videoPaths = {
         'Drive Services': 'Assets/ZIpZapZoi3.mp4',
@@ -273,12 +315,21 @@
     const titleText = document.getElementById("dynamicTitle");
 
     function openVideo(moduleName) {
+        currentModule = moduleName;
+        titleText.innerText = moduleName;
+
+        // Pre-fill notify email with logged-in user's email if available
+        const u = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const notifyEl = document.getElementById('notifyEmail');
+        if (u && u.email && notifyEl) notifyEl.value = u.email;
+        // Reset success message
+        const ns = document.getElementById('notifySuccess');
+        if (ns) ns.classList.add('hidden');
+
         const videoFile = videoPaths[moduleName];
         if(!videoFile) {
-            // Fallback if video is missing
             videoWrapper.style.display = "none";
             messageContainer.style.display = "block";
-            titleText.innerText = moduleName;
             overlay.style.display = "flex";
             return;
         }
