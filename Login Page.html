@@ -336,6 +336,7 @@
           to_name:     userObj.name || 'there',
           otp_code:    otpCode,
           expiry_mins: '10',
+          email:       userObj.email,
         });
         showToast(`OTP sent to ${userObj.email} 📧`, 'success');
       } catch (err) {

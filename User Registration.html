@@ -373,7 +373,11 @@
     if (EMAILJS_CONFIGURED) {
       try {
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-          to_email: email, to_name: name, otp_code: otpCode, expiry_mins: '10',
+          to_email: email,
+          to_name: name,
+          otp_code: otpCode,
+          expiry_mins: '10',
+          email: email,
         });
         showToast(`OTP sent to ${email} 📧`);
       } catch (err) {
