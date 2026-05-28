@@ -272,9 +272,14 @@
             </p>
           </div>
         </div>
-        <button onclick="closeFloatingChat()" class="text-white/80 hover:text-white transition-colors p-1">
-          <span class="material-symbols-outlined">close</span>
-        </button>
+        <div class="flex items-center gap-1">
+          <button onclick="openInInbox()" title="Open full inbox" class="text-white/80 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10" >
+            <span class="material-symbols-outlined text-[20px]">open_in_new</span>
+          </button>
+          <button onclick="closeFloatingChat()" class="text-white/80 hover:text-white transition-colors p-1">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
       </div>
 
       <!-- Messages Feed -->
@@ -284,7 +289,8 @@
 
       <!-- Input Area -->
       <div class="bg-white dark:bg-card-dark p-3 border-t border-gray-200 dark:border-gray-700 flex items-center gap-2 rounded-b-2xl">
-        <input type="text" id="chatWidgetInput" class="flex-1 bg-gray-100 dark:bg-gray-800 border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none transition-all placeholder-gray-400 dark:text-white" placeholder="Type a message...">
+        <input type="text" id="chatWidgetInput" class="flex-1 bg-gray-100 dark:bg-gray-800 border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none transition-all placeholder-gray-400 dark:text-white" placeholder="Type a message..."
+          onkeypress="if(event.key==='Enter') sendFloatingMessage('text')">
         <button onclick="sendFloatingMessage('text')" class="w-9 h-9 bg-primary text-white rounded-full shadow-md hover:bg-green-700 transition-transform active:scale-95 flex items-center justify-center flex-shrink-0">
           <span class="material-symbols-outlined text-sm">send</span>
         </button>
@@ -592,6 +598,20 @@
         widget.classList.remove('translate-y-[120%]');
         
         renderFloatingMessages();
+      }
+
+      // Navigate to Inbox.html with intent
+      function openInInbox() {
+        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if (!user) { window.location.href = 'Login Page.html'; return; }
+        const intent = {
+          partnerId: chatWidgetPartnerId,
+          partnerName: chatWidgetPartnerName,
+          listingId: currentListing ? currentListing.id : null,
+          listingTitle: currentListing ? currentListing.title : 'Listing'
+        };
+        localStorage.setItem('zzz_chat_intent', JSON.stringify(intent));
+        window.location.href = 'Inbox.html';
       }
 
       function closeFloatingChat() {
