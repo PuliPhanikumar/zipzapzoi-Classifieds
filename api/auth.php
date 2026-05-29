@@ -54,14 +54,15 @@ function handleRegister(array $b): void {
         'INSERT INTO otp_tokens (email, otp_code, action, expires_at, meta) VALUES (?, ?, ?, ?, ?)'
     )->execute([$email, $otp, 'register', $expiry, $meta]);
 
-    // Send OTP via EmailJS (server-side via cURL if available, else instruct frontend)
-    // NOTE: EmailJS is client-side only. OTP is sent by the browser via EmailJS.
-    // We return the OTP expiry so the frontend can show a countdown.
-    // The actual email is sent by the frontend after this endpoint returns success.
+    // Send OTP email via PHP mail (server-side)
+    sendOtpMail($email, $name, $otp, 15);
+
     jsonOk([
-        'message'    => 'OTP generated. Frontend should send it via EmailJS.',
-        'otp'        => $otp,       // Frontend sends this in the email
-        'expires_in' => 900,        // 15 minutes in seconds
+        'message'    => 'OTP sent to your email.',
+        'otp'        => $otp,       // Also returned so browser can send via EmailJS as backup
+        'expires_in' => 900,
+        'to_name'    => $name,
+        'to_email'   => $email,
     ]);
 }
 
@@ -146,9 +147,12 @@ function handleLogin(array $b): void {
     $db->prepare('INSERT INTO otp_tokens (email, otp_code, action, expires_at) VALUES (?, ?, ?, ?)')
        ->execute([$email, $otp, 'login', $expiry]);
 
+    // Send OTP email via PHP mail (server-side — works without EmailJS)
+    sendOtpMail($email, $user['name'], $otp, 10);
+
     jsonOk([
-        'message'    => 'OTP generated.',
-        'otp'        => $otp,
+        'message'    => 'OTP sent to your email.',
+        'otp'        => $otp,   // Also returned so browser can send via EmailJS as backup
         'expires_in' => 600,
         'to_name'    => $user['name'],
         'to_email'   => $email,
@@ -263,6 +267,37 @@ function handleVerifySensitiveOtp(array $b): void {
 // ─────────────────────────────────────────────────────────────────────
 function generateOtp(): string {
     return str_pad((string)random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+}
+
+function sendOtpMail(string $toEmail, string $toName, string $otp, int $expiryMins = 10): void {
+    $subject = "Your ZipZapZoi OTP Code: {$otp}";
+    $body    = "
+<!DOCTYPE html>
+<html><body style='margin:0;padding:0;background:#f0f4f8;font-family:Arial,sans-serif;'>
+<div style='max-width:480px;margin:40px auto;background:#fff;border-radius:16px;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,0.08);'>
+  <div style='text-align:center;margin-bottom:32px;'>
+    <h1 style='color:#019863;margin:0;font-size:28px;'>ZipZapZoi</h1>
+    <p style='color:#888;margin:4px 0 0;font-size:13px;'>Post Free Ads</p>
+  </div>
+  <p style='color:#374151;font-size:16px;margin:0 0 8px;'>Hello <strong>{$toName}</strong>,</p>
+  <p style='color:#374151;font-size:15px;margin:0 0 28px;'>Your verification code is:</p>
+  <div style='background:#f0fdf4;border:2px solid #019863;border-radius:12px;padding:24px;text-align:center;margin-bottom:28px;'>
+    <span style='font-size:42px;font-weight:800;letter-spacing:12px;color:#019863;'>{$otp}</span>
+  </div>
+  <p style='color:#6b7280;font-size:14px;text-align:center;margin:0 0 8px;'>⏱ Valid for <strong>{$expiryMins} minutes</strong></p>
+  <p style='color:#9ca3af;font-size:12px;text-align:center;margin:0;'>If you didn't request this code, please ignore this email.</p>
+  <hr style='border:none;border-top:1px solid #f3f4f6;margin:28px 0;'>
+  <p style='color:#d1d5db;font-size:11px;text-align:center;margin:0;'>© 2026 ZipZapZoi. All Rights Reserved.</p>
+</div>
+</body></html>";
+
+    $headers  = "MIME-Version: 1.0\r\n";
+    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+    $headers .= "From: ZipZapZoi <no-reply@zipzapzoi.com>\r\n";
+    $headers .= "Reply-To: no-reply@zipzapzoi.com\r\n";
+    $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
+
+    @mail($toEmail, $subject, $body, $headers);
 }
 
 function getUserById(int $id): ?array {
