@@ -355,7 +355,7 @@
                 <div id="featureFlagsUI" class="hidden space-y-3">
                     <label class="flex items-center gap-3 text-sm cursor-pointer"><input type="checkbox" id="flagEscrow" onchange="saveFeatureFlags()" class="rounded text-brand w-4 h-4 focus:ring-brand"> Require Escrow Payment System</label>
                     <label class="flex items-center gap-3 text-sm cursor-pointer"><input type="checkbox" id="flagVerify" onchange="saveFeatureFlags()" class="rounded text-brand w-4 h-4 focus:ring-brand"> Require Strict Seller ID Verification</label>
-                    <label class="flex items-center gap-3 text-sm cursor-pointer"><input type="checkbox" id="flagPremium" onchange="saveFeatureFlags()" class="rounded text-brand w-4 h-4 focus:ring-brand"> Limit to Premium/Featured Listings Only</label>
+<label class="flex items-center gap-3 text-sm cursor-pointer"><input type="checkbox" id="flagPremium" onchange="saveFeatureFlags()" class="rounded text-brand w-4 h-4 focus:ring-brand"> Limit to Premium/Featured Listings Only</label>
                 </div>
                 <p id="featureFlagsEmpty" class="text-slate-400 text-xs italic">Select a Category above to configure flags.</p>
             </div>
@@ -364,14 +364,168 @@
     </div>
 
     <div id="tab-settings" class="tab-content hidden space-y-6">
+      <!-- Listing & Media Config -->
       <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-6">
-        <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-brand">tune</span> Listing & Media Configurations</h3>
+        <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-brand">tune</span> Listing &amp; Media Configurations</h3>
         <div class="grid grid-cols-3 gap-6">
           <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">Global Listing Expiry (Days)</label><input type="number" id="cfgExpiry" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand" value="30"></div>
           <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">Max Upload Size (MB)</label><input type="number" id="cfgUploadSize" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand" value="5"></div>
           <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">Allowed Image Formats</label><input type="text" id="cfgFormats" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand" value="jpg,png,webp"></div>
         </div>
         <button onclick="saveSettingsLocal()" class="mt-6 bg-brand text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700 transition-colors shadow-sm">Save System Config</button>
+      </div>
+
+      <!-- ═══ API & INTEGRATIONS PANEL ═══ -->
+      <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden">
+        <div class="p-5 border-b border-slate-100 dark:border-gray-800 bg-gradient-to-r from-brand/5 to-blue-500/5 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand to-blue-500 flex items-center justify-center shadow-md">
+              <span class="material-symbols-outlined text-white text-xl">api</span>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 dark:text-white">API &amp; Integrations</h3>
+              <p class="text-xs text-slate-500">Update keys here — no code changes needed. Saved to device storage.</p>
+            </div>
+          </div>
+          <div id="apiSaveStatus" class="hidden text-xs font-bold text-green-600 flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">check_circle</span> Saved!
+          </div>
+        </div>
+
+        <div class="p-6 space-y-8">
+
+          <!-- EmailJS -->
+          <div>
+            <div class="flex items-center gap-2 mb-4">
+              <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+                <span class="material-symbols-outlined text-blue-500 text-[18px]">mail</span>
+              </div>
+              <div>
+                <h4 class="font-bold text-sm text-slate-800 dark:text-white">EmailJS Configuration</h4>
+                <p class="text-[11px] text-slate-400">Used for OTP verification emails and password reset links</p>
+              </div>
+              <a href="https://dashboard.emailjs.com" target="_blank" class="ml-auto text-[11px] text-blue-500 hover:underline flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">open_in_new</span> EmailJS Dashboard
+              </a>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Service ID</label>
+                <input type="text" id="apiEmailjsService" placeholder="service_xxxxxxx"
+                  class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 text-sm font-mono focus:ring-2 focus:ring-brand outline-none transition-all">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Public Key</label>
+                <input type="text" id="apiEmailjsPublic" placeholder="XXXXXXXXXXXXXXX"
+                  class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 text-sm font-mono focus:ring-2 focus:ring-brand outline-none transition-all">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">OTP / Verification Template ID</label>
+                <input type="text" id="apiEmailjsOtp" placeholder="template_xxxxxxx"
+                  class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 text-sm font-mono focus:ring-2 focus:ring-brand outline-none transition-all">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Password Reset Template ID</label>
+                <input type="text" id="apiEmailjsReset" placeholder="template_xxxxxxx"
+                  class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 text-sm font-mono focus:ring-2 focus:ring-brand outline-none transition-all">
+              </div>
+            </div>
+            <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl text-xs text-blue-700 dark:text-blue-300">
+              <strong>Template variables expected:</strong> OTP — <code>{{to_name}}, {{to_email}}, {{otp_code}}, {{expiry_mins}}</code> &nbsp;|&nbsp;
+              Reset — <code>{{to_name}}, {{to_email}}, {{reset_link}}, {{reset_link_text}}</code>
+            </div>
+          </div>
+
+          <hr class="border-slate-100 dark:border-gray-800">
+
+          <!-- Razorpay -->
+          <div>
+            <div class="flex items-center gap-2 mb-4">
+              <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+                <span class="material-symbols-outlined text-blue-700 dark:text-blue-300 text-[18px]">payments</span>
+              </div>
+              <div>
+                <h4 class="font-bold text-sm text-slate-800 dark:text-white">Razorpay Payment Gateway</h4>
+                <p class="text-[11px] text-slate-400">Live key is used across all plan purchase flows</p>
+              </div>
+              <a href="https://dashboard.razorpay.com" target="_blank" class="ml-auto text-[11px] text-blue-500 hover:underline flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">open_in_new</span> Razorpay Dashboard
+              </a>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="col-span-2">
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Live API Key</label>
+                <div class="relative">
+                  <input type="password" id="apiRazorpayKey" placeholder="rzp_live_XXXXXXXXXXXXXXXXXX"
+                    class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 pr-10 text-sm font-mono focus:ring-2 focus:ring-brand outline-none transition-all">
+                  <button type="button" onclick="toggleApiKeyVisibility('apiRazorpayKey', this)"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                    <span class="material-symbols-outlined text-[18px]">visibility</span>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Currency</label>
+                <select id="apiRazorpayCurrency" class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand outline-none">
+                  <option value="INR">INR — Indian Rupee ₹</option>
+                  <option value="USD">USD — US Dollar $</option>
+                  <option value="EUR">EUR — Euro €</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Environment</label>
+                <select id="apiRazorpayEnv" class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand outline-none">
+                  <option value="live">🟢 Live</option>
+                  <option value="test">🧪 Test</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <hr class="border-slate-100 dark:border-gray-800">
+
+          <!-- Site Identity -->
+          <div>
+            <div class="flex items-center gap-2 mb-4">
+              <div class="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
+                <span class="material-symbols-outlined text-green-600 text-[18px]">corporate_fare</span>
+              </div>
+              <div>
+                <h4 class="font-bold text-sm text-slate-800 dark:text-white">Site Identity</h4>
+                <p class="text-[11px] text-slate-400">Used in email templates and system notifications</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Site Name</label>
+                <input type="text" id="apiSiteName" placeholder="ZIPZAPZOI Classifieds"
+                  class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Support Email</label>
+                <input type="email" id="apiSupportEmail" placeholder="support@zipzapzoi.com"
+                  class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">OTP Expiry (Minutes)</label>
+                <input type="number" id="apiOtpExpiry" placeholder="10" min="1" max="60"
+                  class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Save Button -->
+          <div class="flex items-center gap-4 pt-2">
+            <button onclick="saveApiConfig()" class="bg-gradient-to-r from-brand to-green-500 text-white font-black px-8 py-3 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px]">save</span> Save All API Settings
+            </button>
+            <button onclick="testEmailJs()" class="border border-slate-200 dark:border-gray-700 text-slate-600 dark:text-gray-300 font-bold px-6 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px]">send</span> Send Test Email
+            </button>
+            <p class="text-[11px] text-slate-400 ml-auto">⚠️ Keys are stored locally on this device only.</p>
+          </div>
+
+        </div>
       </div>
     </div>
 
@@ -1168,7 +1322,106 @@ function resetSchemaToFactory() { confirmAction('Factory Reset', 'Restore defaul
 // ==============================
 // 7. GLOBAL CONFIG & BACKUPS
 // ==============================
-function loadSettingsUI() { const cfg = safeJSON('zzz_sys_cfg', {expiry:30, uploadSize:5, formats:'jpg,png,webp', timeout:15, ips:'', enforce2fa:false}); ['expiry','uploadSize','formats','timeout','ips'].forEach(k => { const el = document.getElementById('cfg'+k.charAt(0).toUpperCase()+k.slice(1)); if(el) el.value = cfg[k]; }); const el2fa = document.getElementById('cfg2FA'); if(el2fa) el2fa.checked = !!cfg.enforce2fa; }
+function loadSettingsUI() {
+  const cfg = safeJSON('zzz_sys_cfg', {expiry:30, uploadSize:5, formats:'jpg,png,webp', timeout:15, ips:'', enforce2fa:false});
+  ['expiry','uploadSize','formats','timeout','ips'].forEach(k => {
+    const el = document.getElementById('cfg'+k.charAt(0).toUpperCase()+k.slice(1));
+    if(el) el.value = cfg[k];
+  });
+  const el2fa = document.getElementById('cfg2FA');
+  if(el2fa) el2fa.checked = !!cfg.enforce2fa;
+  loadApiConfig();
+}
+
+// ─── API CONFIG ────────────────────────────────────────────────────────────
+function loadApiConfig() {
+  const defaults = {
+    emailjsService: 'service_40ub0hj',
+    emailjsPublic:  'sbx4wO3ByZ3hFYoL6',
+    emailjsOtp:     'template_q4h6hyh',
+    emailjsReset:   'template_hj4pquj',
+    razorpayKey:    'rzp_live_SugQ3leLrB2iW6',
+    razorpayCurrency: 'INR',
+    razorpayEnv:    'live',
+    siteName:       'ZIPZAPZOI Classifieds',
+    supportEmail:   'support@zipzapzoi.com',
+    otpExpiry:      10
+  };
+  const saved = safeJSON('zzz_api_config', {});
+  const cfg = Object.assign({}, defaults, saved);
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
+  set('apiEmailjsService', cfg.emailjsService);
+  set('apiEmailjsPublic',  cfg.emailjsPublic);
+  set('apiEmailjsOtp',     cfg.emailjsOtp);
+  set('apiEmailjsReset',   cfg.emailjsReset);
+  set('apiRazorpayKey',    cfg.razorpayKey);
+  set('apiRazorpayCurrency', cfg.razorpayCurrency);
+  set('apiRazorpayEnv',    cfg.razorpayEnv);
+  set('apiSiteName',       cfg.siteName);
+  set('apiSupportEmail',   cfg.supportEmail);
+  set('apiOtpExpiry',      cfg.otpExpiry);
+}
+
+function saveApiConfig() {
+  const get = id => document.getElementById(id)?.value?.trim() || '';
+  const cfg = {
+    emailjsService:   get('apiEmailjsService'),
+    emailjsPublic:    get('apiEmailjsPublic'),
+    emailjsOtp:       get('apiEmailjsOtp'),
+    emailjsReset:     get('apiEmailjsReset'),
+    razorpayKey:      get('apiRazorpayKey'),
+    razorpayCurrency: get('apiRazorpayCurrency'),
+    razorpayEnv:      get('apiRazorpayEnv'),
+    siteName:         get('apiSiteName'),
+    supportEmail:     get('apiSupportEmail'),
+    otpExpiry:        parseInt(get('apiOtpExpiry')) || 10,
+    updatedAt:        new Date().toISOString()
+  };
+  if(!cfg.emailjsService || !cfg.emailjsPublic) { showToast('EmailJS Service ID and Public Key are required', 'error'); return; }
+  if(!cfg.razorpayKey) { showToast('Razorpay key is required', 'error'); return; }
+  localStorage.setItem('zzz_api_config', JSON.stringify(cfg));
+  logAction('API_CONFIG_UPDATE', 'API keys and integration settings updated');
+  const statusEl = document.getElementById('apiSaveStatus');
+  if(statusEl) { statusEl.classList.remove('hidden'); setTimeout(() => statusEl.classList.add('hidden'), 3000); }
+  showToast('✅ API settings saved — all pages will use new keys immediately');
+  resetSessionTimer();
+}
+
+function toggleApiKeyVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if(!input) return;
+  const isHidden = input.type === 'password';
+  input.type = isHidden ? 'text' : 'password';
+  btn.querySelector('.material-symbols-outlined').textContent = isHidden ? 'visibility_off' : 'visibility';
+}
+
+function testEmailJs() {
+  const cfg = safeJSON('zzz_api_config', {});
+  const serviceId  = cfg.emailjsService  || 'service_40ub0hj';
+  const templateId = cfg.emailjsOtp      || 'template_q4h6hyh';
+  const publicKey  = cfg.emailjsPublic   || 'sbx4wO3ByZ3hFYoL6';
+  const adminUser  = JSON.parse(localStorage.getItem('zzz_user') || '{}');
+  const toEmail    = adminUser.email || cfg.supportEmail || '';
+  if(!toEmail) { showToast('No admin email found to send test to', 'error'); return; }
+  if(typeof emailjs === 'undefined') {
+    showToast('EmailJS not loaded on this page — test from Login or Registration page instead', 'error');
+    return;
+  }
+  emailjs.init(publicKey);
+  emailjs.send(serviceId, templateId, {
+    to_name:     adminUser.name || 'Admin',
+    to_email:    toEmail,
+    otp_code:    '123456',
+    expiry_mins: cfg.otpExpiry || 10
+  }).then(() => {
+    showToast('✅ Test email sent to ' + toEmail);
+    logAction('EMAIL_TEST_SENT', 'Test OTP email sent to ' + toEmail);
+  }).catch(err => {
+    showToast('❌ Email failed: ' + (err.text || err.message || 'Unknown error'), 'error');
+  });
+}
+// ─── END API CONFIG ────────────────────────────────────────────────────────
+
 function saveSettingsLocal() { const cfg = { expiry: document.getElementById('cfgExpiry')?.value||30, uploadSize: document.getElementById('cfgUploadSize')?.value||5, formats: document.getElementById('cfgFormats')?.value||'jpg,png', timeout: document.getElementById('cfgTimeout')?.value||15, ips: document.getElementById('cfgIPs')?.value||'', enforce2fa: document.getElementById('cfg2FA')?.checked||false }; localStorage.setItem('zzz_sys_cfg', JSON.stringify(cfg)); logAction('SYS_CONFIG_UPDATE', 'Updated global settings'); showToast('Settings applied securely'); resetSessionTimer(); }
 function handleLogout() { if(window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(null); else { localStorage.removeItem('zzz_user'); localStorage.removeItem('zipzapzoi_current_user'); } sessionStorage.removeItem('zzz_admin_2fa_verified'); window.location.href = 'Login Page.html'; }
 
