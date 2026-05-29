@@ -15,8 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 // ── Database Credentials ──────────────────────────────────────────────
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'u572945141_Classifieds_db');
-define('DB_USER', 'u572945141_YOUR_DB_USER');  // ← Replace with your DB username from hPanel
-define('DB_PASS', 'YOUR_DB_PASSWORD');           // ← Replace with your DB password
+define('DB_USER', 'u572945141_Classifieds_db');  // ← Replace with your DB username from hPanel
+define('DB_PASS', 'Dhiyanshi#28');           // ← Replace with your DB password
 define('DB_CHARSET', 'utf8mb4');
 
 // ── Session / Cookie Settings ─────────────────────────────────────────
