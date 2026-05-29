@@ -455,7 +455,7 @@
       const data = await res.json();
       if (data.success) {
         startCountdown((data.expires_in || 600) * 1000);
-        await sendOtpEmail(_pendingUser, data.otp);
+        showToast(`New OTP sent to ${_pendingUser.email} 📧`, 'success');
       } else {
         showToast(data.error || 'Could not resend OTP. Please go back.', 'error');
       }
@@ -556,14 +556,14 @@
         return;
       }
 
-      // Credentials valid — send OTP via EmailJS, show OTP step
+      // Credentials valid — OTP sent by PHP server-side, just show OTP step
       _pendingEmail = email;
       _pendingPass  = password; // kept in memory for resend only
       _pendingUser  = { name: data.to_name, email: data.to_email };
       showOtpStep(_pendingUser);
       startCountdown((data.expires_in || 600) * 1000);
       startResendTimer(30);
-      await sendOtpEmail(_pendingUser, data.otp);
+      showToast(`OTP sent to ${data.to_email} 📧`, 'success');
 
     } catch (err) {
       btn.disabled = false;
