@@ -92,3 +92,7 @@ Options -Indexes
 
 # ── 8. Default charset ───────────────────────────────────────────────
 AddDefaultCharset UTF-8
+
+# ── 9. PHP Execution (Hostinger LiteSpeed) ───────────────────────────
+# Forces LiteSpeed to execute .php files via its built-in LSPHP engine
+AddType application/x-httpd-lsphp .php
