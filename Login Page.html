@@ -255,11 +255,11 @@
   if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
 
   // ─── State ────────────────────────────────────────────────
-  let _pendingUser = null;    // user object pending OTP confirm
-  let _currentOtp  = null;   // 6-digit string
-  let _otpExpiry   = null;   // Date when OTP expires
-  let _countdownId = null;
-  let _resendId    = null;
+  let _pendingUser  = null;   // {name, email} pending OTP
+  let _pendingEmail = null;   // email for verify_otp call
+  let _pendingPass  = null;   // password kept in memory for resend
+  let _countdownId  = null;
+  let _resendId     = null;
 
   // ─── Utilities ────────────────────────────────────────────
   function showToast(msg, type = 'success') {
@@ -443,16 +443,29 @@
 
   // ─── Resend OTP ───────────────────────────────────────────
   async function resendOtp() {
-    _currentOtp = generateOtp();
-    _otpExpiry  = new Date(Date.now() + 10 * 60 * 1000);
     clearOtpBoxes();
-    startCountdown(10 * 60 * 1000);
     startResendTimer(30);
-    await sendOtpEmail(_pendingUser, _currentOtp);
+    try {
+      const res  = await fetch('/api/auth.php?action=login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: _pendingEmail, password: _pendingPass })
+      });
+      const data = await res.json();
+      if (data.success) {
+        startCountdown((data.expires_in || 600) * 1000);
+        await sendOtpEmail(_pendingUser, data.otp);
+      } else {
+        showToast(data.error || 'Could not resend OTP. Please go back.', 'error');
+      }
+    } catch (err) {
+      showToast('Network error. Please go back and try again.', 'error');
+    }
   }
 
-  // ─── Verify OTP ───────────────────────────────────────────
-  function verifyOtp() {
+  // ─── Verify OTP (server-side) ─────────────────────────────
+  async function verifyOtp() {
     const entered = getEnteredOtp();
     if (entered.length < 6) { showToast('Please enter all 6 digits.', 'error'); return; }
 
@@ -462,51 +475,47 @@
     document.getElementById('verifyBtnIcon').className = 'material-symbols-outlined text-[20px] animate-spin';
     document.getElementById('verifyBtnIcon').textContent = 'refresh';
 
-    setTimeout(() => {
-      // Check expiry
-      if (!_currentOtp || Date.now() > _otpExpiry.getTime()) {
-        showToast('OTP has expired. Please request a new one.', 'error');
-        btn.disabled = false;
-        document.getElementById('verifyBtnText').textContent = 'Verify & Sign In';
-        document.getElementById('verifyBtnIcon').className = 'material-symbols-outlined text-[20px]';
-        document.getElementById('verifyBtnIcon').textContent = 'verified';
-        return;
-      }
+    try {
+      const res  = await fetch('/api/auth.php?action=verify_otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: _pendingEmail, otp: entered, action: 'login' })
+      });
+      const data = await res.json();
 
-      if (entered === _currentOtp) {
-        clearInterval(_countdownId);
-        showToast(`Welcome back, ${_pendingUser.name.split(' ')[0]}! 🎉`);
-        loginSuccess(_pendingUser);
-      } else {
-        showToast('Incorrect OTP. Please try again.', 'error');
+      if (!data.success) {
+        showToast(data.error || 'Incorrect OTP. Please try again.', 'error');
         clearOtpBoxes();
         btn.disabled = false;
         document.getElementById('verifyBtnText').textContent = 'Verify & Sign In';
         document.getElementById('verifyBtnIcon').className = 'material-symbols-outlined text-[20px]';
         document.getElementById('verifyBtnIcon').textContent = 'verified';
-        // Shake animation on boxes
         const boxes = document.getElementById('otpBoxes');
-        boxes.style.animation = 'none';
-        boxes.offsetHeight; // reflow
+        boxes.style.animation = 'none'; boxes.offsetHeight;
         boxes.style.animation = 'shake 0.4s ease';
+        return;
       }
-    }, 600);
+
+      clearInterval(_countdownId);
+      showToast(`Welcome back, ${data.user.name.split(' ')[0]}! 🎉`);
+      loginSuccess(data.user);
+
+    } catch (err) {
+      showToast('Network error. Please try again.', 'error');
+      btn.disabled = false;
+      document.getElementById('verifyBtnText').textContent = 'Verify & Sign In';
+      document.getElementById('verifyBtnIcon').className = 'material-symbols-outlined text-[20px]';
+      document.getElementById('verifyBtnIcon').textContent = 'verified';
+    }
   }
 
   // ─── Final Login ──────────────────────────────────────────
   function loginSuccess(user) {
-    const banned = JSON.parse(localStorage.getItem('zzz_banned_users') || '[]');
-    if (banned.includes(user.name) || banned.includes(user.id)) {
-      showToast('Your account has been suspended. Contact support.', 'error');
-      backToLogin();
-      return;
-    }
-    if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(user);
-    else {
-      localStorage.setItem('zzz_user', JSON.stringify(user));
-      if (window.ZZZ && window.ZZZ.Plans) window.ZZZ.Plans.grantMonthlyFreeAd(user.id);
-      localStorage.setItem('zipzapzoi_current_user', JSON.stringify(user));
-    }
+    // Save user info to localStorage for UI display (auth is via session cookie)
+    localStorage.setItem('zzz_user', JSON.stringify(user));
+    localStorage.setItem('zipzapzoi_current_user', JSON.stringify(user));
+    _pendingPass = null; // Clear password from memory
     const redirect = new URLSearchParams(window.location.search).get('redirect');
     setTimeout(() => {
       if (redirect) window.location.href = redirect;
@@ -515,7 +524,7 @@
     }, 800);
   }
 
-  // ─── Form Submit (Step 1) ─────────────────────────────────
+  // ─── Form Submit (Step 1) — calls real PHP API ───────────
   document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const email    = document.getElementById('email').value.trim().toLowerCase();
@@ -529,29 +538,40 @@
     document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px] animate-spin';
     document.getElementById('btnIcon').textContent = 'refresh';
 
+    try {
+      const res  = await fetch('/api/auth.php?action=login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
 
-    // Real user lookup
-    setTimeout(async () => {
-      const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-      const found = users.find(u => u.email.toLowerCase() === email && u.password === password);
-
-      if (!found) {
+      if (!data.success) {
         btn.disabled = false;
         document.getElementById('btnText').textContent = 'Send OTP & Sign In';
         document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px]';
         document.getElementById('btnIcon').textContent = 'send';
-        showToast('Incorrect email or password. Please try again.', 'error');
+        showToast(data.error || 'Invalid email or password.', 'error');
         return;
       }
 
-      // Credentials valid — generate & send OTP
-      _currentOtp = generateOtp();
-      _otpExpiry  = new Date(Date.now() + 10 * 60 * 1000);
-      showOtpStep(found);
-      startCountdown(10 * 60 * 1000);
+      // Credentials valid — send OTP via EmailJS, show OTP step
+      _pendingEmail = email;
+      _pendingPass  = password; // kept in memory for resend only
+      _pendingUser  = { name: data.to_name, email: data.to_email };
+      showOtpStep(_pendingUser);
+      startCountdown((data.expires_in || 600) * 1000);
       startResendTimer(30);
-      await sendOtpEmail(found, _currentOtp);
-    }, 700);
+      await sendOtpEmail(_pendingUser, data.otp);
+
+    } catch (err) {
+      btn.disabled = false;
+      document.getElementById('btnText').textContent = 'Send OTP & Sign In';
+      document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px]';
+      document.getElementById('btnIcon').textContent = 'send';
+      showToast('Network error. Please check connection and try again.', 'error');
+    }
   });
 
   // Shake keyframe
