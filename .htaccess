@@ -1,6 +1,6 @@
-# PHP Handler (Hostinger LiteSpeed srv948 — provided by Hostinger support)
+# PHP Handler (Hostinger LiteSpeed srv948 — confirmed working)
 <FilesMatch ".(php4|php5|php3|php2|php|phtml)$">
-    SetHandler application/x-lsphp83
+    SetHandler application/x-lsphp
 </FilesMatch>
 
 # ═══════════════════════════════════════════════════════════════════
