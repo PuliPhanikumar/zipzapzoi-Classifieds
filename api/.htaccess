@@ -1,0 +1,11 @@
+# Block direct access to config.php
+<Files "config.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Allow API files to run PHP
+AddHandler application/x-httpd-php .php
+
+# No directory listing
+Options -Indexes
