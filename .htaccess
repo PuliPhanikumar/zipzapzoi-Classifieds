@@ -84,8 +84,7 @@ ErrorDocument 404 /404.html
 
 # ── 6. Block Bad Bots & Sensitive Files ─────────────────────────────
 <FilesMatch "(\.git|\.env|\.htpasswd|composer\.json|package\.json)$">
-    Order allow,deny
-    Deny from all
+    Require all denied
 </FilesMatch>
 
 # ── 7. Block Directory Listing ───────────────────────────────────────

@@ -1,8 +1,8 @@
-# Block direct access to config.php
-<Files "config.php">
-    Order allow,deny
-    Deny from all
-</Files>
-
 # No directory listing
 Options -Indexes
+
+# Block direct access to config.php (LiteSpeed compatible)
+<Files "config.php">
+    Require all denied
+</Files>
+
