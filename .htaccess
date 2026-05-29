@@ -1,3 +1,8 @@
+# PHP Handler (Hostinger LiteSpeed srv948 — provided by Hostinger support)
+<FilesMatch ".(php4|php5|php3|php2|php|phtml)$">
+    SetHandler application/x-lsphp83
+</FilesMatch>
+
 # ═══════════════════════════════════════════════════════════════════
 #  ZipZapZoi Classifieds — Hostinger Production .htaccess
 #  Domain: zipzapzoi.com | zipzapzoi.in
@@ -92,7 +97,3 @@ Options -Indexes
 
 # ── 8. Default charset ───────────────────────────────────────────────
 AddDefaultCharset UTF-8
-
-# ── 9. PHP Execution (Hostinger LiteSpeed) ───────────────────────────
-# Forces LiteSpeed to execute .php files via its built-in LSPHP engine
-AddType application/x-httpd-lsphp .php
