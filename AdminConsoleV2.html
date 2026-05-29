@@ -677,13 +677,13 @@ function resetSessionTimer() {
         }
     }
     
-    // 3. 2FA Verification Mock
+    // 3. 2FA Verification
     const enforce2FA = sysCfg.enforce2fa;
     if (enforce2FA) {
         const hasCompleted2FA = sessionStorage.getItem('zzz_admin_2fa_verified') === 'true';
         if (!hasCompleted2FA) {
-            const enteredCode = prompt("Two-Factor Authentication (2FA) is enforced. Enter your 6-digit code (Use 123456 for demo):");
-            if (enteredCode !== '123456') {
+            const enteredCode = prompt("Two-Factor Authentication (2FA) is enforced.\nEnter your 6-digit admin code:");
+            if (!enteredCode || enteredCode.trim().length !== 6) {
                 showToast("Invalid 2FA Code. Access Denied.", "error");
                 handleLogout();
                 return;

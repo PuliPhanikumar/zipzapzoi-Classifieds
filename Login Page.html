@@ -78,13 +78,6 @@
     .dark .otp-input:focus { background: #1e293b; }
     .otp-input.filled { border-color: #019863; background: #f0fdf4; color: #019863; }
     .dark .otp-input.filled { background: rgba(1,152,99,0.12); }
-
-    /* Dev OTP Banner */
-    .dev-otp-banner {
-      background: linear-gradient(135deg, #1e3a5f, #0f2844);
-      border: 1px solid rgba(99,179,237,0.3);
-      border-radius: 1rem; padding: 1rem 1.25rem;
-    }
   </style>
 </head>
 <body class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 font-sans transition-colors duration-300 min-h-screen flex items-center justify-center p-4">
@@ -180,22 +173,6 @@
         </p>
       </div>
 
-      <!-- Demo Credentials -->
-      <div class="mt-5 p-4 bg-gray-50 dark:bg-gray-800/60 rounded-2xl text-xs text-gray-400 dark:text-gray-500">
-        <p class="font-bold text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1">
-          <span class="material-symbols-outlined text-sm">info</span> Demo Credentials (No OTP needed)
-        </p>
-        <div class="grid grid-cols-2 gap-2">
-          <button onclick="fillDemo('admin@zipzapzoi.com','admin123')" class="text-left p-2 bg-white dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600 hover:border-primary transition-colors">
-            <p class="font-bold text-gray-600 dark:text-gray-300">Admin</p>
-            <p class="text-gray-400">admin@zipzapzoi.com</p>
-          </button>
-          <button onclick="fillDemo('user@zipzapzoi.com','user123')" class="text-left p-2 bg-white dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600 hover:border-primary transition-colors">
-            <p class="font-bold text-gray-600 dark:text-gray-300">User</p>
-            <p class="text-gray-400">user@zipzapzoi.com</p>
-          </button>
-        </div>
-      </div>
     </div>
 
     <!-- ══════════════ STEP 2: OTP VERIFICATION ══════════════ -->
@@ -215,18 +192,6 @@
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Verify It's You</h2>
         <p class="text-gray-500 dark:text-gray-400 text-sm">We sent a 6-digit code to</p>
         <p class="font-bold text-gray-800 dark:text-white text-sm mt-1" id="otpSentTo">your email</p>
-      </div>
-
-      <!-- Dev OTP Banner (shown when EmailJS not configured) -->
-      <div id="devOtpBanner" class="dev-otp-banner mb-6 hidden">
-        <div class="flex items-start gap-3">
-          <span class="material-symbols-outlined text-blue-400 text-xl mt-0.5">developer_mode</span>
-          <div>
-            <p class="text-blue-300 text-xs font-bold uppercase tracking-wider mb-1">Dev Mode — OTP Preview</p>
-            <p class="text-white font-mono text-2xl font-black tracking-[0.3em]" id="devOtpCode">------</p>
-            <p class="text-blue-400 text-xs mt-1">This banner is only visible in development. Configure EmailJS to send real emails.</p>
-          </div>
-        </div>
       </div>
 
       <!-- 6 OTP boxes -->
@@ -323,44 +288,27 @@
     icon.textContent = input.type === 'password' ? 'visibility' : 'visibility_off';
   }
 
-  function fillDemo(email, pass) {
-    document.getElementById('email').value = email;
-    document.getElementById('password').value = pass;
-    document.getElementById('loginForm').dispatchEvent(new Event('submit'));
-  }
 
   // ─── OTP Generation ───────────────────────────────────────
   function generateOtp() {
     return String(Math.floor(100000 + Math.random() * 900000));
   }
 
-  // ─── Send OTP via EmailJS (or show in dev banner) ─────────
+  // ─── Send OTP via EmailJS ──────────────────────────────────
   async function sendOtpEmail(userObj, otpCode) {
-    if (EMAILJS_CONFIGURED) {
-      try {
-        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-          to_email:    userObj.email,
-          to_name:     userObj.name || 'there',
-          otp_code:    otpCode,
-          expiry_mins: '10',
-          email:       userObj.email,
-        });
-        showToast(`OTP sent to ${userObj.email} 📧`, 'success');
-      } catch (err) {
-        console.error('EmailJS error:', err);
-        showToast('Email failed — check EmailJS config. OTP shown in dev banner.', 'error');
-        showDevBanner(otpCode);
-      }
-    } else {
-      // Dev mode — show OTP on screen
-      showDevBanner(otpCode);
-      showToast(`OTP generated (dev mode) 🔐`, 'info');
+    try {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email:    userObj.email,
+        to_name:     userObj.name || 'there',
+        otp_code:    otpCode,
+        expiry_mins: getApiCfg().otpExpiry || '10',
+        email:       userObj.email,
+      });
+      showToast(`OTP sent to ${userObj.email} 📧`, 'success');
+    } catch (err) {
+      console.error('EmailJS error:', err);
+      showToast('Failed to send OTP email. Please try again or contact support.', 'error');
     }
-  }
-
-  function showDevBanner(code) {
-    document.getElementById('devOtpCode').textContent = code;
-    document.getElementById('devOtpBanner').classList.remove('hidden');
   }
 
   // ─── Countdown Timer ──────────────────────────────────────
@@ -483,7 +431,6 @@
     _currentOtp = null;
     _pendingUser = null;
     clearOtpBoxes();
-    document.getElementById('devOtpBanner').classList.add('hidden');
     document.getElementById('stepOTP').classList.add('hidden');
     document.getElementById('stepLogin').classList.remove('hidden');
     // Reset button
@@ -499,7 +446,6 @@
     _currentOtp = generateOtp();
     _otpExpiry  = new Date(Date.now() + 10 * 60 * 1000);
     clearOtpBoxes();
-    document.getElementById('devOtpBanner').classList.add('hidden');
     startCountdown(10 * 60 * 1000);
     startResendTimer(30);
     await sendOtpEmail(_pendingUser, _currentOtp);
@@ -583,17 +529,6 @@
     document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px] animate-spin';
     document.getElementById('btnIcon').textContent = 'refresh';
 
-    // Demo accounts — bypass OTP
-    if (email === 'admin@zipzapzoi.com' && password === 'admin123') {
-      showToast('Admin demo login — OTP skipped ✓');
-      loginSuccess({ id: 'admin_01', name: 'Super Admin', email, role: 'admin', avatar: '' });
-      return;
-    }
-    if (email === 'user@zipzapzoi.com' && password === 'user123') {
-      showToast('Demo login — OTP skipped ✓');
-      loginSuccess({ id: 'user_01', name: 'Demo User', email, role: 'user', phone: '', avatar: '' });
-      return;
-    }
 
     // Real user lookup
     setTimeout(async () => {

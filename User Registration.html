@@ -78,11 +78,6 @@
     .dark .otp-input:focus { background: #1e293b; }
     .otp-input.filled { border-color: #019863; background: #f0fdf4; color: #019863; }
     .dark .otp-input.filled { background: rgba(1,152,99,0.12); }
-    .dev-otp-banner {
-      background: linear-gradient(135deg, #1e3a5f, #0f2844);
-      border: 1px solid rgba(99,179,237,0.3);
-      border-radius: 1rem; padding: 1rem 1.25rem;
-    }
 
     /* Progress Steps */
     .step-dot { width: 10px; height: 10px; border-radius: 9999px; transition: all 0.3s; }
@@ -243,17 +238,6 @@
         <p class="text-xs text-gray-400 mt-1">Your account will be created after verification</p>
       </div>
 
-      <!-- Dev OTP Banner -->
-      <div id="devOtpBanner" class="dev-otp-banner mb-6 hidden">
-        <div class="flex items-start gap-3">
-          <span class="material-symbols-outlined text-blue-400 text-xl mt-0.5">developer_mode</span>
-          <div>
-            <p class="text-blue-300 text-xs font-bold uppercase tracking-wider mb-1">Dev Mode — OTP Preview</p>
-            <p class="text-white font-mono text-2xl font-black tracking-[0.3em]" id="devOtpCode">------</p>
-            <p class="text-blue-400 text-xs mt-1">Configure EmailJS to send real emails to users.</p>
-          </div>
-        </div>
-      </div>
 
       <!-- 6 OTP boxes -->
       <div class="flex justify-center gap-2 mb-2" id="otpBoxes">
@@ -381,30 +365,19 @@
   function generateOtp() { return String(Math.floor(100000 + Math.random() * 900000)); }
 
   async function sendOtpEmail(email, name, otpCode) {
-    if (EMAILJS_CONFIGURED) {
-      try {
-        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-          to_email: email,
-          to_name: name,
-          otp_code: otpCode,
-          expiry_mins: '10',
-          email: email,
-        });
-        showToast(`OTP sent to ${email} 📧`);
-      } catch (err) {
-        console.error('EmailJS error:', err);
-        showDevBanner(otpCode);
-        showToast('Email failed — OTP shown in dev banner.', 'error');
-      }
-    } else {
-      showDevBanner(otpCode);
-      showToast('OTP generated (dev mode) 🔐', 'info');
+    try {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email: email,
+        to_name: name,
+        otp_code: otpCode,
+        expiry_mins: getApiCfg().otpExpiry || '10',
+        email: email,
+      });
+      showToast(`OTP sent to ${email} 📧`);
+    } catch (err) {
+      console.error('EmailJS error:', err);
+      showToast('Failed to send OTP email. Please try again or contact support.', 'error');
     }
-  }
-
-  function showDevBanner(code) {
-    document.getElementById('devOtpCode').textContent = code;
-    document.getElementById('devOtpBanner').classList.remove('hidden');
   }
 
   function startCountdown(durationMs) {
@@ -473,7 +446,6 @@
   function backToReg() {
     clearInterval(_countdownId); clearInterval(_resendId);
     _currentOtp = null; clearOtpBoxes();
-    document.getElementById('devOtpBanner').classList.add('hidden');
     document.getElementById('stepOTP').classList.add('hidden');
     document.getElementById('stepReg').classList.remove('hidden');
     setProgress(1);
@@ -488,7 +460,6 @@
     _currentOtp = generateOtp();
     _otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
     clearOtpBoxes();
-    document.getElementById('devOtpBanner').classList.add('hidden');
     startCountdown(10 * 60 * 1000);
     startResendTimer(30);
     await sendOtpEmail(_pendingData.email, _pendingData.name, _currentOtp);
