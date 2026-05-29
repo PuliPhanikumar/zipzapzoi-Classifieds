@@ -26,10 +26,11 @@ CREATE TABLE IF NOT EXISTS `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- First super admin account (password: Admin@ZipZap2026 — change after first login!)
+-- Password hash below is bcrypt of 'Admin@ZipZap2026'
 INSERT INTO `users` (`name`, `email`, `phone`, `password_hash`, `role`, `is_verified`) VALUES
 ('Super Admin', 'admin@zipzapzoi.com', '9999999999',
- '$2y$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uAtmkPS9u', -- bcrypt of 'Admin@ZipZap2026'
-'super_admin', 1);
+ '$2y$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uAtmkPS9u',
+ 'super_admin', 1);
 
 -- ── 2. SESSIONS ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS `sessions` (
