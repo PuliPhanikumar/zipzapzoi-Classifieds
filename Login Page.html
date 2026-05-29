@@ -264,15 +264,22 @@
 <script src="js/utils.js"></script>
 <script>
   // ═══════════════════════════════════════════════════════════
-  // EmailJS Config — fill these in when you get your account
-  // 1. Sign up at https://www.emailjs.com (free: 200 emails/month)
-  // 2. Create a service (Gmail recommended)
-  // 3. Create a template with variables: {{to_email}}, {{to_name}}, {{otp_code}}, {{expiry_mins}}
-  // 4. Fill the values below and set EMAILJS_CONFIGURED = true
+  // EmailJS Config — managed via Admin Console > Global Settings > API & Integrations
+  // Keys update automatically when saved in admin — no code change needed
   // ═══════════════════════════════════════════════════════════
-  const EMAILJS_SERVICE_ID  = 'service_40ub0hj';
-  const EMAILJS_TEMPLATE_ID = 'template_q4h6hyh';
-  const EMAILJS_PUBLIC_KEY  = 'sbx4wO3ByZ3hFYoL6';
+  function getApiCfg() {
+    const saved = JSON.parse(localStorage.getItem('zzz_api_config') || '{}');
+    return {
+      serviceId:  saved.emailjsService  || 'service_40ub0hj',
+      templateId: saved.emailjsOtp      || 'template_q4h6hyh',
+      publicKey:  saved.emailjsPublic   || 'sbx4wO3ByZ3hFYoL6',
+      otpExpiry:  saved.otpExpiry       || 10
+    };
+  }
+  const _ejsCfg = getApiCfg();
+  const EMAILJS_SERVICE_ID  = _ejsCfg.serviceId;
+  const EMAILJS_TEMPLATE_ID = _ejsCfg.templateId;
+  const EMAILJS_PUBLIC_KEY  = _ejsCfg.publicKey;
   const EMAILJS_CONFIGURED  = true;
 
   if (EMAILJS_CONFIGURED) {

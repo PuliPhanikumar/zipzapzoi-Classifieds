@@ -615,11 +615,21 @@
       const finalAmount = originalPrice - discountAmount;
       const amountInPaise = finalAmount * 100; // Razorpay needs paise (₹1 = 100 paise)
 
-      // ── RAZORPAY STANDARD CHECKOUT ───────────────────────
+      // ── Load key dynamically from admin config ──────────────────────────
+      function getRazorpayCfg() {
+        const saved = JSON.parse(localStorage.getItem('zzz_api_config') || '{}');
+        return {
+          key:      saved.razorpayKey      || 'rzp_live_SugQ3leLrB2iW6',
+          currency: saved.razorpayCurrency || 'INR'
+        };
+      }
+      const _rzpCfg = getRazorpayCfg();
+
+      // ── RAZORPAY STANDARD CHECKOUT ──────────────────────────────────────
       const options = {
-        key: 'rzp_live_SugQ3leLrB2iW6',
+        key: _rzpCfg.key,
         amount: amountInPaise,
-        currency: 'INR',
+        currency: _rzpCfg.currency,
         name: 'ZipZapZoi Classifieds',
         description: `${selectedPlan.name} Plan — ${finalAmount === originalPrice ? '' : discount + '% OFF · '}₹${finalAmount}`,
         // order_id is required for production signature verification.
@@ -729,10 +739,11 @@
         }
         return;
       }
+      const _rzpTestCfg = JSON.parse(localStorage.getItem('zzz_api_config') || '{}');
       const testOptions = {
-        key: 'rzp_live_SugQ3leLrB2iW6',
+        key: _rzpTestCfg.razorpayKey || 'rzp_live_SugQ3leLrB2iW6',
         amount: 100, // ₹1 in paise
-        currency: 'INR',
+        currency: _rzpTestCfg.razorpayCurrency || 'INR',
         name: 'ZipZapZoi',
         description: 'Payment Gateway Verification',
         prefill: {
