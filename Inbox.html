@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -166,515 +166,298 @@
     </main>
   </div>
 
-  <script>
-    const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
-    const STORAGE_KEY = 'zzz_messages';
-    const CONV_SEP = '::';
-
-    function getConversationId(userA, userB, listingId) {
-      return [...[userA, userB].sort(), listingId || 'general'].join(CONV_SEP);
+    <script>
+    // â”€â”€â”€ AUTH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    const currentUser = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+    if (!currentUser) {
+      window.location.href = 'Login Page.html?redirect=Inbox.html';
+      throw new Error('Not authenticated');
     }
 
-    function parseConversationId(convId) {
-      const parts = convId.split(CONV_SEP);
-      return {
-        userA: parts[0],
-        userB: parts[1],
-        listingId: parts.slice(2).join(CONV_SEP) || 'general'
-      };
-    }
-    
     document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
 
-    // Dark mode toggle (header button)
+    // Dark mode
     function toggleDarkMode() {
       const dark = document.documentElement.classList.toggle('dark');
       localStorage.setItem('zzz_theme', dark ? 'dark' : 'light');
       document.getElementById('themeIcon').textContent = dark ? 'light_mode' : 'dark_mode';
     }
-    if (document.documentElement.classList.contains('dark')) {
-      document.getElementById('themeIcon').textContent = 'light_mode';
+    if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
+
+    // â”€â”€â”€ STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    let allThreads   = [];
+    let activeThread = null;   // { otherId, listingId, otherName }
+    let pollTimer    = null;
+
+    // â”€â”€â”€ 1. LOAD INBOX â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    async function loadInbox() {
+      try {
+        const res  = await fetch('/api/messages.php', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) return;
+        allThreads = data.data || [];
+        renderList();
+      } catch(e) {}
     }
 
-    // --- 1. DATA LOADING ---
-    function getConversations() {
-      const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      const convMap = {};
-
-      allMsgs.forEach(msg => {
-        const convId = getConversationId(msg.fromUserId, msg.toUserId, msg.listingId);
-
-        if (!convMap[convId]) {
-          convMap[convId] = {
-            id: convId,
-            listingId: msg.listingId,
-            listingTitle: msg.listingTitle,
-            otherUser: msg.fromUserId === currentUser.id ? msg.toName : msg.fromName,
-            lastMsg: msg,
-            unreadCount: 0
-          };
-        }
-        
-        if (new Date(msg.timestamp) > new Date(convMap[convId].lastMsg.timestamp)) {
-          convMap[convId].lastMsg = msg;
-        }
-        
-        if(msg.toUserId === currentUser.id && !msg.read) {
-           convMap[convId].unreadCount++;
-        }
-      });
-
-      return Object.values(convMap).sort((a, b) => new Date(b.lastMsg.timestamp) - new Date(a.lastMsg.timestamp));
-    }
-
-    let activeConvId = null;
-
+    // â”€â”€â”€ 2. RENDER CONVERSATION LIST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function renderList() {
-      const list = getConversations();
       const container = document.getElementById('conversationList');
-      const search = document.getElementById('searchBox').value.toLowerCase();
+      const q = (document.getElementById('searchBox').value || '').toLowerCase();
 
-      if (list.length === 0) {
+      const filtered = allThreads.filter(t =>
+        (t.other_user_name || '').toLowerCase().includes(q) ||
+        (t.listing_title   || '').toLowerCase().includes(q) ||
+        (t.last_message    || '').toLowerCase().includes(q)
+      );
+
+      if (filtered.length === 0) {
         container.innerHTML = `
           <div class="p-8 text-center text-gray-400 flex flex-col items-center gap-4">
             <span class="material-symbols-outlined text-5xl text-gray-300">chat_bubble_outline</span>
             <div>
               <p class="font-bold text-gray-600 dark:text-gray-300 mb-1">No messages yet</p>
-              <p class="text-sm">Start a conversation by clicking "Chat with Seller" on any listing.</p>
+              <p class="text-sm">Click "Chat with Seller" on any listing to start.</p>
             </div>
             <a href="classifieds.html" class="mt-2 px-5 py-2.5 bg-primary text-white font-bold rounded-xl text-sm hover:bg-green-700 transition-all">Browse Listings</a>
-          </div>
-        `;
+          </div>`;
         return;
       }
 
-      container.innerHTML = list
-        .filter(c => (c.listingTitle || '').toLowerCase().includes(search) || (c.otherUser || '').toLowerCase().includes(search) || (c.lastMsg.text && c.lastMsg.text.toLowerCase().includes(search)))
-        .map(c => {
-          const isActive = c.id === activeConvId;
-          const date = new Date(c.lastMsg.timestamp).toLocaleDateString([], {month:'short', day:'numeric'});
-          const lastText = c.lastMsg.type === 'offer' ? `💰 Offer: ₹${Number(c.lastMsg.offerAmount).toLocaleString()}` : (c.lastMsg.text || '');
-          
-          return `
-          <div onclick="openChat('${c.id}')" class="flex gap-3 p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800 transition-colors ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-primary' : 'border-l-4 border-l-transparent'}">
-            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-secondary to-primary flex-shrink-0 flex items-center justify-center font-bold text-white shadow-sm">${c.otherUser ? c.otherUser.charAt(0).toUpperCase() : '?'}</div>
+      container.innerHTML = filtered.map(t => {
+        const isActive = activeThread &&
+          activeThread.otherId  == t.other_user_id &&
+          String(activeThread.listingId) === String(t.listing_id || 0);
+        const date    = new Date(t.last_time).toLocaleDateString([], { month:'short', day:'numeric' });
+        const preview = esc(t.last_message || '');
+
+        return `
+          <div onclick="openThread(${t.other_user_id}, ${t.listing_id || 0}, '${esc(t.other_user_name || 'User')}')"
+               class="flex gap-3 p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800 transition-colors ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-primary' : 'border-l-4 border-l-transparent'}">
+            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-secondary to-primary flex-shrink-0 flex items-center justify-center font-bold text-white shadow-sm">
+              ${(t.other_user_name || '?').charAt(0).toUpperCase()}
+            </div>
             <div class="flex-1 min-w-0">
               <div class="flex justify-between items-baseline mb-0.5">
-                <h4 class="font-bold text-gray-800 dark:text-white truncate text-sm">${c.otherUser || 'User'}</h4>
+                <h4 class="font-bold text-gray-800 dark:text-white truncate text-sm">${esc(t.other_user_name || 'User')}</h4>
                 <span class="text-[11px] text-gray-400 whitespace-nowrap ml-2">${date}</span>
               </div>
-              <p class="text-xs text-gray-400 dark:text-gray-500 truncate mb-1">${c.listingTitle || 'General'}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-500 truncate mb-1">${esc(t.listing_title || 'General')}</p>
               <div class="flex justify-between items-center">
-                 <p class="text-sm text-gray-600 dark:text-gray-300 truncate ${c.unreadCount > 0 ? 'font-bold text-gray-900 dark:text-white' : ''}">${lastText}</p>
-                 ${c.unreadCount > 0 ? `<span class="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-2 flex-shrink-0">${c.unreadCount}</span>` : ''}
+                <p class="text-sm text-gray-600 dark:text-gray-300 truncate ${t.unread_count > 0 ? 'font-bold text-gray-900 dark:text-white' : ''}">${preview}</p>
+                ${t.unread_count > 0 ? '<span class="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-2 flex-shrink-0">' + t.unread_count + '</span>' : ''}
               </div>
             </div>
-          </div>
-          `;
-        }).join('');
+          </div>`;
+      }).join('');
     }
 
-    // --- 2. OPEN CHAT ---
-    function openChat(convId) {
-      activeConvId = convId;
-      
-      const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      let updated = false;
-      const conv = parseConversationId(convId);
-      const listingId = conv.listingId; 
+    // â”€â”€â”€ 3. OPEN THREAD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    async function openThread(otherId, listingId, otherName) {
+      activeThread = { otherId, listingId: listingId || 0, otherName };
 
-      const msgs = allMsgs.filter(m => {
-         const isMatch = getConversationId(m.fromUserId, m.toUserId, m.listingId) === convId;
-         if(isMatch && m.toUserId === currentUser.id && !m.read) {
-             m.read = true; updated = true;
-         }
-         return isMatch;
-      }).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
-
-      if(updated) { localStorage.setItem(STORAGE_KEY, JSON.stringify(allMsgs)); renderList(); }
-      
-      // UI Updates
       document.getElementById('emptyState').classList.add('hidden');
       document.getElementById('chatArea').classList.remove('hidden');
       document.getElementById('activeChat').classList.remove('hidden');
-      
-      // Mobile
-      if(window.innerWidth < 768) { document.getElementById('sidebar').classList.add('hidden'); }
+      if (window.innerWidth < 768) document.getElementById('sidebar').classList.add('hidden');
 
-      // Identify Other User
-      let otherName = 'User';
-      let listTitle = 'Listing';
-      
-      if(msgs.length > 0) {
-         otherName = msgs[0].fromUserId === currentUser.id ? msgs[0].toName : msgs[0].fromName;
-         listTitle = msgs[0].listingTitle;
+      document.getElementById('chatName').textContent   = otherName || 'User';
+      document.getElementById('chatAvatar').textContent = (otherName || '?').charAt(0).toUpperCase();
+
+      if (listingId) {
+        fetch('/api/listings.php?id=' + listingId, { credentials: 'include' })
+          .then(r => r.json()).then(d => {
+            if (!d.success) return;
+            const l = d.data.listing;
+            document.getElementById('contextTitle').textContent = l.title || 'Listing';
+            document.getElementById('contextPrice').textContent =
+              l.price_type === 'free' ? 'FREE' : '\u20b9' + parseFloat(l.price||0).toLocaleString('en-IN');
+            const img = Array.isArray(l.images) && l.images[0] ? l.images[0] : '';
+            document.getElementById('contextImg').style.backgroundImage = "url('" + img + "')";
+            document.getElementById('contextLink').href = 'Listing Detail.html?id=' + l.id;
+          }).catch(() => {});
       } else {
-         // Fallback if opening empty/new chat
-         // This relies on activeConvId or external set
+        document.getElementById('contextTitle').textContent = 'Direct Message';
+        document.getElementById('contextPrice').textContent = '';
+        document.getElementById('contextImg').style.backgroundImage = '';
+        document.getElementById('contextLink').href = '#';
       }
 
-      document.getElementById('chatName').textContent = otherName || 'User';
-      document.getElementById('chatAvatar').textContent = (otherName || '?').charAt(0);
-      document.getElementById('contextTitle').textContent = listTitle;
-      document.getElementById('contextLink').href = `Listing Detail.html?id=${listingId}`;
-      
-      // Try to load real listing details for context banner
-      const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-      const listData = listings.find(l => l.id === listingId);
-      if (listData) {
-          document.getElementById('contextPrice').textContent = `₹${listData.price}`;
-          document.getElementById('contextImg').style.backgroundImage = `url('${listData.image}')`;
-      } else {
-          document.getElementById('contextPrice').textContent = '';
-          document.getElementById('contextImg').style.backgroundImage = `url('https://via.placeholder.com/150')`;
+      document.getElementById('messagesFeed').innerHTML =
+        '<div class="flex justify-center items-center h-full py-10"><span class="material-symbols-outlined text-4xl text-gray-300">hourglass_empty</span></div>';
+
+      try {
+        const params = new URLSearchParams({ thread: otherId });
+        if (listingId) params.set('listing_id', listingId);
+        const res  = await fetch('/api/messages.php?' + params, { credentials: 'include' });
+        const data = await res.json();
+        if (data.success) renderMessages(data.data || []);
+        await loadInbox();
+      } catch(e) {}
+
+      clearInterval(pollTimer);
+      pollTimer = setInterval(refreshThread, 15000);
+    }
+
+    async function refreshThread() {
+      if (!activeThread) return;
+      try {
+        const { otherId, listingId } = activeThread;
+        const params = new URLSearchParams({ thread: otherId });
+        if (listingId) params.set('listing_id', listingId);
+        const res  = await fetch('/api/messages.php?' + params, { credentials: 'include' });
+        const data = await res.json();
+        if (data.success) renderMessages(data.data || []);
+      } catch(e) {}
+    }
+
+    // â”€â”€â”€ 4. RENDER MESSAGES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    function renderMessages(msgs) {
+      const feed   = document.getElementById('messagesFeed');
+      const bottom = feed.scrollHeight - feed.clientHeight <= feed.scrollTop + 80;
+
+      if (!msgs || msgs.length === 0) {
+        feed.innerHTML = '<div class="flex flex-col items-center justify-center h-full py-20 text-gray-400 gap-2"><span class="material-symbols-outlined text-5xl">chat_bubble_outline</span><p class="text-sm">No messages yet. Say hello!</p></div>';
+        return;
       }
+
+      feed.innerHTML = msgs.map(m => {
+        const isMe = String(m.from_user_id) === String(currentUser.id);
+        const side = isMe
+          ? 'bg-bubble-me dark:bg-primary text-gray-800 dark:text-white rounded-tr-none'
+          : 'bg-white dark:bg-card-dark text-gray-800 dark:text-white rounded-tl-none';
+        const time = new Date(m.created_at).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+        return '<div class="flex w-full ' + (isMe?'justify-end':'justify-start') + ' slide-in">' +
+          '<div class="msg-bubble px-4 py-2 rounded-xl shadow-sm text-sm ' + side + '">' +
+          sanitizeInput(m.body || '') +
+          '<div class="msg-time ' + (isMe?'text-green-800 dark:text-green-100':'text-gray-400') + '">' + time +
+          (isMe ? ' <span class="material-symbols-outlined text-[10px] text-blue-500 align-middle ml-1">done_all</span>' : '') +
+          '</div></div></div>';
+      }).join('');
+
+      if (bottom || msgs.length <= 5) feed.scrollTop = feed.scrollHeight;
+    }
+
+    // â”€â”€â”€ 5. SEND MESSAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    async function sendMessage() {
+      const input = document.getElementById('msgInput');
+      const txt   = input.value.trim();
+      if (!txt || !activeThread) return;
+
+      const { otherId, listingId } = activeThread;
+      input.value = '';
 
       const feed = document.getElementById('messagesFeed');
-      feed.innerHTML = msgs.map(m => {
-        const isMe = m.fromUserId === currentUser.id;
-        
-        if (m.type === 'offer') {
-             return `
-              <div class="flex w-full ${isMe ? 'justify-end' : 'justify-start'} slide-in">
-                <div class="px-4 py-3 rounded-xl shadow-sm text-sm ${isMe ? 'bg-green-100 text-green-900 rounded-tr-none' : 'bg-white dark:bg-card-dark text-gray-800 dark:text-white rounded-tl-none'} border-l-4 border-l-green-500">
-                  <p class="font-bold text-xs text-green-600 mb-1 uppercase tracking-wider">${isMe ? 'You made an offer' : 'Received Offer'}</p>
-                  <p class="font-black text-2xl mb-2">₹${Number(m.offerAmount).toLocaleString()}</p>
-                  ${!isMe && m.status === 'pending' ? `
-                    <div class="flex gap-2 mt-2">
-                        <button onclick="handleOffer('${m.id}', 'reject')" class="flex-1 py-1 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded">Reject</button>
-                        <button onclick="handleOffer('${m.id}', 'accept')" class="flex-1 py-1 text-xs font-bold text-green-600 bg-green-50 hover:bg-green-100 rounded">Accept</button>
-                    </div>
-                  ` : ''}
-                  ${m.status === 'accepted' ? '<p class="text-xs font-bold text-green-600 mt-1"><span class="material-symbols-outlined text-[12px] align-middle">check_circle</span> Accepted</p>' : ''}
-                  ${m.status === 'rejected' ? '<p class="text-xs font-bold text-red-600 mt-1"><span class="material-symbols-outlined text-[12px] align-middle">cancel</span> Rejected</p>' : ''}
-                </div>
-              </div>
-             `;
-        }
-
-        return `
-          <div class="flex w-full ${isMe ? 'justify-end' : 'justify-start'} slide-in">
-            <div class="msg-bubble px-4 py-2 rounded-xl shadow-sm relative text-sm ${isMe ? 'bg-bubble-me dark:bg-primary text-gray-800 dark:text-white rounded-tr-none' : 'bg-white dark:bg-card-dark text-gray-800 dark:text-white rounded-tl-none'}">
-              ${sanitizeInput(m.text)}
-              <div class="msg-time ${isMe ? 'text-green-800 dark:text-green-100' : 'text-gray-400'}">${new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} 
-              ${isMe ? '<span class="material-symbols-outlined text-[10px] text-blue-500 align-middle ml-1">done_all</span>' : ''}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
-      
+      const div  = document.createElement('div');
+      div.className = 'flex w-full justify-end slide-in';
+      div.innerHTML = '<div class="msg-bubble px-4 py-2 rounded-xl shadow-sm text-sm bg-bubble-me dark:bg-primary text-gray-800 dark:text-white rounded-tr-none">' +
+        sanitizeInput(txt) +
+        '<div class="msg-time text-green-800 dark:text-green-100">Sending\u2026</div></div>';
+      feed.appendChild(div);
       feed.scrollTop = feed.scrollHeight;
+
+      try {
+        const body = { to_user_id: otherId, body: txt, subject: 'Message' };
+        if (listingId) body.listing_id = listingId;
+        const res  = await fetch('/api/messages.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!data.success) { showToast(data.error || 'Send failed.', 'error'); return; }
+        await refreshThread();
+        await loadInbox();
+      } catch { showToast('Network error. Try again.', 'error'); }
     }
 
-    // --- 3. CHECK FOR NEW CHAT INTENT ---
+    // â”€â”€â”€ 6. CHAT INTENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function checkChatIntent() {
-        const intentRaw = localStorage.getItem('zzz_chat_intent');
-        if (!intentRaw) return;
-
-        const intent = JSON.parse(intentRaw);
-        localStorage.removeItem('zzz_chat_intent'); // Clear it immediately
-
-        // 1. Search for existing conversation
-        const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        const existingMsg = allMsgs.find(m => 
-            (((m.fromUserId === intent.partnerId && m.toUserId === currentUser.id) ||
-            (m.fromUserId === currentUser.id && m.toUserId === intent.partnerId)) &&
-            (m.listingId || 'general') === (intent.listingId || 'general'))
-        );
-
-        if (existingMsg) {
-            // Found existing -> Open it
-            const convId = getConversationId(existingMsg.fromUserId, existingMsg.toUserId, existingMsg.listingId);
-            openChat(convId);
-        } else {
-            // 2. Start NEW Chat Interface
-            startNewChatUI(intent);
-        }
+      const raw = sessionStorage.getItem('zzz_chat_intent') || localStorage.getItem('zzz_chat_intent');
+      if (!raw) return;
+      sessionStorage.removeItem('zzz_chat_intent');
+      localStorage.removeItem('zzz_chat_intent');
+      try {
+        const intent   = JSON.parse(raw);
+        const otherId  = intent.partnerId   || intent.sellerId   || 0;
+        const otherName= intent.partnerName || intent.sellerName || 'Seller';
+        const listingId= intent.listingId   || 0;
+        const initTxt  = intent.initialText || '';
+        const existing = allThreads.find(t =>
+          t.other_user_id == otherId && String(t.listing_id||0) === String(listingId||0));
+        if (existing) openThread(otherId, listingId, otherName);
+        else          startNewChatUI(otherId, listingId, otherName, initTxt);
+      } catch(e) {}
     }
 
-    function startNewChatUI(intent) {
-        document.getElementById('emptyState').classList.add('hidden');
-        document.getElementById('chatArea').classList.remove('hidden');
-        document.getElementById('activeChat').classList.remove('hidden');
-        if(window.innerWidth < 768) document.getElementById('sidebar').classList.add('hidden');
-
-        // Setup Draft UI
-        document.getElementById('chatName').textContent = intent.partnerName || "User";
-        document.getElementById('chatAvatar').textContent = (intent.partnerName || "?").charAt(0).toUpperCase();
-        
-        // Context Banner
-        document.getElementById('contextTitle').textContent = intent.listingTitle || "Direct Message";
-        
-        const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-        const listData = listings.find(l => l.id === intent.listingId);
-        if (listData) {
-            document.getElementById('contextPrice').textContent = `₹${listData.price}`;
-            document.getElementById('contextImg').style.backgroundImage = `url('${listData.image}')`;
-            document.getElementById('contextLink').href = `Listing Detail.html?id=${intent.listingId}`;
-        } else {
-            document.getElementById('contextPrice').textContent = ""; 
-            document.getElementById('contextImg').style.backgroundImage = `url('https://via.placeholder.com/150')`;
-            document.getElementById('contextLink').href = "#";
-        }
-
-        // Generate a temporary ID
-        activeConvId = getConversationId(currentUser.id, intent.partnerId, intent.listingId || 'general');
-
-        // Clear Feed with Welcome Message
-        document.getElementById('messagesFeed').innerHTML = `
-            <div class="text-center text-gray-400 text-sm mt-10">
-                <p>Starting new chat with <span class="font-bold">${intent.partnerName}</span></p>
-                <p>Say Hi! 👋</p>
-            </div>
-        `;
-        
-        // Store temp data on the input for the sendMessage function
-        document.getElementById('msgInput').dataset.tempPartnerId = intent.partnerId;
-        document.getElementById('msgInput').dataset.tempPartnerName = intent.partnerName;
-        if (intent.initialText) {
-            document.getElementById('msgInput').value = intent.initialText;
-        } else {
-            document.getElementById('msgInput').value = '';
-        }
-    }
-
-    // --- 4. SEND MESSAGE ---
-    function sendMessage() {
-      const txt = document.getElementById('msgInput').value.trim();
-      if(!txt || !activeConvId) return;
-
-      const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      const conv = parseConversationId(activeConvId);
-      
-      // Determine Receiver
-      let otherUserId = conv.userA === currentUser.id ? conv.userB : conv.userA;
-      let otherName = document.getElementById('chatName').textContent;
-      let listTitle = document.getElementById('contextTitle').textContent;
-      let listId = conv.listingId;
-
-      // Handle "Draft/New" mode where parts might vary or be 'general'
-      if(document.getElementById('msgInput').dataset.tempPartnerId) {
-          otherUserId = document.getElementById('msgInput').dataset.tempPartnerId;
-          otherName = document.getElementById('msgInput').dataset.tempPartnerName;
-          delete document.getElementById('msgInput').dataset.tempPartnerId; // Clear draft flag
+    function startNewChatUI(otherId, listingId, otherName, initTxt) {
+      activeThread = { otherId, listingId: listingId || 0, otherName };
+      document.getElementById('emptyState').classList.add('hidden');
+      document.getElementById('chatArea').classList.remove('hidden');
+      document.getElementById('activeChat').classList.remove('hidden');
+      if (window.innerWidth < 768) document.getElementById('sidebar').classList.add('hidden');
+      document.getElementById('chatName').textContent   = otherName;
+      document.getElementById('chatAvatar').textContent = otherName.charAt(0).toUpperCase();
+      if (listingId) {
+        fetch('/api/listings.php?id=' + listingId, { credentials: 'include' })
+          .then(r => r.json()).then(d => {
+            if (!d.success) return;
+            const l = d.data.listing;
+            document.getElementById('contextTitle').textContent = l.title || 'Listing';
+            document.getElementById('contextPrice').textContent = '\u20b9' + parseFloat(l.price||0).toLocaleString('en-IN');
+            const img = Array.isArray(l.images) && l.images[0] ? l.images[0] : '';
+            document.getElementById('contextImg').style.backgroundImage = "url('" + img + "')";
+            document.getElementById('contextLink').href = 'Listing Detail.html?id=' + l.id;
+          }).catch(() => {});
       }
-
-      const newMsg = {
-        id: 'msg_' + Date.now(),
-        fromUserId: currentUser.id,
-        fromName: currentUser.name,
-        toUserId: otherUserId,
-        toName: otherName,
-        listingId: listId,
-        listingTitle: listTitle,
-        text: txt,
-        timestamp: new Date().toISOString(),
-        read: false
-      };
-
-      allMsgs.push(newMsg);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(allMsgs));
-      
-      document.getElementById('msgInput').value = '';
-      openChat(activeConvId); // Reload to show real message
-      renderList(); // Update sidebar
-      
-      // Auto-Reply Sim (Optional)
-      if (localStorage.getItem('zzz_dev_mode') === 'true') {
-        setTimeout(() => {
-           simulateReply(activeConvId, otherUserId, otherName, listId, listTitle);
-        }, 2000);
-      }
-    }
-
-    function simulateReply(convId, userId, userName, listId, listTitle) {
-      const replies = ["Okay, sounds good.", "Can you share more info?", "I am interested."];
-      const replyMsg = {
-        id: 'msg_' + Date.now(),
-        fromUserId: userId,
-        fromName: userName,
-        toUserId: currentUser.id,
-        toName: currentUser.name,
-        listingId: listId,
-        listingTitle: listTitle,
-        text: replies[Math.floor(Math.random() * replies.length)],
-        timestamp: new Date().toISOString(),
-        read: false
-      };
-      const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      allMsgs.push(replyMsg);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(allMsgs));
-      if (activeConvId === convId) openChat(convId);
-      renderList();
-    }
-
-    function setInput(text) {
-      document.getElementById('msgInput').value = text;
+      document.getElementById('messagesFeed').innerHTML =
+        '<div class="text-center text-gray-400 text-sm mt-10 flex flex-col items-center gap-2">' +
+        '<span class="material-symbols-outlined text-4xl text-gray-300">waving_hand</span>' +
+        '<p>Starting a new chat with <span class="font-bold text-gray-600 dark:text-gray-300">' + esc(otherName) + '</span></p>' +
+        '<p class="text-xs">Say Hi! \ud83d\udc4b</p></div>';
+      if (initTxt) document.getElementById('msgInput').value = initTxt;
       document.getElementById('msgInput').focus();
     }
 
-    
-    function handleOffer(msgId, action) {
-        const allMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        const msg = allMsgs.find(m => m.id === msgId);
-        if(!msg) return;
+    // â”€â”€â”€ 7. HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    function esc(s) {
+      return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+    function sanitizeInput(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+    function setInput(t) { document.getElementById('msgInput').value=t; document.getElementById('msgInput').focus(); }
 
-        msg.status = action === 'accept' ? 'accepted' : 'rejected';
-        
-        // Add a system text message
-        const sysMsg = {
-          id: 'msg_' + Date.now(),
-          type: 'text',
-          fromUserId: currentUser.id,
-          fromName: currentUser.name,
-          toUserId: msg.fromUserId,
-          toName: msg.fromName,
-          listingId: msg.listingId,
-          listingTitle: msg.listingTitle,
-          text: action === 'accept' ? `I have accepted your offer of ₹${Number(msg.offerAmount).toLocaleString()}!` : `Sorry, I cannot accept your offer of ₹${Number(msg.offerAmount).toLocaleString()}.`,
-          timestamp: new Date().toISOString(),
-          read: false
-        };
-        allMsgs.push(sysMsg);
-        
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(allMsgs));
-        openChat(activeConvId);
-        renderList();
+    function showToast(msg, type) {
+      type = type || 'success';
+      let c=document.getElementById('zzz-tc');
+      if(!c){c=document.createElement('div');c.id='zzz-tc';c.className='fixed bottom-6 right-6 z-[999] flex flex-col gap-2';document.body.appendChild(c);}
+      const t=document.createElement('div');
+      t.className='flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white font-bold text-sm transition-all duration-300 translate-y-4 opacity-0 ' + (type==='error'?'bg-red-500':'bg-primary');
+      t.innerHTML='<span class="material-symbols-outlined text-[18px]">' + (type==='error'?'error':'check_circle') + '</span>' + esc(msg);
+      c.appendChild(t); requestAnimationFrame(function(){t.classList.remove('translate-y-4','opacity-0');});
+      setTimeout(function(){t.classList.add('translate-y-4','opacity-0');setTimeout(function(){t.remove();},300);},4000);
     }
 
-    // --- 5. NAVIGATION / CLOSE CHATS ---
+    // â”€â”€â”€ 8. NAVIGATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function closeChatMobile() {
+      clearInterval(pollTimer); activeThread=null;
       document.getElementById('activeChat').classList.add('hidden');
       document.getElementById('sidebar').classList.remove('hidden');
-      activeConvId = null;
       renderList();
     }
-
     function closeChatDesktop() {
+      clearInterval(pollTimer); activeThread=null;
       document.getElementById('activeChat').classList.add('hidden');
       document.getElementById('emptyState').classList.remove('hidden');
-      activeConvId = null;
       renderList();
     }
 
-    document.getElementById('msgInput').addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') sendMessage();
-    });
-
+    // â”€â”€â”€ 9. EVENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    document.getElementById('msgInput').addEventListener('keypress', function(e){ if(e.key==='Enter') sendMessage(); });
     document.getElementById('searchBox').addEventListener('input', renderList);
 
-    window.addEventListener('storage', (event) => {
-      if(event.key === STORAGE_KEY || event.key === 'zzz_data_updated_at') {
-        renderList();
-        if(activeConvId) openChat(activeConvId);
-      }
-    });
-
-    // Initial Load
-    renderList();
-    checkChatIntent(); // <--- CRITICAL: Check for new chats on load
-// ============================================
-// UNIVERSAL UTILITY FUNCTIONS (ADD TO ALL)
-// ============================================
-
-// CSRF Token Management
-function generateCsrfToken() {
-    return 'csrf_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-}
-
-function getCsrfToken() {
-    let token = sessionStorage.getItem('csrf_token');
-    if (!token) {
-        token = generateCsrfToken();
-        sessionStorage.setItem('csrf_token', token);
-    }
-    return token;
-}
-
-function setCsrfToken() {
-    const token = getCsrfToken();
-    const inputs = document.querySelectorAll('input[name="csrf_token"]');
-    inputs.forEach(input => input.value = token);
-}
-
-// Input Validation Functions
-function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function validatePhone(phone) {
-    const digits = phone.replace(/\D/g, '');
-    return digits.length === 10;
-}
-
-function validatePrice(price) {
-    const num = parseFloat(price);
-    return !isNaN(num) && num > 0 && num < 1000000;
-}
-
-function validatePassword(password) {
-    return password.length >= 8 &&
-           /[a-z]/.test(password) &&
-           /[A-Z]/.test(password) &&
-           /[0-9]/.test(password);
-}
-
-// Input Sanitization
-function sanitizeInput(input) {
-    const div = document.createElement('div');
-    div.textContent = input;
-    return div.innerHTML;
-}
-
-function sanitizeHTML(html) {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div.textContent;
-}
-
-// Error/Success Messages
-function showError(message) {
-    let errorDiv = document.getElementById('errorMessage');
-    if (!errorDiv) {
-        errorDiv = document.createElement('div');
-        errorDiv.id = 'errorMessage';
-        errorDiv.style.cssText = 'color: red; padding: 10px; margin: 10px 0; border: 1px solid red; border-radius: 4px; display: none;';
-        const form = document.querySelector('form');
-        if (form) form.parentElement.insertBefore(errorDiv, form);
-    }
-    errorDiv.textContent = message;
-    errorDiv.style.display = 'block';
-    errorDiv.setAttribute('role', 'alert');
-}
-
-function showSuccess(message) {
-    let successDiv = document.getElementById('successMessage');
-    if (!successDiv) {
-        successDiv = document.createElement('div');
-        successDiv.id = 'successMessage';
-        successDiv.style.cssText = 'color: green; padding: 10px; margin: 10px 0; border: 1px solid green; border-radius: 4px; display: none;';
-        const form = document.querySelector('form');
-        if (form) form.parentElement.insertBefore(successDiv, form);
-    }
-    successDiv.textContent = message;
-    successDiv.style.display = 'block';
-    successDiv.setAttribute('role', 'status');
-}
-
-function hideError() {
-    const errorDiv = document.getElementById('errorMessage');
-    if (errorDiv) errorDiv.style.display = 'none';
-}
-
-function hideSuccess() {
-    const successDiv = document.getElementById('successMessage');
-    if (successDiv) successDiv.style.display = 'none';
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    setCsrfToken();
-});
+    // â”€â”€â”€ 10. INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    (async function(){ await loadInbox(); checkChatIntent(); })();
 
   </script>
   <script src="js/utils.js"></script>
