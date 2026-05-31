@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -312,11 +312,19 @@
 <script src="js/utils.js"></script>
 <script>
 (function() {
-  const currentUserAuth = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+  // Auth check — use localStorage cache, verify session with API
+  const currentUserAuth = JSON.parse(localStorage.getItem('zzz_user') || 'null');
   if (!currentUserAuth) {
     window.location.href = 'Login Page.html?redirect=Post Listing.html';
     return;
   }
+  // Non-blocking session verification
+  fetch('/api/auth.php?action=me', { credentials: 'include' })
+    .then(r => r.json())
+    .then(d => {
+      if (!d.success) { localStorage.removeItem('zzz_user'); window.location.href = 'Login Page.html'; }
+      else localStorage.setItem('zzz_user', JSON.stringify(d.data.user));
+    }).catch(() => {});
 
   let schema = {};
 
@@ -860,8 +868,7 @@
       </div>`;
   }
 
-  function handleSubmit() {
-    const currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+  async function handleSubmit() {
     if (!currentCategory || !currentCategoryKey) { showToast('Please choose a category.', 'error'); return; }
     if (!subCategorySelect.value) { showToast('Please choose a subcategory.', 'error'); return; }
     if (!document.getElementById('postTitle').value.trim()) { showToast('Please enter an ad title.', 'error'); return; }
@@ -871,7 +878,6 @@
 
     const isCharity = !!(currentCategory.hidePrice || currentCategoryKey === 'charity');
 
-    // Charity: require declaration
     if (isCharity) {
       const decl = document.getElementById('charityDeclaration');
       if (!decl || !decl.checked) {
@@ -881,93 +887,74 @@
       }
     }
 
-    // Non-charity: quota check
-    if (!isCharity && !editId) {
-      if (window.ZZZ && window.ZZZ.Plans) {
-        const q = window.ZZZ.Plans.getUserQuota(currentUser ? currentUser.id : null);
-        if (!q || q.adsRemaining <= 0) {
-          document.getElementById('zzz-quota-gate').classList.remove('hidden');
-          return;
-        }
-      }
-    }
-
-    // Non-charity: price required
     if (!isCharity && !document.getElementById('postPrice').value) {
       showToast('Please enter a price for your listing.', 'error'); return;
     }
 
     // Gather dynamic fields
-    const dynamicData = {};
+    const fields = {};
     const brain = window.ZZZ && window.ZZZ.getClassifiedsSchema ? window.ZZZ.getClassifiedsSchema() : (window.ZZZ_SCHEMA || { fields: [] });
     const subObj = currentCategory.subIds ? currentCategory.subIds.find(s => s.label === subCategorySelect.value) : null;
     if (subObj) {
       brain.fields.filter(f => f.subcategoryId === subObj.id).forEach(f => {
         const el = document.getElementById('dyn_' + f.id);
-        if (el) dynamicData[f.id] = el.value;
+        if (el) fields[f.id] = el.value;
       });
     }
 
-    const prev = editId ? (JSON.parse(localStorage.getItem('zzz_listings') || '[]').find(l => l.id === editId) || {}) : {};
-    const newItem = {
-      id: editId || ('item_' + Date.now()),
-      userId: currentUser ? currentUser.id : 'guest',
-      userName: currentUser ? currentUser.name : 'Guest',
-      userEmail: currentUser ? (currentUser.email || '') : '',
-      categoryId: currentCategoryKey,
-      category: schema[currentCategoryKey].label,
-      subcategory: subCategorySelect.value,
-      title: document.getElementById('postTitle').value.trim(),
-      price: isCharity ? 0 : (parseFloat(document.getElementById('postPrice').value) || 0),
-      negotiable: !!(document.getElementById('postNegotiable') && document.getElementById('postNegotiable').checked),
-      hidePhone: !!(document.getElementById('hidePhone') && document.getElementById('hidePhone').checked),
-      phone: currentUser ? (currentUser.phone || '') : '',
-      description: document.getElementById('postDescription').value.trim(),
-      state: document.getElementById('stateSelect').value,
-      city: document.getElementById('citySelect').value,
-      specificLocation: document.getElementById('specificLocation').value,
-      lat: parseFloat(document.getElementById('pickedLat').value) || null,
-      lng: parseFloat(document.getElementById('pickedLng').value) || null,
-      location: [document.getElementById('citySelect').value, document.getElementById('stateSelect').value].filter(Boolean).join(', '),
-      image: uploadedImages[0] || '',
-      images: uploadedImages,
-      dynamicData,
-      isCharity,
-      isFree: isCharity,
-      charityDeclared: isCharity,
-      createdAt: prev.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      status: editId ? (prev.status || 'active') : 'pending_review',
-      moderationStatus: 'pending_review',
-      views: prev.views || 0,
-      promoted: prev.promoted || false
+    const negotiable = !!(document.getElementById('postNegotiable') && document.getElementById('postNegotiable').checked);
+    const price      = isCharity ? 0 : (parseFloat(document.getElementById('postPrice').value) || 0);
+
+    const payload = {
+      title:          document.getElementById('postTitle').value.trim(),
+      description:    document.getElementById('postDescription').value.trim(),
+      category:       schema[currentCategoryKey].label,
+      subcategory:    subCategorySelect.value,
+      price,
+      price_type:     isCharity ? 'free' : (negotiable ? 'negotiable' : 'fixed'),
+      location_city:  document.getElementById('citySelect').value,
+      location_state: document.getElementById('stateSelect').value,
+      location_area:  document.getElementById('specificLocation').value,
+      images:         uploadedImages,
+      fields,
     };
 
-    // SAVE DIRECTLY TO localStorage
-    const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-    if (editId) {
-      const idx = listings.findIndex(l => l.id === editId);
-      if (idx !== -1) { listings[idx] = { ...listings[idx], ...newItem }; }
-      else { listings.unshift(newItem); }
-    } else {
-      listings.unshift(newItem);
-    }
-    localStorage.setItem('zzz_listings', JSON.stringify(listings));
-    localStorage.setItem('zzz_data_updated_at', String(Date.now()));
+    // Disable buttons while posting
+    finalSubmitBtn.disabled = true;
+    finalSubmitBtn.innerHTML = '<span>Posting...</span><span class="material-symbols-outlined animate-spin">refresh</span>';
+    confirmPostBtn.disabled  = true;
+    confirmPostBtn.textContent = 'Posting...';
 
-    // Deduct quota only for non-charity new posts
-    if (!isCharity && !editId && window.ZZZ && window.ZZZ.Plans && currentUser) {
-      window.ZZZ.Plans.deductQuota(currentUser.id);
-    }
+    try {
+      const url    = editId ? `/api/listings.php?id=${editId}` : '/api/listings.php';
+      const method = editId ? 'PUT' : 'POST';
+      const res    = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
 
-    // Add charity to moderation queue
-    if (isCharity && !editId) {
-      const queue = JSON.parse(localStorage.getItem('zzz_charity_queue') || '[]');
-      queue.unshift({ listingId: newItem.id, userId: newItem.userId, userName: newItem.userName, title: newItem.title, submittedAt: new Date().toISOString(), status: 'pending_review' });
-      localStorage.setItem('zzz_charity_queue', JSON.stringify(queue));
-    }
+      if (!data.success) {
+        showToast(data.error || 'Failed to post. Please try again.', 'error');
+        finalSubmitBtn.disabled = false;
+        finalSubmitBtn.innerHTML = '<span>Post Now</span><span class="material-symbols-outlined">send</span>';
+        confirmPostBtn.disabled  = false;
+        confirmPostBtn.textContent = editId ? 'Update Listing' : 'Confirm & Post';
+        previewModal.classList.add('hidden'); previewModal.classList.remove('flex');
+        return;
+      }
 
-    showPostSuccess(!!editId, isCharity);
+      showPostSuccess(!!editId, isCharity);
+
+    } catch (err) {
+      showToast('Network error. Please try again.', 'error');
+      finalSubmitBtn.disabled = false;
+      finalSubmitBtn.innerHTML = '<span>Post Now</span><span class="material-symbols-outlined">send</span>';
+      confirmPostBtn.disabled  = false;
+      confirmPostBtn.textContent = editId ? 'Update Listing' : 'Confirm & Post';
+    }
   }
 
   // BIND EVENTS
