@@ -308,23 +308,44 @@
   </div>
 </div>
 
+<!-- ── AUTH GATE MODAL (shown to non-logged-in users at submit) ── -->
+<div id="authGateModal" class="hidden fixed inset-0 z-[200] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm">
+  <div class="bg-white dark:bg-card-dark w-full max-w-sm rounded-3xl shadow-2xl p-8 text-center">
+    <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-5">
+      <span class="material-symbols-outlined text-primary text-4xl">lock_person</span>
+    </div>
+    <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-2">Almost There! 🎉</h2>
+    <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">Create a free account or log in to post your listing. Your details are saved!</p>
+    <div class="flex flex-col gap-3">
+      <a id="authGateRegister" href="User Registration.html" class="w-full py-3.5 bg-primary text-white font-black rounded-xl shadow-lg text-center flex items-center justify-center gap-2 hover:bg-green-700 transition-all">
+        <span class="material-symbols-outlined text-[20px]">person_add</span> Create Free Account
+      </a>
+      <a id="authGateLogin" href="Login Page.html" class="w-full py-3.5 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-xl text-center flex items-center justify-center gap-2 hover:border-primary hover:text-primary transition-all">
+        <span class="material-symbols-outlined text-[20px]">login</span> Log In
+      </a>
+      <button onclick="document.getElementById('authGateModal').classList.add('hidden')" class="text-sm text-gray-400 hover:text-gray-600 mt-1">
+        ← Continue editing
+      </button>
+    </div>
+  </div>
+</div>
+
 <script src="js/schema.js"></script>
 <script src="js/utils.js"></script>
 <script>
 (function() {
-  // Auth check — use localStorage cache, verify session with API
+  // Auth check — non-blocking. Unauthenticated users can fill the form;
+  // the auth gate modal shows only when they try to submit.
   const currentUserAuth = JSON.parse(localStorage.getItem('zzz_user') || 'null');
-  if (!currentUserAuth) {
-    window.location.href = 'Login Page.html?redirect=Post Listing.html';
-    return;
+  // Verify session silently if logged in
+  if (currentUserAuth) {
+    fetch('/api/auth.php?action=me', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        if (!d.success) { localStorage.removeItem('zzz_user'); }
+        else localStorage.setItem('zzz_user', JSON.stringify(d.data.user));
+      }).catch(() => {});
   }
-  // Non-blocking session verification
-  fetch('/api/auth.php?action=me', { credentials: 'include' })
-    .then(r => r.json())
-    .then(d => {
-      if (!d.success) { localStorage.removeItem('zzz_user'); window.location.href = 'Login Page.html'; }
-      else localStorage.setItem('zzz_user', JSON.stringify(d.data.user));
-    }).catch(() => {});
 
   let schema = {};
 
@@ -872,6 +893,14 @@
   }
 
   async function handleSubmit() {
+    // Auth gate — show modal if not logged in
+    const activeUser = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+    if (!activeUser) {
+      // Save redirect so after login/register they come back
+      sessionStorage.setItem('zzz_post_redirect', 'Post Listing.html');
+      document.getElementById('authGateModal').classList.remove('hidden');
+      return;
+    }
     if (!currentCategory || !currentCategoryKey) { showToast('Please choose a category.', 'error'); return; }
     if (!subCategorySelect.value) { showToast('Please choose a subcategory.', 'error'); return; }
     if (!document.getElementById('postTitle').value.trim()) { showToast('Please enter an ad title.', 'error'); return; }
