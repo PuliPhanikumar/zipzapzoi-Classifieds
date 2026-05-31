@@ -329,9 +329,11 @@
   let schema = {};
 
   function loadSchemaFromBrain() {
-    const brain = window.ZZZ && window.ZZZ.getClassifiedsSchema ? window.ZZZ.getClassifiedsSchema() : (window.ZZZ_SCHEMA || { categories: [], subcategories: [], fields: [] });
-    
-    // CONVERT Admin Relational Data -> Post Listing Nested Data for UI
+    let brain = window.ZZZ && window.ZZZ.getClassifiedsSchema ? window.ZZZ.getClassifiedsSchema() : null;
+    // Fall back to static schema.js if Admin brain is empty (no data in DB yet)
+    if (!brain || !brain.categories || brain.categories.length === 0) {
+      brain = window.ZZZ_SCHEMA || { categories: [], subcategories: [], fields: [] };
+    }
     brain.categories.forEach(cat => {
       // 1. Create Category Object
       schema[cat.id] = {
@@ -608,7 +610,8 @@
     // Setup Listener for Subcategory Change -> Populate Fields
     subCategorySelect.onchange = (e) => {
         const selectedSubLabel = e.target.value;
-        const brain = window.ZZZ && window.ZZZ.getClassifiedsSchema ? window.ZZZ.getClassifiedsSchema() : (window.ZZZ_SCHEMA || { fields: [] });
+        let brain = window.ZZZ && window.ZZZ.getClassifiedsSchema ? window.ZZZ.getClassifiedsSchema() : null;
+        if (!brain || !brain.fields || brain.fields.length === 0) brain = window.ZZZ_SCHEMA || { fields: [] };
         
         // Find subcategory ID using the label
         const subObj = currentCategory.subIds.find(s => s.label === selectedSubLabel);
@@ -893,7 +896,8 @@
 
     // Gather dynamic fields
     const fields = {};
-    const brain = window.ZZZ && window.ZZZ.getClassifiedsSchema ? window.ZZZ.getClassifiedsSchema() : (window.ZZZ_SCHEMA || { fields: [] });
+    let brain = window.ZZZ && window.ZZZ.getClassifiedsSchema ? window.ZZZ.getClassifiedsSchema() : null;
+    if (!brain || !brain.fields || brain.fields.length === 0) brain = window.ZZZ_SCHEMA || { fields: [] };
     const subObj = currentCategory.subIds ? currentCategory.subIds.find(s => s.label === subCategorySelect.value) : null;
     if (subObj) {
       brain.fields.filter(f => f.subcategoryId === subObj.id).forEach(f => {
