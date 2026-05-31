@@ -173,9 +173,53 @@ function handleLogout(): void {
 function handleMe(): void {
     $user = getCurrentUser();
     if (!$user) jsonError('Not authenticated.', 401);
-    // Fetch full user data
+
     $full = getUserById((int)$user['id']);
-    jsonOk($full);
+    if (!$full) jsonError('User not found.', 404);
+    $db = getDB();
+
+    // ── Quota ──────────────────────────────────────────────────────
+    $qStmt = $db->prepare(
+        'SELECT ads_remaining, total_granted, plan_id, plan_name, expires_at
+         FROM user_quotas WHERE user_id = ?'
+    );
+    $qStmt->execute([(int)$user['id']]);
+    $quota = $qStmt->fetch();
+    $full['quota'] = $quota ? [
+        'ads_remaining' => (int)$quota['ads_remaining'],
+        'total_granted' => (int)$quota['total_granted'],
+        'plan_id'       => $quota['plan_id'],
+        'plan_name'     => $quota['plan_name'],
+        'expires_at'    => $quota['expires_at'],
+    ] : null;
+
+    // ── Listing Stats (aggregated) ─────────────────────────────────
+    $sStmt = $db->prepare(
+        'SELECT status, COUNT(*) AS cnt, COALESCE(SUM(views), 0) AS total_views
+         FROM listings WHERE user_id = ? GROUP BY status'
+    );
+    $sStmt->execute([(int)$user['id']]);
+    $rows        = $sStmt->fetchAll();
+    $statViews   = 0; $statActive = 0; $statSold = 0;
+    foreach ($rows as $r) {
+        $statViews += (int)$r['total_views'];
+        if ($r['status'] === 'active')  $statActive = (int)$r['cnt'];
+        if ($r['status'] === 'sold')    $statSold   = (int)$r['cnt'];
+    }
+    $full['listing_stats'] = [
+        'total_views' => $statViews,
+        'active'      => $statActive,
+        'sold'        => $statSold,
+    ];
+
+    // ── Unread message count ────────────────────────────────────────
+    $mStmt = $db->prepare(
+        'SELECT COUNT(*) FROM messages WHERE to_user_id = ? AND is_read = 0'
+    );
+    $mStmt->execute([(int)$user['id']]);
+    $full['unread_messages'] = (int)$mStmt->fetchColumn();
+
+    jsonOk(['user' => $full]);
 }
 
 // ─────────────────────────────────────────────────────────────────────

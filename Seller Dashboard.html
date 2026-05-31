@@ -404,23 +404,11 @@
     // ═══════════════════════════════════════════
     //  1. AUTH & INIT
     // ═══════════════════════════════════════════
-    const currentUser = window.ZZZ
-      ? window.ZZZ.getCurrentUser()
-      : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-
+    // Auth — localStorage cache + non-blocking API verify
+    const currentUser = JSON.parse(localStorage.getItem('zzz_user') || 'null');
     if (!currentUser) {
       window.location.href = 'Login Page.html?redirect=Seller+Dashboard.html';
       throw new Error('Not authenticated');
-    }
-
-    // Check ban
-    const bannedUsers = JSON.parse(localStorage.getItem('zzz_banned_users') || '[]');
-    if (bannedUsers.includes(currentUser.id) || bannedUsers.includes(currentUser.name)) {
-      if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(null);
-      else { localStorage.removeItem('zzz_user'); }
-      showToast('Your account has been suspended by an Administrator.', 'error');
-      setTimeout(() => window.location.href = 'Login Page.html', 2000);
-      throw new Error('Banned user');
     }
 
     // Set user name
@@ -473,9 +461,9 @@
     // ═══════════════════════════════════════════
     //  3. LOGOUT
     // ═══════════════════════════════════════════
-    function handleLogout() {
-      if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(null);
-      else localStorage.removeItem('zzz_user');
+    async function handleLogout() {
+      try { await fetch('/api/auth.php?action=logout', { method: 'POST', credentials: 'include' }); } catch(e) {}
+      localStorage.removeItem('zzz_user');
       window.location.href = 'Login Page.html';
     }
 
@@ -483,9 +471,7 @@
     // ═══════════════════════════════════════════
     //  4. PLAN WIDGET
     // ═══════════════════════════════════════════
-    function loadPlanWidget() {
-      if (!window.ZZZ || !window.ZZZ.Plans || !currentUser) return;
-      const q = window.ZZZ.Plans.getUserQuota(currentUser.id);
+    function renderPlanWidget(q) {
       if (!q) {
         document.getElementById('widgetPlanName').textContent = 'No Active Plan';
         document.getElementById('widgetRemaining').textContent = '0';
@@ -494,28 +480,22 @@
         document.getElementById('widgetExpiry').textContent = 'No active plan';
         return;
       }
-      const remaining = Math.max(0, q.adsRemaining || 0);
-      const total = Math.max(1, q.totalGranted || 1);
-      const pct = Math.min(100, Math.round((remaining / total) * 100));
-
-      document.getElementById('widgetPlanName').textContent = q.planName || 'Free Plan';
+      const remaining = Math.max(0, q.ads_remaining || 0);
+      const total     = Math.max(1, q.total_granted  || 1);
+      const pct       = Math.min(100, Math.round((remaining / total) * 100));
+      document.getElementById('widgetPlanName').textContent  = q.plan_name || 'Free Plan';
       document.getElementById('widgetRemaining').textContent = remaining;
-      document.getElementById('widgetTotal').textContent = q.totalGranted || 0;
-      document.getElementById('widgetBarLabel').textContent = remaining + ' of ' + (q.totalGranted || 0) + ' ads remaining';
-
-      if (q.expiresAt) {
-        const days = Math.max(0, Math.round((new Date(q.expiresAt) - Date.now()) / 86400000));
+      document.getElementById('widgetTotal').textContent     = q.total_granted || 0;
+      document.getElementById('widgetBarLabel').textContent  = `${remaining} of ${q.total_granted || 0} ads remaining`;
+      if (q.expires_at) {
+        const days = Math.max(0, Math.round((new Date(q.expires_at) - Date.now()) / 86400000));
         document.getElementById('widgetExpiry').textContent = days > 0
-          ? 'Expires in ' + days + ' day' + (days !== 1 ? 's' : '') + ' · ' + new Date(q.expiresAt).toLocaleDateString('en-IN')
+          ? `Expires in ${days} day${days !== 1 ? 's' : ''} · ${new Date(q.expires_at).toLocaleDateString('en-IN')}`
           : '⚠ Plan Expired — Renew Now';
       } else {
         document.getElementById('widgetExpiry').textContent = '—';
       }
-
-      setTimeout(() => {
-        const bar = document.getElementById('widgetBar');
-        if (bar) bar.style.width = pct + '%';
-      }, 300);
+      setTimeout(() => { const b = document.getElementById('widgetBar'); if (b) b.style.width = pct + '%'; }, 300);
     }
 
 
@@ -525,36 +505,58 @@
     let allMyListings = [];
     let currentFilter = 'all';
 
-    function loadDashboard() {
-      const allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-      allMyListings = allListings.filter(item => item.userId === currentUser.id);
+    async function loadDashboard() {
+      try {
+        // One call — user + quota + stats + unread count
+        const meRes  = await fetch('/api/auth.php?action=me', { credentials: 'include' });
+        const meData = await meRes.json();
 
-      const allMsgs = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
-      const unreadCount = allMsgs.filter(m => m.toUserId === currentUser.id && !m.read).length;
+        if (!meData.success) {
+          localStorage.removeItem('zzz_user');
+          window.location.href = 'Login Page.html';
+          return;
+        }
 
-      // Stats
-      document.getElementById('statViews').textContent =
-        allMyListings.reduce((sum, item) => sum + Number(item.views || 0), 0).toLocaleString('en-IN');
-      document.getElementById('statActive').textContent =
-        allMyListings.filter(i => (i.status || 'active') === 'active').length;
-      document.getElementById('statSold').textContent =
-        allMyListings.filter(i => i.status === 'sold').length;
-      document.getElementById('statMsgs').textContent = unreadCount;
+        const me = meData.data.user;
+        localStorage.setItem('zzz_user', JSON.stringify(me));
 
-      // Message badge
-      if (unreadCount > 0) {
-        document.getElementById('sideBadge').textContent = unreadCount;
-        document.getElementById('sideBadge').classList.remove('hidden');
-        document.getElementById('msgBadge').classList.remove('hidden');
-      } else {
-        document.getElementById('sideBadge').classList.add('hidden');
-        document.getElementById('msgBadge').classList.add('hidden');
+        // Update greeting
+        document.getElementById('userName').textContent = (me.name || 'User').split(' ')[0];
+
+        // Stats
+        const stats = me.listing_stats || {};
+        document.getElementById('statViews').textContent  = (stats.total_views  || 0).toLocaleString('en-IN');
+        document.getElementById('statActive').textContent = stats.active || 0;
+        document.getElementById('statSold').textContent   = stats.sold   || 0;
+
+        const unread = me.unread_messages || 0;
+        document.getElementById('statMsgs').textContent = unread;
+        const sideBadge = document.getElementById('sideBadge');
+        const msgBadge  = document.getElementById('msgBadge');
+        if (unread > 0) {
+          sideBadge.textContent = unread; sideBadge.classList.remove('hidden');
+          msgBadge.classList.remove('hidden');
+        } else {
+          sideBadge.classList.add('hidden'); msgBadge.classList.add('hidden');
+        }
+
+        // Plan widget
+        renderPlanWidget(me.quota);
+
+        // Load my listings from API
+        const lRes  = await fetch(`/api/listings.php?user_id=${me.id}&status=all&limit=100`, { credentials: 'include' });
+        const lData = await lRes.json();
+        if (lData.success) {
+          allMyListings = lData.data.listings || [];
+        }
+
+        filterListings(currentFilter, false);
+        initChart();
+
+      } catch (err) {
+        showToast('Failed to load dashboard. Check connection.', 'error');
+        console.error(err);
       }
-
-      // Render list
-      filterListings(currentFilter, false);
-      loadPlanWidget();
-      initChart();
     }
 
 
@@ -595,8 +597,9 @@
     }
 
     function formatDate(item) {
-      const raw = item.updatedAt || item.createdAt || item.time;
-      if (!raw || raw === 'Just now') return 'Just now';
+      // API uses updated_at / created_at (snake_case)
+      const raw = item.updated_at || item.created_at || item.updatedAt || item.createdAt;
+      if (!raw) return 'Just now';
       const d = new Date(raw);
       return isNaN(d.getTime()) ? 'Just now' : d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
     }
@@ -617,7 +620,10 @@
 
       container.innerHTML = items.map(item => {
         const status = item.status || 'active';
-        const imgSrc = (item.images && item.images[0]) || item.image || 'https://via.placeholder.com/80x80/f0f4f8/999?text=No+Img';
+        // API returns images as array, location as location_city/location_state
+        const imgs   = Array.isArray(item.images) ? item.images : [];
+        const imgSrc = imgs[0] || 'https://placehold.co/80x80/f0f4f8/9ca3af?text=No+Img';
+        const locStr = [item.location_city, item.location_state].filter(Boolean).join(', ') || item.location || 'Not set';
         const isActive = status === 'active';
         const isPremium = item.isPremium;
 
@@ -637,9 +643,9 @@
               </div>
               <p class="text-primary font-black text-base">₹${Number(item.price || 0).toLocaleString('en-IN')}</p>
               <div class="flex items-center gap-3 mt-1 text-xs text-gray-400 flex-wrap">
-                <span class="flex items-center gap-1">
-                  <span class="material-symbols-outlined text-[13px]">location_on</span>${item.location || 'Not set'}
-                </span>
+                 <span class="flex items-center gap-1">
+                   <span class="material-symbols-outlined text-[13px]">location_on</span>${locStr}
+                 </span>
                 <span class="flex items-center gap-1">
                   <span class="material-symbols-outlined text-[13px]">visibility</span>${Number(item.views || 0)} views
                 </span>
@@ -698,20 +704,23 @@
         pendingSoldId = null;
       }, 200);
     }
-    function confirmSold() {
+    async function confirmSold() {
       if (!pendingSoldId) return;
-      const email = document.getElementById('buyerEmail').value.trim();
-      let all = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-      const idx = all.findIndex(i => i.id === pendingSoldId);
-      if (idx > -1) {
-        all[idx].status = 'sold';
-        all[idx].soldAt = new Date().toISOString();
-        if (email) all[idx].soldToEmail = email;
-        localStorage.setItem('zzz_listings', JSON.stringify(all));
-        localStorage.setItem('zzz_data_updated_at', String(Date.now()));
-        showToast('🎉 Listing marked as Sold!', 'success');
-        loadDashboard();
-      }
+      try {
+        const res  = await fetch(`/api/listings.php?id=${pendingSoldId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ status: 'sold' }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('🎉 Listing marked as Sold!', 'success');
+          loadDashboard();
+        } else {
+          showToast(data.error || 'Failed to update.', 'error');
+        }
+      } catch { showToast('Network error.', 'error'); }
       closeSoldModal();
     }
 
@@ -724,15 +733,22 @@
       document.getElementById('deleteModal').classList.add('hidden');
       pendingDeleteId = null;
     }
-    function confirmDelete() {
+    async function confirmDelete() {
       if (!pendingDeleteId) return;
-      let all = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-      all = all.filter(i => i.id !== pendingDeleteId);
-      localStorage.setItem('zzz_listings', JSON.stringify(all));
-      localStorage.setItem('zzz_data_updated_at', String(Date.now()));
+      try {
+        const res  = await fetch(`/api/listings.php?id=${pendingDeleteId}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Listing deleted.', 'success');
+          loadDashboard();
+        } else {
+          showToast(data.error || 'Failed to delete.', 'error');
+        }
+      } catch { showToast('Network error.', 'error'); }
       closeDeleteModal();
-      showToast('Listing deleted.', 'success');
-      loadDashboard();
     }
     // Keep old window.deleteItem for compatibility
     window.deleteItem = (id) => openDeleteModal(id);
@@ -905,12 +921,7 @@
       }, 3500);
     }
 
-    // ── Storage sync ───────────────────────────
-    window.addEventListener('storage', (e) => {
-      if (['zzz_listings', 'zzz_messages', 'zzz_data_updated_at', 'zzz_user_quotas'].includes(e.key)) {
-        loadDashboard();
-      }
-    });
+    // (Storage sync removed — data now comes from PHP API)
 
     // ── INIT ──────────────────────────────────
     loadDashboard();
@@ -946,7 +957,7 @@
       setTimeout(() => document.getElementById('editProfileModal').classList.add('hidden'), 180);
     }
 
-    function saveProfile() {
+    async function saveProfile() {
       const name  = document.getElementById('epName').value.trim();
       const phone = document.getElementById('epPhone').value.trim();
       const city  = document.getElementById('epCity').value.trim();
@@ -954,35 +965,26 @@
 
       if (!name) { showToast('Name cannot be empty.', 'error'); return; }
 
-      // Load current user
-      const user = window.ZZZ ? window.ZZZ.getCurrentUser()
-                              : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
       if (!user) { showToast('Session expired. Please log in again.', 'error'); return; }
 
-      // Merge updated fields
-      const updatedUser = { ...user, name, phone, mobile: phone, city, bio, updatedAt: new Date().toISOString() };
+      try {
+        const res  = await fetch(`/api/users.php?id=${user.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ name, phone, city }),
+        });
+        const data = await res.json();
+        if (!data.success) { showToast(data.error || 'Failed to save.', 'error'); return; }
 
-      // Save to zzz_user (active session)
-      localStorage.setItem('zzz_user', JSON.stringify(updatedUser));
-
-      // Also update in zzz_users registry (the full user list)
-      const allUsers = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-      const idx = allUsers.findIndex(u => u.id === user.id || u.email === user.email);
-      if (idx !== -1) {
-        allUsers[idx] = { ...allUsers[idx], name, phone, mobile: phone, city, bio, updatedAt: updatedUser.updatedAt };
-      } else {
-        allUsers.push(updatedUser); // Add if somehow missing
-      }
-      localStorage.setItem('zzz_users', JSON.stringify(allUsers));
-
-      // Sync via ZZZ if available
-      if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(updatedUser);
-
-      // Update UI immediately — name in header
-      document.getElementById('userName').textContent = name.split(' ')[0];
-
-      showToast('✅ Profile saved successfully!', 'success');
-      closeEditProfile();
+        // Update localStorage cache
+        const updated = { ...user, name, phone, city };
+        localStorage.setItem('zzz_user', JSON.stringify(updated));
+        document.getElementById('userName').textContent = name.split(' ')[0];
+        showToast('✅ Profile saved successfully!', 'success');
+        closeEditProfile();
+      } catch { showToast('Network error. Try again.', 'error'); }
     }
 
     // Close on backdrop click
