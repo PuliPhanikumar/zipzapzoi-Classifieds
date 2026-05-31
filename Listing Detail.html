@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -301,499 +301,315 @@
     <script src="js/utils.js"></script>
     <script>
       let currentListing = null;
-      let isFavorite = false;
+      let isFavorite     = false;
 
-      document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener('DOMContentLoaded', async () => {
         if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
-        
+
         const params = new URLSearchParams(window.location.search);
         const id = params.get('id');
-        if(!id) {
-            showToast('Listing not found', 'error');
+        if (!id) { showToast('Listing not found', 'error'); window.location.href = 'classifieds.html'; return; }
+
+        try {
+          const res  = await fetch('/api/listings.php?id=' + id, { credentials: 'include' });
+          const data = await res.json();
+
+          if (!data.success) {
+            showToast(data.error || 'Listing not found', 'error');
             window.location.href = 'classifieds.html';
             return;
-        }
+          }
 
-        const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-        currentListing = listings.find(l => l.id === id);
+          currentListing = data.data;
 
-        if(!currentListing) {
-            showToast('Listing not found or deleted', 'error');
-            window.location.href = 'classifieds.html';
-            return;
-        }
-
-        const viewer = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-        const canInspect = viewer && (viewer.id === currentListing.userId || viewer.role === 'admin' || viewer.role === 'super_admin');
-        if((currentListing.status || 'active') !== 'active' && !canInspect) {
+          const viewer     = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+          const canInspect = viewer && (viewer.id === currentListing.user_id || viewer.role === 'admin' || viewer.role === 'super_admin');
+          if (currentListing.status !== 'active' && !canInspect) {
             alert('This listing is not currently active.');
             window.location.href = 'classifieds.html';
             return;
+          }
+
+          renderData();
+
+          // Non-blocking favourite state (only for logged-in users)
+          if (viewer) {
+            fetch('/api/favorites.php', { credentials: 'include' })
+              .then(r => r.json())
+              .then(d => {
+                if (d.success) {
+                  isFavorite = (d.data || []).some(f => f.id === currentListing.id);
+                  updateFavIcon();
+                }
+              }).catch(() => {});
+          }
+        } catch(e) {
+          showToast('Failed to load listing. Check connection.', 'error');
         }
-
-        // Simulate Views
-        currentListing.views = (currentListing.views || 0) + 1;
-        localStorage.setItem('zzz_listings', JSON.stringify(listings));
-
-        renderData();
       });
 
+      // â”€â”€â”€ RENDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       function renderData() {
-        document.getElementById('detailTitle').textContent = currentListing.title;
-        document.getElementById('detailCategory').textContent = currentListing.category;
-        document.getElementById('detailPrice').textContent = `₹${parseFloat(currentListing.price).toLocaleString()}`;
-        document.getElementById('detailLocation').textContent = currentListing.location || 'Local';
+        const l = currentListing;
+        document.title = l.title + ' - ZipZapZoi';
 
-        // ─── SELLER PLAN BADGE ────────────────────────────
-        if (window.ZZZ && window.ZZZ.Plans && currentListing.userId) {
-          const sellerQuota = window.ZZZ.Plans.getUserQuota(currentListing.userId);
-          if (sellerQuota && sellerQuota.planId && sellerQuota.planId !== 'new_user_free' && sellerQuota.planId !== 'monthly_free') {
-            const plan = window.ZZZ.Plans.getById(sellerQuota.planId);
-            if (plan) {
-              const badge = document.createElement('span');
-              badge.id = 'zzz-seller-plan-badge';
-              badge.className = 'inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded-full border border-primary/20 ml-2';
-              badge.innerHTML = '<span class="material-symbols-outlined text-[12px]">workspace_premium</span>' + plan.name + ' Seller';
-              const titleEl = document.getElementById('detailLocation');
-              if (titleEl && titleEl.parentNode) titleEl.parentNode.appendChild(badge);
-            }
-          }
-        }
-        // ─── END SELLER PLAN BADGE ───────────────────────
+        document.getElementById('detailTitle').textContent    = l.title || '';
+        document.getElementById('detailCategory').textContent = l.subcategory || l.category || '';
+        document.getElementById('detailPrice').textContent    =
+          l.price_type === 'free' ? 'FREE' : '\u20b9' + parseFloat(l.price || 0).toLocaleString('en-IN');
 
-        // Init map if coords available
-        if (typeof L !== 'undefined') {
-          initListingMap(currentListing.lat, currentListing.lng, currentListing.title);
-        } else {
-          window.addEventListener('load', () => initListingMap(currentListing.lat, currentListing.lng, currentListing.title));
-        }
-        document.getElementById('detailTime').textContent = currentListing.date || 'Just now';
-        document.getElementById('detailViews').textContent = currentListing.views || 1;
-        document.getElementById('detailDescription').textContent = currentListing.description;
-        
-        document.getElementById('sellerName').textContent = currentListing.userName || 'Anonymous Seller';
-        document.getElementById('sellerInit').textContent = (currentListing.userName || 'A').charAt(0).toUpperCase();
+        const locStr = [l.location_city, l.location_state].filter(Boolean).join(', ') || 'Local';
+        document.getElementById('detailLocation').textContent = locStr;
+        document.getElementById('detailTime').textContent     = timeAgo(l.created_at);
+        document.getElementById('detailViews').textContent    = (l.views || 1).toLocaleString('en-IN');
+        document.getElementById('detailDescription').textContent = l.description || '';
 
-        if(currentListing.condition) {
-           document.getElementById('conditionBadge').textContent = currentListing.condition.toUpperCase();
-        } else {
-           document.getElementById('conditionBadge').style.display = 'none';
-        }
+        // Seller
+        document.getElementById('sellerName').textContent  = l.seller_name || 'Anonymous';
+        document.getElementById('sellerInit').textContent  = (l.seller_name || 'A').charAt(0).toUpperCase();
+        const vBadge = document.getElementById('sellerVerifiedBadge');
+        if (l.seller_is_verified) { vBadge.classList.remove('hidden'); vBadge.classList.add('flex'); }
+        else { vBadge.classList.add('hidden'); }
 
-        // Dynamic Attributes
-        if (currentListing.dynamicData && Object.keys(currentListing.dynamicData).length > 0) {
-            const grid = document.getElementById('attributesGrid');
-            const section = document.getElementById('attributesSection');
-            let html = '';
-            
-            const brainFields = (window.ZZZ_SCHEMA && window.ZZZ_SCHEMA.fields) ? window.ZZZ_SCHEMA.fields : [];
+        // Condition badge
+        if (l.condition) document.getElementById('conditionBadge').textContent = l.condition.toUpperCase();
+        else             document.getElementById('conditionBadge').style.display = 'none';
 
-            Object.entries(currentListing.dynamicData).forEach(([key, val]) => {
-                if(!val) return;
-                const fieldDef = brainFields.find(f => f.id === key);
-                const label = fieldDef ? fieldDef.label : key.replace(/_/g, ' ').toUpperCase();
-                
-                html += `
-                  <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
-                    <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">${label}</p>
-                    <p class="font-bold text-gray-900 dark:text-white text-sm truncate" title="${val}">${val}</p>
-                  </div>
-                `;
-            });
-
-            if (html !== '') {
-                grid.innerHTML = html;
-                section.style.display = 'block';
-            } else {
-                section.style.display = 'none';
-            }
-        } else {
-            document.getElementById('attributesSection').style.display = 'none';
+        // Dynamic fields
+        const fields = l.fields || {};
+        const fieldKeys = Object.keys(fields).filter(k => fields[k]);
+        if (fieldKeys.length > 0) {
+          document.getElementById('attributesGrid').innerHTML = fieldKeys.map(key => {
+            const label = key.replace(/_/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
+            return `<div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+              <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">${label}</p>
+              <p class="font-bold text-gray-900 dark:text-white text-sm truncate" title="${fields[key]}">${fields[key]}</p>
+            </div>`;
+          }).join('');
+          document.getElementById('attributesSection').style.display = 'block';
         }
 
         // Gallery
-        const images = currentListing.images || [];
+        const images = Array.isArray(l.images) ? l.images : [];
         const gallery = document.getElementById('imageGallery');
-        if(images.length > 0) {
-            gallery.innerHTML = images.map((img, i) => `
-               <img src="${img}" class="gallery-item ${i === 0 ? 'main-img' : ''}" onclick="window.open('${img}', '_blank')">
-            `).join('');
-        } else {
-            gallery.innerHTML = `<img src="https://via.placeholder.com/800x600?text=No+Images+Provided" class="gallery-item main-img">`;
-        }
+        gallery.innerHTML = images.length > 0
+          ? images.map((img, i) => `<img src="${img}" class="gallery-item ${i===0?'main-img':''}" onclick="window.open('${img}','_blank')">`).join('')
+          : `<img src="https://placehold.co/800x600/f0f4f8/9ca3af?text=No+Image" class="gallery-item main-img">`;
 
-        // Check Fav
-        const favs = window.ZZZ ? window.ZZZ.getFavoriteIds() : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-        isFavorite = favs.includes(currentListing.id);
-        updateFavIcon();
+        // Map
+        if (typeof L !== 'undefined') initListingMap(l.lat, l.lng, l.title);
+        else window.addEventListener('load', () => initListingMap(l.lat, l.lng, l.title));
+
+        // Fade in
+        document.getElementById('contentArea').style.opacity = '1';
       }
 
+      // â”€â”€â”€ FAVOURITES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       function updateFavIcon() {
         const btn = document.getElementById('favBtnHeader');
-        if(isFavorite) {
-            btn.classList.add('text-red-500');
-            btn.classList.remove('text-gray-600', 'dark:text-gray-400');
-            btn.querySelector('span').style.fontVariationSettings = "'FILL' 1";
+        if (!btn) return;
+        if (isFavorite) {
+          btn.classList.add('text-red-500'); btn.classList.remove('text-gray-600','dark:text-gray-400');
+          btn.querySelector('span').style.fontVariationSettings = "'FILL' 1";
         } else {
-            btn.classList.remove('text-red-500');
-            btn.classList.add('text-gray-600', 'dark:text-gray-400');
-            btn.querySelector('span').style.fontVariationSettings = "'FILL' 0";
+          btn.classList.remove('text-red-500'); btn.classList.add('text-gray-600','dark:text-gray-400');
+          btn.querySelector('span').style.fontVariationSettings = "'FILL' 0";
         }
       }
 
-      function toggleFav() {
+      async function toggleFav() {
         const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
-        if(!user) {
-            window.location.href = 'Login Page.html?redirect=Listing Detail.html?id=' + currentListing.id;
-            return;
+        if (!user) {
+          window.location.href = 'Login Page.html?redirect=' + encodeURIComponent('Listing Detail.html?id=' + currentListing.id);
+          return;
         }
-
-        if(window.ZZZ) {
-            isFavorite = window.ZZZ.toggleFavorite(currentListing.id);
-        } else {
-            let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-            if(isFavorite) {
-                favs = favs.filter(f => f !== currentListing.id);
-                isFavorite = false;
-            } else {
-                favs.push(currentListing.id);
-                isFavorite = true;
-            }
-            localStorage.setItem('zzz_favorites', JSON.stringify(favs));
-        }
-        updateFavIcon();
-
-        // Toggle Negotiable badge
-        const negBadge = document.getElementById('negotiableBadge');
-        if(negBadge) {
-            if(currentListing.negotiable) negBadge.classList.remove('hidden');
-            else negBadge.classList.add('hidden');
-        }
-        
-        // Toggle Seller Verified badge
-        const verifiedUsers = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
-        const isSellerVerified = verifiedUsers.includes(currentListing.userId) || verifiedUsers.includes(currentListing.userName);
-        const badgeEl = document.getElementById('sellerVerifiedBadge');
-        if (badgeEl) {
-            if (isSellerVerified) {
-                badgeEl.classList.remove('hidden');
-                badgeEl.classList.add('flex');
-            } else {
-                badgeEl.classList.add('hidden');
-                badgeEl.classList.remove('flex');
-            }
-        }
+        try {
+          const res  = await fetch('/api/favorites.php?action=toggle', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+            body: JSON.stringify({ listing_id: currentListing.id }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            isFavorite = data.data.is_favorited;
+            updateFavIcon();
+            showToast(isFavorite ? '\u2764\ufe0f Saved to favourites' : 'Removed from favourites', 'success');
+          }
+        } catch { showToast('Network error.', 'error'); }
       }
 
-      function updateFavIcon() {
-        const btn = document.getElementById('favBtnHeader');
-        if(isFavorite) {
-            btn.classList.add('text-red-500');
-            btn.classList.remove('text-gray-600', 'dark:text-gray-400');
-            btn.querySelector('span').style.fontVariationSettings = "'FILL' 1";
-        } else {
-            btn.classList.remove('text-red-500');
-            btn.classList.add('text-gray-600', 'dark:text-gray-400');
-            btn.querySelector('span').style.fontVariationSettings = "'FILL' 0";
-        }
-      }
-
-      function toggleFav() {
-        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-        if(!user) {
-            window.location.href = 'Login Page.html?redirect=Listing Detail.html?id=' + currentListing.id;
-            return;
-        }
-
-        if(window.ZZZ) {
-            isFavorite = window.ZZZ.toggleFavorite(currentListing.id);
-        } else {
-            let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-            if(isFavorite) {
-                favs = favs.filter(f => f !== currentListing.id);
-                isFavorite = false;
-            } else {
-                favs.push(currentListing.id);
-                isFavorite = true;
-            }
-            localStorage.setItem('zzz_favorites', JSON.stringify(favs));
-        }
-        updateFavIcon();
-      }
-
+      // â”€â”€â”€ SHARE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       function shareListing() {
-        const url = window.location.href;
-        navigator.clipboard.writeText(url).then(() => {
-            showToast('Listing link copied to clipboard!', 'success');
-        });
+        navigator.clipboard.writeText(window.location.href).then(() => showToast('Link copied to clipboard!', 'success'));
       }
 
+      // â”€â”€â”€ DARK MODE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      function toggleDarkMode() {
+        const dark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('zzz_theme', dark ? 'dark' : 'light');
+        document.getElementById('themeIcon').textContent = dark ? 'light_mode' : 'dark_mode';
+      }
+
+      // â”€â”€â”€ CHAT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       function initiateChat() {
-        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-        if(!user) {
-            window.location.href = 'Login Page.html?redirect=Listing Detail.html?id=' + currentListing.id;
-            return;
-        }
-        if(user.email === currentListing.userEmail) {
-            showToast('You cannot chat with yourself!', 'error');
-            return;
-        }
-        const sId = currentListing.userId || currentListing.userEmail || 'anonymous';
-        const sName = currentListing.userName || 'Anonymous Seller';
-        
-        openFloatingChat(sId, sName);
+        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if (!user) { window.location.href = 'Login Page.html?redirect=' + encodeURIComponent('Listing Detail.html?id=' + currentListing.id); return; }
+        if (String(user.id) === String(currentListing.user_id)) { showToast('You cannot chat with yourself!', 'error'); return; }
+        openFloatingChat(currentListing.user_id, currentListing.seller_name || 'Seller');
       }
 
+      // â”€â”€â”€ OFFER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       function makeOffer() {
-        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-        if(!user) {
-            window.location.href = 'Login Page.html?redirect=Listing Detail.html?id=' + currentListing.id;
-            return;
-        }
-        
-        const sId = currentListing.userId || currentListing.userEmail || 'anonymous';
-        if(user.email === currentListing.userEmail || user.id === sId) {
-            showToast('You cannot make an offer on your own listing!', 'error');
-            return;
-        }
-
+        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if (!user) { window.location.href = 'Login Page.html?redirect=' + encodeURIComponent('Listing Detail.html?id=' + currentListing.id); return; }
+        if (String(user.id) === String(currentListing.user_id)) { showToast('You cannot offer on your own listing!', 'error'); return; }
         document.getElementById('modalListingTitle').textContent = currentListing.title;
-        document.getElementById('modalAskingPrice').textContent = `₹${parseFloat(currentListing.price).toLocaleString()}`;
+        document.getElementById('modalAskingPrice').textContent  = '\u20b9' + parseFloat(currentListing.price||0).toLocaleString('en-IN');
         document.getElementById('offerAmountInput').value = '';
         document.getElementById('offerModal').classList.remove('hidden');
       }
-
-      function closeOfferModal() {
-        document.getElementById('offerModal').classList.add('hidden');
-      }
-
+      function closeOfferModal() { document.getElementById('offerModal').classList.add('hidden'); }
       function submitOffer() {
         const offer = document.getElementById('offerAmountInput').value.trim();
-        if(!offer || isNaN(offer) || parseFloat(offer) <= 0) {
-            showToast('Please enter a valid offer amount.', 'error');
-            return;
-        }
-
-        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-        const sId = currentListing.userId || currentListing.userEmail || 'anonymous';
-        const sName = currentListing.userName || 'Anonymous Seller';
-        
+        if (!offer || isNaN(offer) || parseFloat(offer) <= 0) { showToast('Enter a valid offer amount.', 'error'); return; }
         closeOfferModal();
-        openFloatingChat(sId, sName);
-        sendFloatingMessage('offer', `Hi! I'd like to make an offer of ₹${Number(offer).toLocaleString()} for this.`, offer);
+        openFloatingChat(currentListing.user_id, currentListing.seller_name || 'Seller');
+        sendFloatingMessage('text', `Hi! I\u2019d like to offer \u20b9${Number(offer).toLocaleString('en-IN')} for "${currentListing.title}". Is this acceptable?`);
       }
-      
-      
-      // --- FLOATING CHAT LOGIC ---
-      let chatWidgetPartnerId = null;
+
+      // â”€â”€â”€ FLOATING CHAT WIDGET â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      let chatWidgetPartnerId   = null;
       let chatWidgetPartnerName = null;
+      let chatPollTimer         = null;
 
       function openFloatingChat(partnerId, partnerName) {
-        chatWidgetPartnerId = partnerId;
+        chatWidgetPartnerId   = partnerId;
         chatWidgetPartnerName = partnerName;
-        document.getElementById('chatWidgetName').textContent = partnerName;
+        document.getElementById('chatWidgetName').textContent   = partnerName;
         document.getElementById('chatWidgetAvatar').textContent = partnerName.charAt(0).toUpperCase();
-        
-        const widget = document.getElementById('floatingChatWidget');
-        widget.classList.remove('translate-y-[120%]');
-        
-        renderFloatingMessages();
-      }
-
-      // Navigate to Inbox.html with intent
-      function openInInbox() {
-        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-        if (!user) { window.location.href = 'Login Page.html'; return; }
-        const intent = {
-          partnerId: chatWidgetPartnerId,
-          partnerName: chatWidgetPartnerName,
-          listingId: currentListing ? currentListing.id : null,
-          listingTitle: currentListing ? currentListing.title : 'Listing'
-        };
-        localStorage.setItem('zzz_chat_intent', JSON.stringify(intent));
-        window.location.href = 'Inbox.html';
+        document.getElementById('floatingChatWidget').classList.remove('translate-y-[120%]');
+        loadFloatingMessages();
+        clearInterval(chatPollTimer);
+        chatPollTimer = setInterval(loadFloatingMessages, 15000);
       }
 
       function closeFloatingChat() {
+        clearInterval(chatPollTimer);
         document.getElementById('floatingChatWidget').classList.add('translate-y-[120%]');
       }
 
-      function renderFloatingMessages() {
-        if(!chatWidgetPartnerId) return;
-        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-        if(!user) return;
+      async function loadFloatingMessages() {
+        if (!chatWidgetPartnerId || !currentListing) return;
+        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if (!user) return;
+        try {
+          const p = new URLSearchParams({ thread: chatWidgetPartnerId, listing_id: currentListing.id });
+          const res  = await fetch('/api/messages.php?' + p, { credentials: 'include' });
+          const data = await res.json();
+          if (data.success) renderFloatingMessages(data.data || []);
+        } catch(e) {}
+      }
 
-        const allMsgs = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
-        const convId = [...[user.id, chatWidgetPartnerId].sort(), currentListing.id].join('::');
-
-        const msgs = allMsgs.filter(m => {
-           const isMatch = [...[m.fromUserId, m.toUserId].sort(), m.listingId].join('::') === convId;
-           if(isMatch && m.toUserId === user.id && !m.read) m.read = true; // Mark as read while open
-           return isMatch;
-        }).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
-
-        localStorage.setItem('zzz_messages', JSON.stringify(allMsgs)); // Save read state
-
+      function renderFloatingMessages(msgs) {
+        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if (!user) return;
         const feed = document.getElementById('chatWidgetFeed');
-        if(msgs.length === 0) {
-            feed.innerHTML = `<div class="text-center text-gray-500 text-xs mt-4">Say Hi to ${chatWidgetPartnerName}! 👋</div>`;
-            return;
+        if (!msgs || msgs.length === 0) {
+          feed.innerHTML = `<div class="text-center text-gray-500 text-xs mt-4">Say Hi to ${chatWidgetPartnerName}! \ud83d\udc4b</div>`;
+          return;
         }
-
+        const san = s => { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; };
         feed.innerHTML = msgs.map(m => {
-          const isMe = m.fromUserId === user.id;
-          
-          if (m.type === 'offer') {
-             return `
-              <div class="flex w-full ${isMe ? 'justify-end' : 'justify-start'}">
-                <div class="px-4 py-3 rounded-xl shadow-sm text-sm ${isMe ? 'bg-green-100 text-green-900 rounded-tr-none' : 'bg-white dark:bg-card-dark text-gray-800 dark:text-white rounded-tl-none'} border-l-4 border-l-green-500">
-                  <p class="font-bold text-xs text-green-600 mb-1 uppercase tracking-wider">${isMe ? 'You made an offer' : 'Received Offer'}</p>
-                  <p class="font-black text-2xl mb-2">₹${Number(m.offerAmount).toLocaleString()}</p>
-                  ${!isMe && m.status === 'pending' ? `
-                    <div class="flex gap-2 mt-2">
-                        <button onclick="handleOffer('${m.id}', 'reject')" class="flex-1 py-1 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded">Reject</button>
-                        <button onclick="handleOffer('${m.id}', 'accept')" class="flex-1 py-1 text-xs font-bold text-green-600 bg-green-50 hover:bg-green-100 rounded">Accept</button>
-                    </div>
-                  ` : ''}
-                  ${m.status === 'accepted' ? '<p class="text-xs font-bold text-green-600 mt-1"><span class="material-symbols-outlined text-[12px] align-middle">check_circle</span> Accepted</p>' : ''}
-                  ${m.status === 'rejected' ? '<p class="text-xs font-bold text-red-600 mt-1"><span class="material-symbols-outlined text-[12px] align-middle">cancel</span> Rejected</p>' : ''}
-                </div>
-              </div>
-             `;
-          }
-
-          return `
-            <div class="flex w-full ${isMe ? 'justify-end' : 'justify-start'}">
-              <div class="max-w-[85%] px-3 py-2 rounded-xl shadow-sm text-sm ${isMe ? 'bg-bubble-me dark:bg-primary text-gray-800 dark:text-white rounded-tr-none' : 'bg-white dark:bg-card-dark text-gray-800 dark:text-white rounded-tl-none'}">
-                ${window.sanitizeInput ? window.sanitizeInput(m.text) : m.text}
-                <div class="text-[9px] opacity-70 text-right mt-1">${new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
-              </div>
+          const isMe = String(m.from_user_id) === String(user.id);
+          const side = isMe ? 'bg-bubble-me dark:bg-primary text-gray-800 dark:text-white rounded-tr-none' : 'bg-white dark:bg-card-dark text-gray-800 dark:text-white rounded-tl-none';
+          const time = new Date(m.created_at).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+          return `<div class="flex w-full ${isMe?'justify-end':'justify-start'}">
+            <div class="max-w-[85%] px-3 py-2 rounded-xl shadow-sm text-sm ${side}">
+              ${san(m.body || '')}
+              <div class="text-[9px] opacity-70 text-right mt-1">${time}</div>
             </div>
-          `;
+          </div>`;
         }).join('');
         feed.scrollTop = feed.scrollHeight;
       }
 
-      function sendFloatingMessage(type = 'text', overrideText = null, offerAmount = null) {
-        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-        if(!user || !chatWidgetPartnerId) return;
-
+      async function sendFloatingMessage(type, overrideText) {
+        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if (!user || !chatWidgetPartnerId) return;
         const inputEl = document.getElementById('chatWidgetInput');
-        let txt = overrideText !== null ? overrideText : inputEl.value.trim();
-        if(!txt && type === 'text') return;
+        const txt = overrideText != null ? overrideText : (inputEl ? inputEl.value.trim() : '');
+        if (!txt) return;
+        if (inputEl) inputEl.value = '';
 
-        const allMsgs = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
-        const newMsg = {
-          id: 'msg_' + Date.now(),
-          type: type,
-          fromUserId: user.id,
-          fromName: user.name,
-          toUserId: chatWidgetPartnerId,
-          toName: chatWidgetPartnerName,
-          listingId: currentListing.id,
-          listingTitle: currentListing.title,
-          text: txt,
-          offerAmount: offerAmount,
-          status: type === 'offer' ? 'pending' : null,
-          timestamp: new Date().toISOString(),
-          read: false
-        };
+        // Optimistic bubble
+        const feed = document.getElementById('chatWidgetFeed');
+        const div  = document.createElement('div');
+        div.className = 'flex w-full justify-end';
+        const san = s => { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; };
+        div.innerHTML = `<div class="max-w-[85%] px-3 py-2 rounded-xl shadow-sm text-sm bg-bubble-me dark:bg-primary text-gray-800 dark:text-white rounded-tr-none">${san(txt)}<div class="text-[9px] opacity-70 text-right mt-1">Sending\u2026</div></div>`;
+        feed.appendChild(div);
+        feed.scrollTop = feed.scrollHeight;
 
-        allMsgs.push(newMsg);
-        localStorage.setItem('zzz_messages', JSON.stringify(allMsgs));
-        if(inputEl) inputEl.value = '';
-        renderFloatingMessages();
-
-        // Optional Dev Mode simulation
-        if (localStorage.getItem('zzz_dev_mode') === 'true' && type === 'text') {
-            setTimeout(() => {
-                const reply = {
-                    id: 'msg_' + Date.now(),
-                    type: 'text',
-                    fromUserId: chatWidgetPartnerId,
-                    fromName: chatWidgetPartnerName,
-                    toUserId: user.id,
-                    toName: user.name,
-                    listingId: currentListing.id,
-                    listingTitle: currentListing.title,
-                    text: "Sounds good, thanks for reaching out!",
-                    timestamp: new Date().toISOString(),
-                    read: false
-                };
-                const m2 = JSON.parse(localStorage.getItem('zzz_messages'));
-                m2.push(reply);
-                localStorage.setItem('zzz_messages', JSON.stringify(m2));
-                renderFloatingMessages();
-            }, 1500);
-        }
+        try {
+          const res  = await fetch('/api/messages.php', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+            body: JSON.stringify({ to_user_id: chatWidgetPartnerId, listing_id: currentListing.id, body: txt, subject: 'Enquiry' }),
+          });
+          const data = await res.json();
+          if (data.success) await loadFloatingMessages();
+          else showToast(data.error || 'Send failed.', 'error');
+        } catch { showToast('Network error.', 'error'); }
       }
 
-      function handleOffer(msgId, action) {
-        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-        const allMsgs = JSON.parse(localStorage.getItem('zzz_messages') || '[]');
-        const msg = allMsgs.find(m => m.id === msgId);
-        if(!msg) return;
-
-        msg.status = action === 'accept' ? 'accepted' : 'rejected';
-        
-        // Add a system text message
-        const sysMsg = {
-          id: 'msg_' + Date.now(),
-          type: 'text',
-          fromUserId: user.id,
-          fromName: user.name,
-          toUserId: msg.fromUserId,
-          toName: msg.fromName,
-          listingId: msg.listingId,
-          listingTitle: msg.listingTitle,
-          text: action === 'accept' ? `I have accepted your offer of ₹${Number(msg.offerAmount).toLocaleString()}!` : `Sorry, I cannot accept your offer of ₹${Number(msg.offerAmount).toLocaleString()}.`,
-          timestamp: new Date().toISOString(),
-          read: false
-        };
-        allMsgs.push(sysMsg);
-        
-        localStorage.setItem('zzz_messages', JSON.stringify(allMsgs));
-        renderFloatingMessages();
+      function openInInbox() {
+        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if (!user) { window.location.href = 'Login Page.html'; return; }
+        localStorage.setItem('zzz_chat_intent', JSON.stringify({
+          partnerId: chatWidgetPartnerId, partnerName: chatWidgetPartnerName,
+          listingId: currentListing ? currentListing.id : null,
+          listingTitle: currentListing ? currentListing.title : 'Listing'
+        }));
+        window.location.href = 'Inbox.html';
       }
 
-      window.addEventListener('storage', (e) => {
-          if(e.key === 'zzz_messages' && !document.getElementById('floatingChatWidget').classList.contains('translate-y-[120%]')) {
-              renderFloatingMessages();
-          }
-      });
-      // --- END FLOATING CHAT LOGIC ---
-
-
+      // â”€â”€â”€ REPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       function reportListing() {
-        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-        if(!user) {
-            window.location.href = 'Login Page.html?redirect=Listing Detail.html?id=' + currentListing.id;
-            return;
-        }
-
-        const reason = prompt("Please enter the reason for reporting this listing:");
-        if(reason && reason.trim()) {
-            const flags = JSON.parse(localStorage.getItem('zzz_flags') || '[]');
-            flags.push({
-                id: 'flag_' + Date.now(),
-                listingId: currentListing.id,
-                listingTitle: currentListing.title,
-                reporterId: user.id || 'anonymous',
-                reporterName: user.name || 'Anonymous',
-                reason: reason.trim(),
-                date: Date.now()
-            });
-            localStorage.setItem('zzz_flags', JSON.stringify(flags));
-            showToast('Thank you for reporting. Our moderation team will review this listing.', 'success');
-        }
+        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if (!user) { window.location.href = 'Login Page.html'; return; }
+        const reason = prompt('Why are you reporting this listing?');
+        if (reason && reason.trim()) showToast('Thank you! Our team will review this listing.', 'success');
       }
 
+      // â”€â”€â”€ SELLER PROFILE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       function viewSellerProfile() {
         if (!currentListing) return;
-        const sId = currentListing.userId || currentListing.userEmail || 'anonymous';
-        window.location.href = 'profile.html?sellerId=' + encodeURIComponent(sId);
+        window.location.href = 'profile.html?sellerId=' + encodeURIComponent(currentListing.user_id);
+      }
+
+      // â”€â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      function timeAgo(dateStr) {
+        if (!dateStr) return 'Just now';
+        const d    = new Date(dateStr);
+        const diff = Math.floor((Date.now() - d) / 1000);
+        if (diff < 60)     return 'Just now';
+        if (diff < 3600)   return Math.floor(diff/60) + 'm ago';
+        if (diff < 86400)  return Math.floor(diff/3600) + 'h ago';
+        if (diff < 604800) return Math.floor(diff/86400) + 'd ago';
+        return d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+      }
+
+      function showToast(msg, type) {
+        type = type || 'success';
+        let c = document.getElementById('zzz-tc');
+        if (!c) { c = document.createElement('div'); c.id='zzz-tc'; c.className='fixed bottom-6 right-6 z-[999] flex flex-col gap-2'; document.body.appendChild(c); }
+        const t = document.createElement('div');
+        const san = s => { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; };
+        t.className = 'flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white font-bold text-sm transition-all duration-300 translate-y-4 opacity-0 ' + (type==='error'?'bg-red-500':'bg-primary');
+        t.innerHTML = '<span class="material-symbols-outlined text-[18px]">' + (type==='error'?'error':'check_circle') + '</span>' + san(msg);
+        c.appendChild(t);
+        requestAnimationFrame(() => t.classList.remove('translate-y-4','opacity-0'));
+        setTimeout(() => { t.classList.add('translate-y-4','opacity-0'); setTimeout(() => t.remove(), 300); }, 4000);
       }
     </script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/abKU=" crossorigin=""></script>
-</body>
-</html>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/abKU=" crossorigin=""></script>
+  </body>
+  </html>

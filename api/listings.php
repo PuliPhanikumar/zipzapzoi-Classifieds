@@ -130,7 +130,7 @@ function getOne(int $id): void {
         'SELECT l.*, u.name AS seller_name, u.email AS seller_email,
                 u.phone AS seller_phone, u.avatar AS seller_avatar,
                 u.city AS seller_city, u.state AS seller_state,
-                u.created_at AS seller_since
+                u.created_at AS seller_since, u.is_verified AS seller_is_verified
          FROM listings l
          JOIN users u ON u.id = l.user_id
          WHERE l.id = ?'
