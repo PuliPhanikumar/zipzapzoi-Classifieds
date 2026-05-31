@@ -313,9 +313,7 @@
   if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
 
   // ─── State ────────────────────────────────────────────────
-  let _pendingData = null;  // form data waiting for OTP
-  let _currentOtp  = null;
-  let _otpExpiry   = null;
+  let _pendingData = null;  // form data {name,phone,email,password}
   let _countdownId = null;
   let _resendId    = null;
 
@@ -362,24 +360,6 @@
   }
 
   // ─── OTP Helpers ──────────────────────────────────────────
-  function generateOtp() { return String(Math.floor(100000 + Math.random() * 900000)); }
-
-  async function sendOtpEmail(email, name, otpCode) {
-    try {
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-        to_email: email,
-        to_name: name,
-        otp_code: otpCode,
-        expiry_mins: getApiCfg().otpExpiry || '10',
-        email: email,
-      });
-      showToast(`OTP sent to ${email} 📧`);
-    } catch (err) {
-      console.error('EmailJS error:', err);
-      showToast('Failed to send OTP email. Please try again or contact support.', 'error');
-    }
-  }
-
   function startCountdown(durationMs) {
     clearInterval(_countdownId);
     const el = document.getElementById('otpCountdown');
@@ -390,7 +370,6 @@
       if (rem <= 0) {
         clearInterval(_countdownId);
         el.textContent = '00:00'; el.classList.remove('text-primary'); el.classList.add('text-red-500');
-        _currentOtp = null;
         return;
       }
       const m = Math.floor(rem / 60000), s = Math.floor((rem % 60000) / 1000);
@@ -408,7 +387,6 @@
     }, 1000);
   }
 
-  // ─── OTP Box Input ────────────────────────────────────────
   function onOtpInput(i) {
     const el = document.getElementById(`otp${i}`);
     el.value = el.value.replace(/\D/, '').slice(-1);
@@ -445,7 +423,7 @@
 
   function backToReg() {
     clearInterval(_countdownId); clearInterval(_resendId);
-    _currentOtp = null; clearOtpBoxes();
+    clearOtpBoxes();
     document.getElementById('stepOTP').classList.add('hidden');
     document.getElementById('stepReg').classList.remove('hidden');
     setProgress(1);
@@ -456,17 +434,8 @@
     document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px]';
   }
 
-  async function resendOtp() {
-    _currentOtp = generateOtp();
-    _otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-    clearOtpBoxes();
-    startCountdown(10 * 60 * 1000);
-    startResendTimer(30);
-    await sendOtpEmail(_pendingData.email, _pendingData.name, _currentOtp);
-  }
-
-  // ─── Verify OTP → Create Account ─────────────────────────
-  function verifyOtp() {
+  // ─── Verify OTP → Create Account (server-side) ───────────────
+  async function verifyOtp() {
     const entered = getEnteredOtp();
     if (entered.length < 6) { showToast('Please enter all 6 digits.', 'error'); return; }
 
@@ -476,18 +445,17 @@
     document.getElementById('verifyBtnIcon').className = 'material-symbols-outlined text-[20px] animate-spin';
     document.getElementById('verifyBtnIcon').textContent = 'refresh';
 
-    setTimeout(() => {
-      if (!_currentOtp || Date.now() > _otpExpiry.getTime()) {
-        showToast('OTP expired. Please request a new one.', 'error');
-        btn.disabled = false;
-        document.getElementById('verifyBtnText').textContent = 'Verify & Create Account';
-        document.getElementById('verifyBtnIcon').className = 'material-symbols-outlined text-[20px]';
-        document.getElementById('verifyBtnIcon').textContent = 'how_to_reg';
-        return;
-      }
+    try {
+      const res = await fetch('/api/auth.php?action=verify_otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: _pendingData.email, otp: entered, action: 'register' })
+      });
+      const data = await res.json();
 
-      if (entered !== _currentOtp) {
-        showToast('Incorrect OTP. Please try again.', 'error');
+      if (!data.success) {
+        showToast(data.error || 'Incorrect OTP. Please try again.', 'error');
         clearOtpBoxes();
         btn.disabled = false;
         document.getElementById('verifyBtnText').textContent = 'Verify & Create Account';
@@ -499,40 +467,50 @@
         return;
       }
 
-      // OTP correct — create user
+      // Account created! Save user to localStorage for UI
+      const user = data.data.user;
+      localStorage.setItem('zzz_user', JSON.stringify(user));
+      localStorage.setItem('zipzapzoi_current_user', JSON.stringify(user));
       clearInterval(_countdownId);
-      const { name, phone, email, password } = _pendingData;
-      const role = email.includes('admin') ? 'admin' : 'user';
-      const newUser = {
-        id: 'user_' + Date.now(),
-        name, email, phone, password,
-        role,
-        emailVerified: true,
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=019863&color=fff`,
-        joined: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-      };
 
-      const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-      users.push(newUser);
-      localStorage.setItem('zzz_users', JSON.stringify(users));
-      localStorage.setItem('zzz_user', JSON.stringify(newUser));
-      localStorage.setItem('zipzapzoi_current_user', JSON.stringify(newUser));
-
-      if (window.ZZZ && window.ZZZ.Plans) window.ZZZ.Plans.assignPlan(newUser.id, 'new_user_free', { price: 0 });
-
-      // Show success screen
       document.getElementById('stepOTP').classList.add('hidden');
       document.getElementById('stepSuccess').classList.remove('hidden');
       setProgress(3);
+      setTimeout(() => { window.location.href = 'classifieds.html'; }, 2000);
 
-      setTimeout(() => {
-        window.location.href = role === 'admin' ? 'AdminConsoleV2.html' : 'classifieds.html';
-      }, 2000);
-    }, 800);
+    } catch (err) {
+      showToast('Network error. Please try again.', 'error');
+      btn.disabled = false;
+      document.getElementById('verifyBtnText').textContent = 'Verify & Create Account';
+      document.getElementById('verifyBtnIcon').className = 'material-symbols-outlined text-[20px]';
+      document.getElementById('verifyBtnIcon').textContent = 'how_to_reg';
+    }
   }
 
-  // ─── Form Submit (Step 1 → Trigger OTP) ──────────────────
+  async function resendOtp() {
+    clearOtpBoxes();
+    startResendTimer(30);
+    try {
+      const { name, phone, email, password } = _pendingData;
+      const res  = await fetch('/api/auth.php?action=register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name, phone, email, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        startCountdown((data.data.expires_in || 900) * 1000);
+        showToast(`OTP sent to ${_pendingData.email} 📧`);
+      } else {
+        showToast(data.error || 'Could not resend OTP. Please go back.', 'error');
+      }
+    } catch (err) {
+      showToast('Network error. Please go back and try again.', 'error');
+    }
+  }
+
+  // ─── Form Submit (Step 1) — calls real PHP API ───────────────
   document.getElementById('regForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const name     = document.getElementById('fullName').value.trim();
@@ -552,38 +530,41 @@
     document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px] animate-spin';
     document.getElementById('btnIcon').textContent = 'refresh';
 
-    setTimeout(async () => {
-      // Anti-spam: phone free trial check
-      if (window.ZZZ && window.ZZZ.Plans && window.ZZZ.Plans.phoneHadFreeTrial(phone)) {
+    try {
+      const res = await fetch('/api/auth.php?action=register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name, phone, email, password })
+      });
+      const data = await res.json();
+
+      if (!data.success) {
         btn.disabled = false;
         document.getElementById('btnText').textContent = 'Continue →  Verify OTP';
         document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px]';
         document.getElementById('btnIcon').textContent = 'send';
-        showToast('This mobile number was already used for a free trial.', 'error');
+        showToast(data.error || 'Registration failed. Please try again.', 'error');
+        if (data.error && data.error.includes('already exists')) {
+          setTimeout(() => window.location.href = 'Login Page.html', 2500);
+        }
         return;
       }
 
-      // Check email uniqueness
-      const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-      if (users.some(u => u.email.toLowerCase() === email)) {
-        btn.disabled = false;
-        document.getElementById('btnText').textContent = 'Continue →  Verify OTP';
-        document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px]';
-        document.getElementById('btnIcon').textContent = 'send';
-        showToast('This email is already registered. Please login.', 'error');
-        setTimeout(() => window.location.href = 'Login Page.html', 2000);
-        return;
-      }
-
-      // All good — store pending data & send OTP
+      // OTP sent by PHP server-side — show OTP step
       _pendingData = { name, phone, email, password };
-      _currentOtp  = generateOtp();
-      _otpExpiry   = new Date(Date.now() + 10 * 60 * 1000);
       showOtpStep();
-      startCountdown(10 * 60 * 1000);
+      startCountdown((data.data.expires_in || 900) * 1000);
       startResendTimer(30);
-      await sendOtpEmail(email, name, _currentOtp);
-    }, 600);
+      showToast(`OTP sent to ${data.data.to_email} 📧`);
+
+    } catch (err) {
+      btn.disabled = false;
+      document.getElementById('btnText').textContent = 'Continue →  Verify OTP';
+      document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px]';
+      document.getElementById('btnIcon').textContent = 'send';
+      showToast('Network error. Please check connection and try again.', 'error');
+    }
   });
 
   // Shake animation
