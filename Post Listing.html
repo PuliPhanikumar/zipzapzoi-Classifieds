@@ -315,10 +315,11 @@
       <span class="material-symbols-outlined text-primary text-4xl">lock_person</span>
     </div>
     <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-2">Almost There! 🎉</h2>
-    <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">Create a free account or log in to post your listing. Your details are saved!</p>
+    <p class="text-gray-500 dark:text-gray-400 text-sm mb-2">Create a free account or log in to post your listing.</p>
+    <p class="text-green-600 dark:text-green-400 text-xs font-bold mb-6">✅ Your ad details are saved — you won't lose them!</p>
     <div class="flex flex-col gap-3">
       <a id="authGateRegister" href="User Registration.html" class="w-full py-3.5 bg-primary text-white font-black rounded-xl shadow-lg text-center flex items-center justify-center gap-2 hover:bg-green-700 transition-all">
-        <span class="material-symbols-outlined text-[20px]">person_add</span> Create Free Account
+        <span class="material-symbols-outlined text-[20px]">person_add</span> Create Free Account (6 Ads Free!)
       </a>
       <a id="authGateLogin" href="Login Page.html" class="w-full py-3.5 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-xl text-center flex items-center justify-center gap-2 hover:border-primary hover:text-primary transition-all">
         <span class="material-symbols-outlined text-[20px]">login</span> Log In
@@ -896,8 +897,23 @@
     // Auth gate — show modal if not logged in
     const activeUser = JSON.parse(localStorage.getItem('zzz_user') || 'null');
     if (!activeUser) {
-      // Save redirect so after login/register they come back
-      sessionStorage.setItem('zzz_post_redirect', 'Post Listing.html');
+      // Save partial form data so user doesn't lose work when they return after registering
+      const partial = {
+        title:       document.getElementById('postTitle')?.value || '',
+        description: document.getElementById('postDescription')?.value || '',
+        price:       document.getElementById('postPrice')?.value || '',
+        category:    currentCategoryKey || '',
+        subcategory: document.getElementById('subCategorySelect')?.value || '',
+        state:       document.getElementById('stateSelect')?.value || '',
+        city:        document.getElementById('citySelect')?.value || '',
+      };
+      sessionStorage.setItem('zzz_post_draft', JSON.stringify(partial));
+
+      // Set redirect target for both login and registration pages
+      const redirectUrl = encodeURIComponent('Post Listing.html');
+      document.getElementById('authGateRegister').href = 'User Registration.html?redirect=' + redirectUrl;
+      document.getElementById('authGateLogin').href    = 'Login Page.html?redirect=' + redirectUrl;
+
       document.getElementById('authGateModal').classList.remove('hidden');
       return;
     }
@@ -1074,6 +1090,24 @@
       }
     );
   };
+  // ── Restore draft if user just came back from registration/login ──────
+  // We wait a moment for the form fields to be rendered before restoring
+  setTimeout(() => {
+    const draft = sessionStorage.getItem('zzz_post_draft');
+    if (!draft) return;
+    try {
+      const d = JSON.parse(draft);
+      if (d.title       && document.getElementById('postTitle'))       document.getElementById('postTitle').value = d.title;
+      if (d.description && document.getElementById('postDescription')) document.getElementById('postDescription').value = d.description;
+      if (d.price       && document.getElementById('postPrice'))       document.getElementById('postPrice').value = d.price;
+      // Show a friendly toast
+      if (d.title || d.description) {
+        showToast('✅ Your draft has been restored! Continue where you left off.', 'success');
+      }
+      sessionStorage.removeItem('zzz_post_draft'); // clear after restore
+    } catch(e) {}
+  }, 800);
+
 })();
   </script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/abKU=" crossorigin=""></script>

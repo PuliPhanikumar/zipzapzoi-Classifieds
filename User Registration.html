@@ -214,7 +214,7 @@
 
       <div class="mt-8 text-center pt-6 border-t border-gray-100 dark:border-gray-800">
         <p class="text-gray-500 dark:text-gray-400 font-medium">
-          Already have an account? <a href="Login Page.html" class="text-primary font-bold hover:underline ml-1">Log In</a>
+          Already have an account? <a id="loginLink" href="Login Page.html" class="text-primary font-bold hover:underline ml-1">Log In</a>
         </p>
       </div>
     </div>
@@ -277,7 +277,7 @@
       <p class="text-primary font-bold text-lg mb-6">6 FREE ads waiting for you!</p>
       <div class="flex items-center justify-center gap-2 text-gray-400 text-sm">
         <span class="material-symbols-outlined text-[18px] animate-spin">refresh</span>
-        Redirecting to classifieds...
+        <span id="successRedirectMsg">Redirecting...</span>
       </div>
     </div>
 
@@ -307,6 +307,15 @@
 
   if (EMAILJS_CONFIGURED) {
     emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+  }
+
+  // Read ?redirect= param (set by auth gate on Post Listing page)
+  const _redirectAfterReg = new URLSearchParams(window.location.search).get('redirect') || '';
+
+  // If there's a redirect, update the Login link to preserve it
+  if (_redirectAfterReg) {
+    const loginLink = document.getElementById('loginLink');
+    if (loginLink) loginLink.href = 'Login Page.html?redirect=' + encodeURIComponent(_redirectAfterReg);
   }
 
   // Sync dark mode icon
@@ -476,7 +485,16 @@
       document.getElementById('stepOTP').classList.add('hidden');
       document.getElementById('stepSuccess').classList.remove('hidden');
       setProgress(3);
-      setTimeout(() => { window.location.href = 'classifieds.html'; }, 2000);
+
+      // Redirect: go back to the page they came from (e.g. Post Listing) or default to classifieds
+      const dest = _redirectAfterReg || 'classifieds.html';
+      const msgEl = document.getElementById('successRedirectMsg');
+      if (msgEl) {
+        msgEl.textContent = _redirectAfterReg
+          ? 'Taking you back to your ad… 🎉'
+          : 'Redirecting to classifieds…';
+      }
+      setTimeout(() => { window.location.href = dest; }, 2000);
 
     } catch (err) {
       showToast('Network error. Please try again.', 'error');
