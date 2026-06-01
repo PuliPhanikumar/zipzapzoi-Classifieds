@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -612,944 +612,704 @@
 </div>
 
 <script>
-// ==============================
-// 1. CORE UTILITIES & SECURITY
-// ==============================
-function escapeHTML(str) { return typeof str!=='string'?str:str.replace(/[&<>'"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m])); }
-function safeJSON(key, fallback=[]) { try{const d=localStorage.getItem(key);return d?JSON.parse(d):fallback;}catch(e){return fallback;} }
-function showToast(msg, type='success') { 
-    const t=document.getElementById('toast'); 
-    document.getElementById('toastMsg').textContent=msg; 
-    document.getElementById('toastIcon').textContent=type==='error'?'error':'check_circle'; 
-    document.getElementById('toastIcon').className = `material-symbols-outlined ${type==='error'?'text-red-500':'text-brand'}`;
-    t.classList.remove('hidden'); 
-    setTimeout(() => { t.classList.remove('scale-95', 'opacity-0'); t.classList.add('scale-100', 'opacity-100'); }, 10); 
-    setTimeout(() => { t.classList.remove('scale-100', 'opacity-100'); t.classList.add('scale-95', 'opacity-0'); setTimeout(()=>t.classList.add('hidden'), 300); }, 3000); 
-}
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-function toggleDarkMode() {
-    const isDark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem('zzz_theme', isDark ? 'dark' : 'light');
-    document.getElementById('themeIcon').textContent = isDark ? 'light_mode' : 'dark_mode';
-}
-function confirmAction(title, msg, callback) {
-    document.getElementById('confirmTitle').textContent = title; document.getElementById('confirmMessage').textContent = msg;
-    document.getElementById('confirmOkBtn').onclick = () => { closeModal('confirmModal'); callback(); };
-    document.getElementById('confirmModal').classList.remove('hidden');
-}
-function logAction(action, detail) {
-    let logs = safeJSON('zzz_admin_logs'); const u = safeJSON('zzz_user',{name:'Super Admin'});
-    logs.unshift({ time: new Date().toLocaleString(), admin: u.name.split(' ')[0], action, detail });
-    if(logs.length > 50) logs.length = 50; localStorage.setItem('zzz_admin_logs', JSON.stringify(logs));
-}
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  CORE UTILITIES
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+function escapeHTML(str) { return typeof str!=='string'?str:str.replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m])); }
+function safeJSON(key,fallback=[]){try{const d=localStorage.getItem(key);return d?JSON.parse(d):fallback;}catch(e){return fallback;}}
+function showToast(msg,type='success'){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;document.getElementById('toastIcon').textContent=type==='error'?'error':'check_circle';document.getElementById('toastIcon').className=`material-symbols-outlined ${type==='error'?'text-red-500':'text-brand'}`;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),4000);}
+function closeModal(id){document.getElementById(id).classList.add('hidden');}
+function confirmAction(title,msg,cb){if(confirm(`${title}\n\n${msg}`))cb();}
+const charts={};
 
-let sessionTimer, sessionTimeoutMin = safeJSON('zzz_sys_cfg', {timeout:15}).timeout;
-function resetSessionTimer() {
-    clearTimeout(sessionTimer); let t = sessionTimeoutMin * 60;
-    if(window.sysTick) clearInterval(window.sysTick);
-    window.sysTick = setInterval(() => {
-        t--; document.getElementById('sessionTimerDisplay').textContent = `Session: ${Math.floor(t/60).toString().padStart(2,'0')}:${(t%60).toString().padStart(2,'0')}`;
-        if(t<=0) { clearInterval(window.sysTick); showToast("Session Expired.", "error"); handleLogout(); }
-    }, 1000);
-    sessionTimer = setTimeout(()=>{clearInterval(window.sysTick);}, t*1000);
-}
-['mousemove','click','keypress'].forEach(e=>document.addEventListener(e, resetSessionTimer));
-
-(function authCheck(){
-    // 1. Enforce Admin/Moderator/SuperAdmin Role
-    if (typeof isAdmin === 'function' && !isAdmin()) {
-        showToast("Access Denied: Administrator or Moderator role required.", "error");
-        window.location.href = 'Login Page.html?redirect=AdminConsoleV2.html';
-        return;
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  ADMIN API HELPER  â€” all fetch calls go through here
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+async function adminFetch(url, opts={}) {
+  try {
+    const res  = await fetch(url, { credentials:'include', ...opts,
+      headers: { 'Content-Type':'application/json', ...(opts.headers||{}) }
+    });
+    const data = await res.json();
+    if (res.status === 401 || res.status === 403) {
+      alert('Session expired or insufficient permissions. Please log in again.');
+      window.location.href = 'Login Page.html';
+      return null;
     }
-    
-    // 2. IP Allowlist Check
-    const sysCfg = safeJSON('zzz_sys_cfg', {ips:''});
-    if (sysCfg.ips && sysCfg.ips.trim()) {
-        const allowedIPs = sysCfg.ips.split(',').map(ip => ip.trim()).filter(Boolean);
-        if (allowedIPs.length > 0) {
-            const currentIP = localStorage.getItem('zzz_client_ip') || '127.0.0.1';
-            if (!allowedIPs.includes(currentIP)) {
-                showToast(`Access Denied: IP address ${currentIP} is not authorized.`, 'error');
-                window.location.href = 'classifieds.html';
-                return;
-            }
-        }
-    }
-    
-    // 3. 2FA Verification
-    const enforce2FA = sysCfg.enforce2fa;
-    if (enforce2FA) {
-        const hasCompleted2FA = sessionStorage.getItem('zzz_admin_2fa_verified') === 'true';
-        if (!hasCompleted2FA) {
-            const enteredCode = prompt("Two-Factor Authentication (2FA) is enforced.\nEnter your 6-digit admin code:");
-            if (!enteredCode || enteredCode.trim().length !== 6) {
-                showToast("Invalid 2FA Code. Access Denied.", "error");
-                handleLogout();
-                return;
-            }
-            sessionStorage.setItem('zzz_admin_2fa_verified', 'true');
-        }
-    }
+    return data;
+  } catch(e) {
+    showToast('Network error â€” check connection.','error');
+    return null;
+  }
+}
+async function adminPost(url,body){return adminFetch(url,{method:'POST',body:JSON.stringify(body)});}
+async function adminPut(url,body){return adminFetch(url,{method:'PUT',body:JSON.stringify(body)});}
+async function adminDelete(url){return adminFetch(url,{method:'DELETE'});}
 
-    seedMockData(); 
-    resetSessionTimer();
-    const theme = localStorage.getItem('zzz_theme');
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const dark = theme === 'dark' || (!theme && prefersDark);
-    if(dark) { document.documentElement.classList.add('dark'); document.getElementById('themeIcon').textContent='light_mode'; }
-    else { document.documentElement.classList.remove('dark'); document.getElementById('themeIcon').textContent='dark_mode'; }
-})();
-
-function switchTab(id) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    document.getElementById('tab-'+id).classList.remove('hidden');
-    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active-nav'));
-    document.getElementById('nav-'+id).classList.add('active-nav');
-    
-    if(id==='dashboard') { loadDashboard(); requestAnimationFrame(() => initCharts()); }
-    if(id==='listings') loadListings(); 
-    if(id==='users') { loadUsers(); loadVerificationReqs(); } 
-    if(id==='payments') loadPayments();
-    if(id==='coupons') loadCoupons();
-    if(id==='moderation') loadReports();
-    if(id==='charity') loadCharityQueue();
-    if(id==='support') loadSupport(); 
-    if(id==='schema') renderSchemaBuilder();
-    if(id==='settings' || id==='security') loadSettingsUI();
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  LOG ADMIN ACTION
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+function logAction(action,detail=''){
+  adminPost('/api/admin/logs.php',{action,detail}).catch(()=>{});
 }
 
-// ──────────────────────────────────────────────
-//  CHARITY MODERATION QUEUE
-// ──────────────────────────────────────────────
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  TAB SWITCHING
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+function switchTab(id){
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.add('hidden'));
+  document.getElementById('tab-'+id).classList.remove('hidden');
+  document.querySelectorAll('.nav-link').forEach(el=>el.classList.remove('active-nav'));
+  document.getElementById('nav-'+id).classList.add('active-nav');
+  document.getElementById('pageTitle').textContent = {
+    dashboard:'Dashboard & Analytics', listings:'Listings Database',
+    users:'User Base', payments:'Payments & Refunds', coupons:'Promo Coupons',
+    pricing:'Pricing & Plans', moderation:'Reports & Moderation',
+    support:'Tickets & SLA', charity:'Charity Queue', schema:'Schema Builder',
+    settings:'Global Settings', security:'Security Center'
+  }[id] || id;
 
-let _charityReasonCallback = null;
+  if(id==='dashboard'){loadDashboard();}
+  if(id==='listings') loadListings();
+  if(id==='users'){loadUsers();loadVerificationReqs();}
+  if(id==='payments') loadPayments();
+  if(id==='coupons') loadCoupons();
+  if(id==='moderation') loadReports();
+  if(id==='charity') loadCharityQueue();
+  if(id==='support') loadSupport();
+  if(id==='schema') renderSchemaBuilder();
+  if(id==='settings'||id==='security') loadSettingsUI();
+  if(id==='pricing') loadPricingTab();
+}
 
-function openCharityReasonModal(title, subtitle, confirmLabel, confirmClass, callback) {
-  const modal = document.getElementById('charityReasonModal');
-  document.getElementById('charityReasonTitle').textContent = title;
-  document.getElementById('charityReasonSubtitle').textContent = subtitle;
-  document.getElementById('charityReasonText').value = '';
-  const btn = document.getElementById('charityReasonConfirmBtn');
-  btn.textContent = confirmLabel;
-  btn.className = `flex-1 ${confirmClass} text-white font-black py-2.5 rounded-xl transition-colors`;
-  _charityReasonCallback = callback;
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  SESSION TIMER  (frontend only)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+let _sessionSecs = 3600;
+let _timerInterval = null;
+function resetSessionTimer(){
+  clearInterval(_timerInterval);
+  _sessionSecs = 3600;
+  _timerInterval = setInterval(()=>{
+    _sessionSecs--;
+    if(_sessionSecs<=0){clearInterval(_timerInterval);handleLogout();}
+    const m=String(Math.floor(_sessionSecs/60)).padStart(2,'0');
+    const s=String(_sessionSecs%60).padStart(2,'0');
+    const el=document.getElementById('sessionTimerDisplay');
+    if(el) el.textContent=`Session: ${m}:${s}`;
+  },1000);
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  STARTUP  â€” verify admin session on page load
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+document.addEventListener('DOMContentLoaded', async () => {
+  // Apply dark mode
+  const theme=localStorage.getItem('zzz_theme');
+  const dark = theme==='dark' || (!theme && window.matchMedia('(prefers-color-scheme:dark)').matches);
+  if(dark){document.documentElement.classList.add('dark');document.getElementById('themeIcon').textContent='light_mode';}
+
+  // Verify we are an admin (dashboard.php will 401/403 redirect if not)
+  resetSessionTimer();
+  loadDashboard();
+  requestAnimationFrame(()=>initCharts({}));
+});
+
+function toggleDarkMode(){
+  const dark=document.documentElement.classList.toggle('dark');
+  localStorage.setItem('zzz_theme',dark?'dark':'light');
+  document.getElementById('themeIcon').textContent=dark?'light_mode':'dark_mode';
+}
+
+function refreshData(){showToast('Syncing with databaseâ€¦','success');setTimeout(()=>location.reload(),500);}
+
+function handleLogout(){
+  adminFetch('/api/auth.php?action=logout',{method:'POST'}).finally(()=>{
+    localStorage.removeItem('zzz_user');
+    window.location.href='Login Page.html';
+  });
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  DASHBOARD  &  CHARTS
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+async function loadDashboard(){
+  const data = await adminFetch('/api/admin/dashboard.php');
+  if(!data||!data.success) return;
+  const d = data.data;
+
+  document.getElementById('statUsers').textContent    = d.stats.total_users.toLocaleString('en-IN');
+  document.getElementById('statListings').textContent = d.stats.active_listings.toLocaleString('en-IN');
+  document.getElementById('statTickets').textContent  = d.stats.open_tickets;
+  document.getElementById('statRev').textContent      = 'â‚¹'+d.stats.total_revenue.toLocaleString('en-IN');
+
+  // Badge for pending listings
+  const pendingBadge = document.getElementById('badge-listings');
+  if(pendingBadge){
+    pendingBadge.textContent = d.stats.pending_listings;
+    pendingBadge.classList.toggle('hidden', d.stats.pending_listings===0);
+  }
+
+  // Audit logs
+  document.getElementById('dashboardLogs').innerHTML = d.logs.map(l=>`
+    <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/50">
+      <td class="py-2 text-slate-400 whitespace-nowrap text-xs">${escapeHTML((l.created_at||'').substring(0,16))}</td>
+      <td class="font-bold whitespace-nowrap text-xs">${escapeHTML(l.admin_name||'System')}</td>
+      <td class="text-brand text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">${escapeHTML(l.action)}</td>
+      <td class="text-slate-600 dark:text-gray-300 truncate max-w-[200px] text-xs">${escapeHTML(l.detail||'')}</td>
+    </tr>`).join('') || '<tr><td colspan="4" class="py-4 text-center text-slate-400 text-xs">No logs yet.</td></tr>';
+
+  // Defer chart init to after DOM paints
+  requestAnimationFrame(()=>initCharts(d));
+}
+
+function initCharts(d){
+  try {
+    const actCtx=document.getElementById('activityChart');
+    if(!actCtx||actCtx.offsetParent===null) return;
+
+    ['activity','status','category','funnel','geo'].forEach(k=>{if(charts[k]){charts[k].destroy();delete charts[k];}});
+
+    Chart.defaults.color=document.documentElement.classList.contains('dark')?'#94a3b8':'#64748b';
+    Chart.defaults.font.family="'Spline Sans',sans-serif";
+
+    const act = (d&&d.activity)||{labels:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],data:[0,0,0,0,0,0,0]};
+    charts.activity = new Chart(actCtx,{
+      type:'line',
+      data:{labels:act.labels,datasets:[{label:'New Listings',data:act.data,borderColor:'#019863',backgroundColor:'rgba(1,152,99,0.1)',tension:0.4,fill:true}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+    });
+
+    const sb = (d&&d.status_breakdown)||{};
+    charts.status = new Chart(document.getElementById('statusChart'),{
+      type:'doughnut',
+      data:{labels:['Active','Pending','Rejected','Expired','Sold'],datasets:[{data:[sb.active||0,sb.pending_review||0,sb.rejected||0,sb.expired||0,sb.sold||0],backgroundColor:['#019863','#f59e0b','#ef4444','#94a3b8','#3b82f6']}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom'}}}
+    });
+
+    const cats = (d&&d.category_breakdown)||[];
+    charts.category = new Chart(document.getElementById('categoryChart'),{
+      type:'pie',
+      data:{labels:cats.length?cats.map(c=>c.label):['None'],datasets:[{data:cats.length?cats.map(c=>c.count):[0],backgroundColor:['#019863','#3b82f6','#8b5cf6','#f59e0b','#94a3b8','#ec4899']}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}
+    });
+
+    const active=sb.active||1;
+    charts.funnel = new Chart(document.getElementById('funnelChart'),{
+      type:'bar',
+      data:{labels:['Visitors','Searches','Drafts','Live'],datasets:[{label:'Users',data:[active*12,active*8,active*2,active],backgroundColor:'#019863',borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+    });
+
+    const cities=(d&&d.city_breakdown)||[];
+    charts.geo = new Chart(document.getElementById('geoChart'),{
+      type:'bar',
+      data:{labels:cities.length?cities.map(c=>c.label):['â€”'],datasets:[{label:'Listings',data:cities.length?cities.map(c=>c.count):[0],backgroundColor:'#3b82f6',borderRadius:4}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+    });
+  }catch(e){}
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  LISTINGS  (Admin View â€” all statuses)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+async function loadListings(){
+  const search = document.getElementById('listingSearch').value;
+  const status = document.getElementById('listingStatusFilter').value;
+  const params = new URLSearchParams({search,status});
+  const data   = await adminFetch('/api/admin/listings.php?'+params);
+  if(!data||!data.success){document.getElementById('listingsTableBody').innerHTML='<tr><td colspan="6" class="p-8 text-center text-red-400">Failed to load.</td></tr>';return;}
+
+  const list = data.data;
+  const statusColors={active:'bg-green-100 text-green-700',pending_review:'bg-yellow-100 text-yellow-700',rejected:'bg-red-100 text-red-700',expired:'bg-slate-100 text-slate-500',sold:'bg-blue-100 text-blue-700',draft:'bg-gray-100 text-gray-500'};
+  document.getElementById('listingsTableBody').innerHTML = list.length ? list.map(l=>{
+    const actions=[];
+    if(l.status==='pending_review'){
+      actions.push(`<button onclick="confirmAction('Approve','Approve: ${escapeHTML(l.title)}?',()=>approveListing(${l.id}))" class="text-green-500 hover:text-green-700 transition-colors animate-pulse" title="Approve"><span class="material-symbols-outlined text-[18px]">check_circle</span></button>`);
+      actions.push(`<button onclick="confirmAction('Reject','Reject: ${escapeHTML(l.title)}?',()=>rejectListing(${l.id}))" class="text-red-500 hover:text-red-700 transition-colors" title="Reject"><span class="material-symbols-outlined text-[18px]">cancel</span></button>`);
+    }
+    actions.push(`<button onclick="confirmAction('Delete','Delete: ${escapeHTML(l.title)}?',()=>deleteListing(${l.id}))" class="text-slate-400 hover:text-red-600 transition-colors" title="Delete"><span class="material-symbols-outlined text-[18px]">delete</span></button>`);
+    actions.push(`<a href="Listing Detail.html?id=${l.id}" target="_blank" class="text-slate-400 hover:text-brand" title="View"><span class="material-symbols-outlined text-[18px]">open_in_new</span></a>`);
+    return `<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/50 border-b border-slate-100 dark:border-gray-800">
+      <td class="px-4 py-3 font-bold text-sm">${escapeHTML(l.title)}</td>
+      <td class="px-4 py-3 text-xs">${escapeHTML(l.seller_name||'â€”')}</td>
+      <td class="px-4 py-3 text-xs"><span class="bg-slate-100 dark:bg-gray-700 px-2 py-1 rounded">${escapeHTML(l.category||'â€”')}</span></td>
+      <td class="px-4 py-3 font-bold text-brand text-sm">${l.price_type==='free'?'FREE':'â‚¹'+parseFloat(l.price||0).toLocaleString('en-IN')}</td>
+      <td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${statusColors[l.status]||'bg-gray-100 text-gray-500'}">${l.status}</span></td>
+      <td class="px-4 py-3 text-right"><div class="flex gap-2 justify-end items-center">${actions.join('')}</div></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="6" class="p-8 text-center text-slate-400">No listings found.</td></tr>';
+}
+async function approveListing(id){const r=await adminPut('/api/admin/listings.php',{id,status:'active'});if(r&&r.success){showToast('Listing approved âœ“','success');loadListings();loadDashboard();}else showToast(r?.error||'Error','error');}
+async function rejectListing(id){const r=await adminPut('/api/admin/listings.php',{id,status:'rejected'});if(r&&r.success){showToast('Listing rejected','error');loadListings();}else showToast(r?.error||'Error','error');}
+async function deleteListing(id){const r=await adminDelete('/api/admin/listings.php?id='+id);if(r&&r.success){showToast('Listing deleted');loadListings();loadDashboard();}else showToast(r?.error||'Error','error');}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  USERS
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+async function loadUsers(){
+  const search = document.getElementById('userSearch').value;
+  const data   = await adminFetch('/api/admin/users.php?search='+encodeURIComponent(search));
+  if(!data||!data.success){document.getElementById('usersTableBody').innerHTML='<tr><td colspan="5" class="p-8 text-center text-red-400">Failed to load.</td></tr>';return;}
+
+  const users=data.data;
+  document.getElementById('usersTableBody').innerHTML = users.length ? users.map(u=>{
+    const roleColor=u.role==='super_admin'?'text-purple-600 bg-purple-100':u.role==='admin'?'text-blue-600 bg-blue-100':'text-slate-600 bg-slate-100 dark:bg-gray-700';
+    const vBadge=u.is_verified?`<span class="material-symbols-outlined text-[14px] text-blue-500 align-middle ml-1" title="Verified">verified</span>`:'';
+    const banBtn=!u.is_active
+      ?`<button onclick="confirmAction('Unban User','Restore access for ${escapeHTML(u.email)}?',()=>unbanUser(${u.id}))" class="text-red-500 hover:text-red-700" title="Unban"><span class="material-symbols-outlined text-[18px]">lock_open</span></button>`
+      :`<button onclick="confirmAction('Ban User','Revoke access for ${escapeHTML(u.email)}?',()=>banUser(${u.id}))" class="text-slate-400 hover:text-red-500" title="Ban"><span class="material-symbols-outlined text-[18px]">block</span></button>`;
+    return `<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/50 border-b border-slate-100 dark:border-gray-800">
+      <td class="px-6 py-3"><div class="font-bold flex items-center gap-1">${escapeHTML(u.name)}${vBadge}${!u.is_active?'<span class="ml-1 text-[10px] bg-red-100 text-red-600 px-1 rounded">BANNED</span>':''}</div><div class="text-[10px] text-slate-500 font-mono">${escapeHTML(u.email)}</div></td>
+      <td class="px-6 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${roleColor}">${u.role}</span></td>
+      <td class="px-6 py-3"><span class="text-xs text-slate-500">${u.active_listings} active ads</span></td>
+      <td class="px-6 py-3 text-xs text-slate-400">${(u.created_at||'').substring(0,10)}</td>
+      <td class="px-6 py-3 text-right flex gap-3 justify-end items-center">
+        <button onclick="openUserModal(${u.id})" class="text-slate-400 hover:text-brand" title="Edit"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+        ${!u.is_verified?`<button onclick="confirmAction('Verify User','Verify ${escapeHTML(u.name)}?',()=>verifyUser(${u.id}))" class="text-slate-400 hover:text-blue-500" title="Verify"><span class="material-symbols-outlined text-[18px]">verified_user</span></button>`:''}
+        ${banBtn}
+      </td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="5" class="p-8 text-center text-slate-400">No users found.</td></tr>';
+}
+
+async function banUser(id){const r=await adminPut('/api/admin/users.php',{id,action:'ban'});if(r&&r.success){showToast('User banned','error');loadUsers();}else showToast(r?.error||'Error','error');}
+async function unbanUser(id){const r=await adminPut('/api/admin/users.php',{id,action:'unban'});if(r&&r.success){showToast('User unbanned','success');loadUsers();}else showToast(r?.error||'Error','error');}
+async function verifyUser(id){const r=await adminPut('/api/admin/users.php',{id,action:'verify'});if(r&&r.success){showToast('User verified âœ“','success');loadUsers();loadVerificationReqs();}else showToast(r?.error||'Error','error');}
+
+async function loadVerificationReqs(){
+  const data=await adminFetch('/api/admin/users.php?action=verifications');
+  const tbody=document.getElementById('verificationsTableBody');
+  if(!tbody)return;
+  if(!data||!data.success){tbody.innerHTML='<tr><td colspan="4" class="p-4 text-center text-red-400">Failed.</td></tr>';return;}
+  const reqs=data.data;
+  tbody.innerHTML=reqs.length?reqs.map(r=>`
+    <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/50 border-b border-slate-100 dark:border-gray-800">
+      <td class="px-6 py-3"><div class="font-bold">${escapeHTML(r.name)}</div><div class="text-[10px] text-slate-500 font-mono">${escapeHTML(r.email)}</div></td>
+      <td class="px-6 py-3 text-xs text-slate-400">${(r.created_at||'').substring(0,10)}</td>
+      <td class="px-6 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-yellow-100 text-yellow-700">Unverified</span></td>
+      <td class="px-6 py-3 text-right flex gap-3 justify-end items-center">
+        <button onclick="verifyUser(${r.id})" class="text-green-500 hover:text-green-700 text-xs font-bold">Verify</button>
+      </td>
+    </tr>`).join(''):'<tr><td colspan="4" class="p-8 text-center text-slate-400">All users are verified.</td></tr>';
+}
+
+function openUserModal(id=null){
+  document.getElementById('userModalTitle').textContent=id?'Edit User':'Add User';
+  document.getElementById('userId').value=id||'';
+  document.getElementById('userName').value='';
+  document.getElementById('userEmail').value='';
+  document.getElementById('userRole').value='user';
+  if(id){
+    // Pre-fill from already-loaded table if possible
+    const row=document.querySelector(`#usersTableBody tr td:first-child`);
+    // Just open the modal â€” save will handle both create and update
+  }
+  document.getElementById('userModal').classList.remove('hidden');
+}
+
+async function saveUser(){
+  const id    = document.getElementById('userId').value;
+  const name  = document.getElementById('userName').value.trim();
+  const email = document.getElementById('userEmail').value.trim();
+  const role  = document.getElementById('userRole').value;
+  if(!name||!email) return showToast('Name and Email required','error');
+
+  const body={name,email,role};
+  let r;
+  if(id){body.id=parseInt(id);r=await adminPut('/api/admin/users.php',body);}
+  else  {r=await adminPost('/api/admin/users.php',body);}
+
+  if(r&&r.success){closeModal('userModal');loadUsers();showToast(id?'User updated':'User created','success');}
+  else showToast(r?.error||'Error saving user','error');
+}
+
+function openTimeline(uid){
+  document.getElementById('timelineContent').innerHTML=`<div class="text-center text-slate-400 text-xs py-8">Timeline not available in live mode yet.</div>`;
+  document.getElementById('timelineModal').classList.remove('hidden');
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  PAYMENTS
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+async function loadPayments(){
+  const data=await adminFetch('/api/admin/payments.php');
+  if(!data||!data.success){document.getElementById('paymentsTableBody').innerHTML='<tr><td colspan="5" class="p-6 text-center text-red-400">Failed.</td></tr>';return;}
+  const txns=data.data;
+  document.getElementById('paymentsTableBody').innerHTML=txns.length?txns.map(t=>`
+    <tr class="border-b border-slate-100 dark:border-gray-800 hover:bg-slate-50 dark:hover:bg-gray-800/50">
+      <td class="px-6 py-3 font-mono text-xs text-slate-500">${t.razorpay_payment_id||'#'+t.id}</td>
+      <td class="px-6 py-3 font-bold text-xs">${escapeHTML(t.user_name||'â€”')}</td>
+      <td class="px-6 py-3 text-brand font-bold text-xs">â‚¹${parseFloat(t.amount||0).toLocaleString('en-IN')}</td>
+      <td class="px-6 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${t.status==='success'?'bg-green-100 text-green-700':t.status==='refunded'?'bg-red-100 text-red-700':'bg-yellow-100 text-yellow-700'}">${t.status}</span></td>
+      <td class="px-6 py-3 text-right">${t.status==='success'?`<button onclick="openRefund(${t.id},'${escapeHTML(t.razorpay_payment_id||'#'+t.id)}',${t.amount})" class="text-red-500 text-xs font-bold hover:underline">Refund</button>`:''}</td>
+    </tr>`).join(''):'<tr><td colspan="5" class="p-6 text-center text-slate-400">No transactions yet.</td></tr>';
+}
+
+function openRefund(id,txnId,amount){
+  document.getElementById('refundTxnId').value=id;
+  document.getElementById('refundTxnInfo').textContent=`Txn: ${txnId} | Amount: â‚¹${parseFloat(amount).toLocaleString('en-IN')}`;
+  document.getElementById('refundModal').classList.remove('hidden');
+}
+async function executeRefund(){
+  const id=parseInt(document.getElementById('refundTxnId').value);
+  const r=await adminPost('/api/admin/payments.php',{id,action:'refund'});
+  if(r&&r.success){showToast('Refund processed','success');closeModal('refundModal');loadPayments();loadDashboard();}
+  else showToast(r?.error||'Refund failed','error');
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  COUPONS
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+async function loadCoupons(){
+  const data=await adminFetch('/api/admin/coupons.php');
+  if(!data||!data.success){document.getElementById('couponsTableBody').innerHTML='<tr><td colspan="4" class="p-4 text-center text-red-400">Failed.</td></tr>';return;}
+  const coupons=data.data;
+  document.getElementById('couponsTableBody').innerHTML=coupons.length?coupons.map(c=>`
+    <tr class="border-b border-slate-100 dark:border-gray-800 hover:bg-slate-50 dark:hover:bg-gray-800/50">
+      <td class="px-6 py-3 font-bold font-mono">${escapeHTML(c.code)}</td>
+      <td class="px-6 py-3 text-brand font-bold">${c.discount_pct}%</td>
+      <td class="px-6 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${c.is_active?'bg-green-100 text-green-700':'bg-slate-100 text-slate-500'}">${c.is_active?'Active':'Inactive'}</span></td>
+      <td class="px-6 py-3 text-right">
+        <button onclick="confirmAction('Delete Coupon','Delete ${c.code}?',()=>deleteCoupon('${escapeHTML(c.code)}'))" class="text-red-500 text-xs font-bold hover:underline">Delete</button>
+      </td>
+    </tr>`).join(''):'<tr><td colspan="4" class="p-6 text-center text-slate-400">No coupons created yet.</td></tr>';
+}
+async function createCoupon(){
+  const code=document.getElementById('couponCode').value.trim();
+  const discount=parseInt(document.getElementById('couponDiscount').value||0);
+  if(!code||!discount) return showToast('Fill all fields','error');
+  const r=await adminPost('/api/admin/coupons.php',{code,discount_pct:discount});
+  if(r&&r.success){document.getElementById('couponCode').value='';document.getElementById('couponDiscount').value='';loadCoupons();showToast('Coupon created âœ“','success');}
+  else showToast(r?.error||'Error','error');
+}
+async function deleteCoupon(code){
+  const r=await adminDelete('/api/admin/coupons.php?code='+encodeURIComponent(code));
+  if(r&&r.success){loadCoupons();showToast('Coupon deleted');}
+  else showToast(r?.error||'Error','error');
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  MODERATION  â€” Reports & Flags
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+async function loadReports(){
+  const data=await adminFetch('/api/admin/reports.php');
+  if(!data||!data.success){document.getElementById('reportsTableBody').innerHTML='<tr><td colspan="2" class="p-6 text-center text-red-400">Failed.</td></tr>';return;}
+  const {reports,abuse_tracking}=data.data;
+
+  const modBadge=document.getElementById('badge-moderation');
+  const pendingCount=reports.filter(r=>r.status==='pending').length;
+  if(modBadge){modBadge.textContent=pendingCount;modBadge.classList.toggle('hidden',pendingCount===0);}
+
+  document.getElementById('reportsTableBody').innerHTML=reports.length?reports.map(r=>`
+    <tr class="border-b border-slate-100 dark:border-gray-800 hover:bg-slate-50 dark:hover:bg-gray-800/50">
+      <td class="font-bold text-xs py-2 px-2 max-w-[200px] truncate">${escapeHTML(r.listing_title||'Deleted listing')}</td>
+      <td class="text-red-500 font-bold text-xs py-2 px-2">${escapeHTML(r.reason||'No reason')}</td>
+    </tr>`).join(''):'<tr><td colspan="2" class="p-6 text-center text-slate-400">No reports â€” queue is clean! âœ“</td></tr>';
+
+  document.getElementById('abuseTableBody').innerHTML=abuse_tracking.length?abuse_tracking.map(a=>`
+    <tr><td class="py-2 text-xs font-bold text-slate-500">${escapeHTML(a.seller_name||'â€”')}</td>
+    <td class="text-center font-bold text-orange-500">${a.report_count}</td>
+    <td class="text-right"><button onclick="showToast('Warning noted for ${escapeHTML(a.seller_name||'')}','success')" class="text-[10px] font-bold bg-orange-100 text-orange-700 px-2 py-1 rounded hover:bg-orange-200">Warn</button></td></tr>`)
+    .join(''):'<tr><td colspan="3" class="py-4 text-center text-slate-400">No repeat reporters.</td></tr>';
+}
+
+function loadSupport(){
+  document.getElementById('supportTableBody').innerHTML='<tr><td colspan="6" class="p-8 text-center text-slate-400">Support tickets module coming soon.</td></tr>';
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  CHARITY QUEUE  (free listings pending review)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+let _charityReasonCallback=null;
+function openCharityReasonModal(title,subtitle,confirmLabel,confirmClass,callback){
+  const modal=document.getElementById('charityReasonModal');
+  document.getElementById('charityReasonTitle').textContent=title;
+  document.getElementById('charityReasonSubtitle').textContent=subtitle;
+  document.getElementById('charityReasonText').value='';
+  const btn=document.getElementById('charityReasonConfirmBtn');
+  btn.textContent=confirmLabel;
+  btn.className=`flex-1 ${confirmClass} text-white font-black py-2.5 rounded-xl transition-colors`;
+  _charityReasonCallback=callback;
   modal.classList.remove('hidden');
 }
+function closeCharityReasonModal(){document.getElementById('charityReasonModal').classList.add('hidden');_charityReasonCallback=null;}
 
-function closeCharityReasonModal() {
-  document.getElementById('charityReasonModal').classList.add('hidden');
-  _charityReasonCallback = null;
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('charityReasonConfirmBtn');
-  if (btn) btn.addEventListener('click', () => {
-    const reason = document.getElementById('charityReasonText').value.trim();
-    if (_charityReasonCallback) _charityReasonCallback(reason);
+document.addEventListener('DOMContentLoaded',()=>{
+  const btn=document.getElementById('charityReasonConfirmBtn');
+  if(btn) btn.addEventListener('click',()=>{
+    const reason=document.getElementById('charityReasonText').value.trim();
+    if(_charityReasonCallback) _charityReasonCallback(reason);
     closeCharityReasonModal();
   });
 });
 
-function loadCharityQueue() {
-  const queue = safeJSON('zzz_charity_queue');
-  const listings = safeJSON('zzz_listings');
-  const search = (document.getElementById('charitySearch')?.value || '').toLowerCase();
-  const filter = document.getElementById('charityFilter')?.value || '';
+async function loadCharityQueue(){
+  const search=(document.getElementById('charitySearch')?.value||'').toLowerCase();
+  const filter=document.getElementById('charityFilter')?.value||'';
+  const params=new URLSearchParams({type:'charity'});
+  if(filter) params.set('status',filter);
+  if(search) params.set('search',search);
+
+  const data=await adminFetch('/api/admin/listings.php?'+params);
+  if(!data||!data.success) return;
+  let rows=data.data;
 
   // Stats
-  document.getElementById('charityStatPending').textContent = queue.filter(q => q.status === 'pending_review').length;
-  document.getElementById('charityStatApproved').textContent = queue.filter(q => q.status === 'approved').length;
-  document.getElementById('charityStatRejected').textContent = queue.filter(q => q.status === 'rejected').length;
-  document.getElementById('charityStatFlagged').textContent = queue.filter(q => q.status === 'flagged').length;
+  const allData=await adminFetch('/api/admin/listings.php?type=charity');
+  const all=allData?.data||[];
+  document.getElementById('charityStatPending').textContent  = all.filter(q=>q.status==='pending_review').length;
+  document.getElementById('charityStatApproved').textContent = all.filter(q=>q.status==='active').length;
+  document.getElementById('charityStatRejected').textContent = all.filter(q=>q.status==='rejected').length;
+  document.getElementById('charityStatFlagged').textContent  = 0;
 
-  // Badge on nav
-  const pending = queue.filter(q => q.status === 'pending_review').length;
-  const badge = document.getElementById('badge-charity');
-  if (badge) { badge.textContent = pending; badge.classList.toggle('hidden', pending === 0); }
+  const badge=document.getElementById('badge-charity');
+  const pending=all.filter(q=>q.status==='pending_review').length;
+  if(badge){badge.textContent=pending;badge.classList.toggle('hidden',pending===0);}
 
-  let rows = queue;
-  if (filter) rows = rows.filter(q => q.status === filter);
-  if (search) rows = rows.filter(q =>
-    (q.title || '').toLowerCase().includes(search) ||
-    (q.userName || '').toLowerCase().includes(search)
-  );
+  const tbody=document.getElementById('charityQueueBody');
+  const empty=document.getElementById('charityEmptyState');
 
-  const tbody = document.getElementById('charityQueueBody');
-  const empty = document.getElementById('charityEmptyState');
-
-  if (rows.length === 0) {
-    tbody.innerHTML = '';
-    empty.classList.remove('hidden');
-    return;
-  }
-  empty.classList.add('hidden');
-
-  const statusBadge = (s) => {
-    const map = {
-      pending_review: 'bg-amber-100 text-amber-700',
-      approved: 'bg-green-100 text-green-700',
-      rejected: 'bg-red-100 text-red-700',
-      flagged: 'bg-purple-100 text-purple-700'
-    };
-    const label = { pending_review: '⏳ Pending', approved: '✅ Approved', rejected: '❌ Rejected', flagged: '🚩 Flagged' };
-    return `<span class="px-2 py-0.5 rounded-full text-[11px] font-black ${map[s] || 'bg-gray-100 text-gray-600'}">${label[s] || s}</span>`;
+  const statusBadge=(s)=>{
+    const map={pending_review:'bg-amber-100 text-amber-700',active:'bg-green-100 text-green-700',rejected:'bg-red-100 text-red-700'};
+    const label={pending_review:'â³ Pending',active:'âœ… Approved',rejected:'âŒ Rejected'};
+    return `<span class="px-2 py-0.5 rounded-full text-[11px] font-black ${map[s]||'bg-gray-100 text-gray-600'}">${label[s]||s}</span>`;
   };
 
-  tbody.innerHTML = rows.map(q => {
-    const listing = listings.find(l => l.id === q.listingId) || {};
-    const date = q.submittedAt ? new Date(q.submittedAt).toLocaleDateString('en-IN', { day:'numeric', month:'short' }) : '—';
-    return `<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/50">
-      <td class="px-4 py-3">
-        <p class="font-bold text-slate-800 dark:text-white text-sm max-w-[200px] truncate">${escapeHTML(q.title || listing.title || 'Untitled')}</p>
-        <p class="text-xs text-slate-400">${escapeHTML(listing.subcategory || listing.category || 'Charity')}</p>
-      </td>
-      <td class="px-4 py-3">
-        <p class="font-bold text-sm">${escapeHTML(q.userName || '—')}</p>
-        <p class="text-xs text-slate-400">${q.userId || ''}</p>
-      </td>
-      <td class="px-4 py-3 text-sm text-slate-500">${date}</td>
+  if(rows.length===0){tbody.innerHTML='';empty.classList.remove('hidden');return;}
+  empty.classList.add('hidden');
+  tbody.innerHTML=rows.map(q=>`
+    <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/50">
+      <td class="px-4 py-3"><p class="font-bold text-slate-800 dark:text-white text-sm max-w-[200px] truncate">${escapeHTML(q.title||'Untitled')}</p><p class="text-xs text-slate-400">${escapeHTML(q.subcategory||q.category||'Charity')}</p></td>
+      <td class="px-4 py-3"><p class="font-bold text-sm">${escapeHTML(q.seller_name||'â€”')}</p></td>
+      <td class="px-4 py-3 text-sm text-slate-500">${(q.created_at||'').substring(0,10)}</td>
       <td class="px-4 py-3">${statusBadge(q.status)}</td>
-      <td class="px-4 py-3 text-xs text-slate-500 max-w-[140px] truncate" title="${escapeHTML(q.adminReason || '')}">${escapeHTML(q.adminReason || '—')}</td>
+      <td class="px-4 py-3 text-xs text-slate-500">â€”</td>
       <td class="px-4 py-3 text-right">
         <div class="flex items-center justify-end gap-1.5 flex-wrap">
-          ${q.status !== 'approved' ? `<button onclick="approveCharity('${q.listingId}')" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">check</span> Approve</button>` : ''}
-          ${q.status !== 'rejected' ? `<button onclick="rejectCharity('${q.listingId}')" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">close</span> Reject</button>` : ''}
-          ${q.status !== 'flagged' ? `<button onclick="flagCharity('${q.listingId}', '${q.userId}')" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">flag</span> Flag+Ban</button>` : ''}
-          ${listing.id ? `<a href="classifieds.html?id=${listing.id}" target="_blank" class="text-slate-400 hover:text-brand border border-slate-200 dark:border-gray-700 text-xs font-bold px-2 py-1.5 rounded-lg transition-colors"><span class="material-symbols-outlined text-[13px]">open_in_new</span></a>` : ''}
+          ${q.status!=='active'?`<button onclick="approveCharity(${q.id})" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg"><span class="material-symbols-outlined text-[13px]">check</span> Approve</button>`:''}
+          ${q.status!=='rejected'?`<button onclick="rejectCharity(${q.id})" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg"><span class="material-symbols-outlined text-[13px]">close</span> Reject</button>`:''}
+          <a href="Listing Detail.html?id=${q.id}" target="_blank" class="text-slate-400 hover:text-brand border border-slate-200 dark:border-gray-700 text-xs font-bold px-2 py-1.5 rounded-lg"><span class="material-symbols-outlined text-[13px]">open_in_new</span></a>
         </div>
       </td>
-    </tr>`;
-  }).join('');
+    </tr>`).join('');
 }
 
-function _updateCharityItem(listingId, newStatus, reason) {
-  const queue = safeJSON('zzz_charity_queue');
-  const listings = safeJSON('zzz_listings');
-  const idx = queue.findIndex(q => q.listingId === listingId);
-  if (idx !== -1) {
-    queue[idx].status = newStatus;
-    queue[idx].adminReason = reason || '';
-    queue[idx].reviewedAt = new Date().toISOString();
-    localStorage.setItem('zzz_charity_queue', JSON.stringify(queue));
-  }
-  // Update corresponding listing status
-  const lIdx = listings.findIndex(l => l.id === listingId);
-  if (lIdx !== -1) {
-    listings[lIdx].status = newStatus === 'approved' ? 'active' : newStatus === 'rejected' ? 'rejected' : 'flagged';
-    listings[lIdx].moderationStatus = newStatus;
-    listings[lIdx].moderationReason = reason || '';
-    localStorage.setItem('zzz_listings', JSON.stringify(listings));
-  }
-  adminLog(`Charity ${newStatus.toUpperCase()}`, `Listing: ${listingId} | Reason: ${reason || 'None'}`);
+function approveCharity(id){
+  openCharityReasonModal('âœ… Approve Charity Post','Optionally add a note. The post will go live immediately.','Approve Post','bg-green-600 hover:bg-green-700',async(reason)=>{
+    const r=await adminPut('/api/admin/listings.php',{id,status:'active'});
+    if(r&&r.success){showToast('Charity post approved & live!','success');loadCharityQueue();}
+    else showToast(r?.error||'Error','error');
+  });
+}
+function rejectCharity(id){
+  openCharityReasonModal('âŒ Reject Charity Post','Provide a reason â€” this will be shown to the user.','Reject Post','bg-red-500 hover:bg-red-600',async(reason)=>{
+    if(!reason){showToast('Please enter a rejection reason.','error');return;}
+    const r=await adminPut('/api/admin/listings.php',{id,status:'rejected'});
+    if(r&&r.success){showToast('Charity post rejected','error');loadCharityQueue();}
+  });
+}
+async function bulkApproveCharity(){
+  const data=await adminFetch('/api/admin/listings.php?type=charity&status=pending_review');
+  if(!data||!data.success) return;
+  const pending=data.data;
+  if(!pending.length){showToast('No pending charity posts.','error');return;}
+  if(!confirm(`Approve all ${pending.length} pending charity posts?`)) return;
+  await Promise.all(pending.map(p=>adminPut('/api/admin/listings.php',{id:p.id,status:'active'})));
+  showToast(`${pending.length} charity posts approved!`,'success');
   loadCharityQueue();
 }
 
-function approveCharity(listingId) {
-  openCharityReasonModal(
-    '✅ Approve Charity Post',
-    'Optionally add a note. The post will go live immediately.',
-    'Approve Post',
-    'bg-green-600 hover:bg-green-700',
-    (reason) => {
-      _updateCharityItem(listingId, 'approved', reason || 'Genuine charity post — Approved by admin');
-      showToast('Charity post approved & made live!', 'success');
-    }
-  );
-}
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  SETTINGS  &  API CONFIG
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+async function loadSettingsUI(){
+  const data=await adminFetch('/api/admin/settings.php');
+  if(!data||!data.success) return;
+  const cfg=data.data;
 
-function rejectCharity(listingId) {
-  openCharityReasonModal(
-    '❌ Reject Charity Post',
-    'Provide a reason — this will be shown to the user.',
-    'Reject Post',
-    'bg-red-500 hover:bg-red-600',
-    (reason) => {
-      if (!reason) { showToast('Please enter a rejection reason.', 'error'); return; }
-      _updateCharityItem(listingId, 'rejected', reason);
-      showToast('Charity post rejected.', 'error');
-    }
-  );
-}
-
-function flagCharity(listingId, userId) {
-  openCharityReasonModal(
-    '🚩 Flag Post & Suspend User',
-    'This will flag the post AND suspend the user account. Enter reason.',
-    'Flag & Suspend',
-    'bg-purple-600 hover:bg-purple-700',
-    (reason) => {
-      if (!reason) { showToast('Please enter a reason for flagging.', 'error'); return; }
-      _updateCharityItem(listingId, 'flagged', reason);
-      // Suspend the user
-      const users = safeJSON('zzz_users');
-      const uIdx = users.findIndex(u => u.id === userId);
-      if (uIdx !== -1) {
-        users[uIdx].suspended = true;
-        users[uIdx].suspendedReason = `Charity abuse: ${reason}`;
-        users[uIdx].suspendedAt = new Date().toISOString();
-        localStorage.setItem('zzz_users', JSON.stringify(users));
-      }
-      adminLog('USER_SUSPENDED', `User ${userId} suspended for charity abuse. Listing: ${listingId}`);
-      showToast('Post flagged & user suspended!', 'error');
-    }
-  );
-}
-
-function bulkApproveCharity() {
-  const queue = safeJSON('zzz_charity_queue');
-  const pending = queue.filter(q => q.status === 'pending_review');
-  if (pending.length === 0) { showToast('No pending charity posts to approve.', 'error'); return; }
-  if (!confirm(`Approve all ${pending.length} pending charity posts?`)) return;
-  pending.forEach(q => _updateCharityItem(q.listingId, 'approved', 'Bulk approved by admin'));
-  showToast(`${pending.length} charity post(s) approved!`, 'success');
-}
-
-function updateCharityBadge() {
-  const queue = safeJSON('zzz_charity_queue');
-  const pending = queue.filter(q => q.status === 'pending_review').length;
-  const badge = document.getElementById('badge-charity');
-  if (badge) { badge.textContent = pending; badge.classList.toggle('hidden', pending === 0); }
-}
-
-
-
-function refreshData() { showToast('Syncing with database...', 'success'); setTimeout(()=>{ location.reload(); }, 500); }
-
-// ==============================
-// 2. DASHBOARD & CHARTS (SAFE INIT)
-// ==============================
-function loadDashboard() {
-    const users = safeJSON('zzz_users'); const listings = safeJSON('zzz_listings'); const txns = safeJSON('zzz_transactions');
-    document.getElementById('statUsers').textContent = users.length;
-    document.getElementById('statListings').textContent = listings.filter(l=>l.status==='active').length;
-    document.getElementById('statTickets').textContent = safeJSON('zzz_support_tickets').filter(t=>t.status==='Open').length;
-    document.getElementById('statRev').textContent = '₹' + Number(txns.filter(t=>t.status==='success').reduce((sum, t)=>sum+Number(t.amount||0), 0)).toLocaleString();
-    
-    const logs = safeJSON('zzz_admin_logs');
-    document.getElementById('dashboardLogs').innerHTML = logs.map(l=>`<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/50"><td class="py-2 text-slate-400 whitespace-nowrap">${escapeHTML(l.time.split(',')[0])}</td><td class="font-bold whitespace-nowrap">${escapeHTML(l.admin)}</td><td class="text-brand text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">${escapeHTML(l.action)}</td><td class="text-slate-600 dark:text-gray-300 truncate max-w-[200px]">${escapeHTML(l.detail)}</td></tr>`).join('') || '<tr><td colspan="4" class="py-4 text-center text-slate-400">No logs.</td></tr>';const charts = {};
-function initCharts() {
-    try {
-        const actCtx = document.getElementById('activityChart');
-        if(!actCtx || actCtx.offsetParent === null) return; // Don't init if hidden
-
-        ['activity','status','category','funnel','geo'].forEach(k => { if(charts[k]) charts[k].destroy(); });
-        
-        Chart.defaults.color = document.documentElement.classList.contains('dark') ? '#94a3b8' : '#64748b';
-        Chart.defaults.font.family = "'Spline Sans', sans-serif";
-
-        // 1. Dynamic Activity Chart
-        const list = safeJSON('zzz_listings');
-        const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-        const counts = [0, 0, 0, 0, 0, 0, 0];
-        const labels = [];
-        const now = new Date();
-        
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(now.getDate() - i);
-            labels.push(days[d.getDay()]);
-            
-            const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0).getTime();
-            const endOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999).getTime();
-            
-            list.forEach(l => {
-                const ts = new Date(l.createdAt).getTime();
-                if (ts >= startOfDay && ts <= endOfDay) {
-                    counts[6 - i]++;
-                }
-            });
-        }
-
-        charts.activity = new Chart(actCtx, { 
-            type:'line', 
-            data:{ 
-                labels: labels, 
-                datasets:[{ 
-                    label:'New Listings', 
-                    data: counts, 
-                    borderColor:'#019863', 
-                    backgroundColor:'rgba(1,152,99,0.1)', 
-                    tension:0.4, 
-                    fill:true 
-                }] 
-            }, 
-            options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}} 
-        });
-        
-        // 2. Dynamic Status Chart
-        const activeCount = list.filter(l => l.status === 'active').length;
-        const pendingCount = list.filter(l => l.status === 'pending_review').length;
-        const rejectedCount = list.filter(l => l.status === 'rejected').length;
-        const expiredCount = list.filter(l => l.status === 'expired').length;
-
-        charts.status = new Chart(document.getElementById('statusChart'), { 
-            type:'doughnut', 
-            data:{ 
-                labels:['Active','Pending','Rejected','Expired'], 
-                datasets:[{ 
-                    data:[activeCount, pendingCount, rejectedCount, expiredCount], 
-                    backgroundColor:['#019863','#f59e0b','#ef4444','#94a3b8'] 
-                }] 
-            }, 
-            options:{responsive:true, maintainAspectRatio:false, cutout:'70%', plugins:{legend:{position:'bottom'}}} 
-        });
-
-        // 3. Dynamic Category Chart
-        const catCounts = {};
-        list.forEach(l => {
-            const c = l.category || 'Uncategorized';
-            catCounts[c] = (catCounts[c] || 0) + 1;
-        });
-        const sortedCats = Object.entries(catCounts).sort((a,b) => b[1] - a[1]);
-        const catLabels = sortedCats.slice(0, 4).map(x => x[0]);
-        const catData = sortedCats.slice(0, 4).map(x => x[1]);
-        if (sortedCats.length > 4) {
-            catLabels.push('Others');
-            catData.push(sortedCats.slice(4).reduce((sum, x) => sum + x[1], 0));
-        }
-
-        charts.category = new Chart(document.getElementById('categoryChart'), { 
-            type:'pie', 
-            data:{ 
-                labels: catLabels.length ? catLabels : ['None'], 
-                datasets:[{ 
-                    data: catData.length ? catData : [0], 
-                    backgroundColor:['#019863','#3b82f6','#8b5cf6','#f59e0b','#94a3b8'] 
-                }] 
-            }, 
-            options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right'}}} 
-        });
-
-        // 4. Dynamic Funnel Chart
-        charts.funnel = new Chart(document.getElementById('funnelChart'), { 
-            type:'bar', 
-            data:{ 
-                labels:['Visitors','Searches','Drafts','Live'], 
-                datasets:[{ 
-                    label:'Users', 
-                    data:[activeCount * 12, activeCount * 8, activeCount * 2, activeCount], 
-                    backgroundColor:'#019863', 
-                    borderRadius:4 
-                }] 
-            }, 
-            options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}} 
-        });
-
-        // 5. Dynamic Geo Chart
-        const locCounts = {};
-        list.forEach(l => {
-            const loc = l.location || 'Mumbai';
-            locCounts[loc] = (locCounts[loc] || 0) + 1;
-        });
-        const sortedLocs = Object.entries(locCounts).sort((a,b) => b[1] - a[1]);
-        const locLabels = sortedLocs.slice(0, 4).map(x => x[0]);
-        const locData = sortedLocs.slice(0, 4).map(x => x[1]);
-        while (locLabels.length < 4) {
-            locLabels.push(['Delhi', 'Bangalore', 'Pune', 'Kolkata'][locLabels.length]);
-            locData.push(0);
-        }
-
-        charts.geo = new Chart(document.getElementById('geoChart'), { 
-            type:'bar', 
-            data:{ 
-                labels: locLabels, 
-                datasets:[{ 
-                    label:'Users', 
-                    data: locData, 
-                    backgroundColor:'#3b82f6', 
-                    borderRadius:4 
-                }] 
-            }, 
-            options:{indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}} 
-        });
-    } catch(e) {}
-}
-
-// ==============================
-// 3. LISTINGS & USERS
-// ==============================
-function loadListings() {
-    let list = safeJSON('zzz_listings'); const search = document.getElementById('listingSearch').value.toLowerCase(); const status = document.getElementById('listingStatusFilter').value;
-    if(search) list = list.filter(l => (l.title||'').toLowerCase().includes(search) || (l.userName||'').toLowerCase().includes(search));
-    if(status) list = list.filter(l => l.status === status);
-    const tbody = document.getElementById('listingsTableBody');
-    const statusColors = { active:'bg-green-100 text-green-700', pending_review:'bg-yellow-100 text-yellow-700', rejected:'bg-red-100 text-red-700', expired:'bg-slate-100 text-slate-700' };
-    tbody.innerHTML = list.length ? list.map(l => {
-        const actions = [];
-        if (l.status === 'pending_review') {
-            actions.push(`<button onclick="confirmAction('Approve Listing', 'Approve ${escapeHTML(l.title)}?', ()=>{ approveListing('${l.id}') })" class="text-green-500 hover:text-green-700 text-xs font-bold transition-colors mr-2 animate-pulse" title="Approve"><span class="material-symbols-outlined text-[16px] align-middle">check_circle</span></button>`);
-            actions.push(`<button onclick="confirmAction('Reject Listing', 'Reject ${escapeHTML(l.title)}?', ()=>{ rejectListing('${l.id}') })" class="text-red-500 hover:text-red-700 text-xs font-bold transition-colors mr-2" title="Reject"><span class="material-symbols-outlined text-[16px] align-middle">cancel</span></button>`);
-        }
-        actions.push(`<button onclick="confirmAction('Delete Listing', 'Remove ${escapeHTML(l.title)}?', ()=>{ deleteListing('${l.id}') })" class="text-slate-400 hover:text-red-600 text-xs font-bold transition-colors" title="Delete"><span class="material-symbols-outlined text-[16px] align-middle">delete</span></button>`);
-        return `<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/50 border-b border-slate-100 dark:border-gray-800"><td class="px-4 py-3 font-bold">${escapeHTML(l.title)}</td><td class="px-4 py-3 text-xs">${escapeHTML(l.userName)}</td><td class="px-4 py-3 text-xs"><span class="bg-slate-100 dark:bg-gray-700 px-2 py-1 rounded">${escapeHTML(l.category)}</span></td><td class="px-4 py-3 font-bold text-brand">₹${Number(l.price).toLocaleString()}</td><td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${statusColors[l.status]||statusColors.expired}">${escapeHTML(l.status)}</span></td><td class="px-4 py-3 text-right"><div class="flex gap-2 justify-end items-center">${actions.join('')}</div></td></tr>`;
-    }).join('') : '<tr><td colspan="6" class="p-8 text-center text-slate-400">No listings found.</td></tr>';
-}
-function approveListing(id) { let list = safeJSON('zzz_listings'); const idx = list.findIndex(l => l.id === id); if (idx > -1) { list[idx].status = 'active'; localStorage.setItem('zzz_listings', JSON.stringify(list)); logAction('APPROVE_LISTING', id); loadListings(); showToast('Listing approved', 'success'); } }
-function rejectListing(id) { let list = safeJSON('zzz_listings'); const idx = list.findIndex(l => l.id === id); if (idx > -1) { list[idx].status = 'rejected'; localStorage.setItem('zzz_listings', JSON.stringify(list)); logAction('REJECT_LISTING', id); loadListings(); showToast('Listing rejected', 'error'); } }
-function deleteListing(id) { let list = safeJSON('zzz_listings').filter(l => l.id !== id); localStorage.setItem('zzz_listings', JSON.stringify(list)); logAction('DELETE_LISTING', id); loadListings(); showToast('Listing deleted'); }
-
-function loadUsers() {
-    let users = safeJSON('zzz_users'); const search = document.getElementById('userSearch').value.toLowerCase();
-    if(search) users = users.filter(u => (u.name||'').toLowerCase().includes(search) || (u.email||'').toLowerCase().includes(search));
-    const banned = safeJSON('zzz_banned_users');
-    const verified = safeJSON('zzz_verified_users');
-    document.getElementById('usersTableBody').innerHTML = users.length ? users.map(u => {
-        const score = Math.floor(Math.random()*40)+60; const scoreColor = score > 80 ? 'text-green-600 bg-green-100' : score > 50 ? 'text-yellow-600 bg-yellow-100' : 'text-red-600 bg-red-100';
-        const roleColor = u.role==='super_admin'?'text-purple-600 bg-purple-100':u.role==='moderator'?'text-blue-600 bg-blue-100':'text-slate-600 bg-slate-100 dark:bg-gray-700';
-        const isBanned = banned.includes(u.id) || banned.includes(u.name);
-        const isVerified = verified.includes(u.id) || verified.includes(u.name);
-        const vBadge = isVerified ? `<span class="material-symbols-outlined text-[14px] text-blue-500 align-middle ml-1" title="Verified">verified</span>` : '';
-        const banAction = isBanned ? 
-            `<button onclick="confirmAction('Unban User', 'Restore access for ${escapeHTML(u.email)}?', ()=>{ unbanUser('${u.id}') })" class="text-red-500 hover:text-red-700" title="Unban"><span class="material-symbols-outlined text-[18px]">lock_open</span></button>` :
-            `<button onclick="confirmAction('Ban User', 'Revoke access for ${escapeHTML(u.email)}?', ()=>{ banUser('${u.id}') })" class="text-slate-400 hover:text-red-500" title="Ban"><span class="material-symbols-outlined text-[18px]">block</span></button>`;
-        return `<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/50 border-b border-slate-100 dark:border-gray-800"><td class="px-6 py-3"><div class="font-bold flex items-center gap-1">${escapeHTML(u.name)}${vBadge}</div><div class="text-[10px] text-slate-500 font-mono">${escapeHTML(u.email)}</div></td><td class="px-6 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${roleColor}">${escapeHTML(u.role)}</span></td><td class="px-6 py-3"><span class="px-2 py-1 rounded text-xs font-bold ${scoreColor}">${score}%</span></td><td class="px-6 py-3 text-xs text-slate-400">${new Date(u.createdAt || u.joined || Date.now()).toLocaleDateString()}</td><td class="px-6 py-3 text-right flex gap-3 justify-end items-center"><button onclick="openUserModal('${u.id}')" class="text-slate-400 hover:text-brand" title="Edit"><span class="material-symbols-outlined text-[18px]">edit</span></button><button onclick="openTimeline('${u.id}')" class="text-slate-400 hover:text-blue-500" title="Timeline"><span class="material-symbols-outlined text-[18px]">history</span></button>${banAction}</td></tr>`;
-    }).join('') : '<tr><td colspan="5" class="p-8 text-center text-slate-400">No users found.</td></tr>';
-}
-function banUser(userId) { let banned = safeJSON('zzz_banned_users'); if(!banned.includes(userId)) { banned.push(userId); localStorage.setItem('zzz_banned_users', JSON.stringify(banned)); logAction('BAN_USER', userId); showToast('User banned', 'error'); loadUsers(); } }
-function unbanUser(userId) { let banned = safeJSON('zzz_banned_users'); banned = banned.filter(id => id !== userId); localStorage.setItem('zzz_banned_users', JSON.stringify(banned)); logAction('UNBAN_USER', userId); showToast('User unbanned', 'success'); loadUsers(); }
-
-function loadVerificationReqs() {
-    const reqs = safeJSON('zzz_verification_reqs');
-    const tbody = document.getElementById('verificationsTableBody');
-    if (!tbody) return;
-    const pendingReqs = reqs.filter(r => r.status === 'pending');
-    tbody.innerHTML = pendingReqs.length ? pendingReqs.map(r => `
-        <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/50 border-b border-slate-100 dark:border-gray-800">
-            <td class="px-6 py-3">
-                <div class="font-bold">${escapeHTML(r.userName)}</div>
-                <div class="text-[10px] text-slate-500 font-mono">${escapeHTML(r.userEmail || '')}</div>
-            </td>
-            <td class="px-6 py-3 text-xs text-slate-400">${new Date(r.date).toLocaleString()}</td>
-            <td class="px-6 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-yellow-100 text-yellow-700">Pending</span></td>
-            <td class="px-6 py-3 text-right flex gap-3 justify-end items-center">
-                <button onclick="confirmAction('Approve Verification', 'Verify ${escapeHTML(r.userName)}?', ()=>{ approveVerification('${r.userId}') })" class="text-green-500 hover:text-green-700 text-xs font-bold transition-colors">Approve</button>
-                <button onclick="confirmAction('Reject Verification', 'Reject verification for ${escapeHTML(r.userName)}?', ()=>{ rejectVerification('${r.userId}') })" class="text-red-500 hover:text-red-700 text-xs font-bold transition-colors">Reject</button>
-            </td>
-        </tr>
-    `).join('') : '<tr><td colspan="4" class="p-8 text-center text-slate-400">No pending verification requests.</td></tr>';
-}
-function approveVerification(userId) {
-    let reqs = safeJSON('zzz_verification_reqs');
-    const reqIdx = reqs.findIndex(r => r.userId === userId);
-    if (reqIdx > -1) { reqs[reqIdx].status = 'approved'; localStorage.setItem('zzz_verification_reqs', JSON.stringify(reqs)); }
-    let verified = safeJSON('zzz_verified_users');
-    if (!verified.includes(userId)) { verified.push(userId); localStorage.setItem('zzz_verified_users', JSON.stringify(verified)); }
-    logAction('APPROVE_VERIFICATION', userId);
-    showToast('User verification approved', 'success');
-    loadVerificationReqs();
-    loadUsers();
-}
-function rejectVerification(userId) {
-    let reqs = safeJSON('zzz_verification_reqs');
-    const reqIdx = reqs.findIndex(r => r.userId === userId);
-    if (reqIdx > -1) { reqs[reqIdx].status = 'rejected'; localStorage.setItem('zzz_verification_reqs', JSON.stringify(reqs)); }
-    let verified = safeJSON('zzz_verified_users');
-    verified = verified.filter(id => id !== userId);
-    localStorage.setItem('zzz_verified_users', JSON.stringify(verified));
-    logAction('REJECT_VERIFICATION', userId);
-    showToast('User verification rejected', 'error');
-    loadVerificationReqs();
-    loadUsers();
-}
-
-function openUserModal(id = null) {
-    document.getElementById('userModalTitle').textContent = id ? 'Edit User' : 'Add User'; 
-    const form = { id:'', name:'', email:'', role:'user' };
-    if(id) { const u = safeJSON('zzz_users').find(x=>x.id===id); if(u) Object.assign(form, u); }
-    document.getElementById('userId').value = form.id; document.getElementById('userName').value = form.name; document.getElementById('userEmail').value = form.email; document.getElementById('userRole').value = form.role;
-    document.getElementById('userModal').classList.remove('hidden');
-}
-function saveUser() {
-    const id = document.getElementById('userId').value; const name = document.getElementById('userName').value; const email = document.getElementById('userEmail').value; const role = document.getElementById('userRole').value;
-    if(!name || !email) return showToast('Name and Email required', 'error');
-    let users = safeJSON('zzz_users');
-    if(id) { const idx = users.findIndex(u=>u.id===id); if(idx>-1) users[idx] = {...users[idx], name, email, role}; }
-    else { users.push({ id:'u_'+Date.now(), name, email, role, createdAt:new Date().toISOString() }); }
-    localStorage.setItem('zzz_users', JSON.stringify(users)); closeModal('userModal'); loadUsers(); showToast('User saved');
-}
-function openTimeline(uid) {
-    const u = safeJSON('zzz_users').find(x=>x.id===uid); if(!u) return;
-    const evts = [ {t:new Date(u.createdAt), msg:'Account created'}, {t:new Date(Date.now()-3600000), msg:'User logged in'} ];
-    document.getElementById('timelineContent').innerHTML = evts.sort((a,b)=>b.t-a.t).map(e=>`<div class="border-l-2 border-slate-200 dark:border-gray-700 pl-4 pb-4 relative"><div class="absolute w-2 h-2 bg-brand rounded-full -left-[5px] top-1"></div><p class="text-[10px] text-slate-400 font-mono">${e.t.toLocaleString()}</p><p class="font-bold text-slate-700 dark:text-gray-200">${escapeHTML(e.msg)}</p></div>`).join('');
-    document.getElementById('timelineModal').classList.remove('hidden');
-}
-
-// ==============================
-// 4. PAYMENTS & COUPONS
-// ==============================
-function loadPayments() {
-    const txns = safeJSON('zzz_transactions');
-    document.getElementById('paymentsTableBody').innerHTML = txns.length ? txns.map(t=>`<tr class="border-b border-slate-100 dark:border-gray-800"><td class="py-3 font-mono text-xs text-slate-500">${t.id}</td><td class="font-bold text-xs">${escapeHTML(t.userName)}</td><td class="text-brand font-bold text-xs">₹${t.amount}</td><td><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${t.status==='success'?'bg-green-100 text-green-700':t.status==='refunded'?'bg-red-100 text-red-700':'bg-yellow-100 text-yellow-700'}">${t.status}</span></td><td class="text-right">${t.status==='success'?`<button onclick="openRefund('${t.id}')" class="text-red-500 text-xs font-bold hover:underline">Refund</button>`:''}</td></tr>`).join('') : '<tr><td colspan="5" class="p-6 text-center text-slate-400">No transactions.</td></tr>';
-}
-function openRefund(id) {
-    const t = safeJSON('zzz_transactions').find(x=>x.id===id); if(!t) return;
-    document.getElementById('refundTxnId').value = id; document.getElementById('refundTxnInfo').textContent = `Txn: ${t.id} | Amount: ₹${t.amount}`;
-    document.getElementById('refundModal').classList.remove('hidden');
-}
-function executeRefund() {
-    const id = document.getElementById('refundTxnId').value; let txns = safeJSON('zzz_transactions');
-    const idx = txns.findIndex(x=>x.id===id); if(idx>-1) { txns[idx].status = 'refunded'; localStorage.setItem('zzz_transactions', JSON.stringify(txns)); loadPayments(); loadDashboard(); showToast('Refund processed'); closeModal('refundModal'); }
-}
-function loadCoupons() {
-    const coupons = safeJSON('zzz_coupons');
-    document.getElementById('couponsTableBody').innerHTML = coupons.length ? coupons.map(c=>`<tr class="border-b border-slate-100 dark:border-gray-800"><td class="py-3 font-bold font-mono">${escapeHTML(c.code)}</td><td class="text-brand font-bold">${c.discount}%</td><td><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-green-100 text-green-700">Active</span></td><td class="text-right"><button onclick="confirmAction('Delete Coupon', 'Delete ${c.code}?', ()=>{deleteCoupon('${c.code}')})" class="text-red-500 text-xs font-bold">Delete</button></td></tr>`).join('') : '<tr><td colspan="4" class="p-6 text-center text-slate-400">No active coupons.</td></tr>';
-}
-function createCoupon() {
-    const code = document.getElementById('couponCode').value.toUpperCase().trim(); const discount = document.getElementById('couponDiscount').value;
-    if(!code || !discount) return showToast('Fill all fields', 'error');
-    let coupons = safeJSON('zzz_coupons'); coupons.push({code, discount}); localStorage.setItem('zzz_coupons', JSON.stringify(coupons));
-    document.getElementById('couponCode').value = ''; document.getElementById('couponDiscount').value = ''; loadCoupons(); showToast('Coupon created');
-}
-function deleteCoupon(code) { let c = safeJSON('zzz_coupons').filter(x=>x.code!==code); localStorage.setItem('zzz_coupons', JSON.stringify(c)); loadCoupons(); showToast('Coupon deleted'); }
-
-// ==============================
-// 5. MODERATION & SUPPORT
-// ==============================
-function loadReports() {
-    const flags = safeJSON('zzz_flags');
-    document.getElementById('reportsTableBody').innerHTML = flags.length ? flags.map(f=>`<tr class="border-b border-slate-100 dark:border-gray-800"><td class="font-bold text-xs py-2">${escapeHTML(f.listingTitle)}</td><td class="text-red-500 font-bold text-xs">${escapeHTML(f.reason)}</td></tr>`).join('') : '<tr><td colspan="2" class="p-6 text-center text-slate-400">Queue is empty.</td></tr>';
-    
-    const listings = safeJSON('zzz_listings');
-    const userReportCounts = {};
-    
-    flags.forEach(f => {
-        const lst = listings.find(l => l.id === f.listingId);
-        if (lst) {
-            const uName = lst.userName || 'Anonymous';
-            userReportCounts[uName] = (userReportCounts[uName] || 0) + 1;
-        } else {
-            userReportCounts['Deleted Listing Seller'] = (userReportCounts['Deleted Listing Seller'] || 0) + 1;
-        }
-    });
-    
-    const sortedReports = Object.entries(userReportCounts).sort((a,b) => b[1] - a[1]);
-    
-    document.getElementById('abuseTableBody').innerHTML = sortedReports.length ? sortedReports.map(([uName, count]) => `
-        <tr>
-            <td class="py-2 text-xs font-bold text-slate-500">${escapeHTML(uName)}</td>
-            <td class="text-center font-bold text-orange-500">${count}</td>
-            <td class="text-right">
-                <button onclick="showToast('Warning sent to ${escapeHTML(uName)}', 'warning')" class="text-[10px] font-bold bg-orange-100 text-orange-700 px-2 py-1 rounded hover:bg-orange-200">Warn</button>
-            </td>
-        </tr>
-    `).join('') : '<tr><td colspan="3" class="py-4 text-center text-slate-400">No reports submitted.</td></tr>';
-}
-function loadSupport() {
-    let tix = safeJSON('zzz_support_tickets');
-    document.getElementById('supportTableBody').innerHTML = tix.length ? tix.map(t => {
-        return `<tr class="border-b border-slate-100 dark:border-gray-800"><td class="px-6 py-3"><span class="text-[10px] font-bold uppercase px-2 py-1 rounded bg-red-100 text-red-700">${escapeHTML(t.priority)}</span></td><td class="px-6 py-3 text-xs font-bold">${escapeHTML(t.userName)}</td><td class="px-6 py-3 text-xs truncate max-w-[150px]">${escapeHTML(t.topic)}</td><td class="px-6 py-3"><select class="text-xs border rounded p-1"><option>Unassigned</option><option>Admin 1</option></select></td><td class="px-6 py-3 text-xs font-bold text-red-500">2h left</td><td class="px-6 py-3 text-right"><button onclick="showToast('Ticket Resolved'); loadSupport();" class="text-brand text-xs font-bold">Resolve</button></td></tr>`;
-    }).join('') : '<tr><td colspan="6" class="p-8 text-center text-slate-400">No tickets found.</td></tr>';
-}
-
-// ==============================
-// 6. SCHEMA BUILDER (BULLETPROOF DB SYNC)
-// ==============================
-const DEFAULT_SCHEMA = { categories: [{id:'c1', label:'Vehicles', icon:'directions_car'}], subcategories: [{id:'s1', categoryId:'c1', label:'Cars'}], fields: [{id:'f1', subcategoryId:'s1', label:'Mileage', type:'number', options:''}] };
-let curSchema = {categories:[], subcategories:[], fields:[]};
-let activeCat = null, activeSub = null;
-
-function renderSchemaBuilder() {
-    // Check localStorage -> window.ZZZ_SCHEMA -> DEFAULT_SCHEMA
-    let saved = localStorage.getItem('zzz_classifieds_schema');
-    if (saved) {
-        try { curSchema = JSON.parse(saved); } catch(e) { curSchema = DEFAULT_SCHEMA; }
-    } else if (window.ZZZ_SCHEMA) {
-        curSchema = window.ZZZ_SCHEMA;
-    } else {
-        curSchema = DEFAULT_SCHEMA;
-    }
-    
-    document.getElementById('schemaCategories').innerHTML = curSchema.categories.map(c=>`<div onclick="selCat('${c.id}')" class="p-2.5 rounded mb-1 cursor-pointer border border-slate-100 dark:border-gray-700 flex justify-between items-center group transition-colors ${activeCat===c.id?'active-schema shadow-md':'bg-white dark:bg-card-dark hover:bg-slate-50 dark:hover:bg-gray-800'}"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] opacity-70">${escapeHTML(c.icon||'category')}</span><span class="text-sm font-bold">${escapeHTML(c.label)}</span></div><button onclick="openSchemaModal('category', '${c.id}', event)" class="opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">edit</span></button></div>`).join('');
-    
-    const subcats = activeCat ? curSchema.subcategories.filter(s=>s.categoryId===activeCat) : [];
-    document.getElementById('schemaSubcats').innerHTML = activeCat ? (subcats.length ? subcats.map(s=>`<div onclick="selSub('${s.id}')" class="p-2.5 rounded mb-1 cursor-pointer border border-slate-100 dark:border-gray-700 flex justify-between items-center group transition-colors ${activeSub===s.id?'active-schema shadow-md':'bg-white dark:bg-card-dark hover:bg-slate-50 dark:hover:bg-gray-800'}"><span class="text-sm font-bold">${escapeHTML(s.label)}</span><button onclick="openSchemaModal('subcategory', '${s.id}', event)" class="opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">edit</span></button></div>`).join('') : '<div class="text-center text-xs text-slate-400 mt-4">No subcategories yet.</div>') : '<div class="text-center text-xs text-slate-400 mt-10">Select a Category &rarr;</div>';
-    document.getElementById('btnAddSub').disabled = !activeCat;
-    
-    const fields = activeSub ? curSchema.fields.filter(f=>f.subcategoryId===activeSub) : [];
-    document.getElementById('schemaFields').innerHTML = activeSub ? (fields.length ? fields.map(f=>`<div class="p-2.5 rounded mb-1 border border-slate-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-card-dark group"><div class="flex flex-col"><span class="text-sm font-bold">${escapeHTML(f.label)}</span><span class="text-[10px] text-slate-400 font-mono uppercase">${escapeHTML(f.type)}</span></div><button onclick="openSchemaModal('field', '${f.id}')" class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-brand transition-opacity"><span class="material-symbols-outlined text-[16px]">edit</span></button></div>`).join('') : '<div class="text-center text-xs text-slate-400 mt-4">No custom fields yet.</div>') : '<div class="text-center text-xs text-slate-400 mt-10">Select a Subcategory &rarr;</div>';
-    document.getElementById('btnAddField').disabled = !activeSub;
-}
-function selCat(id) { activeCat = id; activeSub = null; renderSchemaBuilder(); }
-function selSub(id) { activeSub = id; renderSchemaBuilder(); }
-
-function openSchemaModal(type, id = null, event = null) {
-    if(event) event.stopPropagation();
-    document.getElementById('schemaModalTitle').textContent = id ? `Edit ${type}` : `Add ${type}`;
-    document.getElementById('schemaItemType').value = type; document.getElementById('schemaItemId').value = id||'';
-    document.getElementById('schemaIconBlock').classList.toggle('hidden', type!=='category');
-    document.getElementById('schemaFieldBlock').classList.toggle('hidden', type!=='field');
-    document.getElementById('schemaDeleteBtn').classList.toggle('hidden', !id);
-
-    let form = {label:'', icon:'', type:'text', options:''};
-    if(id) { const arr = type==='category' ? curSchema.categories : type==='subcategory' ? curSchema.subcategories : curSchema.fields; const item = arr.find(x=>x.id===id); if(item) Object.assign(form, item); }
-    
-    document.getElementById('schemaLabel').value = form.label; document.getElementById('schemaIcon').value = form.icon;
-    document.getElementById('schemaType').value = form.type; document.getElementById('schemaOptions').value = form.options;
-    document.getElementById('schemaOptionsBlock').classList.toggle('hidden', form.type!=='select');
-    document.getElementById('schemaModal').classList.remove('hidden');
-}
-
-function saveSchemaItem() {
-    const type = document.getElementById('schemaItemType').value; const id = document.getElementById('schemaItemId').value;
-    const label = document.getElementById('schemaLabel').value.trim(); if(!label) return showToast('Label required', 'error');
-    let arr = type==='category' ? curSchema.categories : type==='subcategory' ? curSchema.subcategories : curSchema.fields;
-    
-    if(id) {
-        let idx = arr.findIndex(x=>x.id===id);
-        if(idx>-1) { arr[idx].label = label; if(type==='category') arr[idx].icon = document.getElementById('schemaIcon').value; if(type==='field') { arr[idx].type = document.getElementById('schemaType').value; arr[idx].options = document.getElementById('schemaOptions').value; } }
-    } else {
-        const newId = type.charAt(0) + Date.now(); let obj = {id:newId, label};
-        if(type==='category') { obj.icon = document.getElementById('schemaIcon').value; }
-        if(type==='subcategory') obj.categoryId = activeCat;
-        if(type==='field') { obj.subcategoryId = activeSub; obj.type = document.getElementById('schemaType').value; obj.options = document.getElementById('schemaOptions').value; }
-        arr.push(obj);
-    }
-    saveSchemaToDB(); closeModal('schemaModal'); renderSchemaBuilder();
-}
-function deleteSchemaItem() {
-    const type = document.getElementById('schemaItemType').value; const id = document.getElementById('schemaItemId').value;
-    confirmAction('Delete Schema Item', 'Are you sure? This may affect existing listings.', () => {
-        if(type==='category') { curSchema.categories = curSchema.categories.filter(x=>x.id!==id); curSchema.subcategories = curSchema.subcategories.filter(x=>x.categoryId!==id); activeCat=null; activeSub=null; }
-        if(type==='subcategory') { curSchema.subcategories = curSchema.subcategories.filter(x=>x.id!==id); curSchema.fields = curSchema.fields.filter(x=>x.subcategoryId!==id); activeSub=null; }
-        if(type==='field') curSchema.fields = curSchema.fields.filter(x=>x.id!==id);
-        saveSchemaToDB(); closeModal('schemaModal'); renderSchemaBuilder(); showToast('Item deleted');
-    });
-}
-function saveSchemaToDB() { localStorage.setItem('zzz_classifieds_schema', JSON.stringify(curSchema)); logAction('SCHEMA_UPDATE', 'Modified Database Schema'); }
-function resetSchemaToFactory() { confirmAction('Factory Reset', 'Restore default schema?', ()=>{ localStorage.setItem('zzz_classifieds_schema', JSON.stringify(DEFAULT_SCHEMA)); renderSchemaBuilder(); showToast('Schema Reset'); }); }
-
-// ==============================
-// 7. GLOBAL CONFIG & BACKUPS
-// ==============================
-function loadSettingsUI() {
-  const cfg = safeJSON('zzz_sys_cfg', {expiry:30, uploadSize:5, formats:'jpg,png,webp', timeout:15, ips:'', enforce2fa:false});
-  ['expiry','uploadSize','formats','timeout','ips'].forEach(k => {
-    const el = document.getElementById('cfg'+k.charAt(0).toUpperCase()+k.slice(1));
-    if(el) el.value = cfg[k];
+  const cfgMap={
+    listing_expiry_days:'cfgExpiry',
+    max_upload_mb:'cfgUploadSize',
+    allowed_formats:'cfgFormats',
+    session_timeout_mins:'cfgTimeout',
+  };
+  Object.entries(cfgMap).forEach(([key,elId])=>{
+    const el=document.getElementById(elId);
+    if(el&&cfg[key]) el.value=cfg[key];
   });
-  const el2fa = document.getElementById('cfg2FA');
-  if(el2fa) el2fa.checked = !!cfg.enforce2fa;
-  loadApiConfig();
-}
 
-// ─── API CONFIG ────────────────────────────────────────────────────────────
-function loadApiConfig() {
-  const defaults = {
-    emailjsService: 'service_40ub0hj',
-    emailjsPublic:  'sbx4wO3ByZ3hFYoL6',
-    emailjsOtp:     'template_q4h6hyh',
-    emailjsReset:   'template_hj4pquj',
-    razorpayKey:    'rzp_live_SugQ3leLrB2iW6',
-    razorpayCurrency: 'INR',
-    razorpayEnv:    'live',
-    siteName:       'ZIPZAPZOI Classifieds',
-    supportEmail:   'support@zipzapzoi.com',
-    otpExpiry:      10
+  // API keys
+  const apiMap={
+    emailjs_service:'apiEmailjsService',emailjs_public:'apiEmailjsPublic',
+    emailjs_otp_template:'apiEmailjsOtp',emailjs_reset_template:'apiEmailjsReset',
+    razorpay_key:'apiRazorpayKey',razorpay_currency:'apiRazorpayCurrency',
   };
-  const saved = safeJSON('zzz_api_config', {});
-  const cfg = Object.assign({}, defaults, saved);
-  const set = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
-  set('apiEmailjsService', cfg.emailjsService);
-  set('apiEmailjsPublic',  cfg.emailjsPublic);
-  set('apiEmailjsOtp',     cfg.emailjsOtp);
-  set('apiEmailjsReset',   cfg.emailjsReset);
-  set('apiRazorpayKey',    cfg.razorpayKey);
-  set('apiRazorpayCurrency', cfg.razorpayCurrency);
-  set('apiRazorpayEnv',    cfg.razorpayEnv);
-  set('apiSiteName',       cfg.siteName);
-  set('apiSupportEmail',   cfg.supportEmail);
-  set('apiOtpExpiry',      cfg.otpExpiry);
-}
-
-function saveApiConfig() {
-  const get = id => document.getElementById(id)?.value?.trim() || '';
-  const cfg = {
-    emailjsService:   get('apiEmailjsService'),
-    emailjsPublic:    get('apiEmailjsPublic'),
-    emailjsOtp:       get('apiEmailjsOtp'),
-    emailjsReset:     get('apiEmailjsReset'),
-    razorpayKey:      get('apiRazorpayKey'),
-    razorpayCurrency: get('apiRazorpayCurrency'),
-    razorpayEnv:      get('apiRazorpayEnv'),
-    siteName:         get('apiSiteName'),
-    supportEmail:     get('apiSupportEmail'),
-    otpExpiry:        parseInt(get('apiOtpExpiry')) || 10,
-    updatedAt:        new Date().toISOString()
-  };
-  if(!cfg.emailjsService || !cfg.emailjsPublic) { showToast('EmailJS Service ID and Public Key are required', 'error'); return; }
-  if(!cfg.razorpayKey) { showToast('Razorpay key is required', 'error'); return; }
-  localStorage.setItem('zzz_api_config', JSON.stringify(cfg));
-  logAction('API_CONFIG_UPDATE', 'API keys and integration settings updated');
-  const statusEl = document.getElementById('apiSaveStatus');
-  if(statusEl) { statusEl.classList.remove('hidden'); setTimeout(() => statusEl.classList.add('hidden'), 3000); }
-  showToast('✅ API settings saved — all pages will use new keys immediately');
-  resetSessionTimer();
-}
-
-function toggleApiKeyVisibility(inputId, btn) {
-  const input = document.getElementById(inputId);
-  if(!input) return;
-  const isHidden = input.type === 'password';
-  input.type = isHidden ? 'text' : 'password';
-  btn.querySelector('.material-symbols-outlined').textContent = isHidden ? 'visibility_off' : 'visibility';
-}
-
-function testEmailJs() {
-  const cfg = safeJSON('zzz_api_config', {});
-  const serviceId  = cfg.emailjsService  || 'service_40ub0hj';
-  const templateId = cfg.emailjsOtp      || 'template_q4h6hyh';
-  const publicKey  = cfg.emailjsPublic   || 'sbx4wO3ByZ3hFYoL6';
-  const adminUser  = JSON.parse(localStorage.getItem('zzz_user') || '{}');
-  const toEmail    = adminUser.email || cfg.supportEmail || '';
-  if(!toEmail) { showToast('No admin email found to send test to', 'error'); return; }
-  if(typeof emailjs === 'undefined') {
-    showToast('EmailJS not loaded on this page — test from Login or Registration page instead', 'error');
-    return;
-  }
-  emailjs.init(publicKey);
-  emailjs.send(serviceId, templateId, {
-    to_name:     adminUser.name || 'Admin',
-    to_email:    toEmail,
-    otp_code:    '123456',
-    expiry_mins: cfg.otpExpiry || 10
-  }).then(() => {
-    showToast('✅ Test email sent to ' + toEmail);
-    logAction('EMAIL_TEST_SENT', 'Test OTP email sent to ' + toEmail);
-  }).catch(err => {
-    showToast('❌ Email failed: ' + (err.text || err.message || 'Unknown error'), 'error');
+  Object.entries(apiMap).forEach(([key,elId])=>{
+    const el=document.getElementById(elId);
+    if(el&&cfg[key]) el.value=cfg[key];
   });
 }
-// ─── END API CONFIG ────────────────────────────────────────────────────────
 
-function saveSettingsLocal() { const cfg = { expiry: document.getElementById('cfgExpiry')?.value||30, uploadSize: document.getElementById('cfgUploadSize')?.value||5, formats: document.getElementById('cfgFormats')?.value||'jpg,png', timeout: document.getElementById('cfgTimeout')?.value||15, ips: document.getElementById('cfgIPs')?.value||'', enforce2fa: document.getElementById('cfg2FA')?.checked||false }; localStorage.setItem('zzz_sys_cfg', JSON.stringify(cfg)); logAction('SYS_CONFIG_UPDATE', 'Updated global settings'); showToast('Settings applied securely'); resetSessionTimer(); }
-function handleLogout() { if(window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(null); else { localStorage.removeItem('zzz_user'); localStorage.removeItem('zipzapzoi_current_user'); } sessionStorage.removeItem('zzz_admin_2fa_verified'); window.location.href = 'Login Page.html'; }
-
-// ==============================
-// 8. MOCK DATABASE SEEDER
-// ==============================
-function seedMockData(forceReset = false) {
-    if(forceReset || safeJSON('zzz_users').length === 0) {
-        localStorage.setItem('zzz_users', JSON.stringify([{id:'u1', name:'Super Admin', email:'admin@zipzapzoi.com', role:'super_admin', createdAt:Date.now()}, {id:'u2', name:'John Doe', email:'john@example.com', role:'user', createdAt:Date.now() - 864000000}]));
-        localStorage.setItem('zzz_listings', JSON.stringify([{id:'l1', title:'2022 Honda Civic', userName:'John Doe', category:'Vehicles', price:1500000, status:'active', createdAt:Date.now() - 172800000}, {id:'l2', title:'iPhone 13 Pro', userName:'Alice Smith', category:'Electronics', price:65000, status:'pending_review', createdAt:Date.now()}]));
-        localStorage.setItem('zzz_support_tickets', JSON.stringify([{id:'t1', userName:'John Doe', topic:'App crashing on upload', priority:'urgent', status:'Open', createdAt:Date.now()-3600000}]));
-        localStorage.setItem('zzz_flags', JSON.stringify([{id:'f1', listingTitle:'Suspicious Investment', reason:'Potential Scam / Fraud', date:Date.now()}]));
-        localStorage.setItem('zzz_transactions', JSON.stringify([{id:'txn_123', userName:'Alice Smith', amount:199, status:'success', date:Date.now()}, {id:'txn_124', userName:'John Doe', amount:49, status:'refunded', date:Date.now()}]));
-        localStorage.setItem('zzz_coupons', JSON.stringify([{code:'ZOI50', discount:50}, {code:'LAUNCH20', discount:20}]));
-        logAction('SYSTEM_INIT', 'Bootstrapped mock database.');
-    }
-    loadDashboard();
-    updateCharityBadge();
+async function saveSettingsLocal(){
+  const settings={
+    listing_expiry_days: document.getElementById('cfgExpiry')?.value||30,
+    max_upload_mb: document.getElementById('cfgUploadSize')?.value||5,
+    allowed_formats: document.getElementById('cfgFormats')?.value||'jpg,png,webp',
+  };
+  const r=await adminPost('/api/admin/settings.php',{settings});
+  if(r&&r.success) showToast('System config saved âœ“','success');
+  else showToast(r?.error||'Error saving settings','error');
 }
 
-
-    <!-- PRICING & PLANS TAB -->
-    <div id="tab-pricing" class="tab-content hidden space-y-6">
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm"><p class="text-xs font-bold text-slate-400 uppercase">Total Revenue</p><h3 class="text-3xl font-bold mt-1 text-emerald-500" id="priceStatRev">&#8377;0</h3><p class="text-xs text-slate-400 mt-1">All paid plans</p></div>
-        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm"><p class="text-xs font-bold text-slate-400 uppercase">Plans Sold</p><h3 class="text-3xl font-bold mt-1 text-blue-500" id="priceStatPlans">0</h3><p class="text-xs text-slate-400 mt-1">Paid purchases</p></div>
-        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm"><p class="text-xs font-bold text-slate-400 uppercase">Free Accounts</p><h3 class="text-3xl font-bold mt-1 text-green-500" id="priceStatFree">0</h3><p class="text-xs text-slate-400 mt-1">New user free</p></div>
-        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm"><p class="text-xs font-bold text-slate-400 uppercase">Flagged</p><h3 class="text-3xl font-bold mt-1 text-red-500" id="priceStatFlagged">0</h3><p class="text-xs text-slate-400 mt-1">Anti-spam blocked</p></div>
-      </div>
-      <div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-800 flex items-center justify-between">
-          <h3 class="font-bold flex items-center gap-2"><span class="material-symbols-outlined text-yellow-500">price_change</span> Plan Pricing Editor</h3>
-          <div class="flex gap-2">
-            <button onclick="resetPlansToDefault()" class="text-xs font-bold text-slate-500 border border-slate-200 dark:border-gray-700 px-3 py-1.5 rounded-lg">Reset Default</button>
-            <button onclick="savePlansConfig()" class="text-xs font-bold text-white bg-brand px-4 py-1.5 rounded-lg flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">save</span> Save All</button>
-          </div>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm"><thead><tr class="bg-slate-50 dark:bg-gray-800"><th class="text-left px-4 py-3 font-bold text-slate-500 text-xs uppercase">Plan</th><th class="text-left px-4 py-3 font-bold text-slate-500 text-xs uppercase">Tag</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Price (&#8377;)</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Ads</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Days</th><th class="text-left px-4 py-3 font-bold text-slate-500 text-xs uppercase">Description</th></tr></thead>
-          <tbody id="planEditorBody"><tr><td colspan="6" class="text-center py-8 text-slate-400">Loading...</td></tr></tbody></table>
-        </div>
-      </div>
-      <div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm p-6">
-        <h3 class="font-bold flex items-center gap-2 mb-5"><span class="material-symbols-outlined text-yellow-500">bolt</span> Featured Boost Pricing</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">1-Day Boost (&#8377;)</label><input type="number" id="featPrice1d" value="29" class="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 font-bold text-lg outline-none focus:ring-2 focus:ring-brand"></div>
-          <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">7-Day Boost (&#8377;) <span class="text-brand">Best</span></label><input type="number" id="featPrice7d" value="149" class="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 font-bold text-lg outline-none focus:ring-2 focus:ring-brand"></div>
-          <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">30-Day Boost (&#8377;)</label><input type="number" id="featPrice30d" value="399" class="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 font-bold text-lg outline-none focus:ring-2 focus:ring-brand"></div>
-        </div>
-        <button onclick="saveFeaturedPrices()" class="mt-4 bg-brand text-white font-bold px-6 py-2.5 rounded-xl hover:bg-green-700 text-sm flex items-center gap-2"><span class="material-symbols-outlined text-[16px]">save</span> Save Boost Prices</button>
-      </div>
-      <div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-800 flex items-center justify-between">
-          <h3 class="font-bold flex items-center gap-2"><span class="material-symbols-outlined text-red-500">security</span> Anti-Spam Phone Registry</h3>
-          <label class="flex items-center gap-2 text-sm font-bold cursor-pointer"><input type="checkbox" id="antiSpamToggle" class="w-4 h-4" checked onchange="toggleAntiSpam()"> Enable Anti-Spam</label>
-        </div>
-        <div class="p-3 bg-orange-50 dark:bg-orange-900/10 border-b border-orange-100"><p class="text-xs text-orange-700 font-bold">One free trial per mobile number. Duplicates are auto-blocked.</p></div>
-        <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-slate-50 dark:bg-gray-800"><th class="text-left px-4 py-3 font-bold text-slate-500 text-xs uppercase">Phone</th><th class="text-left px-4 py-3 font-bold text-slate-500 text-xs uppercase">User</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Free Trial</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Date</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Action</th></tr></thead>
-        <tbody id="phoneRegistryBody"><tr><td colspan="5" class="text-center py-8 text-slate-400">No registrations yet</td></tr></tbody></table></div>
-      </div>
-      <div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-800 flex items-center justify-between">
-          <h3 class="font-bold flex items-center gap-2"><span class="material-symbols-outlined text-blue-500">manage_accounts</span> User Ad Quotas</h3>
-          <input type="text" id="quotaSearch" placeholder="Search user..." onkeyup="renderQuotaTable()" class="text-xs border border-slate-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-slate-50 dark:bg-gray-800 outline-none">
-        </div>
-        <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-slate-50 dark:bg-gray-800"><th class="text-left px-4 py-3 font-bold text-slate-500 text-xs uppercase">User</th><th class="text-left px-4 py-3 font-bold text-slate-500 text-xs uppercase">Plan</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Left</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Total</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Expires</th><th class="text-center px-4 py-3 font-bold text-slate-500 text-xs uppercase">Grant</th></tr></thead>
-        <tbody id="quotaTableBody"><tr><td colspan="6" class="text-center py-8 text-slate-400">No quota data yet</td></tr></tbody></table></div>
-      </div>
-    </div>
-
-// PRICING TAB
-let editablePlans = null;
-function loadPricingTab() {
-  const plans = window.ZZZ && window.ZZZ.Plans ? window.ZZZ.Plans.getAll() : [];
-  editablePlans = JSON.parse(JSON.stringify(plans));
-  const txns = safeJSON('zzz_transactions', []);
-  const paid = txns.filter(t => t.amount > 0 && t.status === 'success');
-  document.getElementById('priceStatRev').textContent = '\u20B9' + Math.round(paid.reduce((s,t)=>s+(parseFloat(t.amount)||0),0)).toLocaleString('en-IN');
-  document.getElementById('priceStatPlans').textContent = paid.length;
-  const q = safeJSON('zzz_user_quotas', {});
-  document.getElementById('priceStatFree').textContent = Object.values(q).filter(x=>x.planId==='new_user_free').length;
-  const reg = safeJSON('zzz_phone_registry', {});
-  document.getElementById('priceStatFlagged').textContent = Object.values(reg).filter(r=>r.hadFreeTrial).length;
-  const cfg = safeJSON('zzz_plan_config_extras', {feat1d:29,feat7d:149,feat30d:399});
-  document.getElementById('featPrice1d').value = cfg.feat1d||29;
-  document.getElementById('featPrice7d').value = cfg.feat7d||149;
-  document.getElementById('featPrice30d').value = cfg.feat30d||399;
-  renderPlanEditor(); renderPhoneRegistry(); renderQuotaTable();
+async function saveApiConfig(){
+  const settings={
+    emailjs_service:      document.getElementById('apiEmailjsService')?.value||'',
+    emailjs_public:       document.getElementById('apiEmailjsPublic')?.value||'',
+    emailjs_otp_template: document.getElementById('apiEmailjsOtp')?.value||'',
+    emailjs_reset_template:document.getElementById('apiEmailjsReset')?.value||'',
+    razorpay_key:         document.getElementById('apiRazorpayKey')?.value||'',
+    razorpay_currency:    document.getElementById('apiRazorpayCurrency')?.value||'INR',
+  };
+  const r=await adminPost('/api/admin/settings.php',{settings});
+  const status=document.getElementById('apiSaveStatus');
+  if(r&&r.success){showToast('API keys saved âœ“','success');if(status){status.classList.remove('hidden');setTimeout(()=>status.classList.add('hidden'),3000);}}
+  else showToast(r?.error||'Error saving keys','error');
 }
-function renderPlanEditor() {
-  const tbody = document.getElementById('planEditorBody');
-  if (!editablePlans) return;
-  tbody.innerHTML = editablePlans.map((p, i) => `<tr class="border-b border-slate-50 dark:border-gray-800 hover:bg-slate-50/50">
-    <td class="px-4 py-3"><input data-i="${i}" data-f="name" value="${p.name}" class="pei bg-transparent border border-slate-200 rounded-lg px-2 py-1 font-bold text-sm w-36 outline-none"></td>
-    <td class="px-4 py-3"><input data-i="${i}" data-f="tag" value="${p.tag||''}" class="pei bg-transparent border border-slate-200 rounded-lg px-2 py-1 text-xs w-28 outline-none"></td>
+
+function toggleApiKeyVisibility(inputId,btn){
+  const el=document.getElementById(inputId);
+  if(!el)return;
+  el.type=el.type==='password'?'text':'password';
+  btn.querySelector('span').textContent=el.type==='password'?'visibility':'visibility_off';
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  SCHEMA BUILDER  (still uses localStorage â€” schema is frontend config)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+const DEFAULT_SCHEMA={categories:[{id:'c1',label:'Vehicles',icon:'directions_car'}],subcategories:[{id:'s1',categoryId:'c1',label:'Cars'}],fields:[{id:'f1',subcategoryId:'s1',label:'Mileage',type:'number',options:''}]};
+let curSchema={categories:[],subcategories:[],fields:[]};
+let activeCat=null,activeSub=null;
+
+function renderSchemaBuilder(){
+  let saved=localStorage.getItem('zzz_classifieds_schema');
+  if(saved){try{curSchema=JSON.parse(saved);}catch(e){curSchema=DEFAULT_SCHEMA;}}
+  else if(window.ZZZ_SCHEMA){curSchema=window.ZZZ_SCHEMA;}
+  else curSchema=DEFAULT_SCHEMA;
+
+  document.getElementById('schemaCategories').innerHTML=curSchema.categories.map(c=>`<div onclick="selCat('${c.id}')" class="p-2.5 rounded mb-1 cursor-pointer border border-slate-100 dark:border-gray-700 flex justify-between items-center group transition-colors ${activeCat===c.id?'active-schema shadow-md':'bg-white dark:bg-card-dark hover:bg-slate-50 dark:hover:bg-gray-800'}"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] opacity-70">${escapeHTML(c.icon||'category')}</span><span class="text-sm font-bold">${escapeHTML(c.label)}</span></div><button onclick="openSchemaModal('category','${c.id}',event)" class="opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">edit</span></button></div>`).join('');
+
+  const subcats=activeCat?curSchema.subcategories.filter(s=>s.categoryId===activeCat):[];
+  document.getElementById('schemaSubcats').innerHTML=activeCat?(subcats.length?subcats.map(s=>`<div onclick="selSub('${s.id}')" class="p-2.5 rounded mb-1 cursor-pointer border border-slate-100 dark:border-gray-700 flex justify-between items-center group transition-colors ${activeSub===s.id?'active-schema shadow-md':'bg-white dark:bg-card-dark hover:bg-slate-50 dark:hover:bg-gray-800'}"><span class="text-sm font-bold">${escapeHTML(s.label)}</span><button onclick="openSchemaModal('subcategory','${s.id}',event)" class="opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">edit</span></button></div>`).join(''):'<div class="text-center text-xs text-slate-400 mt-4">No subcategories yet.</div>'):'<div class="text-center text-xs text-slate-400 mt-10">Select a Category &rarr;</div>';
+  document.getElementById('btnAddSub').disabled=!activeCat;
+
+  const fields=activeSub?curSchema.fields.filter(f=>f.subcategoryId===activeSub):[];
+  document.getElementById('schemaFields').innerHTML=activeSub?(fields.length?fields.map(f=>`<div class="p-2.5 rounded mb-1 border border-slate-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-card-dark group"><div class="flex flex-col"><span class="text-sm font-bold">${escapeHTML(f.label)}</span><span class="text-[10px] text-slate-400 font-mono uppercase">${escapeHTML(f.type)}</span></div><button onclick="openSchemaModal('field','${f.id}')" class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-brand transition-opacity"><span class="material-symbols-outlined text-[16px]">edit</span></button></div>`).join(''):'<div class="text-center text-xs text-slate-400 mt-4">No custom fields yet.</div>'):'<div class="text-center text-xs text-slate-400 mt-10">Select a Subcategory &rarr;</div>';
+  document.getElementById('btnAddField').disabled=!activeSub;
+
+  if(activeCat){const cat=curSchema.categories.find(c=>c.id===activeCat);const flags=cat?.flags||{};document.getElementById('flagEscrow').checked=!!flags.escrow;document.getElementById('flagVerify').checked=!!flags.verify;document.getElementById('flagPremium').checked=!!flags.premium;document.getElementById('featureFlagsUI').classList.remove('hidden');document.getElementById('featureFlagsEmpty').classList.add('hidden');}
+  else{document.getElementById('featureFlagsUI').classList.add('hidden');document.getElementById('featureFlagsEmpty').classList.remove('hidden');}
+}
+function selCat(id){activeCat=id;activeSub=null;renderSchemaBuilder();}
+function selSub(id){activeSub=id;renderSchemaBuilder();}
+function openSchemaModal(type,id=null,event=null){
+  if(event)event.stopPropagation();
+  document.getElementById('schemaModalTitle').textContent=id?`Edit ${type}`:`Add ${type}`;
+  document.getElementById('schemaItemType').value=type;document.getElementById('schemaItemId').value=id||'';
+  document.getElementById('schemaIconBlock').classList.toggle('hidden',type!=='category');
+  document.getElementById('schemaFieldBlock').classList.toggle('hidden',type!=='field');
+  document.getElementById('schemaDeleteBtn').classList.toggle('hidden',!id);
+  let form={label:'',icon:'',type:'text',options:''};
+  if(id){const arr=type==='category'?curSchema.categories:type==='subcategory'?curSchema.subcategories:curSchema.fields;const item=arr.find(x=>x.id===id);if(item)Object.assign(form,item);}
+  document.getElementById('schemaLabel').value=form.label;document.getElementById('schemaIcon').value=form.icon;
+  document.getElementById('schemaType').value=form.type;document.getElementById('schemaOptions').value=form.options;
+  document.getElementById('schemaOptionsBlock').classList.toggle('hidden',form.type!=='select');
+  document.getElementById('schemaModal').classList.remove('hidden');
+}
+function saveSchemaItem(){
+  const type=document.getElementById('schemaItemType').value,id=document.getElementById('schemaItemId').value;
+  const label=document.getElementById('schemaLabel').value.trim();if(!label)return showToast('Label required','error');
+  let arr=type==='category'?curSchema.categories:type==='subcategory'?curSchema.subcategories:curSchema.fields;
+  if(id){let idx=arr.findIndex(x=>x.id===id);if(idx>-1){arr[idx].label=label;if(type==='category')arr[idx].icon=document.getElementById('schemaIcon').value;if(type==='field'){arr[idx].type=document.getElementById('schemaType').value;arr[idx].options=document.getElementById('schemaOptions').value;}}}
+  else{const newId=type.charAt(0)+Date.now();let obj={id:newId,label};if(type==='category'){obj.icon=document.getElementById('schemaIcon').value;}if(type==='subcategory')obj.categoryId=activeCat;if(type==='field'){obj.subcategoryId=activeSub;obj.type=document.getElementById('schemaType').value;obj.options=document.getElementById('schemaOptions').value;}arr.push(obj);}
+  saveSchemaToDB();closeModal('schemaModal');renderSchemaBuilder();
+}
+function deleteSchemaItem(){
+  const type=document.getElementById('schemaItemType').value,id=document.getElementById('schemaItemId').value;
+  confirmAction('Delete Schema Item','Are you sure? This may affect existing listings.',()=>{
+    if(type==='category'){curSchema.categories=curSchema.categories.filter(x=>x.id!==id);curSchema.subcategories=curSchema.subcategories.filter(x=>x.categoryId!==id);activeCat=null;activeSub=null;}
+    if(type==='subcategory'){curSchema.subcategories=curSchema.subcategories.filter(x=>x.id!==id);curSchema.fields=curSchema.fields.filter(x=>x.subcategoryId!==id);activeSub=null;}
+    if(type==='field')curSchema.fields=curSchema.fields.filter(x=>x.id!==id);
+    saveSchemaToDB();closeModal('schemaModal');renderSchemaBuilder();showToast('Item deleted');
+  });
+}
+function saveSchemaToDB(){localStorage.setItem('zzz_classifieds_schema',JSON.stringify(curSchema));logAction('SCHEMA_UPDATE','Modified Database Schema');}
+function resetSchemaToFactory(){confirmAction('Factory Reset','Restore default schema?',()=>{localStorage.setItem('zzz_classifieds_schema',JSON.stringify(DEFAULT_SCHEMA));renderSchemaBuilder();showToast('Schema Reset');})}
+function saveFeatureFlags(){
+  if(!activeCat) return;
+  const cat=curSchema.categories.find(c=>c.id===activeCat);
+  if(!cat) return;
+  cat.flags={escrow:document.getElementById('flagEscrow').checked,verify:document.getElementById('flagVerify').checked,premium:document.getElementById('flagPremium').checked};
+  saveSchemaToDB();showToast('Feature flags saved','success');
+}
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  PRICING TAB  (still localStorage until plans DB ready)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+let editablePlans=null;
+function loadPricingTab(){
+  if(window.ZZZ&&window.ZZZ.Plans){
+    const saved=localStorage.getItem('zzz_plan_config');
+    editablePlans=saved?JSON.parse(saved):JSON.parse(JSON.stringify(window.ZZZ.Plans.DEFAULT_PLANS));
+  } else editablePlans=[];
+  const txns=safeJSON('zzz_transactions',[]);
+  const paid=txns.filter(t=>t.amount>0&&t.status==='success');
+  const statRev=document.getElementById('priceStatRev');
+  const statPlans=document.getElementById('priceStatPlans');
+  if(statRev) statRev.textContent='â‚¹'+Math.round(paid.reduce((s,t)=>s+(parseFloat(t.amount)||0),0)).toLocaleString('en-IN');
+  if(statPlans) statPlans.textContent=paid.length;
+  const statFree=document.getElementById('priceStatFree');
+  if(statFree) statFree.textContent='â€”';
+  const statFlagged=document.getElementById('priceStatFlagged');
+  if(statFlagged) statFlagged.textContent='â€”';
+  const cfg=safeJSON('zzz_plan_config_extras',{feat1d:29,feat7d:149,feat30d:399});
+  const f1=document.getElementById('featPrice1d'),f7=document.getElementById('featPrice7d'),f30=document.getElementById('featPrice30d');
+  if(f1) f1.value=cfg.feat1d||29;
+  if(f7) f7.value=cfg.feat7d||149;
+  if(f30) f30.value=cfg.feat30d||399;
+  renderPlanEditor();renderPhoneRegistry();renderQuotaTable();
+}
+function renderPlanEditor(){
+  const tbody=document.getElementById('planEditorBody');
+  if(!tbody||!editablePlans) return;
+  tbody.innerHTML=editablePlans.map((p,i)=>`<tr class="border-b border-slate-50 dark:border-gray-800 hover:bg-slate-50/50">
+    <td class="px-4 py-3"><input data-i="${i}" data-f="name" value="${escapeHTML(p.name)}" class="pei bg-transparent border border-slate-200 rounded-lg px-2 py-1 font-bold text-sm w-36 outline-none"></td>
+    <td class="px-4 py-3"><input data-i="${i}" data-f="tag" value="${escapeHTML(p.tag||'')}" class="pei bg-transparent border border-slate-200 rounded-lg px-2 py-1 text-xs w-28 outline-none"></td>
     <td class="px-4 py-3 text-center">${p.price===0?'<span class="text-green-500 font-black text-sm">FREE</span>':`<input data-i="${i}" data-f="price" type="number" value="${p.price}" class="pei bg-transparent border border-slate-200 rounded-lg px-2 py-1 font-black text-sm w-20 text-center outline-none">`}</td>
     <td class="px-4 py-3 text-center"><input data-i="${i}" data-f="ads" type="number" value="${p.ads}" class="pei bg-transparent border border-slate-200 rounded-lg px-2 py-1 font-black text-sm w-20 text-center outline-none"></td>
     <td class="px-4 py-3 text-center"><input data-i="${i}" data-f="days" type="number" value="${p.days}" class="pei bg-transparent border border-slate-200 rounded-lg px-2 py-1 font-black text-sm w-20 text-center outline-none"></td>
     <td class="px-4 py-3"><input data-i="${i}" data-f="desc" value="${(p.desc||'').replace(/"/g,'&quot;')}" class="pei bg-transparent border border-slate-200 rounded-lg px-2 py-1 text-xs w-64 outline-none"></td>
   </tr>`).join('');
-  document.querySelectorAll('.pei').forEach(inp=>inp.addEventListener('input',()=>{
-    const i=parseInt(inp.dataset.i),f=inp.dataset.f;
-    editablePlans[i][f]=['price','ads','days'].includes(f)?parseFloat(inp.value)||0:inp.value;
-  }));
+  document.querySelectorAll('.pei').forEach(inp=>inp.addEventListener('input',()=>{const i=parseInt(inp.dataset.i),f=inp.dataset.f;editablePlans[i][f]=['price','ads','days'].includes(f)?parseFloat(inp.value)||0:inp.value;}));
 }
 function savePlansConfig(){localStorage.setItem('zzz_plan_config',JSON.stringify(editablePlans));logAction('PLAN_UPDATE','Pricing updated');showToast('Plan config saved! Live immediately.');}
 function resetPlansToDefault(){confirmAction('Reset','Restore factory defaults?',()=>{localStorage.removeItem('zzz_plan_config');if(window.ZZZ&&window.ZZZ.Plans){editablePlans=JSON.parse(JSON.stringify(window.ZZZ.Plans.DEFAULT_PLANS));}renderPlanEditor();showToast('Reset to defaults');});}
 function saveFeaturedPrices(){const c={feat1d:parseFloat(document.getElementById('featPrice1d').value)||29,feat7d:parseFloat(document.getElementById('featPrice7d').value)||149,feat30d:parseFloat(document.getElementById('featPrice30d').value)||399};localStorage.setItem('zzz_plan_config_extras',JSON.stringify(c));logAction('FEAT_PRICE','Updated featured prices');showToast('Featured prices saved!');}
-function renderPhoneRegistry(){
-  const reg=safeJSON('zzz_phone_registry',{}),users=safeJSON('zzz_users',[]),tbody=document.getElementById('phoneRegistryBody'),ent=Object.entries(reg);
-  if(!ent.length){tbody.innerHTML='<tr><td colspan="5" class="text-center py-8 text-slate-400">No registrations yet</td></tr>';return;}
-  tbody.innerHTML=ent.map(([ph,d])=>{const u=users.find(x=>x.id===d.userId),dt=d.registeredAt?new Date(d.registeredAt).toLocaleDateString('en-IN'):'—';
-    return `<tr class="border-b border-slate-50 hover:bg-slate-50"><td class="px-4 py-3 font-mono font-bold text-sm">${ph}</td><td class="px-4 py-3 text-sm">${u?u.name:d.userId}</td><td class="px-4 py-3 text-center">${d.hadFreeTrial?'<span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded-full">YES</span>':'<span class="bg-green-100 text-green-600 text-xs font-bold px-2 py-1 rounded-full">NO</span>'}</td><td class="px-4 py-3 text-center text-xs text-slate-400">${dt}</td><td class="px-4 py-3 text-center"><button onclick="clearPhoneReg('${ph}')" class="text-xs text-red-500 font-bold">Remove</button></td></tr>`;
-  }).join('');
-}
-function clearPhoneReg(ph){confirmAction('Remove Phone','Allow this number to register again?',()=>{const r=safeJSON('zzz_phone_registry',{});delete r[ph];localStorage.setItem('zzz_phone_registry',JSON.stringify(r));logAction('PHONE_REMOVE','Removed: '+ph);renderPhoneRegistry();showToast('Removed');});}
+function renderPhoneRegistry(){const tbody=document.getElementById('phoneRegistryBody');if(tbody)tbody.innerHTML='<tr><td colspan="5" class="text-center py-8 text-slate-400">Phone registry moved to DB â€” coming soon.</td></tr>';}
 function renderQuotaTable(){
-  const q=safeJSON('zzz_user_quotas',{}),users=safeJSON('zzz_users',[]),s=(document.getElementById('quotaSearch')?.value||'').toLowerCase(),tbody=document.getElementById('quotaTableBody');
-  const ent=Object.entries(q).filter(([uid])=>!s||(users.find(u=>u.id===uid)?.name||uid).toLowerCase().includes(s));
-  if(!ent.length){tbody.innerHTML='<tr><td colspan="6" class="text-center py-8 text-slate-400">No data</td></tr>';return;}
-  tbody.innerHTML=ent.map(([uid,d])=>{const u=users.find(x=>x.id===uid),exp=d.expiresAt?new Date(d.expiresAt).toLocaleDateString('en-IN'):'—',expired=d.expiresAt&&new Date(d.expiresAt)<Date.now();
-    return `<tr class="border-b border-slate-50 hover:bg-slate-50"><td class="px-4 py-3"><p class="font-bold text-sm">${u?u.name:'Unknown'}</p><p class="text-xs text-slate-400">${uid}</p></td><td class="px-4 py-3"><span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">${d.planName||'—'}</span></td><td class="px-4 py-3 text-center font-black ${d.adsRemaining<=0?'text-red-500':'text-brand'}">${d.adsRemaining}</td><td class="px-4 py-3 text-center font-bold text-slate-500">${d.totalGranted}</td><td class="px-4 py-3 text-center text-xs ${expired?'text-red-400 font-bold':'text-slate-400'}">${exp}</td><td class="px-4 py-3 text-center"><button onclick="grantAdminQ('${uid}')" class="text-xs text-brand font-bold border border-brand/30 px-2 py-1 rounded-lg">+Grant</button></td></tr>`;
-  }).join('');
+  const tbody=document.getElementById('quotaTableBody');
+  if(!tbody)return;
+  // TODO: wire to user_quotas table via API
+  tbody.innerHTML='<tr><td colspan="6" class="text-center py-8 text-slate-400">Quota management via DB API â€” coming soon.</td></tr>';
 }
-function grantAdminQ(uid){const n=parseInt(prompt('Ads to grant?','5')||'0');if(!n||n<=0)return;const q=safeJSON('zzz_user_quotas',{});if(!q[uid])q[uid]={adsRemaining:0,totalGranted:0,planId:'admin_grant',planName:'Admin Grant',expiresAt:new Date(Date.now()+30*86400000).toISOString(),history:[]};q[uid].adsRemaining=(q[uid].adsRemaining||0)+n;q[uid].totalGranted=(q[uid].totalGranted||0)+n;(q[uid].history=q[uid].history||[]).push({planId:'admin_grant',ads:n,grantedAt:new Date().toISOString()});localStorage.setItem('zzz_user_quotas',JSON.stringify(q));logAction('QUOTA_GRANT',n+' ads to '+uid);renderQuotaTable();showToast(n+' ads granted!');}
-function toggleAntiSpam(){const e=document.getElementById('antiSpamToggle').checked;localStorage.setItem('zzz_antispam_enabled',JSON.stringify(e));showToast('Anti-spam '+(e?'enabled':'disabled'));}
+function grantAdminQ(uid){showToast('Quota grant coming soon â€” use DB directly.','error');}
+function toggleAntiSpam(){const e=document.getElementById('antiSpamToggle')?.checked;showToast('Anti-spam setting: '+(e?'enabled':'disabled'));}
 // END PRICING TAB
 
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  SECURITY TAB  placeholders
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+function saveSecuritySettings(){saveSettingsLocal();}
 </script>
 </body>
 </html>
