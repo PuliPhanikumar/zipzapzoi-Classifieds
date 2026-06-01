@@ -326,9 +326,9 @@
       }
 
       // =====================================
-      // 5. 3D GRID RENDER
+      // 5. 3D GRID RENDER (API WIRED)
       // =====================================
-      function renderGrid() {
+      async function renderGrid() {
         const grid = document.getElementById('listingsGrid');
 
         // Show Skeletons
@@ -344,118 +344,119 @@
         }
         grid.innerHTML = skeletons;
 
-        setTimeout(() => {
-            // 1. Filter Category
-            const publicListings = allListings.filter(l => (l.status || 'active') === 'active');
-            let filtered = activeCategory === 'All' ? publicListings : publicListings.filter(l => l.category === activeCategory || l.categoryId === activeCategory);
-            
-            // 2. Search query (title + description + category)
-            const q = document.getElementById('searchQuery').value.trim().toLowerCase();
-            if (q) filtered = filtered.filter(l =>
-              (l.title || '').toLowerCase().includes(q) ||
-              (l.description || '').toLowerCase().includes(q) ||
-              (l.category || '').toLowerCase().includes(q)
-            );
-
-            // 2b. Location filter
-            const loc = document.getElementById('searchLoc').value.trim().toLowerCase();
-            if (loc) filtered = filtered.filter(l =>
-              (l.location || '').toLowerCase().includes(loc) ||
-              (l.city || '').toLowerCase().includes(loc)
-            );
-
-        // 3. Filter Sidebar
+        // Build API query parameters
+        const params = new URLSearchParams();
+        params.append('status', 'active');
+        
+        if (activeCategory !== 'All') params.append('category', activeCategory);
+        
+        const q = document.getElementById('searchQuery').value.trim();
+        if (q) params.append('search', q);
+        
+        const loc = document.getElementById('searchLoc').value.trim();
+        if (loc) params.append('city', loc);
+        
         const minP = document.getElementById('minPrice').value;
+        if (!isNaN(parseFloat(minP)) && minP !== "") params.append('min_price', minP);
+        
         const maxP = document.getElementById('maxPrice').value;
-        const cond = document.getElementById('conditionFilter').value;
-
-        if (!isNaN(parseFloat(minP)) && minP !== "") filtered = filtered.filter(l => parseFloat(l.price) >= parseFloat(minP));
-        if (!isNaN(parseFloat(maxP)) && maxP !== "") filtered = filtered.filter(l => parseFloat(l.price) <= parseFloat(maxP));
-        if(cond !== 'all') filtered = filtered.filter(l => (l.condition || 'used').toLowerCase() === cond);
-
-        // 4. Sort
+        if (!isNaN(parseFloat(maxP)) && maxP !== "") params.append('max_price', maxP);
+        
         const sort = document.getElementById('sortFilter').value;
-            if (sort === 'price_low')  filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
-            if (sort === 'price_high') filtered.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
-            if (sort === 'newest')     filtered.sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
-            if (sort === 'oldest')     filtered.sort((a, b) => new Date(a.createdAt || a.date || 0) - new Date(b.createdAt || b.date || 0));
+        params.append('sort', sort);
 
-            // Filter badge + result count
-            let activeFilters = 0;
-            if (q) activeFilters++;
-            if (loc) activeFilters++;
-            if (!isNaN(parseFloat(document.getElementById('minPrice').value)) && document.getElementById('minPrice').value !== '') activeFilters++;
-            if (!isNaN(parseFloat(document.getElementById('maxPrice').value)) && document.getElementById('maxPrice').value !== '') activeFilters++;
-            if (document.getElementById('conditionFilter').value !== 'all') activeFilters++;
-            if (sort !== 'newest') activeFilters++;
-            if (activeCategory !== 'All') activeFilters++;
-            const badge = document.getElementById('filterBadge');
-            if (badge) {
-              if (activeFilters > 0) { badge.textContent = activeFilters + (activeFilters === 1 ? ' filter' : ' filters'); badge.classList.remove('hidden'); }
-              else { badge.classList.add('hidden'); }
-            }
-            const rc = document.getElementById('resultCount');
-            if (rc) {
-              if (activeFilters > 0) { rc.textContent = filtered.length + ' listing' + (filtered.length !== 1 ? 's' : '') + ' found'; rc.classList.remove('hidden'); }
-              else { rc.classList.add('hidden'); }
-            }
+        // Fetch from API
+        try {
+          const res = await (window.ZZZ && window.ZZZ.api ? window.ZZZ.api.fetch(`/api/listings.php?${params.toString()}`) : fetch(`/api/listings.php?${params.toString()}`).then(r => r.json()));
+          
+          let filtered = res.data ? res.data.listings : (res.listings || []);
+          
+          // Apply local condition filter since API doesn't support condition filter natively yet
+          const cond = document.getElementById('conditionFilter').value;
+          if(cond !== 'all') {
+             filtered = filtered.filter(l => (l.condition || 'used').toLowerCase() === cond);
+          }
 
-        // 5. Render
-        if(filtered.length === 0) {
-          grid.innerHTML = `
-            <div class="col-span-full flex flex-col items-center justify-center py-20 text-center animate-pop">
-              <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">search_off</span>
-              <h3 class="text-xl font-bold text-gray-800 dark:text-white">No results found</h3>
-              <p class="text-gray-500 dark:text-gray-400 mt-2">Try adjusting your filters or search query.</p>
-              <button onclick="clearFilters()" class="mt-6 font-bold text-primary hover:underline">Clear Filters</button>
-            </div>
-          `;
-          return;
+          // Filter badge + result count
+          let activeFilters = 0;
+          if (q) activeFilters++;
+          if (loc) activeFilters++;
+          if (minP !== '') activeFilters++;
+          if (maxP !== '') activeFilters++;
+          if (cond !== 'all') activeFilters++;
+          if (sort !== 'newest') activeFilters++;
+          if (activeCategory !== 'All') activeFilters++;
+          
+          const badge = document.getElementById('filterBadge');
+          if (badge) {
+            if (activeFilters > 0) { badge.textContent = activeFilters + (activeFilters === 1 ? ' filter' : ' filters'); badge.classList.remove('hidden'); }
+            else { badge.classList.add('hidden'); }
+          }
+          const rc = document.getElementById('resultCount');
+          if (rc) {
+            if (activeFilters > 0) { rc.textContent = filtered.length + ' listing' + (filtered.length !== 1 ? 's' : '') + ' found'; rc.classList.remove('hidden'); }
+            else { rc.classList.add('hidden'); }
+          }
+
+          // Render
+          if(filtered.length === 0) {
+            grid.innerHTML = `
+              <div class="col-span-full flex flex-col items-center justify-center py-20 text-center animate-pop">
+                <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">search_off</span>
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white">No results found</h3>
+                <p class="text-gray-500 dark:text-gray-400 mt-2">Try adjusting your filters or search query.</p>
+                <button onclick="clearFilters()" class="mt-6 font-bold text-primary hover:underline">Clear Filters</button>
+              </div>
+            `;
+            return;
+          }
+
+          const favs = window.ZZZ ? window.ZZZ.getFavoriteIds() : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+
+          grid.innerHTML = filtered.map((l, index) => {
+            const isFav = favs.includes(l.id);
+            const timeDelay = index * 0.05; // Cascade animation
+
+            return `
+              <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer relative group opacity-0 animate-pop" style="animation-delay: ${timeDelay}s" onclick="window.location.href='Listing Detail.html?id=${l.id}'">
+                
+                <!-- Image Area -->
+                <div class="relative h-56 overflow-hidden bg-gray-100 dark:bg-gray-900">
+                  <img src="${l.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                  
+                  <!-- Category Badge -->
+                  <div class="absolute top-4 left-4 bg-white/90 dark:bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-gray-800 dark:text-white uppercase tracking-wider card-image-wrap">
+                    ${l.category}
+                  </div>
+
+                  <!-- Favorite Button -->
+                  <button onclick="event.stopPropagation(); toggleFav('${l.id}', this)" class="fav-btn absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center card-image-wrap ${isFav ? 'active' : ''}">
+                    <span class="material-symbols-outlined text-xl">favorite</span>
+                  </button>
+                </div>
+
+                <!-- Details Area -->
+                <div class="p-6">
+                  <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white truncate pr-4">${l.title}</h3>
+                    <p class="text-xl font-black text-primary">₹${Number(l.price).toLocaleString()}</p>
+                  </div>
+                  
+                  <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4">${l.description}</p>
+                  
+                  <div class="flex items-center gap-4 text-xs font-bold text-gray-400 dark:text-gray-500 pt-4 border-t border-gray-100 dark:border-gray-800">
+                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">location_on</span> ${l.location_city || l.location || 'Local'}</span>
+                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> ${l.created_at ? new Date(l.created_at).toLocaleDateString() : 'Just now'}</span>
+                  </div>
+                </div>
+
+              </div>
+            `;
+          }).join('');
+        } catch(e) {
+          console.error('Error fetching listings:', e);
+          grid.innerHTML = '<div class="col-span-full text-center text-red-500 py-10">Error loading listings. Please try again later.</div>';
         }
-
-        const favs = window.ZZZ ? window.ZZZ.getFavoriteIds() : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-
-        grid.innerHTML = filtered.map((l, index) => {
-          const isFav = favs.includes(l.id);
-          const timeDelay = index * 0.05; // Cascade animation
-
-          return `
-            <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer relative group opacity-0 animate-pop" style="animation-delay: ${timeDelay}s" onclick="window.location.href='Listing Detail.html?id=${l.id}'">
-              
-              <!-- Image Area -->
-              <div class="relative h-56 overflow-hidden bg-gray-100 dark:bg-gray-900">
-                <img src="${l.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-                
-                <!-- Category Badge -->
-                <div class="absolute top-4 left-4 bg-white/90 dark:bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-gray-800 dark:text-white uppercase tracking-wider card-image-wrap">
-                  ${l.category}
-                </div>
-
-                <!-- Favorite Button (Stop Propagation to prevent navigation) -->
-                <button onclick="event.stopPropagation(); toggleFav('${l.id}', this)" class="fav-btn absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center card-image-wrap ${isFav ? 'active' : ''}">
-                  <span class="material-symbols-outlined text-xl">favorite</span>
-                </button>
-              </div>
-
-              <!-- Details Area -->
-              <div class="p-6">
-                <div class="flex justify-between items-start mb-2">
-                  <h3 class="text-lg font-bold text-gray-900 dark:text-white truncate pr-4">${l.title}</h3>
-                  <p class="text-xl font-black text-primary">₹${l.price.toLocaleString()}</p>
-                </div>
-                
-                <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4">${l.description}</p>
-                
-                <div class="flex items-center gap-4 text-xs font-bold text-gray-400 dark:text-gray-500 pt-4 border-t border-gray-100 dark:border-gray-800">
-                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">location_on</span> ${l.location || 'Local'}</span>
-                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> ${l.date || 'Just now'}</span>
-                </div>
-              </div>
-
-            </div>
-          `;
-        }).join('');
-        }, 500); // Simulated network delay
       }
 
       // =====================================
@@ -464,9 +465,12 @@
       // Live debounced search
       let _searchDebounce = null;
       function executeSearch() {
-        renderGrid();
-        const grid = document.getElementById('listingsGrid');
-        if (grid) setTimeout(() => grid.scrollIntoView({ behavior: 'smooth', block: 'start' }), 350);
+        if(_searchDebounce) clearTimeout(_searchDebounce);
+        _searchDebounce = setTimeout(() => {
+            renderGrid();
+            const grid = document.getElementById('listingsGrid');
+            if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 400);
       }
 
       function clearFilters() {
@@ -482,26 +486,31 @@
         renderGrid();
       }
 
-      function toggleFav(id, btn) {
+      async function toggleFav(id, btn) {
         if(!currentUser) {
           window.location.href = `Login Page.html?redirect=classifieds.html`;
           return;
         }
-        let isFav;
-        if(window.ZZZ) {
-          isFav = window.ZZZ.toggleFavorite(id);
-        } else {
-          // Guest — show Login / Sign Up buttons
-          authArea.innerHTML = toggleBtn + `
-            <a href="Login Page.html?redirect=classifieds.html" class="px-4 py-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Log In</a>
-            <a href="User Registration.html" class="px-5 py-2.5 bg-primary hover:bg-green-700 text-white rounded-full text-sm font-bold shadow-md transition-transform active:scale-95">Sign Up</a>
-            <a href="Post Listing.html" class="hidden md:flex items-center gap-1 py-2 px-4 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold text-sm transition-colors ml-1"><span class="material-symbols-outlined text-lg">add_circle</span> Post Free</a>
-          `;
-        }
+        
+        let isFav = btn.classList.contains('active');
+        
+        // Optimistic UI update
         if(!isFav) {
-          btn.classList.remove('active');
-        } else {
           btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+
+        // API call
+        if(window.ZZZ && window.ZZZ.api) {
+          try {
+            await window.ZZZ.api.toggleFavorite(id);
+          } catch(e) {
+            console.error('Fav error:', e);
+            // Revert UI on failure
+            if(!isFav) btn.classList.remove('active');
+            else btn.classList.add('active');
+          }
         }
       }
     
