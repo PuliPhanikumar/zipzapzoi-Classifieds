@@ -384,6 +384,7 @@
     <p class="text-gray-500 text-xs mt-1">Built for Bharat 🇮🇳 • Secure • Simple • Local</p>
   </footer>
 
+  <script src="js/api.js"></script>
   <script src="js/schema.js"></script>
   <script src="js/utils.js"></script>
   <script>
@@ -396,7 +397,7 @@
     const BUSINESS_PLAN_IDS = ['growth', 'business', 'pro'];
 
     // ─── Init ────────────────────────────
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
 
       // Load pending listing if from Post Listing page
@@ -411,18 +412,23 @@
       }
 
       // Show user quota widget
-      const user = window.ZZZ ? window.ZZZ.getCurrentUser() : null;
-      if (user && window.ZZZ.Plans) {
-        const q = window.ZZZ.Plans.getUserQuota(user.id);
-        if (q) {
-          document.getElementById('quotaWidget').classList.remove('hidden');
-          document.getElementById('qPlanName').textContent = q.planName || 'Free';
-          document.getElementById('qRemaining').textContent = q.adsRemaining || 0;
-          const expDate = q.expiresAt ? new Date(q.expiresAt).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) : '—';
-          document.getElementById('qExpiry').textContent = 'Valid till ' + expDate;
-          const pct = Math.round(((q.adsRemaining||0) / Math.max(q.totalGranted||1, 1)) * 100);
-          setTimeout(() => { document.getElementById('qBar').style.width = pct + '%'; }, 300);
+      try {
+        const res = await (window.ZZZ && window.ZZZ.api ? window.ZZZ.api.fetch('/api/auth.php?action=me') : fetch('/api/auth.php?action=me').then(r=>r.json()));
+        if (res.success && res.data && res.data.user) {
+          const user = res.data.user;
+          const q = user.quota;
+          if (q) {
+            document.getElementById('quotaWidget').classList.remove('hidden');
+            document.getElementById('qPlanName').textContent = q.plan_name || 'Free';
+            document.getElementById('qRemaining').textContent = q.ads_remaining || 0;
+            const expDate = q.expires_at ? new Date(q.expires_at).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) : '—';
+            document.getElementById('qExpiry').textContent = 'Valid till ' + expDate;
+            const pct = Math.round(((q.ads_remaining||0) / Math.max(q.total_granted||1, 1)) * 100);
+            setTimeout(() => { document.getElementById('qBar').style.width = Math.min(100, Math.max(0, pct)) + '%'; }, 300);
+          }
         }
+      } catch(e) {
+        console.error('Error fetching quota', e);
       }
 
       renderPlans();
@@ -593,7 +599,7 @@
       }
     }
 
-    function initiatePayment() {
+    async function initiatePayment() {
       if (!selectedPlan) { showToast('Please select a plan first', 'error'); return; }
 
       const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
@@ -601,10 +607,33 @@
 
       // Free plan — activate immediately
       if (selectedPlan.price === 0) {
-        if (window.ZZZ && window.ZZZ.Plans) window.ZZZ.Plans.assignPlan(user.id, selectedPlan.id, { price: 0 });
-        if (pendingListing) savePendingListing();
-        showToast('Free plan activated! Start posting.', 'success');
-        setTimeout(() => { window.location.href = 'Seller Dashboard.html'; }, 1500);
+        try {
+          await (window.ZZZ && window.ZZZ.api ? window.ZZZ.api.fetch('/api/transactions.php', {
+            method: 'POST',
+            body: JSON.stringify({
+              plan_id: selectedPlan.id,
+              plan_name: selectedPlan.name,
+              amount: 0,
+              ads: selectedPlan.ads,
+              days: selectedPlan.days
+            })
+          }) : fetch('/api/transactions.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              plan_id: selectedPlan.id,
+              plan_name: selectedPlan.name,
+              amount: 0,
+              ads: selectedPlan.ads,
+              days: selectedPlan.days
+            })
+          }));
+          if (pendingListing) await savePendingListing();
+          showToast('Free plan activated! Start posting.', 'success');
+          setTimeout(() => { window.location.href = 'Seller Dashboard.html'; }, 1500);
+        } catch(e) {
+          showToast(e.message || 'Error activating free plan.', 'error');
+        }
         return;
       }
 
@@ -632,9 +661,6 @@
         currency: _rzpCfg.currency,
         name: 'ZipZapZoi Classifieds',
         description: `${selectedPlan.name} Plan — ${finalAmount === originalPrice ? '' : discount + '% OFF · '}₹${finalAmount}`,
-        // order_id is required for production signature verification.
-        // Generate it server-side: POST /v1/orders with your KEY_SECRET.
-        // order_id: 'order_XXXX',
         prefill: {
           name:    user.name    || '',
           email:   user.email   || '',
@@ -646,8 +672,6 @@
           discount: discount + '%'
         },
         theme: { color: '#019863' },
-        // All payment methods enabled — Razorpay handles method selection internally.
-        // The user's choice (UPI/Card/NetBanking/Wallet) is passed as a preference only.
         config: {
           display: {
             preferences: { show_default_blocks: true },
@@ -664,10 +688,6 @@
           }
         },
         handler: function(response) {
-          // ✅ Payment Successful — response contains:
-          // response.razorpay_payment_id
-          // response.razorpay_order_id  (only if order_id was provided)
-          // response.razorpay_signature (only if order_id was provided)
           onPaymentSuccess(response, user, finalAmount);
         },
         modal: {
@@ -697,37 +717,44 @@
     }
 
     // Called after Razorpay confirms payment
-    function onPaymentSuccess(response, user, amount) {
-      // Save order to localStorage
-      const order = {
-        id: response.razorpay_payment_id || ('zzz_' + Date.now()),
-        plan: selectedPlan.id,
-        planName: selectedPlan.name,
-        amount: amount,
-        paymentId: response.razorpay_payment_id || '',
-        orderId: response.razorpay_order_id || '',
-        signature: response.razorpay_signature || '',
-        userId: user.id,
-        userName: user.name,
-        date: new Date().toLocaleString('en-IN'),
-        status: 'success'
-      };
+    async function onPaymentSuccess(response, user, amount) {
+      try {
+        await (window.ZZZ && window.ZZZ.api ? window.ZZZ.api.fetch('/api/transactions.php', {
+          method: 'POST',
+          body: JSON.stringify({
+            plan_id: selectedPlan.id,
+            plan_name: selectedPlan.name,
+            amount: amount,
+            ads: selectedPlan.ads,
+            days: selectedPlan.days,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id || '',
+            razorpay_signature: response.razorpay_signature || ''
+          })
+        }) : fetch('/api/transactions.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            plan_id: selectedPlan.id,
+            plan_name: selectedPlan.name,
+            amount: amount,
+            ads: selectedPlan.ads,
+            days: selectedPlan.days,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id || '',
+            razorpay_signature: response.razorpay_signature || ''
+          })
+        }).then(r => r.json()));
 
-      const orders = JSON.parse(localStorage.getItem('zzz_orders') || '[]');
-      orders.unshift(order);
-      localStorage.setItem('zzz_orders', JSON.stringify(orders));
+        if (pendingListing) await savePendingListing();
 
-      // Assign plan quota
-      if (window.ZZZ && window.ZZZ.Plans) {
-        window.ZZZ.Plans.assignPlan(user.id, selectedPlan.id, order);
+        showToast('🎉 Payment successful! Plan activated.', 'success');
+        setTimeout(() => {
+          window.location.href = `Payment.html?success=1&txn=${response.razorpay_payment_id || ''}&plan=${selectedPlan.id}&amount=${amount}`;
+        }, 1000);
+      } catch (e) {
+        showToast(e.message || 'Error processing payment.', 'error');
       }
-
-      if (pendingListing) savePendingListing();
-
-      showToast('🎉 Payment successful! Plan activated.', 'success');
-      setTimeout(() => {
-        window.location.href = `Payment.html?success=1&txn=${order.id}&plan=${selectedPlan.id}&amount=${amount}`;
-      }, 1000);
     }
 
     // ─── RAZORPAY INTEGRATION VERIFY (Dev Only) ─────────────────────────────
@@ -769,17 +796,27 @@
       rzpTest.open();
     };
 
-    function savePendingListing() {
+    async function savePendingListing() {
       if (!pendingListing) return;
       pendingListing.status = 'pending_review';
       pendingListing.moderationStatus = 'pending_review';
-      pendingListing.datePosted = new Date().toISOString();
-      pendingListing.time = 'Just now';
 
-      let all = window.ZZZ.read('zzz_listings', []);
-      all.unshift(pendingListing);
-      window.ZZZ.write('zzz_listings', all);
-      sessionStorage.removeItem('zzz_pending_listing');
+      try {
+        if (Array.isArray(pendingListing.images)) {
+          pendingListing.images = JSON.stringify(pendingListing.images);
+        }
+        await (window.ZZZ && window.ZZZ.api ? window.ZZZ.api.fetch('/api/listings.php', {
+          method: 'POST',
+          body: JSON.stringify(pendingListing)
+        }) : fetch('/api/listings.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(pendingListing)
+        }));
+        sessionStorage.removeItem('zzz_pending_listing');
+      } catch(e) {
+        console.error("Failed to save pending listing", e);
+      }
     }
 
     // Init prices
