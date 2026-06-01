@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -1042,10 +1042,10 @@ async function loadCharityQueue(){
   tbody.innerHTML=rows.map(q=>`
     <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/50">
       <td class="px-4 py-3"><p class="font-bold text-slate-800 dark:text-white text-sm max-w-[200px] truncate">${escapeHTML(q.title||'Untitled')}</p><p class="text-xs text-slate-400">${escapeHTML(q.subcategory||q.category||'Charity')}</p></td>
-      <td class="px-4 py-3"><p class="font-bold text-sm">${escapeHTML(q.seller_name||'â€”')}</p></td>
+      <td class="px-4 py-3"><p class="font-bold text-sm">${escapeHTML(q.seller_name||'—')}</p></td>
       <td class="px-4 py-3 text-sm text-slate-500">${(q.created_at||'').substring(0,10)}</td>
       <td class="px-4 py-3">${statusBadge(q.status)}</td>
-      <td class="px-4 py-3 text-xs text-slate-500">â€”</td>
+      <td class="px-4 py-3 text-xs text-slate-500">—</td>
       <td class="px-4 py-3 text-right">
         <div class="flex items-center justify-end gap-1.5 flex-wrap">
           ${q.status!=='active'?`<button onclick="approveCharity(${q.id})" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg"><span class="material-symbols-outlined text-[13px]">check</span> Approve</button>`:''}
@@ -1152,13 +1152,26 @@ function toggleApiKeyVisibility(inputId,btn){
 const DEFAULT_SCHEMA={categories:[{id:'c1',label:'Vehicles',icon:'directions_car'}],subcategories:[{id:'s1',categoryId:'c1',label:'Cars'}],fields:[{id:'f1',subcategoryId:'s1',label:'Mileage',type:'number',options:''}]};
 let curSchema={categories:[],subcategories:[],fields:[]};
 let activeCat=null,activeSub=null;
+let _schemaLoadedFromDB=false;
 
-function renderSchemaBuilder(){
-  let saved=localStorage.getItem('zzz_classifieds_schema');
-  if(saved){try{curSchema=JSON.parse(saved);}catch(e){curSchema=DEFAULT_SCHEMA;}}
-  else if(window.ZZZ_SCHEMA){curSchema=window.ZZZ_SCHEMA;}
-  else curSchema=DEFAULT_SCHEMA;
+async function loadSchemaFromDB(){
+  try{
+    const r=await adminFetch('/api/schema.php');
+    if(r&&r.success&&r.data&&Array.isArray(r.data.categories)&&r.data.source!=='default'&&r.data.categories.length>0){
+      curSchema=r.data;localStorage.setItem('zzz_classifieds_schema',JSON.stringify(curSchema));
+      _schemaLoadedFromDB=true;return;
+    }
+  }catch(e){}
+  const saved=localStorage.getItem('zzz_classifieds_schema');
+  if(saved){try{curSchema=JSON.parse(saved);_schemaLoadedFromDB=true;return;}catch(e){}}
+  if(window.ZZZ_SCHEMA&&window.ZZZ_SCHEMA.categories&&window.ZZZ_SCHEMA.categories.length>0){
+    curSchema=JSON.parse(JSON.stringify(window.ZZZ_SCHEMA));
+  }else{curSchema=DEFAULT_SCHEMA;}
+  _schemaLoadedFromDB=true;
+}
 
+async function renderSchemaBuilder(){
+  if(!_schemaLoadedFromDB) await loadSchemaFromDB();
   document.getElementById('schemaCategories').innerHTML=curSchema.categories.map(c=>`<div onclick="selCat('${c.id}')" class="p-2.5 rounded mb-1 cursor-pointer border border-slate-100 dark:border-gray-700 flex justify-between items-center group transition-colors ${activeCat===c.id?'active-schema shadow-md':'bg-white dark:bg-card-dark hover:bg-slate-50 dark:hover:bg-gray-800'}"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] opacity-70">${escapeHTML(c.icon||'category')}</span><span class="text-sm font-bold">${escapeHTML(c.label)}</span></div><button onclick="openSchemaModal('category','${c.id}',event)" class="opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">edit</span></button></div>`).join('');
 
   const subcats=activeCat?curSchema.subcategories.filter(s=>s.categoryId===activeCat):[];
@@ -1205,8 +1218,21 @@ function deleteSchemaItem(){
     saveSchemaToDB();closeModal('schemaModal');renderSchemaBuilder();showToast('Item deleted');
   });
 }
-function saveSchemaToDB(){localStorage.setItem('zzz_classifieds_schema',JSON.stringify(curSchema));logAction('SCHEMA_UPDATE','Modified Database Schema');}
-function resetSchemaToFactory(){confirmAction('Factory Reset','Restore default schema?',()=>{localStorage.setItem('zzz_classifieds_schema',JSON.stringify(DEFAULT_SCHEMA));renderSchemaBuilder();showToast('Schema Reset');})}
+function saveSchemaToDB(){
+  // 1. Always save to localStorage (instant, offline)
+  localStorage.setItem('zzz_classifieds_schema',JSON.stringify(curSchema));
+  // 2. Push to DB so ALL users see the updated categories
+  adminPost('/api/schema.php',{schema:curSchema})
+    .then(r=>{ if(r&&r.success) logAction('SCHEMA_UPDATE','Schema saved to DB and localStorage'); })
+    .catch(()=>{ logAction('SCHEMA_UPDATE','Schema saved to localStorage only (DB error)'); });
+}
+function resetSchemaToFactory(){confirmAction('Factory Reset','Restore default schema from schema.js?',()=>{
+  const factory=window.ZZZ_SCHEMA||DEFAULT_SCHEMA;
+  curSchema=JSON.parse(JSON.stringify(factory));
+  saveSchemaToDB();
+  renderSchemaBuilder();
+  showToast('Schema reset to factory defaults');
+})}
 function saveFeatureFlags(){
   if(!activeCat) return;
   const cat=curSchema.categories.find(c=>c.id===activeCat);

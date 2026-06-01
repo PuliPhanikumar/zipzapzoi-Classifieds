@@ -351,8 +351,10 @@
   let schema = {};
 
   function loadSchemaFromBrain() {
-    let brain = window.ZZZ && window.ZZZ.getClassifiedsSchema ? window.ZZZ.getClassifiedsSchema() : null;
-    // Fall back to static schema.js if Admin brain is empty (no data in DB yet)
+    // Step 1: Use schema.js immediately (synchronous, always works, 14 categories)
+    let brain = window.ZZZ && window.ZZZ.getClassifiedsSchema
+      ? window.ZZZ.getClassifiedsSchema()
+      : (window.ZZZ_SCHEMA || { categories: [], subcategories: [], fields: [] });
     if (!brain || !brain.categories || brain.categories.length === 0) {
       brain = window.ZZZ_SCHEMA || { categories: [], subcategories: [], fields: [] };
     }
@@ -379,8 +381,44 @@
     });
   }
 
-  // Load the brain immediately
+  // Load the brain immediately (uses schema.js — instant, works offline)
   loadSchemaFromBrain();
+
+  // Background: refresh from DB so admin-configured categories reach ALL users
+  setTimeout(function() {
+    fetch('/api/schema.php').then(function(r){ return r.json(); }).then(function(d) {
+      if (!d.success || !d.data || d.data.source === 'default') return;
+      var brain = d.data;
+      if (!Array.isArray(brain.categories) || brain.categories.length === 0) return;
+      localStorage.setItem('zzz_classifieds_schema', JSON.stringify(brain));
+      brain.categories.forEach(function(cat) {
+        var mySubs = (brain.subcategories||[]).filter(function(s){ return s.categoryId === cat.id; });
+        schema[cat.id] = {
+          label: cat.label, icon: cat.icon,
+          color: cat.color || 'text-gray-500 dark:text-gray-400',
+          priceLabel: cat.priceLabel, hidePrice: cat.hidePrice,
+          photoLimit: cat.photoLimit, note: cat.note,
+          subs: mySubs.map(function(s){ return s.label; }),
+          subIds: mySubs, fields: []
+        };
+      });
+      // Re-render category grid if user hasn't selected a category yet
+      if (!currentCategoryKey) {
+        var grid = document.getElementById('categoryGrid');
+        if (grid) {
+          grid.innerHTML = '';
+          Object.keys(schema).forEach(function(key) {
+            var cat = schema[key];
+            var div = document.createElement('div');
+            div.className = 'cursor-pointer flex flex-col items-center justify-center p-4 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-gray-800 hover:border-secondary hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 transition-all gap-2 group';
+            div.innerHTML = '<span class="material-symbols-outlined text-4xl ' + cat.color + ' group-hover:scale-110 transition-transform">' + cat.icon + '</span><span class="text-sm font-bold text-center">' + cat.label + '</span>';
+            div.onclick = (function(k){ return function(){ selectCategory(k); }; })(key);
+            grid.appendChild(div);
+          });
+        }
+      }
+    }).catch(function(){});
+  }, 0);
 
   // --- 2. MOCK DATA FOR INDIA LOCATIONS ---
   const indiaData = {
@@ -455,121 +493,6 @@
       citySelect.disabled = true;
     }
   });
-
-  // --- 5. LOGIC FUNCTIONS ---
-
-  function selectCategory(key) {
-    currentCategoryKey = key;
-    currentCategory = schema[key];
-    
-    // UI Updates
-    document.getElementById('catSection').classList.add('hidden'); // Hide category grid
-    detailsSection.style.display = 'flex';
-    progressBar.style.width = '66%';
-    document.getElementById('stepIndicator').className = "text-secondary font-bold";
-    categoryTitle.textContent = `${currentCategory.label} Details`;
-    
-    brain.categories.forEach(cat => {
-      // 1. Create Category Object
-      schema[cat.id] = {
-        label: cat.label,
-        icon: cat.icon,
-        color: cat.color || 'text-gray-500 dark:text-gray-400',
-        priceLabel: cat.priceLabel, // Custom Price Label
-        hidePrice: cat.hidePrice,   // Charity logic
-        photoLimit: cat.photoLimit, // Photo limits
-        note: cat.note,             // Notes
-        subs: [],
-        fields: [] 
-      };
-
-      // 2. Find Subcategories
-      const mySubs = brain.subcategories.filter(s => s.categoryId === cat.id);
-      schema[cat.id].subs = mySubs.map(s => s.label);
-      
-      // 3. Store ID mapping for field retrieval later
-      schema[cat.id].subIds = mySubs; // Store objects {id, label}
-    });
-  }
-
-  // Load the brain immediately
-  loadSchemaFromBrain();
-
-  // --- 2. MOCK DATA FOR INDIA LOCATIONS ---
-  const indiaData = {
-    "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Tirupati"],
-    "Karnataka": ["Bengaluru", "Mysuru", "Mangaluru", "Hubballi", "Belagavi"],
-    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad"],
-    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem"],
-    "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam"],
-    "Delhi": ["New Delhi", "North Delhi", "South Delhi", "East Delhi", "West Delhi"],
-    "West Bengal": ["Kolkata", "Howrah", "Durgapur", "Asansol", "Siliguri"],
-    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar"],
-    "Uttar Pradesh": ["Lucknow", "Kanpur", "Ghaziabad", "Agra", "Varanasi"],
-    "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Ajmer"]
-  };
-
-  // --- 3. DOM ELEMENTS ---
-  const categoryGrid = document.getElementById('categoryGrid');
-  const detailsSection = document.getElementById('detailsSection');
-  const dynamicFieldsArea = document.getElementById('dynamicFieldsArea');
-  const subCategorySelect = document.getElementById('subCategorySelect');
-  const categoryTitle = document.getElementById('categoryTitle');
-  const changeCatBtn = document.getElementById('changeCatBtn');
-  const progressBar = document.getElementById('progressBar');
-  const stateSelect = document.getElementById('stateSelect');
-  const citySelect = document.getElementById('citySelect');
-  const priceRow = document.getElementById('priceRow');
-  const priceLabel = document.getElementById('priceLabel');
-  const photoSection = document.getElementById('photoSection');
-  const photoLimitText = document.getElementById('photoLimitText');
-  const finalSubmitBtn = document.getElementById('finalSubmitBtn');
-  const confirmPostBtn = document.getElementById('confirmPostBtn');
-
-  let currentCategory = null;
-  let currentCategoryKey = null;
-  let uploadedImages = []; // Array to store image data URLs
-
-  // --- 4. INITIALIZATION ---
-  
-  // Render Categories
-  Object.keys(schema).forEach(key => {
-    const cat = schema[key];
-    const div = document.createElement('div');
-    div.className = `cursor-pointer flex flex-col items-center justify-center p-4 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-gray-800 hover:border-secondary hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 transition-all gap-2 group`;
-    div.innerHTML = `
-      <span class="material-symbols-outlined text-4xl ${cat.color} group-hover:scale-110 transition-transform">${cat.icon}</span>
-      <span class="text-sm font-bold text-center">${cat.label}</span>
-    `;
-    div.onclick = () => selectCategory(key);
-    categoryGrid.appendChild(div);
-  });
-
-  // Populate States
-  Object.keys(indiaData).forEach(state => {
-    const opt = document.createElement('option');
-    opt.value = state;
-    opt.textContent = state;
-    stateSelect.appendChild(opt);
-  });
-
-  stateSelect.addEventListener('change', (e) => {
-    const state = e.target.value;
-    citySelect.innerHTML = '<option value="">Select City</option>';
-    if (state && indiaData[state]) {
-      indiaData[state].forEach(city => {
-        const opt = document.createElement('option');
-        opt.value = city;
-        opt.textContent = city;
-        citySelect.appendChild(opt);
-      });
-      citySelect.disabled = false;
-    } else {
-      citySelect.disabled = true;
-    }
-  });
-
-  // --- 5. LOGIC FUNCTIONS ---
 
   function selectCategory(key) {
     currentCategoryKey = key;
