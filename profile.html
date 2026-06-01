@@ -223,6 +223,7 @@
 </div>
 
 <script src="js/utils.js"></script>
+<script src="js/api.js"></script>
 <script>
 /* ========== DARK MODE ========== */
 function toggleDarkMode() {
@@ -277,65 +278,79 @@ if (document.documentElement.classList.contains('dark')) {
 }
 
 /* ========== LOAD PROFILE ========== */
-function loadProfile() {
-  const sellerListings = allListings.filter(l => l.userId === sellerId && (l.status || 'active') === 'active');
-  document.getElementById('activeCount').textContent = sellerListings.length;
-
+async function loadProfile() {
   let sellerName = "ZipZapZoi User";
   let sellerLocation = "India";
-
-  if (sellerListings.length > 0) {
-     sellerName = sellerListings[0].userName || "User";
-     sellerLocation = sellerListings[0].city || "India";
-  } else {
-     const allUsers = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-     const foundUser = allUsers.find(u => u.id === sellerId);
-     if (foundUser) sellerName = foundUser.name;
+  let isVerified = false;
+  let activeListingsCount = 0;
+  
+  // 1. Fetch Profile Data
+  try {
+    const profileRes = await (window.ZZZ && window.ZZZ.api ? window.ZZZ.api.fetch(`/api/users.php?id=${sellerId}`) : fetch(`/api/users.php?id=${sellerId}`).then(r => r.json()));
+    if(profileRes.success && profileRes.data) {
+      sellerName = profileRes.data.name || sellerName;
+      sellerLocation = profileRes.data.city || profileRes.data.state || sellerLocation;
+      isVerified = profileRes.data.is_verified;
+      activeListingsCount = profileRes.data.active_listings || 0;
+    }
+  } catch(e) {
+    console.error('Error fetching profile:', e);
   }
 
+  document.getElementById('activeCount').textContent = activeListingsCount;
   document.getElementById('profileName').textContent = sellerName;
   document.getElementById('profileInitial').textContent = sellerName.charAt(0).toUpperCase();
   document.getElementById('sellerLoc').textContent = sellerLocation;
 
-  if (verifiedUsers.includes(sellerId)) {
+  if (isVerified || verifiedUsers.includes(sellerId)) {
     document.getElementById('verifiedBadge').classList.remove('hidden');
   }
 
-  // Listings Grid
+  // 2. Fetch Listings
   const grid = document.getElementById('content-listings');
-  if (sellerListings.length > 0) {
-      grid.innerHTML = sellerListings.map(item => {
-        const img = item.images?.[0] || item.image || 'https://via.placeholder.com/400?text=No+Image';
-        return `
-        <a href="Listing Detail.html?id=${item.id}"
-          class="bg-white dark:bg-card-dark rounded-2xl shadow-sm hover:shadow-bouncy border border-gray-100 dark:border-gray-800 overflow-hidden transition-transform hover:-translate-y-1 block group">
-          <div class="h-48 w-full bg-gray-100 dark:bg-gray-800 relative overflow-hidden">
-             <img src="${img}"
-               loading="lazy"
-               class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
-               onerror="this.src='https://via.placeholder.com/400?text=No+Image'">
-             <span class="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm font-bold uppercase">
-               ${item.category}
-             </span>
-          </div>
-          <div class="p-4">
-            <h3 class="font-bold text-gray-800 dark:text-white truncate mb-1">${item.title}</h3>
-            <p class="text-primary text-xl font-bold">&#8377; ${Number(item.price || 0).toLocaleString('en-IN')}</p>
-            <div class="text-xs text-gray-400 mt-2 flex items-center gap-1">
-               <span class="material-symbols-outlined text-sm">location_on</span> ${item.city || item.location || 'India'}
+  grid.innerHTML = '<div class="col-span-full py-10 text-center"><div class="animate-pulse flex flex-col items-center"><div class="h-8 w-8 bg-gray-200 rounded-full mb-2"></div><div class="h-4 w-32 bg-gray-200 rounded"></div></div></div>';
+  
+  try {
+    const listingsRes = await (window.ZZZ && window.ZZZ.api ? window.ZZZ.api.fetch(`/api/listings.php?user_id=${sellerId}&status=active`) : fetch(`/api/listings.php?user_id=${sellerId}&status=active`).then(r => r.json()));
+    const sellerListings = listingsRes.data && listingsRes.data.listings ? listingsRes.data.listings : [];
+
+    if (sellerListings.length > 0) {
+        grid.innerHTML = sellerListings.map(item => {
+          const img = item.images?.[0] || item.image || 'https://via.placeholder.com/400?text=No+Image';
+          return `
+          <a href="Listing Detail.html?id=${item.id}"
+            class="bg-white dark:bg-card-dark rounded-2xl shadow-sm hover:shadow-bouncy border border-gray-100 dark:border-gray-800 overflow-hidden transition-transform hover:-translate-y-1 block group">
+            <div class="h-48 w-full bg-gray-100 dark:bg-gray-800 relative overflow-hidden">
+               <img src="${img}"
+                 loading="lazy"
+                 class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                 onerror="this.src='https://via.placeholder.com/400?text=No+Image'">
+               <span class="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm font-bold uppercase">
+                 ${item.category}
+               </span>
             </div>
-          </div>
-        </a>`;
-      }).join('');
-  } else {
-      grid.innerHTML = `
-        <div class="col-span-full py-16 text-center text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
-           <span class="material-symbols-outlined text-5xl mb-3 block opacity-40">inventory_2</span>
-           <p class="font-medium">No active listings found for this seller.</p>
-        </div>`;
+            <div class="p-4">
+              <h3 class="font-bold text-gray-800 dark:text-white truncate mb-1">${item.title}</h3>
+              <p class="text-primary text-xl font-bold">&#8377; ${Number(item.price || 0).toLocaleString('en-IN')}</p>
+              <div class="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                 <span class="material-symbols-outlined text-sm">location_on</span> ${item.city || item.location || 'India'}
+              </div>
+            </div>
+          </a>`;
+        }).join('');
+    } else {
+        grid.innerHTML = `
+          <div class="col-span-full py-16 text-center text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+             <span class="material-symbols-outlined text-5xl mb-3 block opacity-40">inventory_2</span>
+             <p class="font-medium">No active listings found for this seller.</p>
+          </div>`;
+    }
+  } catch(e) {
+    console.error('Error fetching listings:', e);
+    grid.innerHTML = '<div class="col-span-full py-10 text-center text-red-500 font-bold">Error loading listings.</div>';
   }
 
-  // Reviews
+  // 3. Reviews (still from localStorage for now since there's no api/reviews.php)
   const reviewContainer = document.getElementById('content-reviews');
   const allReviews = JSON.parse(localStorage.getItem('zzz_reviews') || '[]');
   const sellerReviews = allReviews.filter(r => r.sellerId === sellerId);
