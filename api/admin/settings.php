@@ -29,7 +29,7 @@ function saveSettings(array $admin): void {
     $allowed = [
         'listing_expiry_days', 'max_upload_mb', 'allowed_formats', 'session_timeout_mins',
         'emailjs_service', 'emailjs_public', 'emailjs_otp_template', 'emailjs_reset_template',
-        'razorpay_key', 'razorpay_currency',
+        'razorpay_key', 'razorpay_secret', 'razorpay_currency',
     ];
 
     $stmt = $db->prepare(

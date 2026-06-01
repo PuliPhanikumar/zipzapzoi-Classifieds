@@ -430,70 +430,31 @@
                   class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 text-sm font-mono focus:ring-2 focus:ring-brand outline-none transition-all">
               </div>
             </div>
+<            </div>
             <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl text-xs text-blue-700 dark:text-blue-300">
-              <strong>Template variables expected:</strong> OTP — <code>{{to_name}}, {{to_email}}, {{otp_code}}, {{expiry_mins}}</code> &nbsp;|&nbsp;
-              Reset — <code>{{to_name}}, {{to_email}}, {{reset_link}}, {{reset_link_text}}</code>
+              <strong>Template variables:</strong> OTP &mdash; <code>{{to_name}}, {{otp_code}}</code> &nbsp;|&nbsp; Reset &mdash; <code>{{to_name}}, {{reset_link}}</code>
             </div>
           </div>
-
           <hr class="border-slate-100 dark:border-gray-800">
-
-          <!-- Razorpay -->
+          <!-- Razorpay Payment Gateway -->
           <div>
             <div class="flex items-center gap-2 mb-4">
-              <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
-                <span class="material-symbols-outlined text-blue-700 dark:text-blue-300 text-[18px]">payments</span>
-              </div>
-              <div>
-                <h4 class="font-bold text-sm text-slate-800 dark:text-white">Razorpay Payment Gateway</h4>
-                <p class="text-[11px] text-slate-400">Live key is used across all plan purchase flows</p>
-              </div>
-              <a href="https://dashboard.razorpay.com" target="_blank" class="ml-auto text-[11px] text-blue-500 hover:underline flex items-center gap-1">
-                <span class="material-symbols-outlined text-[14px]">open_in_new</span> Razorpay Dashboard
-              </a>
+              <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center"><span class="material-symbols-outlined text-blue-700 dark:text-blue-300 text-[18px]">payments</span></div>
+              <div><h4 class="font-bold text-sm text-slate-800 dark:text-white">Razorpay Payment Gateway</h4><p class="text-[11px] text-slate-400">Live keys for plan purchases and renewal verification</p></div>
             </div>
             <div class="grid grid-cols-2 gap-4">
-              <div class="col-span-2">
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Live API Key</label>
-                <div class="relative">
-                  <input type="password" id="apiRazorpayKey" placeholder="rzp_live_XXXXXXXXXXXXXXXXXX"
-                    class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 pr-10 text-sm font-mono focus:ring-2 focus:ring-brand outline-none transition-all">
-                  <button type="button" onclick="toggleApiKeyVisibility('apiRazorpayKey', this)"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                    <span class="material-symbols-outlined text-[18px]">visibility</span>
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Currency</label>
-                <select id="apiRazorpayCurrency" class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand outline-none">
-                  <option value="INR">INR — Indian Rupee ₹</option>
-                  <option value="USD">USD — US Dollar $</option>
-                  <option value="EUR">EUR — Euro €</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Environment</label>
-                <select id="apiRazorpayEnv" class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand outline-none">
-                  <option value="live">🟢 Live</option>
-                  <option value="test">🧪 Test</option>
-                </select>
-              </div>
+              <div class="col-span-2"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Live API Key (Public)</label><div class="relative"><input type="password" id="apiRazorpayKey" placeholder="rzp_live_XXXXXXXXXXXXXXXXXX" class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 pr-10 text-sm font-mono focus:ring-2 focus:ring-brand outline-none"><button type="button" onclick="toggleApiKeyVisibility('apiRazorpayKey',this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"><span class="material-symbols-outlined text-[18px]">visibility</span></button></div></div>
+              <div class="col-span-2"><label class="block text-xs font-bold text-red-500 uppercase mb-1">Secret Key (Server-Side Only)</label><div class="relative"><input type="password" id="apiRazorpaySecret" placeholder="Razorpay Key Secret" class="w-full border border-red-200 dark:border-red-900/50 dark:bg-gray-800 rounded-xl px-3 py-2.5 pr-10 text-sm font-mono focus:ring-2 focus:ring-red-400 outline-none"><button type="button" onclick="toggleApiKeyVisibility('apiRazorpaySecret',this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"><span class="material-symbols-outlined text-[18px]">visibility</span></button></div><p class="text-[10px] text-red-400 mt-1">Stored in DB. Used server-side only for payment signature verification.</p></div>
+              <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Currency</label><select id="apiRazorpayCurrency" class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 text-sm"><option value="INR">INR - Rupee</option><option value="USD">USD</option></select></div>
+              <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Environment</label><select id="apiRazorpayEnv" class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 text-sm"><option value="live">Live</option><option value="test">Test</option></select></div>
             </div>
           </div>
-
           <hr class="border-slate-100 dark:border-gray-800">
-
           <!-- Site Identity -->
           <div>
             <div class="flex items-center gap-2 mb-4">
-              <div class="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
-                <span class="material-symbols-outlined text-green-600 text-[18px]">corporate_fare</span>
-              </div>
-              <div>
-                <h4 class="font-bold text-sm text-slate-800 dark:text-white">Site Identity</h4>
-                <p class="text-[11px] text-slate-400">Used in email templates and system notifications</p>
-              </div>
+              <div class="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center"><span class="material-symbols-outlined text-green-600 text-[18px]">corporate_fare</span></div>
+              <div><h4 class="font-bold text-sm text-slate-800 dark:text-white">Site Identity</h4><p class="text-[11px] text-slate-400">Used in email templates and system notifications</p></div>
             </div>
             <div class="grid grid-cols-3 gap-4">
               <div>
@@ -1143,7 +1104,7 @@ async function loadSettingsUI(){
   const apiMap={
     emailjs_service:'apiEmailjsService',emailjs_public:'apiEmailjsPublic',
     emailjs_otp_template:'apiEmailjsOtp',emailjs_reset_template:'apiEmailjsReset',
-    razorpay_key:'apiRazorpayKey',razorpay_currency:'apiRazorpayCurrency',
+    razorpay_key:'apiRazorpayKey',razorpay_secret:'apiRazorpaySecret',razorpay_currency:'apiRazorpayCurrency',
   };
   Object.entries(apiMap).forEach(([key,elId])=>{
     const el=document.getElementById(elId);
@@ -1169,6 +1130,7 @@ async function saveApiConfig(){
     emailjs_otp_template: document.getElementById('apiEmailjsOtp')?.value||'',
     emailjs_reset_template:document.getElementById('apiEmailjsReset')?.value||'',
     razorpay_key:         document.getElementById('apiRazorpayKey')?.value||'',
+    razorpay_secret:      document.getElementById('apiRazorpaySecret')?.value||'',
     razorpay_currency:    document.getElementById('apiRazorpayCurrency')?.value||'INR',
   };
   const r=await adminPost('/api/admin/settings.php',{settings});

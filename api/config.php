@@ -150,3 +150,30 @@ function destroySession(): void {
     }
     setcookie(SESSION_COOKIE, '', ['expires' => time() - 3600, 'path' => '/']);
 }
+
+// ── Razorpay Keys (loaded from system_settings table) ────────────
+function getRazorpayKeys(): array {
+    static $keys = null;
+    if ($keys !== null) return $keys;
+    try {
+        $rows = getDB()->query(
+            "SELECT setting_key, setting_value FROM system_settings
+             WHERE setting_key IN ('razorpay_key','razorpay_secret')"
+        )->fetchAll();
+        $keys = [];
+        foreach ($rows as $r) $keys[$r['setting_key']] = $r['setting_value'] ?? '';
+    } catch (\Throwable $e) {
+        $keys = ['razorpay_key' => '', 'razorpay_secret' => ''];
+    }
+    return $keys;
+}
+
+// ── Verify Razorpay Signature ─────────────────────────────────────
+// Standard format: HMAC-SHA256( orderId + "|" + paymentId, secret )
+function verifyRazorpaySignature(string $orderId, string $paymentId, string $signature): bool {
+    $keys   = getRazorpayKeys();
+    $secret = $keys['razorpay_secret'] ?? '';
+    if (!$secret) return false; // secret not configured → block
+    $expected = hash_hmac('sha256', $orderId . '|' . $paymentId, $secret);
+    return hash_equals($expected, $signature);
+}

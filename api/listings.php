@@ -29,6 +29,13 @@ function getAll(): void {
     $where  = ['l.status = :status'];
     $params = [':status' => $_GET['status'] ?? 'active'];
 
+    // Auto-filter: don't show listings whose expires_at has passed, even if status is still 'active'
+    // This prevents date-lapsed listings from appearing in search results without needing a cron job
+    $requestedStatus = $_GET['status'] ?? 'active';
+    if ($requestedStatus === 'active') {
+        $where[] = '(l.expires_at IS NULL OR l.expires_at > NOW())';
+    }
+
     if (!empty($_GET['category'])) {
         $where[] = 'l.category = :cat';
         $params[':cat'] = $_GET['category'];
@@ -179,48 +186,82 @@ function createListing(): void {
 
     $db = getDB();
 
-    // Check quota
-    $qStmt = $db->prepare('SELECT ads_remaining, expires_at FROM user_quotas WHERE user_id = ?');
+    // ── Quota check + monthly free ad grant ───────────────────────
+    $qStmt = $db->prepare(
+        'SELECT ads_remaining, expires_at, monthly_free_granted FROM user_quotas WHERE user_id = ?'
+    );
     $qStmt->execute([(int)$user['id']]);
     $quota = $qStmt->fetch();
-    if (!$quota || $quota['ads_remaining'] <= 0) {
-        jsonError('You have no ad quota remaining. Please purchase a plan to post more ads.');
-    }
-    // Check quota expiry
-    if ($quota['expires_at'] && strtotime($quota['expires_at']) < time()) {
-        jsonError('Your ad quota has expired. Please renew your plan.');
+
+    // Monthly free ad grant: 1 free ad per calendar month per account
+    $thisMonth = date('Y-m');
+    if ($quota && ($quota['monthly_free_granted'] ?? '') !== $thisMonth) {
+        // Grant 1 free ad for this calendar month
+        $db->prepare(
+            'UPDATE user_quotas
+             SET ads_remaining = ads_remaining + 1,
+                 monthly_free_granted = ?
+             WHERE user_id = ?'
+        )->execute([$thisMonth, (int)$user['id']]);
+        $quota['ads_remaining'] = ($quota['ads_remaining'] ?? 0) + 1;
     }
 
+    if (!$quota) {
+        jsonError('No ad quota found. Please purchase a plan to post ads.');
+    }
+
+    // Check quota expiry (plan must be active to use remaining ads)
+    // Admin/super_admin have expires_at=NULL (unlimited)
+    if ($quota['expires_at'] && strtotime($quota['expires_at']) < time()) {
+        jsonError('Your ad plan has expired. Please purchase a new plan to continue posting.');
+    }
+
+    if ((int)$quota['ads_remaining'] <= 0) {
+        jsonError('You have 0 ads remaining in your plan. Purchase a plan to post more ads.');
+    }
+
+    // ── Insert listing ────────────────────────────────────────────
+    $priceType = in_array($b['price_type'] ?? '', ['fixed','negotiable','free'])
+               ? $b['price_type'] : 'fixed';
+    $condition = in_array($b['condition'] ?? '', ['new','used','refurbished'])
+               ? $b['condition'] : null;
+    $status    = 'pending_review'; // All new listings go to admin moderation queue
+
     $expires = date('Y-m-d H:i:s', strtotime('+30 days'));
-    $stmt = $db->prepare(
+    $db->prepare(
         'INSERT INTO listings
-         (user_id, title, description, category, subcategory, price, price_type,
+         (user_id, title, description, category, subcategory, condition, price, price_type,
           location_city, location_state, location_area, images, fields, status, expires_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    );
-    $stmt->execute([
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    )->execute([
         (int)$user['id'],
         $title,
         clean($b['description'] ?? ''),
         $category,
         clean($b['subcategory'] ?? ''),
+        $condition,
         max(0, (float)($b['price'] ?? 0)),
-        in_array($b['price_type'] ?? '', ['fixed','negotiable','free']) ? $b['price_type'] : 'fixed',
+        $priceType,
         clean($b['location_city']  ?? ''),
         clean($b['location_state'] ?? ''),
         clean($b['location_area']  ?? ''),
         json_encode($b['images'] ?? []),
         json_encode($b['fields'] ?? []),
-        'active',  // auto-approve — change to 'pending_review' for moderation
+        $status,
         $expires,
     ]);
     $listingId = (int)$db->lastInsertId();
 
-    // Deduct quota
-    $db->prepare('UPDATE user_quotas SET ads_remaining = ads_remaining - 1 WHERE user_id = ?')
-       ->execute([(int)$user['id']]);
+    // ── Deduct quota atomically ───────────────────────────────────
+    $db->prepare(
+        'UPDATE user_quotas SET ads_remaining = ads_remaining - 1 WHERE user_id = ? AND ads_remaining > 0'
+    )->execute([(int)$user['id']]);
 
-    jsonOk(['id' => $listingId, 'message' => 'Listing posted successfully!'], 201);
+    jsonOk([
+        'id'      => $listingId,
+        'status'  => $status,
+        'message' => 'Listing submitted for review! It will be live once approved.',
+    ], 201);
 }
 
 // ─────────────────────────────────────────────────────────────────────
