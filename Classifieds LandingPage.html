@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -838,15 +838,29 @@
       document.getElementById('mobileSignupBtn').textContent = 'My Dashboard';
       document.getElementById('mobileSignupBtn').href = 'Seller Dashboard.html';
     }
-    // Grant monthly free ad
-    if (window.ZZZ && window.ZZZ.Plans) {
-      window.ZZZ.Plans.grantMonthlyFreeAd(user.id);
-    }
-    // Show live stats from localStorage
-    const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-    const users = JSON.parse(localStorage.getItem('zzz_users') || '[]');
-    if (listings.length > 0) document.getElementById('statListings').textContent = listings.length.toLocaleString('en-IN') + '+';
-    if (users.length > 0) document.getElementById('statUsers').textContent = users.length.toLocaleString('en-IN') + '+';
+    // Fetch live stats from API — no localStorage
+    fetch('/api/listings.php?action=stats', { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) return;
+        const stats = data.data || {};
+        const liveListings = stats.total_active || stats.total_listings || 0;
+        const liveUsers    = stats.total_sellers || stats.total_users   || 0;
+
+        // Animate counters
+        function animateCount(elId, target, suffix) {
+          const el = document.getElementById(elId);
+          if (!el || target === 0) return;
+          const display = target >= 1000
+            ? (target / 1000).toFixed(target % 1000 === 0 ? 0 : 1) + 'k+'
+            : target + suffix;
+          el.textContent = display;
+        }
+        if (liveListings > 0) animateCount('statListings', liveListings, '+');
+        if (liveUsers    > 0) animateCount('statUsers',    liveUsers,    '+');
+      })
+      .catch(() => {}); // Silent fail — default static numbers already shown
+
   }
 
   // Admin link

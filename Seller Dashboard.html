@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -425,12 +425,7 @@
     // Set profile link
     document.getElementById('navProfileLink').href = 'profile.html?sellerId=' + currentUser.id;
 
-    // Check if verified
-    const vUsers = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
-    if (vUsers.includes(currentUser.id) || vUsers.includes(currentUser.name)) {
-      document.getElementById('navVerifyBtn').innerHTML =
-        '<span class="material-symbols-outlined text-[20px] text-green-500">verified</span> <span class="text-green-600 dark:text-green-400">Verified ✓</span>';
-    }
+    // Verified badge — updated after API load in loadDashboard()
 
     // Theme icons on load
     const isDark = document.documentElement.classList.contains('dark');
@@ -549,6 +544,19 @@
 
         // Plan widget
         renderPlanWidget(me.quota);
+
+        // Verified badge — use server data, not localStorage
+        const isVerified = me.is_verified || me.verified || me.verification_status === 'verified';
+        const verifyBtn = document.getElementById('navVerifyBtn');
+        if (verifyBtn) {
+          if (isVerified) {
+            verifyBtn.innerHTML = '<span class="material-symbols-outlined text-[20px] text-green-500">verified</span> <span class="text-green-600 dark:text-green-400">Verified ✓</span>';
+            verifyBtn.style.pointerEvents = 'none';
+          } else {
+            verifyBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">verified</span> Get Verified';
+            verifyBtn.style.pointerEvents = '';
+          }
+        }
 
         // Load my listings from API
         const lRes  = await fetch(`/api/listings.php?user_id=${me.id}&status=all&limit=100`, { credentials: 'include' });
