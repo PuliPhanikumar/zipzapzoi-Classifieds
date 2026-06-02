@@ -763,27 +763,30 @@
     window.editItem = editItem;
 
     // Promote / Boost
-    function promoteItem(id) {
-      // Check if user already has a paid plan; if yes, boost directly
-      const quota = window.ZZZ && window.ZZZ.Plans ? window.ZZZ.Plans.getUserQuota(currentUser.id) : null;
-      const isPaid = quota && quota.planId && !['new_user_free','monthly_free'].includes(quota.planId);
-      if (isPaid) {
-        // Paid plan - could mark listing as featured/boosted
-        let all = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-        const idx = all.findIndex(i => i.id === id);
-        if (idx > -1) {
-          all[idx].boosted = true;
-          all[idx].boostedAt = new Date().toISOString();
-          localStorage.setItem('zzz_listings', JSON.stringify(all));
-          localStorage.setItem('zzz_data_updated_at', String(Date.now()));
-          showToast('⚡ Listing boosted to top!', 'success');
+    async function promoteItem(id) {
+      // Check if user already has a paid plan via the server data already loaded
+      const item = allMyListings.find(i => i.id === id);
+      if (!item) return;
+      // All boosts now go through the backend
+      try {
+        const res  = await fetch(`/api/listings.php?id=${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ boosted: true })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('\u26a1 Listing boosted to top!', 'success');
           loadDashboard();
+        } else {
+          // Redirect to upgrade if server denies (quota/plan check)
+          if (confirm('\u26a1 Boost puts your listing at the top of search results.\n\nUpgrade to a paid plan to unlock boosting.\n\nGo to Plans & Pricing now?')) {
+            window.location.href = 'Classifieds Plans.html';
+          }
         }
-      } else {
-        // Free plan - redirect to upgrade
-        if (confirm('⚡ Boost puts your listing at the top of search results.\n\nUpgrade to a paid plan to unlock boosting.\n\nGo to Plans & Pricing now?')) {
-          window.location.href = 'Classifieds Plans.html';
-        }
+      } catch(e) {
+        showToast('Network error. Try again.', 'error');
       }
     }
     window.promoteItem = promoteItem;
@@ -804,24 +807,23 @@
     };
 
     // Verification request
-    window.requestVerification = function() {
-      const vUsers = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
-      if (vUsers.includes(currentUser.id)) {
-        showToast('You are already verified! ✓', 'success'); return;
+    window.requestVerification = async function() {
+      try {
+        const res  = await fetch('/api/auth.php?action=request_verification', {
+          method: 'POST',
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Verification requested! Admin will review your profile.', 'success');
+          document.getElementById('navVerifyBtn').innerHTML =
+            '<span class="material-symbols-outlined text-[20px]">schedule</span> Pending Review';
+        } else {
+          showToast(data.error || 'Already verified or pending.', 'success');
+        }
+      } catch(e) {
+        showToast('Network error. Try again.', 'error');
       }
-      const reqs = JSON.parse(localStorage.getItem('zzz_verification_reqs') || '[]');
-      if (reqs.find(r => r.userId === currentUser.id)) {
-        showToast('Your verification request is pending review.'); return;
-      }
-      reqs.push({
-        userId: currentUser.id, userName: currentUser.name,
-        userEmail: currentUser.email || '', date: new Date().toISOString(), status: 'pending'
-      });
-      localStorage.setItem('zzz_verification_reqs', JSON.stringify(reqs));
-      localStorage.setItem('zzz_data_updated_at', String(Date.now()));
-      showToast('Verification requested! Admin will review your profile.', 'success');
-      document.getElementById('navVerifyBtn').innerHTML =
-        '<span class="material-symbols-outlined text-[20px]">schedule</span> Pending Review';
     };
 
 

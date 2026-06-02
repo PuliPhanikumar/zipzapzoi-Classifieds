@@ -254,8 +254,6 @@ function showToast(message, type = 'success') {
 const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
 const urlParams = new URLSearchParams(window.location.search);
 const sellerId = urlParams.get('sellerId');
-const allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-const verifiedUsers = JSON.parse(localStorage.getItem('zzz_verified_users') || '[]');
 
 if (!sellerId) {
   showToast("No seller profile specified. Redirecting to listings.", "error");
@@ -302,7 +300,7 @@ async function loadProfile() {
   document.getElementById('profileInitial').textContent = sellerName.charAt(0).toUpperCase();
   document.getElementById('sellerLoc').textContent = sellerLocation;
 
-  if (isVerified || verifiedUsers.includes(sellerId)) {
+  if (isVerified) {
     document.getElementById('verifiedBadge').classList.remove('hidden');
   }
 

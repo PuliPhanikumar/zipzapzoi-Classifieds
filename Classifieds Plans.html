@@ -435,14 +435,18 @@
     });
 
     // ─── Render Plan Cards ───────────────
-    function renderPlans() {
+    async function renderPlans() {
       const plans = window.ZZZ && window.ZZZ.Plans ? window.ZZZ.Plans.getAll() : [];
-      const cfg = window.ZZZ ? window.ZZZ.read('zzz_plan_config_extras', {}) : {};
-
-      // Update featured boost prices from admin config
-      if (cfg.feat1d) document.getElementById('featPrice1d').textContent = '₹' + cfg.feat1d;
-      if (cfg.feat7d) document.getElementById('featPrice7d').textContent = '₹' + cfg.feat7d;
-      if (cfg.feat30d) document.getElementById('featPrice30d').textContent = '₹' + cfg.feat30d;
+      // Fetch featured boost prices from system settings API
+      try {
+        const cfgRes = await fetch('/api/schema.php').then(r => r.json());
+        if (cfgRes.success && cfgRes.data && cfgRes.data.plan_config_extras) {
+          const cfg = cfgRes.data.plan_config_extras;
+          if (cfg.feat1d) document.getElementById('featPrice1d').textContent = '₹' + cfg.feat1d;
+          if (cfg.feat7d) document.getElementById('featPrice7d').textContent = '₹' + cfg.feat7d;
+          if (cfg.feat30d) document.getElementById('featPrice30d').textContent = '₹' + cfg.feat30d;
+        }
+      } catch(e) { /* non-critical, keep default prices */ }
 
       const monthlyGrid = document.getElementById('monthlyPlansGrid');
       const businessGrid = document.getElementById('businessPlansGrid');
@@ -525,27 +529,34 @@
     }
 
     // ─── Promo Code ──────────────────────
-    function applyPromoCode() {
+    async function applyPromoCode() {
       const input = document.getElementById('promoCodeInput').value.trim().toUpperCase();
       const msg = document.getElementById('promoMessage');
       if (!input) { msg.textContent = 'Please enter a code.'; msg.className = 'text-xs mt-1 text-red-500 font-bold'; msg.classList.remove('hidden'); return; }
 
-      const coupons = window.ZZZ.read('zzz_coupons', []);
-      const coupon = coupons.find(c => c.code.toUpperCase() === input);
-      if (!coupon) {
-        msg.textContent = 'Invalid coupon code.';
+      try {
+        const res = await fetch('/api/schema.php').then(r => r.json());
+        const coupons = (res.success && res.data && res.data.coupons) ? res.data.coupons : [];
+        const coupon = coupons.find(c => c.code && c.code.toUpperCase() === input);
+        if (!coupon) {
+          msg.textContent = 'Invalid coupon code.';
+          msg.className = 'text-xs mt-1 text-red-500 font-bold';
+          msg.classList.remove('hidden');
+          currentDiscount = 0;
+          document.getElementById('sumDiscountRow').classList.add('hidden');
+          updatePrices();
+          return;
+        }
+        currentDiscount = coupon.discount;
+        msg.textContent = `✅ Coupon ${coupon.code} applied: ${currentDiscount}% off!`;
+        msg.className = 'text-xs mt-1 text-green-500 font-bold';
+        msg.classList.remove('hidden');
+        updatePrices();
+      } catch(e) {
+        msg.textContent = 'Could not validate coupon. Try again.';
         msg.className = 'text-xs mt-1 text-red-500 font-bold';
         msg.classList.remove('hidden');
-        currentDiscount = 0;
-        document.getElementById('sumDiscountRow').classList.add('hidden');
-        updatePrices();
-        return;
       }
-      currentDiscount = coupon.discount;
-      msg.textContent = `✅ Coupon ${coupon.code} applied: ${currentDiscount}% off!`;
-      msg.className = 'text-xs mt-1 text-green-500 font-bold';
-      msg.classList.remove('hidden');
-      updatePrices();
     }
 
     // ─── Price Calculation ───────────────

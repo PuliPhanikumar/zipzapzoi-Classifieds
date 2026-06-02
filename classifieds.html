@@ -228,7 +228,7 @@
       const categories = [{ id: 'All', icon: 'explore', label: 'Explore' }, ...classifiedsSchema.categories];
 
       let activeCategory = 'All';
-      let allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
+      let allListings = [];
       const currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
 
       // =====================================
@@ -254,12 +254,7 @@
         }, 50);
       });
 
-      window.addEventListener('storage', (event) => {
-        if(event.key === 'zzz_listings' || event.key === 'zzz_favorites_by_user' || event.key === 'zzz_data_updated_at') {
-          allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-          renderGrid();
-        }
-      });
+      // Storage sync removed — data now comes from PHP API
 
       // =====================================
       // 3. AUTH RENDER

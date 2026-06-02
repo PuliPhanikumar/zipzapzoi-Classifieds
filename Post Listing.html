@@ -739,44 +739,41 @@
   const editId = urlParams.get('id');
 
   if(editId) {
-    const listings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-    const item = listings.find(l => l.id === editId);
-    if(item) {
-        // Find key by label
+    fetch(`/api/listings.php?id=${editId}`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        const item = data.success && data.data ? data.data : null;
+        if(!item) return;
         const key = Object.keys(schema).find(k => schema[k].label === item.category);
         if(key) {
             selectCategory(key);
-            // Wait for UI to render
             setTimeout(() => {
-                document.getElementById('postTitle').value = item.title;
-                document.getElementById('postPrice').value = item.price;
-                document.getElementById('postDescription').value = item.description;
-                document.getElementById('stateSelect').value = item.state || '';
+                document.getElementById('postTitle').value = item.title || '';
+                document.getElementById('postPrice').value = item.price || '';
+                document.getElementById('postDescription').value = item.description || '';
+                document.getElementById('stateSelect').value = item.location_state || item.state || '';
                 stateSelect.dispatchEvent(new Event('change'));
-                document.getElementById('citySelect').value = item.city || '';
+                document.getElementById('citySelect').value = item.location_city || item.city || '';
                 document.getElementById('subCategorySelect').value = item.subcategory || '';
-                // Trigger subcat change to load fields
                 subCategorySelect.dispatchEvent(new Event('change'));
-                
-                document.getElementById('specificLocation').value = item.specificLocation || '';
-                if(document.getElementById('postNegotiable')) document.getElementById('postNegotiable').checked = !!item.negotiable;
+                document.getElementById('specificLocation').value = item.location_area || item.specificLocation || '';
+                if(document.getElementById('postNegotiable')) document.getElementById('postNegotiable').checked = item.price_type === 'negotiable';
                 if(document.getElementById('hidePhone')) document.getElementById('hidePhone').checked = !!item.hidePhone;
-                
-                // Load Dynamic Fields
-                if(item.dynamicData) {
-                    setTimeout(() => { // Small delay for fields to render
-                        Object.keys(item.dynamicData).forEach(fieldId => {
+                if(item.fields || item.dynamicData) {
+                    setTimeout(() => {
+                        const d = item.fields || item.dynamicData || {};
+                        Object.keys(d).forEach(fieldId => {
                             const el = document.getElementById('dyn_' + fieldId);
-                            if(el) el.value = item.dynamicData[fieldId];
+                            if(el) el.value = d[fieldId];
                         });
                     }, 200);
                 }
-                
                 finalSubmitBtn.innerHTML = '<span>Update Listing</span><span class="material-symbols-outlined">save</span>';
                 confirmPostBtn.textContent = "Update Listing";
             }, 500);
         }
-    }
+      })
+      .catch(e => console.error('Failed to load listing for edit:', e));
   }
 
   // --- 8. SUBMIT HANDLER ---

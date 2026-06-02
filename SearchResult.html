@@ -215,15 +215,13 @@
           || { categories: [], subcategories: [] };
       }
 
-      document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener('DOMContentLoaded', async () => {
         if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
 
         const schema = getSchema();
         const catSelect = document.getElementById('catFilter');
         catSelect.innerHTML = '<option value="all">All Categories</option>' +
           schema.categories.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
-
-        allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
 
         const params = new URLSearchParams(window.location.search);
         currentQuery = params.get('q')   || '';
@@ -233,15 +231,25 @@
         const urlCat = params.get('cat');
         if (urlCat) { catSelect.value = urlCat; updateSubcategories(); }
 
+        // Fetch listings from API instead of localStorage
+        try {
+          const q = [];
+          if (currentQuery) q.push('search=' + encodeURIComponent(currentQuery));
+          if (currentLoc)   q.push('location=' + encodeURIComponent(currentLoc));
+          q.push('status=active', 'limit=200');
+          const res  = await fetch('/api/listings.php?' + q.join('&'));
+          const data = await res.json();
+          if (data.success && data.data && data.data.listings) {
+            allListings = data.data.listings;
+          }
+        } catch(e) {
+          console.error('Failed to fetch listings:', e);
+        }
+
         renderResults();
       });
 
-      window.addEventListener('storage', e => {
-        if (['zzz_listings','zzz_favorites_by_user','zzz_data_updated_at'].includes(e.key)) {
-          allListings = JSON.parse(localStorage.getItem('zzz_listings') || '[]');
-          renderResults();
-        }
-      });
+      // Storage sync removed — data now comes from PHP API
 
       function updateSearch() {
         currentQuery = document.getElementById('searchQuery').value.trim();
@@ -378,23 +386,28 @@
         }, 400);
       }
 
-      function toggleFav(id, btn) {
+      async function toggleFav(id, btn) {
         const user = window.ZZZ ? window.ZZZ.getCurrentUser()
                                 : JSON.parse(localStorage.getItem('zzz_user') || 'null');
         if (!user) {
           window.location.href = `Login Page.html?redirect=SearchResult.html?q=${encodeURIComponent(currentQuery)}`;
           return;
         }
-        let isFav;
-        if (window.ZZZ) {
-          isFav = window.ZZZ.toggleFavorite(id);
-        } else {
-          let favs = JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
-          isFav = !favs.includes(id);
-          favs  = isFav ? [...favs, id] : favs.filter(f => f !== id);
-          localStorage.setItem('zzz_favorites', JSON.stringify(favs));
+        try {
+          const res  = await fetch('/api/favorites.php?action=toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ listing_id: id })
+          });
+          const data = await res.json();
+          if (data.success) {
+            const isFav = data.data && data.data.action === 'added';
+            isFav ? btn.classList.add('active') : btn.classList.remove('active');
+          }
+        } catch(e) {
+          console.error('Fav toggle error:', e);
         }
-        isFav ? btn.classList.add('active') : btn.classList.remove('active');
       }
 
       function toggleMobileFilters() {
