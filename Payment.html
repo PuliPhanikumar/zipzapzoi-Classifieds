@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -10,6 +10,13 @@
   </script>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://zipzapzoi.com/Payment.html"/>
+  <meta property="og:title" content="Secure Payment — ZipZapZoi"/>
+  <meta property="og:description" content="Complete your ZipZapZoi plan purchase securely via UPI, Card or Net Banking."/>
+  <meta property="og:image" content="https://zipzapzoi.com/og-image.png"/>
+  <meta name="robots" content="index, follow"/>
+  <link rel="canonical" href="https://zipzapzoi.com/Payment.html"/>
   <title>ZipZapZoi — Secure Payment</title>
   <meta name="description" content="Complete your ZipZapZoi plan purchase securely via UPI, Card, Net Banking or Wallet."/>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -630,49 +637,39 @@
       rzp.open();
     }
 
-    function completePayment(razorpayResponse) {
+    async function completePayment(razorpayResponse) {
       razorpayResponse = razorpayResponse || {};
-      // Assign plan
-      if (window.ZZZ && window.ZZZ.Plans) {
-        window.ZZZ.Plans.assignPlan(currentUser.id, planId, {
-          price: totalAmt,
-          paymentId: razorpayResponse.razorpay_payment_id || ''
-        });
-      }
 
-      // Use Razorpay payment ID as canonical transaction ID
       const txnId = razorpayResponse.razorpay_payment_id || ('ZZZ' + Date.now().toString().slice(-10).toUpperCase());
       const now = new Date();
 
-      // Save transaction to order history
-      const orders = JSON.parse(localStorage.getItem('zzz_orders') || '[]');
-      const order = {
-        txnId,
-        razorpay_payment_id: razorpayResponse.razorpay_payment_id || txnId,
-        razorpay_order_id:   razorpayResponse.razorpay_order_id   || '',
-        razorpay_signature:  razorpayResponse.razorpay_signature   || '',
-        planId,
-        planName: selectedPlan.name,
-        baseAmt: baseFee,
-        discountAmt,
-        gstAmt,
-        totalAmt,
-        paymentMethod,
-        userId: currentUser.id,
-        userName: currentUser.name,
-        userEmail: currentUser.email || '',
-        date: now.toISOString(),
-        status: 'success'
-      };
-      orders.unshift(order);
-      localStorage.setItem('zzz_orders', JSON.stringify(orders));
-      localStorage.setItem('zzz_data_updated_at', String(Date.now()));
+      // Post transaction to backend — server verifies signature and grants quota
+      try {
+        await fetch('/api/transactions.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            plan_id:             planId,
+            plan_name:           selectedPlan.name,
+            amount:              totalAmt,
+            ads:                 selectedPlan.ads,
+            days:                selectedPlan.days,
+            razorpay_payment_id: razorpayResponse.razorpay_payment_id || '',
+            razorpay_order_id:   razorpayResponse.razorpay_order_id   || '',
+            razorpay_signature:  razorpayResponse.razorpay_signature   || ''
+          })
+        });
+      } catch(e) {
+        console.error('Failed to record transaction:', e);
+        showToast('Payment recorded but plan activation may be delayed. Contact support if needed.', 'error');
+      }
 
       // Populate success screen
       document.getElementById('txnId').textContent = '#' + txnId;
       document.getElementById('receiptDate').textContent = now.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
       document.getElementById('receiptPlan').textContent = selectedPlan.name;
-      document.getElementById('receiptAmount').textContent = totalAmt > 0 ? '₹' + totalAmt : 'FREE';
+      document.getElementById('receiptAmount').textContent = totalAmt > 0 ? '\u20b9' + totalAmt : 'FREE';
       document.getElementById('receiptMethod').textContent = paymentMethod;
 
       // Populate print receipt
@@ -681,10 +678,10 @@
       document.getElementById('printUserEmail').textContent = currentUser.email || '';
       document.getElementById('printDate').textContent = now.toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
       document.getElementById('printMethod').textContent = paymentMethod;
-      document.getElementById('printPlanName').textContent = selectedPlan.name + ' — ' + selectedPlan.ads + ' ads, ' + selectedPlan.days + ' days';
-      document.getElementById('printBaseAmt').textContent = '₹' + baseFee;
-      document.getElementById('printGst').textContent = '₹' + gstAmt;
-      document.getElementById('printTotal').textContent = totalAmt > 0 ? '₹' + totalAmt : 'FREE';
+      document.getElementById('printPlanName').textContent = selectedPlan.name + ' \u2014 ' + selectedPlan.ads + ' ads, ' + selectedPlan.days + ' days';
+      document.getElementById('printBaseAmt').textContent = '\u20b9' + baseFee;
+      document.getElementById('printGst').textContent = '\u20b9' + gstAmt;
+      document.getElementById('printTotal').textContent = totalAmt > 0 ? '\u20b9' + totalAmt : 'FREE';
 
       // Show success
       document.getElementById('successScreen').classList.remove('hidden');
@@ -697,40 +694,46 @@
     // ═══════════════════════════════════════════
     //  ORDER HISTORY MODAL
     // ═══════════════════════════════════════════
-    function showOrderHistory() {
+    async function showOrderHistory() {
       const modal = document.getElementById('orderHistoryModal');
-      const list = document.getElementById('orderHistoryList');
-      const orders = JSON.parse(localStorage.getItem('zzz_orders') || '[]')
-        .filter(o => o.userId === currentUser.id);
-
-      if (orders.length === 0) {
-        list.innerHTML = `
-          <div class="text-center py-12">
-            <span class="material-symbols-outlined text-5xl text-gray-300 dark:text-gray-600 block mb-3">receipt_long</span>
-            <p class="text-gray-400 font-semibold">No orders yet</p>
-            <p class="text-xs text-gray-400 mt-1">Your payment history will appear here.</p>
-          </div>`;
-      } else {
-        list.innerHTML = orders.map(o => `
-          <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
-            <div class="flex items-start justify-between mb-2">
-              <div>
-                <p class="font-black text-gray-900 dark:text-white text-sm">${o.planName}</p>
-                <p class="text-xs text-gray-400">${new Date(o.date).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}</p>
-              </div>
-              <div class="text-right">
-                <p class="font-black text-primary">${o.totalAmt > 0 ? '₹' + o.totalAmt : 'FREE'}</p>
-                <span class="text-[10px] font-black text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full">✓ ${o.status}</span>
-              </div>
-            </div>
-            <div class="flex items-center justify-between text-xs text-gray-400">
-              <span>Txn: <span class="font-bold text-gray-600 dark:text-gray-300">#${o.txnId}</span></span>
-              <span>${o.paymentMethod}</span>
-            </div>
-          </div>`).join('');
-      }
-
+      const list  = document.getElementById('orderHistoryList');
+      list.innerHTML = '<p class="text-center text-gray-400 py-8">Loading...</p>';
       modal.classList.remove('hidden');
+
+      try {
+        const res  = await fetch('/api/transactions.php', { credentials: 'include' });
+        const data = await res.json();
+        const orders = (data.success && data.data && data.data.transactions) ? data.data.transactions : [];
+
+        if (orders.length === 0) {
+          list.innerHTML = `
+            <div class="text-center py-12">
+              <span class="material-symbols-outlined text-5xl text-gray-300 dark:text-gray-600 block mb-3">receipt_long</span>
+              <p class="text-gray-400 font-semibold">No orders yet</p>
+              <p class="text-xs text-gray-400 mt-1">Your payment history will appear here.</p>
+            </div>`;
+        } else {
+          list.innerHTML = orders.map(o => `
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
+              <div class="flex items-start justify-between mb-2">
+                <div>
+                  <p class="font-black text-gray-900 dark:text-white text-sm">${o.plan_name || o.planName}</p>
+                  <p class="text-xs text-gray-400">${new Date(o.created_at || o.date).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}</p>
+                </div>
+                <div class="text-right">
+                  <p class="font-black text-primary">${Number(o.amount || o.totalAmt) > 0 ? '\u20b9' + Number(o.amount || o.totalAmt) : 'FREE'}</p>
+                  <span class="text-[10px] font-black text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full">\u2713 ${o.status || 'success'}</span>
+                </div>
+              </div>
+              <div class="flex items-center justify-between text-xs text-gray-400">
+                <span>Txn: <span class="font-bold text-gray-600 dark:text-gray-300">#${o.razorpay_payment_id || o.txnId || o.id}</span></span>
+                <span>${o.payment_method || o.paymentMethod || 'Online'}</span>
+              </div>
+            </div>`).join('');
+        }
+      } catch(e) {
+        list.innerHTML = '<p class="text-center text-red-400 py-8 font-bold">Failed to load order history.</p>';
+      }
     }
 
     function closeOrderHistory() {
@@ -752,9 +755,8 @@
     // ── INIT ──
     loadPlan();
 
-    // Auto-open order history if redirected from dashboard
+    // ── view=history: full order history page ──
     if (params.get('view') === 'history') {
-      // Show the order history page style
       document.getElementById('paymentPage').innerHTML = `
         <div class="max-w-xl mx-auto py-6">
           <div class="flex items-center gap-3 mb-6">
@@ -763,48 +765,80 @@
             </a>
             <h1 class="text-2xl font-black text-gray-900 dark:text-white">Order History</h1>
           </div>
-          <div id="fullOrderList" class="space-y-4"></div>
+          <div id="fullOrderList" class="space-y-4"><p class="text-center text-gray-400 py-8">Loading...</p></div>
         </div>`;
 
-      const orders = JSON.parse(localStorage.getItem('zzz_orders') || '[]')
-        .filter(o => o.userId === currentUser.id);
-      const listEl = document.getElementById('fullOrderList');
+      fetch('/api/transactions.php', { credentials: 'include' })
+        .then(r => r.json())
+        .then(data => {
+          const orders = (data.success && data.data && data.data.transactions) ? data.data.transactions : [];
+          const listEl = document.getElementById('fullOrderList');
+          if (!listEl) return;
 
-      if (orders.length === 0) {
-        listEl.innerHTML = `
-          <div class="text-center py-16 bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800">
-            <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 block mb-3">receipt_long</span>
-            <p class="font-black text-gray-400 text-lg">No orders yet</p>
-            <p class="text-sm text-gray-400 mt-1 mb-6">Purchase a plan to start posting ads.</p>
-            <a href="Classifieds Plans.html" class="bg-primary text-white font-black px-6 py-3 rounded-xl hover:bg-green-700 transition-colors">Browse Plans</a>
-          </div>`;
-      } else {
-        listEl.innerHTML = orders.map(o => `
-          <div class="bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 p-5 shadow-sm">
-            <div class="flex items-start justify-between mb-3">
-              <div>
-                <h3 class="font-black text-gray-900 dark:text-white">${o.planName}</h3>
-                <p class="text-xs text-gray-400 mt-0.5">${new Date(o.date).toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'long', year:'numeric' })}</p>
-              </div>
-              <div class="text-right">
-                <p class="text-xl font-black text-primary">${o.totalAmt > 0 ? '₹' + o.totalAmt : 'FREE'}</p>
-                <span class="text-[10px] font-black text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full">✓ ${o.status}</span>
-              </div>
-            </div>
-            <div class="grid grid-cols-2 gap-2 text-sm border-t border-gray-100 dark:border-gray-700 pt-3">
-              <div>
-                <p class="text-xs text-gray-400">Transaction ID</p>
-                <p class="font-bold text-gray-700 dark:text-gray-300">#${o.txnId}</p>
-              </div>
-              <div>
-                <p class="text-xs text-gray-400">Payment Method</p>
-                <p class="font-bold text-gray-700 dark:text-gray-300">${o.paymentMethod}</p>
-              </div>
-              ${o.gstAmt > 0 ? `<div><p class="text-xs text-gray-400">Base Price</p><p class="font-bold">₹${o.baseAmt}</p></div>
-              <div><p class="text-xs text-gray-400">GST (18%)</p><p class="font-bold">₹${o.gstAmt}</p></div>` : ''}
-            </div>
-          </div>`).join('');
-      }
+          if (orders.length === 0) {
+            listEl.innerHTML = `
+              <div class="text-center py-16 bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800">
+                <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 block mb-3">receipt_long</span>
+                <p class="font-black text-gray-400 text-lg">No orders yet</p>
+                <p class="text-sm text-gray-400 mt-1 mb-6">Purchase a plan to start posting ads.</p>
+                <a href="Classifieds Plans.html" class="bg-primary text-white font-black px-6 py-3 rounded-xl hover:bg-green-700 transition-colors">Browse Plans</a>
+              </div>`;
+          } else {
+            listEl.innerHTML = orders.map(o => `
+              <div class="bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 p-5 shadow-sm">
+                <div class="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 class="font-black text-gray-900 dark:text-white">${o.plan_name || o.planName}</h3>
+                    <p class="text-xs text-gray-400 mt-0.5">${new Date(o.created_at || o.date).toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'long', year:'numeric' })}</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-xl font-black text-primary">${Number(o.amount || o.totalAmt) > 0 ? '\u20b9' + Number(o.amount || o.totalAmt) : 'FREE'}</p>
+                    <span class="text-[10px] font-black text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full">\u2713 ${o.status || 'success'}</span>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-sm border-t border-gray-100 dark:border-gray-700 pt-3">
+                  <div>
+                    <p class="text-xs text-gray-400">Transaction ID</p>
+                    <p class="font-bold text-gray-700 dark:text-gray-300">#${o.razorpay_payment_id || o.txnId || o.id}</p>
+                  </div>
+                  <div>
+                    <p class="text-xs text-gray-400">Payment Method</p>
+                    <p class="font-bold text-gray-700 dark:text-gray-300">${o.payment_method || o.paymentMethod || 'Online'}</p>
+                  </div>
+                </div>
+              </div>`).join('');
+          }
+        })
+        .catch(() => {
+          const listEl = document.getElementById('fullOrderList');
+          if (listEl) listEl.innerHTML = '<p class="text-center text-red-400 py-8 font-bold">Failed to load orders.</p>';
+        });
+    }
+
+    // ── ?success=1: show receipt from URL params (redirected from Classifieds Plans) ──
+    if (params.get('success') === '1') {
+      const txnFromUrl   = params.get('txn')   || 'N/A';
+      const planFromUrl  = params.get('plan')  || planId || 'Plan';
+      const amtFromUrl   = params.get('amount') || totalAmt || '0';
+      const now = new Date();
+
+      document.getElementById('txnId').textContent        = '#' + txnFromUrl;
+      document.getElementById('receiptDate').textContent  = now.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+      document.getElementById('receiptPlan').textContent  = (selectedPlan && selectedPlan.name) || planFromUrl;
+      document.getElementById('receiptAmount').textContent = Number(amtFromUrl) > 0 ? '\u20b9' + amtFromUrl : 'FREE';
+      document.getElementById('receiptMethod').textContent = 'Online Payment';
+
+      document.getElementById('printTxnId').textContent   = '#' + txnFromUrl;
+      document.getElementById('printUserName').textContent = currentUser.name || '';
+      document.getElementById('printUserEmail').textContent = currentUser.email || '';
+      document.getElementById('printDate').textContent    = now.toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
+      document.getElementById('printMethod').textContent  = 'Online Payment';
+      document.getElementById('printPlanName').textContent = (selectedPlan && selectedPlan.name) || planFromUrl;
+      document.getElementById('printBaseAmt').textContent = '\u20b9' + amtFromUrl;
+      document.getElementById('printGst').textContent     = '\u20b9' + Math.round(Number(amtFromUrl) * 0.18);
+      document.getElementById('printTotal').textContent   = Number(amtFromUrl) > 0 ? '\u20b9' + amtFromUrl : 'FREE';
+
+      document.getElementById('successScreen').classList.remove('hidden');
     }
   </script>
 </body>
