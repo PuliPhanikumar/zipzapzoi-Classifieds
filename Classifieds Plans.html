@@ -443,15 +443,20 @@
 
     // ─── Render Plan Cards ───────────────
     async function renderPlans() {
-      const plans = window.ZZZ && window.ZZZ.Plans ? window.ZZZ.Plans.getAll() : [];
-      // Fetch featured boost prices from system settings API
+      let plans = window.ZZZ && window.ZZZ.Plans ? window.ZZZ.Plans.DEFAULT_PLANS : [];
+      // Fetch dynamic plan overrides and featured boost prices from system settings API
       try {
         const cfgRes = await fetch('/api/schema.php').then(r => r.json());
-        if (cfgRes.success && cfgRes.data && cfgRes.data.plan_config_extras) {
-          const cfg = cfgRes.data.plan_config_extras;
-          if (cfg.feat1d) document.getElementById('featPrice1d').textContent = '₹' + cfg.feat1d;
-          if (cfg.feat7d) document.getElementById('featPrice7d').textContent = '₹' + cfg.feat7d;
-          if (cfg.feat30d) document.getElementById('featPrice30d').textContent = '₹' + cfg.feat30d;
+        if (cfgRes.success && cfgRes.data) {
+          if (cfgRes.data.plan_config) {
+            plans = cfgRes.data.plan_config;
+          }
+          if (cfgRes.data.plan_config_extras) {
+            const cfg = cfgRes.data.plan_config_extras;
+            if (cfg.feat1d) document.getElementById('featPrice1d').textContent = '₹' + cfg.feat1d;
+            if (cfg.feat7d) document.getElementById('featPrice7d').textContent = '₹' + cfg.feat7d;
+            if (cfg.feat30d) document.getElementById('featPrice30d').textContent = '₹' + cfg.feat30d;
+          }
         }
       } catch(e) { /* non-critical, keep default prices */ }
 

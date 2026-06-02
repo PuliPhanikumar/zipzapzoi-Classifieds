@@ -26,23 +26,36 @@ if ($method === 'GET') {
 // ── GET — public, returns schema ──────────────────────────────────
 function getSchema(): void {
     $db  = getDB();
+    
+    // Fetch base classifieds schema
     $row = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'classifieds_schema'")->fetch();
-
+    $schema = [];
     if ($row && !empty($row['setting_value'])) {
-        $schema = json_decode($row['setting_value'], true);
-        if ($schema) {
-            jsonOk($schema);
-            return;
-        }
+        $schema = json_decode($row['setting_value'], true) ?: [];
     }
+    
+    if (empty($schema)) {
+        $schema = [
+            'categories'    => [],
+            'subcategories' => [],
+            'fields'        => [],
+            'source'        => 'default', // signals to frontend to use schema.js
+        ];
+    }
+    
+    // Fetch Active Coupons
+    $coupons = $db->query("SELECT code, discount_pct FROM coupons WHERE is_active=1")->fetchAll();
+    $schema['coupons'] = $coupons ?: [];
+    
+    // Fetch Plan Config
+    $plan_config = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'plan_config'")->fetchColumn();
+    $schema['plan_config'] = $plan_config ? json_decode($plan_config, true) : null;
+    
+    // Fetch Featured Prices
+    $feat_prices = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'featured_prices'")->fetchColumn();
+    $schema['plan_config_extras'] = $feat_prices ? json_decode($feat_prices, true) : null;
 
-    // No schema in DB yet — return empty so frontend uses schema.js fallback
-    jsonOk([
-        'categories'    => [],
-        'subcategories' => [],
-        'fields'        => [],
-        'source'        => 'default', // signals to frontend to use schema.js
-    ]);
+    jsonOk($schema);
 }
 
 // ── POST — admin only, saves schema ──────────────────────────────
