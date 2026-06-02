@@ -824,6 +824,7 @@
         }) : fetch('/api/listings.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(pendingListing)
         }));
         sessionStorage.removeItem('zzz_pending_listing');
@@ -834,20 +835,6 @@
 
     // Init prices
     updatePrices();
-
-          ondismiss: function() { showToast('Test cancelled.', 'error'); },
-          animation: true
-        }
-      };
-
-      const rzpTest = new Razorpay(testOptions);
-      rzpTest.on('payment.failed', function(r) {
-        showToast('Test failed: ' + (r.error.description || 'Unknown'), 'error');
-        console.error('[Test]', r.error);
-      });
-      rzpTest.open();
-    };
-
     // ─── showToast fallback (if utils.js not loaded) ─────────
     if (typeof showToast === 'undefined') {
       window.showToast = function(msg, type) {
