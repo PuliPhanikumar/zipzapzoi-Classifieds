@@ -1255,11 +1255,16 @@ function saveFeatureFlags(){
 let editablePlans=null;
 async function loadPricingTab(){
   const data = await adminFetch('/api/admin/settings.php');
-  if(data && data.success && data.data.plan_config) {
-    editablePlans = JSON.parse(data.data.plan_config);
-  } else if(window.ZZZ&&window.ZZZ.Plans) {
-    editablePlans = JSON.parse(JSON.stringify(window.ZZZ.Plans.DEFAULT_PLANS));
-  } else editablePlans=[];
+  editablePlans = null;
+  if(data && data.success && data.data.plan_config && data.data.plan_config.trim() !== '' && data.data.plan_config !== '[]') {
+    try { editablePlans = JSON.parse(data.data.plan_config); } catch(e){}
+  }
+  if (!editablePlans || editablePlans.length === 0) {
+    if(window.ZZZ&&window.ZZZ.Plans){
+      const saved=localStorage.getItem('zzz_plan_config');
+      editablePlans=saved?JSON.parse(saved):JSON.parse(JSON.stringify(window.ZZZ.Plans.DEFAULT_PLANS));
+    } else editablePlans=[];
+  }
   const txns=safeJSON('zzz_transactions',[]);
   const paid=txns.filter(t=>t.amount>0&&t.status==='success');
   const statRev=document.getElementById('priceStatRev');

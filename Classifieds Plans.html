@@ -443,12 +443,12 @@
 
     // ─── Render Plan Cards ───────────────
     async function renderPlans() {
-      let plans = window.ZZZ && window.ZZZ.Plans ? window.ZZZ.Plans.DEFAULT_PLANS : [];
+      let plans = window.ZZZ && window.ZZZ.Plans ? window.ZZZ.Plans.getAll() : [];
       // Fetch dynamic plan overrides and featured boost prices from system settings API
       try {
         const cfgRes = await fetch('/api/schema.php').then(r => r.json());
         if (cfgRes.success && cfgRes.data) {
-          if (cfgRes.data.plan_config) {
+          if (cfgRes.data.plan_config && cfgRes.data.plan_config.length > 0) {
             plans = cfgRes.data.plan_config;
           }
           if (cfgRes.data.plan_config_extras) {
