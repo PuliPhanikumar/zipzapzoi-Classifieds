@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -291,7 +291,7 @@ async function loadProfile() {
   
   // 1. Fetch Profile Data
   try {
-    const profileRes = await (window.ZZZ && window.ZZZ.api ? window.ZZZ.api.fetch(`/api/users.php?id=${sellerId}`) : fetch(`/api/users.php?id=${sellerId}`).then(r => r.json()));
+    const profileRes = await fetch(`/api/users.php?id=${sellerId}`, { credentials: 'include' }).then(r => r.json());
     if(profileRes.success && profileRes.data) {
       sellerName = profileRes.data.name || sellerName;
       sellerLocation = profileRes.data.city || profileRes.data.state || sellerLocation;
@@ -316,7 +316,7 @@ async function loadProfile() {
   grid.innerHTML = '<div class="col-span-full py-10 text-center"><div class="animate-pulse flex flex-col items-center"><div class="h-8 w-8 bg-gray-200 rounded-full mb-2"></div><div class="h-4 w-32 bg-gray-200 rounded"></div></div></div>';
   
   try {
-    const listingsRes = await (window.ZZZ && window.ZZZ.api ? window.ZZZ.api.fetch(`/api/listings.php?user_id=${sellerId}&status=active`) : fetch(`/api/listings.php?user_id=${sellerId}&status=active`).then(r => r.json()));
+    const listingsRes = await fetch(`/api/listings.php?user_id=${sellerId}&status=active`, { credentials: 'include' }).then(r => r.json());
     const sellerListings = listingsRes.data && listingsRes.data.listings ? listingsRes.data.listings : [];
 
     if (sellerListings.length > 0) {
@@ -355,29 +355,13 @@ async function loadProfile() {
     grid.innerHTML = '<div class="col-span-full py-10 text-center text-red-500 font-bold">Error loading listings.</div>';
   }
 
-  // 3. Reviews (still from localStorage for now since there's no api/reviews.php)
+  // 3. Reviews — no reviews API yet, show clean empty state
   const reviewContainer = document.getElementById('content-reviews');
-  const allReviews = JSON.parse(localStorage.getItem('zzz_reviews') || '[]');
-  const sellerReviews = allReviews.filter(r => r.sellerId === sellerId);
-
-  if (sellerReviews.length > 0) {
-      reviewContainer.innerHTML = sellerReviews.map(r => `
-        <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-gray-100 dark:border-gray-800 flex gap-4">
-            <div class="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full flex-shrink-0 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold">${r.reviewerName ? r.reviewerName.charAt(0).toUpperCase() : 'U'}</div>
-            <div class="flex-1">
-                <div class="text-yellow-400 text-base mb-1">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
-                <p class="font-bold text-gray-800 dark:text-white text-sm">${r.reviewerName || 'User'}</p>
-                <p class="text-sm text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">${r.text}</p>
-            </div>
-        </div>
-      `).join('');
-  } else {
-      reviewContainer.innerHTML = `
-        <div class="text-center py-12 text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
-           <span class="material-symbols-outlined text-5xl mb-3 block opacity-40">star_half</span>
-           <p class="font-medium">No reviews yet for this seller.</p>
-        </div>`;
-  }
+  reviewContainer.innerHTML = `
+    <div class="text-center py-12 text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+       <span class="material-symbols-outlined text-5xl mb-3 block opacity-40">star_half</span>
+       <p class="font-medium">No reviews yet for this seller.</p>
+    </div>`;
 }
 
 /* ========== TABS ========== */
@@ -437,9 +421,14 @@ function submitReport() {
         date: new Date().toISOString(),
         status: 'pending'
     };
-    const flags = JSON.parse(localStorage.getItem('zzz_flags') || '[]');
-    flags.push(newFlag);
-    localStorage.setItem('zzz_flags', JSON.stringify(flags));
+    try {
+      await fetch('/api/users.php?action=report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(newFlag)
+      });
+    } catch(e) { console.error('Report failed:', e); }
     showToast("User reported. Thank you.");
     closeReportModal();
 }
@@ -461,24 +450,34 @@ function setRating(stars) {
         spans[i].style.color = i < stars ? '#facc15' : '#d1d5db';
     }
 }
-function submitReview() {
+async function submitReview() {
     const stars = parseInt(document.getElementById('reviewRating').value);
     const text = document.getElementById('reviewText').value.trim();
     if (stars === 0) return showToast("Please select a star rating", "error");
     if (!text) return showToast("Please write a review", "error");
-    const allReviews = JSON.parse(localStorage.getItem('zzz_reviews') || '[]');
-    allReviews.push({
-        id: 'rev_' + Date.now(),
-        sellerId, reviewerId: currentUser.id,
-        reviewerName: currentUser.name,
-        rating: stars, text,
-        date: new Date().toISOString()
-    });
-    localStorage.setItem('zzz_reviews', JSON.stringify(allReviews));
-    showToast("Review posted successfully!");
-    closeReviewModal();
-    document.getElementById('reviewText').value = '';
-    setTimeout(() => window.location.reload(), 1000);
+    try {
+      const res = await fetch('/api/users.php?action=review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          seller_id: sellerId,
+          rating: stars,
+          text
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("Review posted successfully!");
+        closeReviewModal();
+        document.getElementById('reviewText').value = '';
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        showToast(data.error || 'Failed to post review.', 'error');
+      }
+    } catch(e) {
+      showToast('Network error. Please try again.', 'error');
+    }
 }
 
 loadProfile();
