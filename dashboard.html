@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -285,12 +285,9 @@
       }
     })();
 
-    function hubLogout() {
-      if (window.ZZZ && window.ZZZ.setCurrentUser) window.ZZZ.setCurrentUser(null);
-      else {
-          localStorage.removeItem('zzz_user');
-          localStorage.removeItem('zipzapzoi_current_user');
-      }
+    async function hubLogout() {
+      try { await fetch('/api/auth.php?action=logout', { method: 'POST', credentials: 'include' }); } catch(e) {}
+      localStorage.removeItem('zzz_user');
       window.location.reload();
     }
 
@@ -305,9 +302,9 @@
       }
     })();
 
-    // Notify Me
+    // Notify Me — POSTs to API
     let currentModule = '';
-    function submitNotify() {
+    async function submitNotify() {
       const emailEl = document.getElementById('notifyEmail');
       const email   = emailEl.value.trim().toLowerCase();
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -315,12 +312,14 @@
         setTimeout(() => emailEl.style.borderColor = '', 1500);
         return;
       }
-      const list = JSON.parse(localStorage.getItem('zzz_notify_list') || '[]');
-      const already = list.find(e => e.email === email && e.module === currentModule);
-      if (!already) {
-        list.push({ email, module: currentModule, date: new Date().toISOString() });
-        localStorage.setItem('zzz_notify_list', JSON.stringify(list));
-      }
+      try {
+        await fetch('/api/users.php?action=notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, module: currentModule, date: new Date().toISOString() })
+        });
+      } catch(e) { console.error('Notify signup failed:', e); }
       document.getElementById('notifySuccess').classList.remove('hidden');
       emailEl.value = '';
     }
