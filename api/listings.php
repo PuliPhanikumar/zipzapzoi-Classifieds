@@ -13,7 +13,11 @@ $method = $_SERVER['REQUEST_METHOD'];
 $id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
 switch ($method) {
-    case 'GET':    $id ? getOne($id) : getAll();    break;
+    case 'GET':
+        if (isset($_GET['action']) && $_GET['action'] === 'stats') getStats();
+        elseif ($id) getOne($id);
+        else getAll();
+        break;
     case 'POST':   createListing();                  break;
     case 'PUT':    $id ? updateListing($id) : jsonError('id required'); break;
     case 'DELETE': $id ? deleteListing($id) : jsonError('id required'); break;
@@ -322,4 +326,36 @@ function deleteListing(int $id): void {
     }
     $db->prepare('DELETE FROM listings WHERE id = ?')->execute([$id]);
     jsonOk(['message' => 'Listing deleted.']);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// GET STATS — public endpoint for Landing Page hero counters
+// GET /api/listings.php?action=stats
+// Returns: total_active, total_listings, total_sellers, total_users
+// ─────────────────────────────────────────────────────────────────────
+function getStats(): void {
+    $db = getDB();
+
+    // Total active listings (not expired)
+    $activeStmt = $db->query(
+        "SELECT COUNT(*) FROM listings
+         WHERE status = 'active' AND (expires_at IS NULL OR expires_at > NOW())"
+    );
+    $totalActive = (int)$activeStmt->fetchColumn();
+
+    // Total listings ever posted
+    $totalListings = (int)$db->query('SELECT COUNT(*) FROM listings')->fetchColumn();
+
+    // Total unique sellers (users who posted at least 1 listing)
+    $totalSellers = (int)$db->query('SELECT COUNT(DISTINCT user_id) FROM listings')->fetchColumn();
+
+    // Total registered active users
+    $totalUsers = (int)$db->query('SELECT COUNT(*) FROM users WHERE is_active = 1')->fetchColumn();
+
+    jsonOk([
+        'total_active'   => $totalActive,
+        'total_listings' => $totalListings,
+        'total_sellers'  => $totalSellers,
+        'total_users'    => $totalUsers,
+    ]);
 }
