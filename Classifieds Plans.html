@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -737,38 +737,33 @@
     // Called after Razorpay confirms payment
     async function onPaymentSuccess(response, user, amount) {
       try {
-        await (window.ZZZ && window.ZZZ.api ? window.ZZZ.api.fetch('/api/transactions.php', {
-          method: 'POST',
-          body: JSON.stringify({
-            plan_id: selectedPlan.id,
-            plan_name: selectedPlan.name,
-            amount: amount,
-            ads: selectedPlan.ads,
-            days: selectedPlan.days,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_order_id: response.razorpay_order_id || '',
-            razorpay_signature: response.razorpay_signature || ''
-          })
-        }) : fetch('/api/transactions.php', {
+        // POST transaction to backend — server verifies and grants quota
+        const res  = await fetch('/api/transactions.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
-            plan_id: selectedPlan.id,
-            plan_name: selectedPlan.name,
-            amount: amount,
-            ads: selectedPlan.ads,
-            days: selectedPlan.days,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_order_id: response.razorpay_order_id || '',
-            razorpay_signature: response.razorpay_signature || ''
+            plan_id:             selectedPlan.id,
+            plan_name:           selectedPlan.name,
+            amount:              amount,
+            ads:                 selectedPlan.ads,
+            days:                selectedPlan.days,
+            razorpay_payment_id: response.razorpay_payment_id || '',
+            razorpay_order_id:   response.razorpay_order_id   || '',
+            razorpay_signature:  response.razorpay_signature   || ''
           })
-        }).then(r => r.json()));
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          console.warn('Transaction API warning:', data.error || 'Unknown');
+        }
 
         if (pendingListing) await savePendingListing();
 
         showToast('🎉 Payment successful! Plan activated.', 'success');
         setTimeout(() => {
-          window.location.href = `Payment.html?success=1&txn=${response.razorpay_payment_id || ''}&plan=${selectedPlan.id}&amount=${amount}`;
+          window.location.href = `Payment.html?success=1&txn=${encodeURIComponent(response.razorpay_payment_id || '')}&plan=${encodeURIComponent(selectedPlan.id)}&amount=${encodeURIComponent(amount)}`;
         }, 1000);
       } catch (e) {
         showToast(e.message || 'Error processing payment.', 'error');
