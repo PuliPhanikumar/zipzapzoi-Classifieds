@@ -1253,10 +1253,12 @@ function saveFeatureFlags(){
 //  PRICING TAB  (still localStorage until plans DB ready)
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 let editablePlans=null;
-function loadPricingTab(){
-  if(window.ZZZ&&window.ZZZ.Plans){
-    const saved=localStorage.getItem('zzz_plan_config');
-    editablePlans=saved?JSON.parse(saved):JSON.parse(JSON.stringify(window.ZZZ.Plans.DEFAULT_PLANS));
+async function loadPricingTab(){
+  const data = await adminFetch('/api/admin/settings.php');
+  if(data && data.success && data.data.plan_config) {
+    editablePlans = JSON.parse(data.data.plan_config);
+  } else if(window.ZZZ&&window.ZZZ.Plans) {
+    editablePlans = JSON.parse(JSON.stringify(window.ZZZ.Plans.DEFAULT_PLANS));
   } else editablePlans=[];
   const txns=safeJSON('zzz_transactions',[]);
   const paid=txns.filter(t=>t.amount>0&&t.status==='success');
@@ -1268,7 +1270,10 @@ function loadPricingTab(){
   if(statFree) statFree.textContent='â€”';
   const statFlagged=document.getElementById('priceStatFlagged');
   if(statFlagged) statFlagged.textContent='â€”';
-  const cfg=safeJSON('zzz_plan_config_extras',{feat1d:29,feat7d:149,feat30d:399});
+  let cfg = {feat1d:29,feat7d:149,feat30d:399};
+  if (typeof data !== "undefined" && data && data.success && data.data.featured_prices) {
+    try { cfg = JSON.parse(data.data.featured_prices); } catch(e){}
+  }
   const f1=document.getElementById('featPrice1d'),f7=document.getElementById('featPrice7d'),f30=document.getElementById('featPrice30d');
   if(f1) f1.value=cfg.feat1d||29;
   if(f7) f7.value=cfg.feat7d||149;
@@ -1288,9 +1293,18 @@ function renderPlanEditor(){
   </tr>`).join('');
   document.querySelectorAll('.pei').forEach(inp=>inp.addEventListener('input',()=>{const i=parseInt(inp.dataset.i),f=inp.dataset.f;editablePlans[i][f]=['price','ads','days'].includes(f)?parseFloat(inp.value)||0:inp.value;}));
 }
-function savePlansConfig(){localStorage.setItem('zzz_plan_config',JSON.stringify(editablePlans));logAction('PLAN_UPDATE','Pricing updated');showToast('Plan config saved! Live immediately.');}
-function resetPlansToDefault(){confirmAction('Reset','Restore factory defaults?',()=>{localStorage.removeItem('zzz_plan_config');if(window.ZZZ&&window.ZZZ.Plans){editablePlans=JSON.parse(JSON.stringify(window.ZZZ.Plans.DEFAULT_PLANS));}renderPlanEditor();showToast('Reset to defaults');});}
-function saveFeaturedPrices(){const c={feat1d:parseFloat(document.getElementById('featPrice1d').value)||29,feat7d:parseFloat(document.getElementById('featPrice7d').value)||149,feat30d:parseFloat(document.getElementById('featPrice30d').value)||399};localStorage.setItem('zzz_plan_config_extras',JSON.stringify(c));logAction('FEAT_PRICE','Updated featured prices');showToast('Featured prices saved!');}
+async function savePlansConfig(){
+  const r = await adminPost('/api/admin/settings.php',{settings:{plan_config:JSON.stringify(editablePlans)}});
+  if(r&&r.success){showToast('Plan config saved! Live immediately.');logAction('PLAN_UPDATE','Pricing updated');}
+  else showToast(r?.error||'Error saving plans','error');
+}
+function resetPlansToDefault(){confirmAction('Reset','Restore factory defaults?',async ()=>{await adminPost('/api/admin/settings.php',{settings:{plan_config:''}});if(window.ZZZ&&window.ZZZ.Plans){editablePlans=JSON.parse(JSON.stringify(window.ZZZ.Plans.DEFAULT_PLANS));}renderPlanEditor();showToast('Reset to defaults');});}
+async function saveFeaturedPrices(){
+  const c={feat1d:parseFloat(document.getElementById('featPrice1d').value)||29,feat7d:parseFloat(document.getElementById('featPrice7d').value)||149,feat30d:parseFloat(document.getElementById('featPrice30d').value)||399};
+  const r = await adminPost('/api/admin/settings.php',{settings:{featured_prices:JSON.stringify(c)}});
+  if(r&&r.success){showToast('Featured prices saved!');logAction('FEAT_PRICE','Updated featured prices');}
+  else showToast('Error saving featured prices','error');
+}
 function renderPhoneRegistry(){const tbody=document.getElementById('phoneRegistryBody');if(tbody)tbody.innerHTML='<tr><td colspan="5" class="text-center py-8 text-slate-400">Phone registry moved to DB â€” coming soon.</td></tr>';}
 function renderQuotaTable(){
   const tbody=document.getElementById('quotaTableBody');
