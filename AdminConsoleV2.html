@@ -7,57 +7,7 @@
     } else {
         document.documentElement.classList.remove('dark');
     }
-  
-// ══════════════════════════════════════════════════════════════
-//  EXPORT CSV
-// ══════════════════════════════════════════════════════════════
-async function exportUsersCSV(){
-  showToast('Preparing CSV...','success');
-  const data=await adminFetch('/api/admin/users.php');
-  if(!data||!data.success){showToast('Export failed','error');return;}
-  const users=data.data;
-  const headers=['ID','Name','Email','Phone','Role','Verified','Active','City','State','Joined','Active Listings'];
-  const rows=users.map(u=>[u.id,u.name,u.email,u.phone||'',u.role,u.is_verified?'Yes':'No',u.is_active?'Yes':'No',u.city||'',u.state||'',(u.created_at||'').substring(0,10),u.active_listings]);
-  const csv=[headers,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='zzz_users_'+new Date().toISOString().substring(0,10)+'.csv';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  logAction('EXPORT_CSV','Exported '+users.length+' users');
-  showToast('Downloaded '+users.length+' users as CSV!','success');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  AI MODERATION RULES
-// ══════════════════════════════════════════════════════════════
-async function saveAIRules(){
-  const keywords=document.getElementById('autoRejectKeywords')?.value||'';
-  const r=await adminPost('/api/admin/settings.php',{settings:{ai_blacklist:keywords}});
-  if(r&&r.success){showToast('Z.O.I Nexus rules deployed!','success');logAction('AI_RULES','Keyword blacklist updated');}
-  else showToast(r?.error||'Error saving AI rules','error');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  DISMISS REPORT
-// ══════════════════════════════════════════════════════════════
-async function dismissReport(id){
-  if(!id) return;
-  const r=await adminPut('/api/admin/reports.php',{id,status:'dismissed'});
-  if(r&&r.success){showToast('Report dismissed','success');loadReports();}
-  else showToast(r?.error||'Error dismissing','error');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  TOGGLE COUPON
-// ══════════════════════════════════════════════════════════════
-async function toggleCoupon(code){
-  const r=await adminPut('/api/admin/coupons.php',{code});
-  if(r&&r.success){loadCoupons();showToast('Coupon status updated','success');}
-  else showToast(r?.error||'Error','error');
-}
-
-</script>
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="ZipZapZoi Admin Console — Platform administration and management tools."/>
@@ -72,267 +22,17 @@ async function toggleCoupon(code){
   
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <script src="js/schema.js">
-// ══════════════════════════════════════════════════════════════
-//  EXPORT CSV
-// ══════════════════════════════════════════════════════════════
-async function exportUsersCSV(){
-  showToast('Preparing CSV...','success');
-  const data=await adminFetch('/api/admin/users.php');
-  if(!data||!data.success){showToast('Export failed','error');return;}
-  const users=data.data;
-  const headers=['ID','Name','Email','Phone','Role','Verified','Active','City','State','Joined','Active Listings'];
-  const rows=users.map(u=>[u.id,u.name,u.email,u.phone||'',u.role,u.is_verified?'Yes':'No',u.is_active?'Yes':'No',u.city||'',u.state||'',(u.created_at||'').substring(0,10),u.active_listings]);
-  const csv=[headers,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='zzz_users_'+new Date().toISOString().substring(0,10)+'.csv';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  logAction('EXPORT_CSV','Exported '+users.length+' users');
-  showToast('Downloaded '+users.length+' users as CSV!','success');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  AI MODERATION RULES
-// ══════════════════════════════════════════════════════════════
-async function saveAIRules(){
-  const keywords=document.getElementById('autoRejectKeywords')?.value||'';
-  const r=await adminPost('/api/admin/settings.php',{settings:{ai_blacklist:keywords}});
-  if(r&&r.success){showToast('Z.O.I Nexus rules deployed!','success');logAction('AI_RULES','Keyword blacklist updated');}
-  else showToast(r?.error||'Error saving AI rules','error');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  DISMISS REPORT
-// ══════════════════════════════════════════════════════════════
-async function dismissReport(id){
-  if(!id) return;
-  const r=await adminPut('/api/admin/reports.php',{id,status:'dismissed'});
-  if(r&&r.success){showToast('Report dismissed','success');loadReports();}
-  else showToast(r?.error||'Error dismissing','error');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  TOGGLE COUPON
-// ══════════════════════════════════════════════════════════════
-async function toggleCoupon(code){
-  const r=await adminPut('/api/admin/coupons.php',{code});
-  if(r&&r.success){loadCoupons();showToast('Coupon status updated','success');}
-  else showToast(r?.error||'Error','error');
-}
-
-</script> 
-  <script src="js/utils.js">
-// ══════════════════════════════════════════════════════════════
-//  EXPORT CSV
-// ══════════════════════════════════════════════════════════════
-async function exportUsersCSV(){
-  showToast('Preparing CSV...','success');
-  const data=await adminFetch('/api/admin/users.php');
-  if(!data||!data.success){showToast('Export failed','error');return;}
-  const users=data.data;
-  const headers=['ID','Name','Email','Phone','Role','Verified','Active','City','State','Joined','Active Listings'];
-  const rows=users.map(u=>[u.id,u.name,u.email,u.phone||'',u.role,u.is_verified?'Yes':'No',u.is_active?'Yes':'No',u.city||'',u.state||'',(u.created_at||'').substring(0,10),u.active_listings]);
-  const csv=[headers,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='zzz_users_'+new Date().toISOString().substring(0,10)+'.csv';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  logAction('EXPORT_CSV','Exported '+users.length+' users');
-  showToast('Downloaded '+users.length+' users as CSV!','success');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  AI MODERATION RULES
-// ══════════════════════════════════════════════════════════════
-async function saveAIRules(){
-  const keywords=document.getElementById('autoRejectKeywords')?.value||'';
-  const r=await adminPost('/api/admin/settings.php',{settings:{ai_blacklist:keywords}});
-  if(r&&r.success){showToast('Z.O.I Nexus rules deployed!','success');logAction('AI_RULES','Keyword blacklist updated');}
-  else showToast(r?.error||'Error saving AI rules','error');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  DISMISS REPORT
-// ══════════════════════════════════════════════════════════════
-async function dismissReport(id){
-  if(!id) return;
-  const r=await adminPut('/api/admin/reports.php',{id,status:'dismissed'});
-  if(r&&r.success){showToast('Report dismissed','success');loadReports();}
-  else showToast(r?.error||'Error dismissing','error');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  TOGGLE COUPON
-// ══════════════════════════════════════════════════════════════
-async function toggleCoupon(code){
-  const r=await adminPut('/api/admin/coupons.php',{code});
-  if(r&&r.success){loadCoupons();showToast('Coupon status updated','success');}
-  else showToast(r?.error||'Error','error');
-}
-
-</script>
-  <script src="https://cdn.tailwindcss.com?plugins=forms">
-// ══════════════════════════════════════════════════════════════
-//  EXPORT CSV
-// ══════════════════════════════════════════════════════════════
-async function exportUsersCSV(){
-  showToast('Preparing CSV...','success');
-  const data=await adminFetch('/api/admin/users.php');
-  if(!data||!data.success){showToast('Export failed','error');return;}
-  const users=data.data;
-  const headers=['ID','Name','Email','Phone','Role','Verified','Active','City','State','Joined','Active Listings'];
-  const rows=users.map(u=>[u.id,u.name,u.email,u.phone||'',u.role,u.is_verified?'Yes':'No',u.is_active?'Yes':'No',u.city||'',u.state||'',(u.created_at||'').substring(0,10),u.active_listings]);
-  const csv=[headers,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='zzz_users_'+new Date().toISOString().substring(0,10)+'.csv';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  logAction('EXPORT_CSV','Exported '+users.length+' users');
-  showToast('Downloaded '+users.length+' users as CSV!','success');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  AI MODERATION RULES
-// ══════════════════════════════════════════════════════════════
-async function saveAIRules(){
-  const keywords=document.getElementById('autoRejectKeywords')?.value||'';
-  const r=await adminPost('/api/admin/settings.php',{settings:{ai_blacklist:keywords}});
-  if(r&&r.success){showToast('Z.O.I Nexus rules deployed!','success');logAction('AI_RULES','Keyword blacklist updated');}
-  else showToast(r?.error||'Error saving AI rules','error');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  DISMISS REPORT
-// ══════════════════════════════════════════════════════════════
-async function dismissReport(id){
-  if(!id) return;
-  const r=await adminPut('/api/admin/reports.php',{id,status:'dismissed'});
-  if(r&&r.success){showToast('Report dismissed','success');loadReports();}
-  else showToast(r?.error||'Error dismissing','error');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  TOGGLE COUPON
-// ══════════════════════════════════════════════════════════════
-async function toggleCoupon(code){
-  const r=await adminPut('/api/admin/coupons.php',{code});
-  if(r&&r.success){loadCoupons();showToast('Coupon status updated','success');}
-  else showToast(r?.error||'Error','error');
-}
-
-</script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js">
-// ══════════════════════════════════════════════════════════════
-//  EXPORT CSV
-// ══════════════════════════════════════════════════════════════
-async function exportUsersCSV(){
-  showToast('Preparing CSV...','success');
-  const data=await adminFetch('/api/admin/users.php');
-  if(!data||!data.success){showToast('Export failed','error');return;}
-  const users=data.data;
-  const headers=['ID','Name','Email','Phone','Role','Verified','Active','City','State','Joined','Active Listings'];
-  const rows=users.map(u=>[u.id,u.name,u.email,u.phone||'',u.role,u.is_verified?'Yes':'No',u.is_active?'Yes':'No',u.city||'',u.state||'',(u.created_at||'').substring(0,10),u.active_listings]);
-  const csv=[headers,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='zzz_users_'+new Date().toISOString().substring(0,10)+'.csv';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  logAction('EXPORT_CSV','Exported '+users.length+' users');
-  showToast('Downloaded '+users.length+' users as CSV!','success');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  AI MODERATION RULES
-// ══════════════════════════════════════════════════════════════
-async function saveAIRules(){
-  const keywords=document.getElementById('autoRejectKeywords')?.value||'';
-  const r=await adminPost('/api/admin/settings.php',{settings:{ai_blacklist:keywords}});
-  if(r&&r.success){showToast('Z.O.I Nexus rules deployed!','success');logAction('AI_RULES','Keyword blacklist updated');}
-  else showToast(r?.error||'Error saving AI rules','error');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  DISMISS REPORT
-// ══════════════════════════════════════════════════════════════
-async function dismissReport(id){
-  if(!id) return;
-  const r=await adminPut('/api/admin/reports.php',{id,status:'dismissed'});
-  if(r&&r.success){showToast('Report dismissed','success');loadReports();}
-  else showToast(r?.error||'Error dismissing','error');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  TOGGLE COUPON
-// ══════════════════════════════════════════════════════════════
-async function toggleCoupon(code){
-  const r=await adminPut('/api/admin/coupons.php',{code});
-  if(r&&r.success){loadCoupons();showToast('Coupon status updated','success');}
-  else showToast(r?.error||'Error','error');
-}
-
-</script>
+  <script src="js/schema.js"></script> 
+  <script src="js/utils.js"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
     tailwind.config = {
       darkMode: "class",
       theme: { extend: { fontFamily: { sans: ["Spline Sans", "sans-serif"] }, colors: { brand: "#019863", dark: "#0f172a", "card-dark": "#1e293b" } } }
     }
-  
-// ══════════════════════════════════════════════════════════════
-//  EXPORT CSV
-// ══════════════════════════════════════════════════════════════
-async function exportUsersCSV(){
-  showToast('Preparing CSV...','success');
-  const data=await adminFetch('/api/admin/users.php');
-  if(!data||!data.success){showToast('Export failed','error');return;}
-  const users=data.data;
-  const headers=['ID','Name','Email','Phone','Role','Verified','Active','City','State','Joined','Active Listings'];
-  const rows=users.map(u=>[u.id,u.name,u.email,u.phone||'',u.role,u.is_verified?'Yes':'No',u.is_active?'Yes':'No',u.city||'',u.state||'',(u.created_at||'').substring(0,10),u.active_listings]);
-  const csv=[headers,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='zzz_users_'+new Date().toISOString().substring(0,10)+'.csv';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  logAction('EXPORT_CSV','Exported '+users.length+' users');
-  showToast('Downloaded '+users.length+' users as CSV!','success');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  AI MODERATION RULES
-// ══════════════════════════════════════════════════════════════
-async function saveAIRules(){
-  const keywords=document.getElementById('autoRejectKeywords')?.value||'';
-  const r=await adminPost('/api/admin/settings.php',{settings:{ai_blacklist:keywords}});
-  if(r&&r.success){showToast('Z.O.I Nexus rules deployed!','success');logAction('AI_RULES','Keyword blacklist updated');}
-  else showToast(r?.error||'Error saving AI rules','error');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  DISMISS REPORT
-// ══════════════════════════════════════════════════════════════
-async function dismissReport(id){
-  if(!id) return;
-  const r=await adminPut('/api/admin/reports.php',{id,status:'dismissed'});
-  if(r&&r.success){showToast('Report dismissed','success');loadReports();}
-  else showToast(r?.error||'Error dismissing','error');
-}
-
-// ══════════════════════════════════════════════════════════════
-//  TOGGLE COUPON
-// ══════════════════════════════════════════════════════════════
-async function toggleCoupon(code){
-  const r=await adminPut('/api/admin/coupons.php',{code});
-  if(r&&r.success){loadCoupons();showToast('Coupon status updated','success');}
-  else showToast(r?.error||'Error','error');
-}
-
-</script>
+  </script>
   <style>
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -1219,14 +919,10 @@ function openUserModal(id=null){
   document.getElementById('userEmail').value='';
   document.getElementById('userRole').value='user';
   const _ph=document.getElementById('userPhone');if(_ph)_ph.value='';
-  if(id && typeof _loadedUsers !== 'undefined' && _loadedUsers.length){
-    const _u=_loadedUsers.find(x=>x.id===id);
-    if(_u){
-      document.getElementById('userName').value=_u.name||'';
-      document.getElementById('userEmail').value=_u.email||'';
-      document.getElementById('userRole').value=_u.role||'user';
-      const _ph=document.getElementById('userPhone');if(_ph)_ph.value=_u.phone||'';
-    }
+  if(id){
+    // Pre-fill from already-loaded table if possible
+    const row=document.querySelector(`#usersTableBody tr td:first-child`);
+    // Just open the modal â€” save will handle both create and update
   }
   document.getElementById('userModal').classList.remove('hidden');
 }
@@ -1344,7 +1040,7 @@ async function loadCoupons(){
       <td class="px-6 py-3 text-brand font-bold">${c.discount_pct}%</td>
       <td class="px-6 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${c.is_active?'bg-green-100 text-green-700':'bg-slate-100 text-slate-500'}">${c.is_active?'Active':'Inactive'}</span></td>
       <td class="px-6 py-3 text-right">
-        <button onclick="toggleCoupon('${escapeHTML(c.code)}')" class="text-xs font-bold ${c.is_active?'text-amber-600':'text-green-600'} hover:underline mr-2 transition-colors">${c.is_active?'Deactivate':'Activate'}</button><button onclick="confirmAction('Delete Coupon','Delete ${c.code}?',()=>deleteCoupon('${escapeHTML(c.code)}'))" class="text-red-500 text-xs font-bold hover:underline">Delete</button>
+        <button onclick="confirmAction('Delete Coupon','Delete ${c.code}?',()=>deleteCoupon('${escapeHTML(c.code)}'))" class="text-red-500 text-xs font-bold hover:underline">Delete</button>
       </td>
     </tr>`).join(''):'<tr><td colspan="4" class="p-6 text-center text-slate-400">No coupons created yet.</td></tr>';
 }
@@ -1680,21 +1376,16 @@ async function loadPricingTab(){
       editablePlans=saved?JSON.parse(saved):JSON.parse(JSON.stringify(window.ZZZ.Plans.DEFAULT_PLANS));
     } else editablePlans=[];
   }
-  // Real stats from the payments API (not localStorage)
-  const _statsR=await adminFetch('/api/admin/payments.php?stats=1');
+  const txns=safeJSON('zzz_transactions',[]);
+  const paid=txns.filter(t=>t.amount>0&&t.status==='success');
   const statRev=document.getElementById('priceStatRev');
   const statPlans=document.getElementById('priceStatPlans');
+  if(statRev) statRev.textContent='â‚¹'+Math.round(paid.reduce((s,t)=>s+(parseFloat(t.amount)||0),0)).toLocaleString('en-IN');
+  if(statPlans) statPlans.textContent=paid.length;
   const statFree=document.getElementById('priceStatFree');
+  if(statFree) statFree.textContent='â€”';
   const statFlagged=document.getElementById('priceStatFlagged');
-  if(_statsR&&_statsR.success&&_statsR.data){
-    const _st=_statsR.data;
-    if(statRev) statRev.textContent='Rs '+Math.round(_st.total_revenue||0).toLocaleString('en-IN');
-    if(statPlans) statPlans.textContent=(_st.paid_plans||0).toLocaleString();
-    if(statFree) statFree.textContent=(_st.free_users||0).toLocaleString();
-    if(statFlagged) statFlagged.textContent='-';
-  } else {
-    [statRev,statPlans,statFree,statFlagged].forEach(el=>{if(el)el.textContent='-';});
-  }
+  if(statFlagged) statFlagged.textContent='â€”';
   let cfg = {feat1d:29,feat7d:149,feat30d:399};
   if (typeof data !== "undefined" && data && data.success && data.data.featured_prices) {
     try { cfg = JSON.parse(data.data.featured_prices); } catch(e){}
@@ -1788,7 +1479,9 @@ async function saveSecuritySettings(){
   if(r&&r.success){showToast('Security policy enforced!','success');logAction('SECURITY_UPDATE','Security settings saved');}
   else showToast(r?.error||'Error saving security settings','error');
 }
+</script>
 
+<script>
 // ══════════════════════════════════════════════════════════════
 //  EXPORT CSV
 // ══════════════════════════════════════════════════════════════
@@ -1837,7 +1530,7 @@ async function toggleCoupon(code){
   if(r&&r.success){loadCoupons();showToast('Coupon status updated','success');}
   else showToast(r?.error||'Error','error');
 }
-
 </script>
+
 </body>
 </html>
