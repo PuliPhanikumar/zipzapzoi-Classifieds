@@ -2,9 +2,10 @@
 /**
  * ZipZapZoi — Admin Users API
  * GET  /api/admin/users.php                     → list users (search)
+ * GET  /api/admin/users.php?quotas=1            → list users with quota data
  * GET  /api/admin/users.php?action=verifications → pending verification requests
  * PUT  /api/admin/users.php                     → ban/unban/verify/unverify/role
- * POST /api/admin/users.php                     → create user
+ * POST /api/admin/users.php                     → create user or grant quota
  */
 require_once __DIR__ . '/../config.php';
 $admin  = requireAdmin();
@@ -12,9 +13,14 @@ $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
 if ($method === 'GET' && $action === 'verifications') getVerifications();
+elseif ($method === 'GET' && ($_GET['quotas'] ?? '') === '1') listUserQuotas();
 elseif ($method === 'GET')  listUsers();
 elseif ($method === 'PUT')  updateUser($admin);
-elseif ($method === 'POST') createUser($admin);
+elseif ($method === 'POST') {
+    $b = getBody();
+    if (($b['action'] ?? '') === 'grant_quota') grantQuota($admin, $b);
+    else createUser($admin);
+}
 else jsonError('Method not allowed', 405);
 
 // ── LIST USERS ────────────────────────────────────────────────────
@@ -39,6 +45,30 @@ function listUsers(): void {
         $r['is_verified']  = (bool)$r['is_verified'];
         $r['is_active']    = (bool)$r['is_active'];
         $r['active_listings'] = (int)$r['active_listings'];
+    }
+    jsonOk($rows);
+}
+
+// ── LIST USER QUOTAS ──────────────────────────────────────────────
+function listUserQuotas(): void {
+    $db   = getDB();
+    $stmt = $db->query(
+        "SELECT u.id, u.name, u.email,
+                COALESCE(q.plan_id, 'free') AS plan_id,
+                COALESCE(q.total_granted, 0) AS total_granted,
+                COALESCE(q.ads_remaining, 0) AS ads_remaining,
+                q.expires_at
+         FROM users u
+         LEFT JOIN user_quotas q ON q.user_id = u.id
+         WHERE u.is_active = 1
+         ORDER BY q.ads_remaining ASC, u.name ASC
+         LIMIT 200"
+    );
+    $rows = $stmt->fetchAll();
+    foreach ($rows as &$r) {
+        $r['id']            = (int)$r['id'];
+        $r['total_granted'] = (int)$r['total_granted'];
+        $r['ads_remaining'] = (int)$r['ads_remaining'];
     }
     jsonOk($rows);
 }
@@ -111,6 +141,26 @@ function updateUser(array $admin): void {
             adminLog($admin, 'EDIT_USER', "User ID: $id ($email)");
             jsonOk(['message' => 'User updated.']);
     }
+}
+
+// ── GRANT QUOTA (Admin Top-Up) ────────────────────────────────────
+function grantQuota(array $admin, array $b): void {
+    $db      = getDB();
+    $userId  = (int)($b['user_id'] ?? 0);
+    $ads     = (int)($b['ads'] ?? 0);
+    if (!$userId || $ads < 1) jsonError('user_id and ads (> 0) required.');
+
+    // Upsert quota row
+    $db->prepare(
+        'INSERT INTO user_quotas (user_id, ads_remaining, total_granted, plan_id)
+         VALUES (?, ?, ?, \'admin_grant\')
+         ON DUPLICATE KEY UPDATE
+           ads_remaining = ads_remaining + VALUES(ads_remaining),
+           total_granted = total_granted + VALUES(total_granted)'
+    )->execute([$userId, $ads, $ads]);
+
+    adminLog($admin, 'GRANT_QUOTA', "User ID: $userId + $ads ads");
+    jsonOk(['message' => "$ads ads granted successfully."]);
 }
 
 // ── CREATE USER ───────────────────────────────────────────────────

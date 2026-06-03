@@ -498,6 +498,34 @@
       </div>
     </div>
 
+    <div id="tab-pricing" class="tab-content hidden space-y-6">
+      <div class="grid grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-card-dark rounded-2xl p-5 border border-slate-100 dark:border-gray-800 shadow-sm"><div class="flex items-center gap-3 mb-1"><span class="material-symbols-outlined text-emerald-500 text-2xl">payments</span><p class="text-xs font-bold text-slate-500 uppercase">Total Revenue</p></div><p class="text-2xl font-black text-slate-800 dark:text-white" id="priceStatRev">-</p></div>
+        <div class="bg-white dark:bg-card-dark rounded-2xl p-5 border border-slate-100 dark:border-gray-800 shadow-sm"><div class="flex items-center gap-3 mb-1"><span class="material-symbols-outlined text-blue-500 text-2xl">receipt_long</span><p class="text-xs font-bold text-slate-500 uppercase">Paid Plans Sold</p></div><p class="text-2xl font-black text-slate-800 dark:text-white" id="priceStatPlans">-</p></div>
+        <div class="bg-white dark:bg-card-dark rounded-2xl p-5 border border-slate-100 dark:border-gray-800 shadow-sm"><div class="flex items-center gap-3 mb-1"><span class="material-symbols-outlined text-slate-400 text-2xl">free_cancellation</span><p class="text-xs font-bold text-slate-500 uppercase">Free Users</p></div><p class="text-2xl font-black text-slate-800 dark:text-white" id="priceStatFree">-</p></div>
+        <div class="bg-white dark:bg-card-dark rounded-2xl p-5 border border-slate-100 dark:border-gray-800 shadow-sm"><div class="flex items-center gap-3 mb-1"><span class="material-symbols-outlined text-red-500 text-2xl">warning</span><p class="text-xs font-bold text-slate-500 uppercase">Flagged Accounts</p></div><p class="text-2xl font-black text-slate-800 dark:text-white" id="priceStatFlagged">-</p></div>
+      </div>
+      <div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 dark:border-gray-800 bg-slate-50 dark:bg-gray-800/50 flex justify-between items-center">
+          <div><h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="material-symbols-outlined text-yellow-500">price_change</span> Plan Price Editor</h3><p class="text-xs text-slate-400 mt-0.5">Changes saved here are immediately reflected on the live plans page.</p></div>
+          <div class="flex gap-2"><button onclick="resetPlansToDefault()" class="border border-slate-200 dark:border-gray-700 text-slate-600 dark:text-gray-300 font-bold px-4 py-2 rounded-lg text-sm hover:bg-slate-50 transition-colors">Reset Defaults</button><button onclick="savePlansConfig()" class="bg-brand text-white font-bold px-5 py-2 rounded-lg text-sm hover:bg-green-700 transition-colors shadow-sm flex items-center gap-2"><span class="material-symbols-outlined text-[16px]">save</span> Save Plans</button></div>
+        </div>
+        <div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 font-bold uppercase text-xs"><tr><th class="px-4 py-3">Plan Name</th><th class="px-4 py-3">Tag / Badge</th><th class="px-4 py-3 text-center">Price (INR)</th><th class="px-4 py-3 text-center">Ads Quota</th><th class="px-4 py-3 text-center">Validity (Days)</th><th class="px-4 py-3">Description</th></tr></thead><tbody id="planEditorBody" class="divide-y divide-slate-100 dark:divide-gray-800"><tr><td colspan="6" class="text-center py-10 text-slate-400">Loading plans...</td></tr></tbody></table></div>
+      </div>
+      <div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm p-6">
+        <div class="flex justify-between items-center mb-5"><div><h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="material-symbols-outlined text-amber-500">star</span> Featured Boost Pricing</h3><p class="text-xs text-slate-400 mt-0.5">Set how much users pay to feature their listings.</p></div><button onclick="saveFeaturedPrices()" class="bg-amber-500 text-white font-bold px-5 py-2 rounded-lg text-sm hover:bg-amber-600 transition-colors shadow-sm flex items-center gap-2"><span class="material-symbols-outlined text-[16px]">save</span> Save Boost Prices</button></div>
+        <div class="grid grid-cols-3 gap-6">
+          <div class="bg-slate-50 dark:bg-gray-800 rounded-xl p-4 border border-slate-200 dark:border-gray-700"><p class="text-xs font-bold text-slate-500 uppercase mb-2">1-Day Boost (INR)</p><div class="flex items-center gap-2"><span class="text-slate-400 font-bold text-lg">Rs</span><input type="number" id="featPrice1d" value="29" class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-900 rounded-lg px-3 py-2 font-black text-xl focus:ring-2 focus:ring-brand outline-none"></div></div>
+          <div class="bg-slate-50 dark:bg-gray-800 rounded-xl p-4 border border-slate-200 dark:border-gray-700"><p class="text-xs font-bold text-slate-500 uppercase mb-2">7-Day Boost (INR)</p><div class="flex items-center gap-2"><span class="text-slate-400 font-bold text-lg">Rs</span><input type="number" id="featPrice7d" value="149" class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-900 rounded-lg px-3 py-2 font-black text-xl focus:ring-2 focus:ring-brand outline-none"></div></div>
+          <div class="bg-slate-50 dark:bg-gray-800 rounded-xl p-4 border border-slate-200 dark:border-gray-700"><p class="text-xs font-bold text-slate-500 uppercase mb-2">30-Day Boost (INR)</p><div class="flex items-center gap-2"><span class="text-slate-400 font-bold text-lg">Rs</span><input type="number" id="featPrice30d" value="399" class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-900 rounded-lg px-3 py-2 font-black text-xl focus:ring-2 focus:ring-brand outline-none"></div></div>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 dark:border-gray-800 bg-slate-50 dark:bg-gray-800/50 flex justify-between items-center"><h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="material-symbols-outlined text-brand">manage_accounts</span> User Quota Management</h3><input type="text" id="quotaSearchInput" placeholder="Search by email..." class="border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm w-64 focus:ring-2 focus:ring-brand outline-none" oninput="filterQuotaTable(this.value)"></div>
+        <div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-slate-50 dark:bg-gray-800/50 text-slate-500 font-bold uppercase text-xs"><tr><th class="px-6 py-3">User</th><th class="px-6 py-3">Email</th><th class="px-6 py-3 text-center">Plan</th><th class="px-6 py-3 text-center">Ads Used</th><th class="px-6 py-3 text-center">Remaining</th><th class="px-6 py-3 text-center">Expires</th><th class="px-6 py-3 text-right">Actions</th></tr></thead><tbody id="quotaTableBody" class="divide-y divide-slate-100 dark:divide-gray-800"><tr><td colspan="7" class="text-center py-10 text-slate-400">Loading quota data...</td></tr></tbody></table></div>
+      </div>
+    </div>
+
     <div id="tab-security" class="tab-content hidden space-y-6">
       <div class="bg-white dark:bg-card-dark rounded-2xl p-6 border border-slate-100 dark:border-gray-800 shadow-sm max-w-2xl border-t-4 border-t-red-600">
           <h3 class="font-bold mb-6 flex items-center gap-2 text-red-600"><span class="material-symbols-outlined">security</span> Access Control Policies</h3>
@@ -1311,13 +1339,47 @@ async function saveFeaturedPrices(){
   else showToast('Error saving featured prices','error');
 }
 function renderPhoneRegistry(){const tbody=document.getElementById('phoneRegistryBody');if(tbody)tbody.innerHTML='<tr><td colspan="5" class="text-center py-8 text-slate-400">Phone registry moved to DB â€” coming soon.</td></tr>';}
-function renderQuotaTable(){
+let _allQuotaRows = [];
+async function renderQuotaTable(){
   const tbody=document.getElementById('quotaTableBody');
   if(!tbody)return;
-  // TODO: wire to user_quotas table via API
-  tbody.innerHTML='<tr><td colspan="6" class="text-center py-8 text-slate-400">Quota management via DB API â€” coming soon.</td></tr>';
+  tbody.innerHTML='<tr><td colspan="7" class="text-center py-10 text-slate-400">Loading...</td></tr>';
+  const data = await adminFetch('/api/admin/users.php?quotas=1');
+  if(!data||!data.success||!data.data||!data.data.length){tbody.innerHTML='<tr><td colspan="7" class="text-center py-10 text-slate-400">No quota data found.</td></tr>';return;}
+  _allQuotaRows = data.data;
+  renderQuotaRows(_allQuotaRows);
 }
-function grantAdminQ(uid){showToast('Quota grant coming soon â€” use DB directly.','error');}
+function renderQuotaRows(rows){
+  const tbody=document.getElementById('quotaTableBody');
+  if(!tbody)return;
+  tbody.innerHTML=rows.map(u=>{
+    const used=(u.total_granted||0)-(u.ads_remaining||0);
+    const expDate=u.expires_at?new Date(u.expires_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'Never';
+    const remaining=u.ads_remaining||0;
+    return '<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/50 transition-colors">' +
+      '<td class="px-6 py-3 font-bold text-sm">'+escapeHTML(u.name||'')+'</td>' +
+      '<td class="px-6 py-3 text-sm text-slate-500">'+escapeHTML(u.email||'')+'</td>' +
+      '<td class="px-6 py-3 text-center"><span class="px-2 py-1 bg-brand/10 text-brand text-xs font-bold rounded-full">'+escapeHTML(u.plan_id||'free')+'</span></td>' +
+      '<td class="px-6 py-3 text-center font-mono text-sm">'+used+'</td>' +
+      '<td class="px-6 py-3 text-center font-mono text-sm font-bold '+(remaining>0?'text-brand':'text-red-500')+'">'+remaining+'</td>' +
+      '<td class="px-6 py-3 text-center text-xs text-slate-400">'+expDate+'</td>' +
+      '<td class="px-6 py-3 text-right"><button onclick="grantAdminQ('+u.id+')" class="text-xs bg-brand text-white px-3 py-1 rounded-lg font-bold hover:bg-green-700 transition-colors">Grant Ads</button></td>' +
+    '</tr>';
+  }).join('');
+}
+function filterQuotaTable(q){
+  if(!_allQuotaRows.length)return;
+  if(!q.trim()){renderQuotaRows(_allQuotaRows);return;}
+  const filtered=_allQuotaRows.filter(u=>(u.email||'').toLowerCase().includes(q.toLowerCase())||(u.name||'').toLowerCase().includes(q.toLowerCase()));
+  renderQuotaRows(filtered);
+}
+async function grantAdminQ(uid){
+  const ads=prompt('Grant how many additional ads to this user?','5');
+  if(!ads||isNaN(parseInt(ads)))return;
+  const r=await adminPost('/api/admin/users.php',{action:'grant_quota',user_id:uid,ads:parseInt(ads)});
+  if(r&&r.success){showToast('Quota granted!','success');renderQuotaTable();}
+  else showToast(r?.error||'Error granting quota','error');
+}
 function toggleAntiSpam(){const e=document.getElementById('antiSpamToggle')?.checked;showToast('Anti-spam setting: '+(e?'enabled':'disabled'));}
 // END PRICING TAB
 
