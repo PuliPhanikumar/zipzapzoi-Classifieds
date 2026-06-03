@@ -187,14 +187,24 @@
     </div>
 
     <div id="tab-payments" class="tab-content hidden h-full flex flex-col space-y-6">
-        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-6 flex-shrink-0">
-            <h3 class="font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-brand">settings_ethernet</span> Gateway Configuration</h3>
-            <div class="grid grid-cols-4 gap-4">
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Provider</label><select class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm"><option>Razorpay</option><option>Stripe</option></select></div>
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Environment</label><select class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm"><option>Live</option><option>Test</option></select></div>
-                <div class="col-span-2"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">API Key</label><input type="password" value="rzp_test_12345" class="w-full border border-slate-300 dark:bg-gray-800 rounded-lg px-3 py-2 text-sm"></div>
+        <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-6 flex-shrink-0 border-t-4 border-t-blue-600">
+            <div class="flex items-center justify-between mb-5">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md"><span class="material-symbols-outlined text-white text-xl">payments</span></div>
+                <div><h3 class="font-bold text-slate-800 dark:text-white">Razorpay Gateway Configuration</h3><p class="text-xs text-slate-400">Keys are saved securely to your database — never hardcoded.</p></div>
+              </div>
+              <a href="https://dashboard.razorpay.com" target="_blank" class="text-xs text-blue-500 hover:underline flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">open_in_new</span> Razorpay Dashboard</a>
             </div>
-            <button onclick="showToast('Gateway configuration saved locally')" class="mt-4 bg-slate-800 text-white px-4 py-2 rounded font-bold text-sm">Save Config</button>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="col-span-2"><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Live API Key (Public — starts with rzp_live_)</label><div class="relative"><input type="password" id="rzpKeyPay" placeholder="rzp_live_XXXXXXXXXXXXXXXXXX" class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 pr-10 text-sm font-mono focus:ring-2 focus:ring-blue-500 outline-none"><button type="button" onclick="toggleApiKeyVisibility('rzpKeyPay',this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"><span class="material-symbols-outlined text-[18px]">visibility</span></button></div></div>
+              <div class="col-span-2"><label class="block text-xs font-bold text-red-500 uppercase mb-1">Secret Key (Server-Side — never share publicly)</label><div class="relative"><input type="password" id="rzpSecretPay" placeholder="Razorpay Key Secret" class="w-full border border-red-200 dark:border-red-900/50 dark:bg-gray-800 rounded-xl px-3 py-2.5 pr-10 text-sm font-mono focus:ring-2 focus:ring-red-400 outline-none"><button type="button" onclick="toggleApiKeyVisibility('rzpSecretPay',this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"><span class="material-symbols-outlined text-[18px]">visibility</span></button></div><p class="text-[10px] text-red-400 mt-1">Stored encrypted in DB. Used server-side only for payment signature verification.</p></div>
+              <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Currency</label><select id="rzpCurrencyPay" class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 text-sm"><option value="INR">INR - Indian Rupee</option><option value="USD">USD - US Dollar</option></select></div>
+              <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Environment</label><select id="rzpEnvPay" class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 text-sm"><option value="live">Live (Production)</option><option value="test">Test (Sandbox)</option></select></div>
+            </div>
+            <div class="flex items-center gap-3 mt-5">
+              <button onclick="savePaymentGateway()" class="bg-blue-600 text-white font-bold px-6 py-2.5 rounded-xl hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"><span class="material-symbols-outlined text-[16px]">save</span> Save Gateway Settings</button>
+              <span id="rzpSaveStatus" class="hidden text-xs text-green-600 font-bold flex items-center gap-1"><span class="material-symbols-outlined text-sm">check_circle</span> Saved to DB!</span>
+            </div>
         </div>
         <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 flex flex-col flex-1 overflow-hidden">
             <div class="p-4 border-b border-slate-100 dark:border-gray-800 bg-slate-50 dark:bg-gray-800/50"><h3 class="font-bold">Transaction Ledger</h3></div>
@@ -438,7 +448,7 @@
                   class="w-full border border-slate-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl px-3 py-2.5 text-sm font-mono focus:ring-2 focus:ring-brand outline-none transition-all">
               </div>
             </div>
-<            </div>
+            </div>
             <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl text-xs text-blue-700 dark:text-blue-300">
               <strong>Template variables:</strong> OTP &mdash; <code>{{to_name}}, {{otp_code}}</code> &nbsp;|&nbsp; Reset &mdash; <code>{{to_name}}, {{reset_link}}</code>
             </div>
@@ -491,7 +501,7 @@
             <button onclick="testEmailJs()" class="border border-slate-200 dark:border-gray-700 text-slate-600 dark:text-gray-300 font-bold px-6 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
               <span class="material-symbols-outlined text-[18px]">send</span> Send Test Email
             </button>
-            <p class="text-[11px] text-slate-400 ml-auto">⚠️ Keys are stored locally on this device only.</p>
+            <p class="text-[11px] text-slate-400 ml-auto">✅ Keys saved securely to the database.</p>
           </div>
 
         </div>
@@ -930,6 +940,17 @@ function openTimeline(uid){
 //  PAYMENTS
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 async function loadPayments(){
+  // Load gateway credentials from DB
+  const settingsData = await adminFetch('/api/admin/settings.php');
+  if(settingsData&&settingsData.success&&settingsData.data){
+    const s = settingsData.data;
+    const rzpKey=document.getElementById('rzpKeyPay');
+    const rzpSecret=document.getElementById('rzpSecretPay');
+    const rzpCurrency=document.getElementById('rzpCurrencyPay');
+    if(rzpKey&&s.razorpay_key) rzpKey.value=s.razorpay_key;
+    if(rzpSecret&&s.razorpay_secret) rzpSecret.value=s.razorpay_secret;
+    if(rzpCurrency&&s.razorpay_currency) rzpCurrency.value=s.razorpay_currency;
+  }
   const data=await adminFetch('/api/admin/payments.php');
   if(!data||!data.success){document.getElementById('paymentsTableBody').innerHTML='<tr><td colspan="5" class="p-6 text-center text-red-400">Failed.</td></tr>';return;}
   const txns=data.data;
@@ -958,6 +979,44 @@ async function executeRefund(){
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 //  COUPONS
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════════
+//  PAYMENT GATEWAY SAVE
+// ══════════════════════════════════════════════════════
+async function testEmailJs(){
+  const svcId=document.getElementById('apiEmailjsService')?.value;
+  const pubKey=document.getElementById('apiEmailjsPublic')?.value;
+  const tplId=document.getElementById('apiEmailjsOtp')?.value;
+  if(!svcId||!pubKey||!tplId){showToast('Fill in EmailJS Service ID, Public Key, and OTP Template ID first','error');return;}
+  showToast('Sending test email...','success');
+  try{
+    await fetch('https://api.emailjs.com/api/v1.0/email/send',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        service_id:svcId,template_id:tplId,user_id:pubKey,
+        template_params:{to_name:'Admin',otp_code:'123456',to_email:'test@zipzapzoi.com'}
+      })
+    });
+    showToast('Test email sent! Check your inbox.','success');
+    logAction('EMAIL_TEST','EmailJS test sent');
+  }catch(e){showToast('Email test failed: '+e.message,'error');}
+}
+
+async function savePaymentGateway(){
+  const settings={
+    razorpay_key: document.getElementById('rzpKeyPay')?.value||'',
+    razorpay_secret: document.getElementById('rzpSecretPay')?.value||'',
+    razorpay_currency: document.getElementById('rzpCurrencyPay')?.value||'INR',
+  };
+  const r = await adminPost('/api/admin/settings.php',{settings});
+  const status=document.getElementById('rzpSaveStatus');
+  if(r&&r.success){
+    showToast('Razorpay settings saved to DB!','success');
+    if(status){status.classList.remove('hidden');setTimeout(()=>status.classList.add('hidden'),3000);}
+    logAction('GATEWAY_UPDATE','Razorpay credentials updated');
+  } else showToast(r?.error||'Error saving gateway settings','error');
+}
+
 async function loadCoupons(){
   const data=await adminFetch('/api/admin/coupons.php');
   if(!data||!data.success){document.getElementById('couponsTableBody').innerHTML='<tr><td colspan="4" class="p-4 text-center text-red-400">Failed.</td></tr>';return;}
