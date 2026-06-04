@@ -345,7 +345,7 @@
       </div>
     </div>
 
-    <div id="tab-schema" class="tab-content hidden min-h-[700px] flex flex-col">
+    <div id="tab-schema" class="tab-content hidden flex flex-col" style="min-height:700px;">
       <div class="flex justify-between items-center mb-6 flex-shrink-0">
         <div><h3 class="text-xl font-bold">Relational Schema Builder</h3><p class="text-sm text-slate-500">Manage categories, subcategories, custom fields, and flags hierarchically.</p></div>
         <div class="flex gap-3">
@@ -354,17 +354,17 @@
         </div>
       </div>
       
-      <div class="flex-1 grid grid-cols-12 gap-6 min-h-0">
-        <div class="col-span-3 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden">
+      <div class="grid grid-cols-12 gap-6" style="height:580px;min-height:580px;">
+        <div class="col-span-3 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden" style="height:580px;">
           <div class="p-3 bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wider text-slate-500">1. Categories</span><button onclick="openSchemaModal('category')" class="text-brand hover:bg-green-100 p-1 rounded transition-colors"><span class="material-symbols-outlined text-sm">add</span></button></div>
           <div id="schemaCategories" class="overflow-y-auto flex-1 p-2 space-y-1"></div>
         </div>
-        <div class="col-span-4 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden">
+        <div class="col-span-4 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden" style="height:580px;">
           <div class="p-3 bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wider text-slate-500">2. Subcategories</span><button id="btnAddSub" onclick="openSchemaModal('subcategory')" class="text-brand hover:bg-green-100 p-1 rounded transition-colors disabled:opacity-30" disabled><span class="material-symbols-outlined text-sm">add</span></button></div>
           <div id="schemaSubcats" class="overflow-y-auto flex-1 p-2 space-y-1"><div class="text-center text-xs text-slate-400 mt-10">Select a Category &rarr;</div></div>
         </div>
-        <div class="col-span-5 flex flex-col gap-6 overflow-hidden min-h-0">
-            <div class="flex-1 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden min-h-[50%]">
+        <div class="col-span-5 flex flex-col gap-6 overflow-hidden" style="height:580px;">
+            <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden" style="height:340px;">
               <div class="p-3 bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wider text-slate-500">3. Custom Fields</span><button id="btnAddField" onclick="openSchemaModal('field')" class="text-brand hover:bg-green-100 p-1 rounded transition-colors disabled:opacity-30" disabled><span class="material-symbols-outlined text-sm">add</span></button></div>
               <div id="schemaFields" class="overflow-y-auto flex-1 p-2 space-y-1"><div class="text-center text-xs text-slate-400 mt-10">Select a Subcategory &rarr;</div></div>
             </div>
@@ -685,7 +685,10 @@ function switchTab(id){
   if(id==='moderation') loadReports();
   if(id==='charity') loadCharityQueue();
   if(id==='support') loadSupport();
-  if(id==='schema') renderSchemaBuilder();
+  if(id==='schema'){
+    // Wait one frame so the tab is visible before rendering
+    requestAnimationFrame(()=>renderSchemaBuilder());
+  }
   if(id==='settings'||id==='security') loadSettingsUI();
   if(id==='pricing') loadPricingTab();
 }
@@ -1195,7 +1198,10 @@ async function bulkApproveCharity(){
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 async function loadSettingsUI(){
   const data=await adminFetch('/api/admin/settings.php');
-  if(!data||!data.success) return;
+  if(!data||!data.success){
+    showToast('Settings failed to load — check server connection','error');
+    return;
+  }
   const cfg=data.data;
 
   const cfgMap={
@@ -1269,7 +1275,34 @@ function toggleApiKeyVisibility(inputId,btn){
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 //  SCHEMA BUILDER  (still uses localStorage â€” schema is frontend config)
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-const DEFAULT_SCHEMA={categories:[{id:'c1',label:'Vehicles',icon:'directions_car'}],subcategories:[{id:'s1',categoryId:'c1',label:'Cars'}],fields:[{id:'f1',subcategoryId:'s1',label:'Mileage',type:'number',options:''}]};
+const DEFAULT_SCHEMA={
+  categories:[
+    {id:'c1',label:'Vehicles',icon:'directions_car'},
+    {id:'c2',label:'Electronics',icon:'devices'},
+    {id:'c3',label:'Real Estate',icon:'home'},
+    {id:'c4',label:'Jobs & Services',icon:'work'},
+    {id:'c5',label:'Furniture & Home',icon:'chair'},
+    {id:'c6',label:'Fashion & Clothing',icon:'checkroom'},
+  ],
+  subcategories:[
+    {id:'s1',categoryId:'c1',label:'Cars'},{id:'s2',categoryId:'c1',label:'Bikes'},{id:'s3',categoryId:'c1',label:'Auto Parts'},
+    {id:'s4',categoryId:'c2',label:'Mobile Phones'},{id:'s5',categoryId:'c2',label:'Laptops'},{id:'s6',categoryId:'c2',label:'Cameras'},
+    {id:'s7',categoryId:'c3',label:'Apartments'},{id:'s8',categoryId:'c3',label:'Plots & Land'},
+    {id:'s9',categoryId:'c4',label:'IT & Software'},{id:'s10',categoryId:'c4',label:'Education & Tutoring'},
+    {id:'s11',categoryId:'c5',label:'Sofas & Chairs'},{id:'s12',categoryId:'c5',label:'Beds & Wardrobes'},
+    {id:'s13',categoryId:'c6',label:'Men's Clothing'},{id:'s14',categoryId:'c6',label:'Women's Clothing'},
+  ],
+  fields:[
+    {id:'f1',subcategoryId:'s1',label:'Mileage (km)',type:'number',options:''},
+    {id:'f2',subcategoryId:'s1',label:'Year of Manufacture',type:'number',options:''},
+    {id:'f3',subcategoryId:'s1',label:'Fuel Type',type:'select',options:'Petrol,Diesel,CNG,Electric,Hybrid'},
+    {id:'f4',subcategoryId:'s2',label:'Engine CC',type:'number',options:''},
+    {id:'f5',subcategoryId:'s4',label:'Storage',type:'select',options:'64GB,128GB,256GB,512GB'},
+    {id:'f6',subcategoryId:'s5',label:'RAM',type:'select',options:'4GB,8GB,16GB,32GB'},
+    {id:'f7',subcategoryId:'s7',label:'BHK',type:'select',options:'1BHK,2BHK,3BHK,4BHK+'},
+    {id:'f8',subcategoryId:'s7',label:'Furnished',type:'select',options:'Furnished,Semi-Furnished,Unfurnished'},
+  ]
+};
 let curSchema={categories:[],subcategories:[],fields:[]};
 let activeCat=null,activeSub=null;
 let _schemaLoadedFromDB=false;
@@ -1277,13 +1310,13 @@ let _schemaLoadedFromDB=false;
 async function loadSchemaFromDB(){
   try{
     const r=await adminFetch('/api/schema.php');
-    if(r&&r.success&&r.data&&Array.isArray(r.data.categories)&&r.data.source!=='default'&&r.data.categories.length>0){
+    if(r&&r.success&&r.data&&Array.isArray(r.data.categories)&&r.data.categories.length>0){
       curSchema=r.data;localStorage.setItem('zzz_classifieds_schema',JSON.stringify(curSchema));
       _schemaLoadedFromDB=true;return;
     }
   }catch(e){}
   const saved=localStorage.getItem('zzz_classifieds_schema');
-  if(saved){try{curSchema=JSON.parse(saved);_schemaLoadedFromDB=true;return;}catch(e){}}
+  if(saved){try{const p=JSON.parse(saved);if(p&&p.categories&&p.categories.length>0){curSchema=p;_schemaLoadedFromDB=true;return;}}catch(e){}}
   if(window.ZZZ_SCHEMA&&window.ZZZ_SCHEMA.categories&&window.ZZZ_SCHEMA.categories.length>0){
     curSchema=JSON.parse(JSON.stringify(window.ZZZ_SCHEMA));
   }else{curSchema=DEFAULT_SCHEMA;}
@@ -1292,6 +1325,11 @@ async function loadSchemaFromDB(){
 
 async function renderSchemaBuilder(){
   if(!_schemaLoadedFromDB) await loadSchemaFromDB();
+  // Safety: if all fallbacks empty, seed with DEFAULT_SCHEMA and save to DB
+  if(!curSchema.categories||curSchema.categories.length===0){
+    curSchema=JSON.parse(JSON.stringify(DEFAULT_SCHEMA));
+    saveSchemaToDB();
+  }
   document.getElementById('schemaCategories').innerHTML=(curSchema.categories||[]).map(c=>`<div onclick="selCat('${c.id}')" class="p-2.5 rounded mb-1 cursor-pointer border border-slate-100 dark:border-gray-700 flex justify-between items-center group transition-colors ${activeCat===c.id?'active-schema shadow-md':'bg-white dark:bg-card-dark hover:bg-slate-50 dark:hover:bg-gray-800'}"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] opacity-70">${escapeHTML(c.icon||'category')}</span><span class="text-sm font-bold">${escapeHTML(c.label)}</span></div><button onclick="openSchemaModal('category','${c.id}',event)" class="opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">edit</span></button></div>`).join('');
 
   const subcats=activeCat?(curSchema.subcategories||[]).filter(s=>s.categoryId===activeCat):[];
