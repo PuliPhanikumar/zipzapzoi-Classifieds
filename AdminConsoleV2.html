@@ -1020,6 +1020,7 @@ async function savePaymentGateway(){
     razorpay_key: document.getElementById('rzpKeyPay')?.value||'',
     razorpay_secret: document.getElementById('rzpSecretPay')?.value||'',
     razorpay_currency: document.getElementById('rzpCurrencyPay')?.value||'INR',
+      razorpay_env: document.getElementById('rzpEnvPay')?.value||'live',
   };
   const r = await adminPost('/api/admin/settings.php',{settings});
   const status=document.getElementById('rzpSaveStatus');
@@ -1079,7 +1080,7 @@ async function loadReports(){
   document.getElementById('abuseTableBody').innerHTML=abuse_tracking.length?abuse_tracking.map(a=>`
     <tr><td class="py-2 text-xs font-bold text-slate-500">${escapeHTML(a.seller_name||'â€”')}</td>
     <td class="text-center font-bold text-orange-500">${a.report_count}</td>
-    <td class="text-right"><button onclick="showToast('Warning noted for ${escapeHTML(a.seller_name||'')}','success')" class="text-[10px] font-bold bg-orange-100 text-orange-700 px-2 py-1 rounded hover:bg-orange-200">Warn</button></td></tr>`)
+    <td class="text-right"><button onclick="banUser(${a.seller_id})" class="text-[10px] font-bold bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200">Ban User</button></td></tr>`)
     .join(''):'<tr><td colspan="3" class="py-4 text-center text-slate-400">No repeat reporters.</td></tr>';
 }
 
@@ -1174,7 +1175,7 @@ function approveCharity(id){
 function rejectCharity(id){
   openCharityReasonModal('âŒ Reject Charity Post','Provide a reason â€” this will be shown to the user.','Reject Post','bg-red-500 hover:bg-red-600',async(reason)=>{
     if(!reason){showToast('Please enter a rejection reason.','error');return;}
-    const r=await adminPut('/api/admin/listings.php',{id,status:'rejected',admin_reason:reason});
+    const r=await adminPut('/api/admin/listings.php',{id,status:'rejected'});
     if(r&&r.success){showToast('Charity post rejected','error');loadCharityQueue();logAction('CHARITY_REJECT','Post '+id+' rejected');}
   });
 }
@@ -1291,13 +1292,13 @@ async function loadSchemaFromDB(){
 
 async function renderSchemaBuilder(){
   if(!_schemaLoadedFromDB) await loadSchemaFromDB();
-  document.getElementById('schemaCategories').innerHTML=curSchema.categories.map(c=>`<div onclick="selCat('${c.id}')" class="p-2.5 rounded mb-1 cursor-pointer border border-slate-100 dark:border-gray-700 flex justify-between items-center group transition-colors ${activeCat===c.id?'active-schema shadow-md':'bg-white dark:bg-card-dark hover:bg-slate-50 dark:hover:bg-gray-800'}"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] opacity-70">${escapeHTML(c.icon||'category')}</span><span class="text-sm font-bold">${escapeHTML(c.label)}</span></div><button onclick="openSchemaModal('category','${c.id}',event)" class="opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">edit</span></button></div>`).join('');
+  document.getElementById('schemaCategories').innerHTML=(curSchema.categories||[]).map(c=>`<div onclick="selCat('${c.id}')" class="p-2.5 rounded mb-1 cursor-pointer border border-slate-100 dark:border-gray-700 flex justify-between items-center group transition-colors ${activeCat===c.id?'active-schema shadow-md':'bg-white dark:bg-card-dark hover:bg-slate-50 dark:hover:bg-gray-800'}"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] opacity-70">${escapeHTML(c.icon||'category')}</span><span class="text-sm font-bold">${escapeHTML(c.label)}</span></div><button onclick="openSchemaModal('category','${c.id}',event)" class="opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">edit</span></button></div>`).join('');
 
-  const subcats=activeCat?curSchema.subcategories.filter(s=>s.categoryId===activeCat):[];
+  const subcats=activeCat?(curSchema.subcategories||[]).filter(s=>s.categoryId===activeCat):[];
   document.getElementById('schemaSubcats').innerHTML=activeCat?(subcats.length?subcats.map(s=>`<div onclick="selSub('${s.id}')" class="p-2.5 rounded mb-1 cursor-pointer border border-slate-100 dark:border-gray-700 flex justify-between items-center group transition-colors ${activeSub===s.id?'active-schema shadow-md':'bg-white dark:bg-card-dark hover:bg-slate-50 dark:hover:bg-gray-800'}"><span class="text-sm font-bold">${escapeHTML(s.label)}</span><button onclick="openSchemaModal('subcategory','${s.id}',event)" class="opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">edit</span></button></div>`).join(''):'<div class="text-center text-xs text-slate-400 mt-4">No subcategories yet.</div>'):'<div class="text-center text-xs text-slate-400 mt-10">Select a Category &rarr;</div>';
   document.getElementById('btnAddSub').disabled=!activeCat;
 
-  const fields=activeSub?curSchema.fields.filter(f=>f.subcategoryId===activeSub):[];
+  const fields=activeSub?(curSchema.fields||[]).filter(f=>f.subcategoryId===activeSub):[];
   document.getElementById('schemaFields').innerHTML=activeSub?(fields.length?fields.map(f=>`<div class="p-2.5 rounded mb-1 border border-slate-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-card-dark group"><div class="flex flex-col"><span class="text-sm font-bold">${escapeHTML(f.label)}</span><span class="text-[10px] text-slate-400 font-mono uppercase">${escapeHTML(f.type)}</span></div><button onclick="openSchemaModal('field','${f.id}')" class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-brand transition-opacity"><span class="material-symbols-outlined text-[16px]">edit</span></button></div>`).join(''):'<div class="text-center text-xs text-slate-400 mt-4">No custom fields yet.</div>'):'<div class="text-center text-xs text-slate-400 mt-10">Select a Subcategory &rarr;</div>';
   document.getElementById('btnAddField').disabled=!activeSub;
 
@@ -1331,9 +1332,9 @@ function saveSchemaItem(){
 function deleteSchemaItem(){
   const type=document.getElementById('schemaItemType').value,id=document.getElementById('schemaItemId').value;
   confirmAction('Delete Schema Item','Are you sure? This may affect existing listings.',()=>{
-    if(type==='category'){curSchema.categories=curSchema.categories.filter(x=>x.id!==id);curSchema.subcategories=curSchema.subcategories.filter(x=>x.categoryId!==id);activeCat=null;activeSub=null;}
-    if(type==='subcategory'){curSchema.subcategories=curSchema.subcategories.filter(x=>x.id!==id);curSchema.fields=curSchema.fields.filter(x=>x.subcategoryId!==id);activeSub=null;}
-    if(type==='field')curSchema.fields=curSchema.fields.filter(x=>x.id!==id);
+    if(type==='category'){curSchema.categories=curSchema.categories.filter(x=>x.id!==id);curSchema.subcategories=(curSchema.subcategories||[]).filter(x=>x.categoryId!==id);activeCat=null;activeSub=null;}
+    if(type==='subcategory'){curSchema.subcategories=(curSchema.subcategories||[]).filter(x=>x.id!==id);curSchema.fields=(curSchema.fields||[]).filter(x=>x.subcategoryId!==id);activeSub=null;}
+    if(type==='field')curSchema.fields=(curSchema.fields||[]).filter(x=>x.id!==id);
     saveSchemaToDB();closeModal('schemaModal');renderSchemaBuilder();showToast('Item deleted');
   });
 }
