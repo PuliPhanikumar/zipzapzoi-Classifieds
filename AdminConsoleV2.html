@@ -785,10 +785,23 @@ async function api(url, opts={}) {
       setTimeout(()=>{ window.location.href='Login Page.html'; }, 1500);
       return null;
     }
-    return await res.json();
+    
+    const text = await res.text();
+    if (!text) return null;
+    
+    try {
+      return JSON.parse(text);
+    } catch(e) {
+      // It's likely HTML (404 or PHP error) instead of JSON. Fail gracefully in background.
+      console.warn('API returned non-JSON:', url);
+      return { success: false, error: 'Server returned invalid format' };
+    }
   } catch(e) {
-    console.error('API error:', url, e);
-    showToast('Network error — check server connection', 'error');
+    console.error('API network error:', url, e);
+    // Only show toast if it's a POST/PUT/DELETE (an action) so we don't spam on page load
+    if (opts.method && opts.method !== 'GET') {
+      showToast('Network error — check server connection', 'error');
+    }
     return null;
   }
 }
@@ -955,7 +968,16 @@ function renderDashboardCharts(listings, payments) {
   const ctx1 = document.getElementById('activityChart');
   if (ctx1) {
     if (_charts.activity) _charts.activity.destroy();
-    _charts.activity = new Chart(ctx1, {type:'line', data:{labels:days,datasets:[{label:'Listings',data:days.map(()=>Math.floor(Math.random()*15+5)),borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.08)',fill:true,tension:.4,borderWidth:2}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+    // Group listings by day for the last 7 days to show real data (fallback to 0 if none)
+    const countsByDay = days.map(dStr => {
+      return listings.filter(l => {
+        if (!l.created_at) return false;
+        const lDate = new Date(l.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+        return lDate === dStr;
+      }).length;
+    });
+    
+    _charts.activity = new Chart(ctx1, {type:'line', data:{labels:days,datasets:[{label:'New Listings',data:countsByDay,borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.08)',fill:true,tension:.4,borderWidth:2}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
   }
   const statuses = ['active','pending_review','expired','rejected'];
   const counts = statuses.map(s=>listings.filter(l=>l.status===s).length);
