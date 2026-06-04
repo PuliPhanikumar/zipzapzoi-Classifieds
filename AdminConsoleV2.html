@@ -139,7 +139,7 @@
       </div>
     </div>
 
-    <div id="tab-listings" class="tab-content hidden h-full flex flex-col">
+    <div id="tab-listings" class="tab-content" style="display:none;height:100%;flex-direction:column;">
       <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 flex flex-col flex-1 overflow-hidden">
         <div class="p-4 border-b border-slate-100 dark:border-gray-800 flex gap-3 items-center bg-slate-50 dark:bg-gray-800/50">
           <h3 class="font-bold flex-1">Database</h3>
@@ -153,7 +153,7 @@
       </div>
     </div>
 
-    <div id="tab-users" class="tab-content hidden h-full flex flex-col gap-4">
+    <div id="tab-users" class="tab-content" style="display:none;">
       <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 flex flex-col flex-1 overflow-hidden">
         <div class="p-4 border-b border-slate-100 dark:border-gray-800 flex flex-wrap gap-3 items-center bg-slate-50 dark:bg-gray-800/50">
           <h3 class="font-bold flex-1">User Base</h3>
@@ -186,7 +186,7 @@
       </div>
     </div>
 
-    <div id="tab-payments" class="tab-content hidden h-full flex flex-col space-y-6">
+    <div id="tab-payments" class="tab-content" style="display:none;">
         <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-6 flex-shrink-0 border-t-4 border-t-blue-600">
             <div class="flex items-center justify-between mb-5">
               <div class="flex items-center gap-3">
@@ -212,7 +212,7 @@
         </div>
     </div>
 
-    <div id="tab-coupons" class="tab-content hidden space-y-6">
+    <div id="tab-coupons" class="tab-content" style="display:none;">
         <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-6">
           <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-pink-500">local_offer</span> Manage Promo Codes</h3>
           <div class="flex gap-4 mb-6">
@@ -224,7 +224,7 @@
         </div>
     </div>
 
-    <div id="tab-moderation" class="tab-content hidden space-y-6">
+    <div id="tab-moderation" class="tab-content" style="display:none;">
       <div class="grid grid-cols-2 gap-6">
           <div class="bg-white dark:bg-card-dark rounded-2xl border border-slate-100 dark:border-gray-800 p-4 shadow-sm flex flex-col max-h-[500px]">
               <h3 class="font-bold text-red-500 mb-3 flex items-center gap-2"><span class="material-symbols-outlined">flag</span> Active Reports Queue</h3>
@@ -244,7 +244,7 @@
     </div>
 
     <!-- ═══ CHARITY MODERATION QUEUE TAB ═══ -->
-    <div id="tab-charity" class="tab-content hidden space-y-6">
+    <div id="tab-charity" class="tab-content" style="display:none;">
 
       <!-- Stats Row -->
       <div class="grid grid-cols-4 gap-4">
@@ -334,7 +334,7 @@
       </div>
     </div>
 
-    <div id="tab-support" class="tab-content hidden h-full flex flex-col">
+    <div id="tab-support" class="tab-content" style="display:none;">
       <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 flex flex-col flex-1 overflow-hidden">
         <div class="p-4 border-b border-slate-100 dark:border-gray-800 bg-slate-50 dark:bg-gray-800/50 flex justify-between items-center">
             <h3 class="font-bold">Tickets & SLA Management</h3>
@@ -345,7 +345,7 @@
       </div>
     </div>
 
-    <div id="tab-schema" class="tab-content hidden flex flex-col" style="min-height:700px;">
+    <div id="tab-schema" class="tab-content" style="display:none;min-height:700px;">
       <div class="flex justify-between items-center mb-6 flex-shrink-0">
         <div><h3 class="text-xl font-bold">Relational Schema Builder</h3><p class="text-sm text-slate-500">Manage categories, subcategories, custom fields, and flags hierarchically.</p></div>
         <div class="flex gap-3">
@@ -354,17 +354,17 @@
         </div>
       </div>
       
-      <div class="grid grid-cols-12 gap-6" style="height:580px;min-height:580px;">
-        <div class="col-span-3 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden" style="height:580px;">
+      <div class="grid grid-cols-12 gap-6" style="height:620px;">
+        <div class="col-span-3 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden" style="height:620px;">
           <div class="p-3 bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wider text-slate-500">1. Categories</span><button onclick="openSchemaModal('category')" class="text-brand hover:bg-green-100 p-1 rounded transition-colors"><span class="material-symbols-outlined text-sm">add</span></button></div>
           <div id="schemaCategories" class="overflow-y-auto flex-1 p-2 space-y-1"></div>
         </div>
-        <div class="col-span-4 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden" style="height:580px;">
+        <div class="col-span-4 bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden" style="height:620px;">
           <div class="p-3 bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wider text-slate-500">2. Subcategories</span><button id="btnAddSub" onclick="openSchemaModal('subcategory')" class="text-brand hover:bg-green-100 p-1 rounded transition-colors disabled:opacity-30" disabled><span class="material-symbols-outlined text-sm">add</span></button></div>
           <div id="schemaSubcats" class="overflow-y-auto flex-1 p-2 space-y-1"><div class="text-center text-xs text-slate-400 mt-10">Select a Category &rarr;</div></div>
         </div>
-        <div class="col-span-5 flex flex-col gap-6 overflow-hidden" style="height:580px;">
-            <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden" style="height:340px;">
+        <div class="col-span-5 flex flex-col gap-6" style="height:620px;">
+            <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden" style="height:380px;">
               <div class="p-3 bg-slate-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center"><span class="text-xs font-bold uppercase tracking-wider text-slate-500">3. Custom Fields</span><button id="btnAddField" onclick="openSchemaModal('field')" class="text-brand hover:bg-green-100 p-1 rounded transition-colors disabled:opacity-30" disabled><span class="material-symbols-outlined text-sm">add</span></button></div>
               <div id="schemaFields" class="overflow-y-auto flex-1 p-2 space-y-1"><div class="text-center text-xs text-slate-400 mt-10">Select a Subcategory &rarr;</div></div>
             </div>
@@ -381,7 +381,7 @@
       </div>
     </div>
 
-    <div id="tab-settings" class="tab-content hidden space-y-6">
+    <div id="tab-settings" class="tab-content" style="display:none;" data-display="block">
       <!-- Listing & Media Config -->
       <div class="bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-6">
         <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-brand">tune</span> Listing &amp; Media Configurations</h3>
@@ -508,7 +508,7 @@
       </div>
     </div>
 
-    <div id="tab-pricing" class="tab-content hidden space-y-6">
+    <div id="tab-pricing" class="tab-content" style="display:none;">
       <div class="grid grid-cols-4 gap-4">
         <div class="bg-white dark:bg-card-dark rounded-2xl p-5 border border-slate-100 dark:border-gray-800 shadow-sm"><div class="flex items-center gap-3 mb-1"><span class="material-symbols-outlined text-emerald-500 text-2xl">payments</span><p class="text-xs font-bold text-slate-500 uppercase">Total Revenue</p></div><p class="text-2xl font-black text-slate-800 dark:text-white" id="priceStatRev">-</p></div>
         <div class="bg-white dark:bg-card-dark rounded-2xl p-5 border border-slate-100 dark:border-gray-800 shadow-sm"><div class="flex items-center gap-3 mb-1"><span class="material-symbols-outlined text-blue-500 text-2xl">receipt_long</span><p class="text-xs font-bold text-slate-500 uppercase">Paid Plans Sold</p></div><p class="text-2xl font-black text-slate-800 dark:text-white" id="priceStatPlans">-</p></div>
@@ -536,7 +536,7 @@
       </div>
     </div>
 
-    <div id="tab-security" class="tab-content hidden space-y-6">
+    <div id="tab-security" class="tab-content" style="display:none;">
       <div class="bg-white dark:bg-card-dark rounded-2xl p-6 border border-slate-100 dark:border-gray-800 shadow-sm max-w-2xl border-t-4 border-t-red-600">
           <h3 class="font-bold mb-6 flex items-center gap-2 text-red-600"><span class="material-symbols-outlined">security</span> Access Control Policies</h3>
           <div class="space-y-5">
@@ -665,10 +665,16 @@ function logAction(action,detail=''){
 //  TAB SWITCHING
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function switchTab(id){
-  document.querySelectorAll('.tab-content').forEach(el=>el.classList.add('hidden'));
-  document.getElementById('tab-'+id).classList.remove('hidden');
+  // Hide ALL tab panels using style.display — avoids Tailwind hidden class conflicts
+  document.querySelectorAll('.tab-content').forEach(el=>{ el.style.display='none'; });
+  // Show the selected tab
+  var tab = document.getElementById('tab-'+id);
+  if(tab) tab.style.display = 'block';
+  // Update nav active state
   document.querySelectorAll('.nav-link').forEach(el=>el.classList.remove('active-nav'));
-  document.getElementById('nav-'+id).classList.add('active-nav');
+  var navEl = document.getElementById('nav-'+id);
+  if(navEl) navEl.classList.add('active-nav');
+  // Update page title
   document.getElementById('pageTitle').textContent = {
     dashboard:'Dashboard & Analytics', listings:'Listings Database',
     users:'User Base', payments:'Payments & Refunds', coupons:'Promo Coupons',
@@ -676,21 +682,18 @@ function switchTab(id){
     support:'Tickets & SLA', charity:'Charity Queue', schema:'Schema Builder',
     settings:'Global Settings', security:'Security Center'
   }[id] || id;
-
-  if(id==='dashboard'){loadDashboard();}
-  if(id==='listings') loadListings();
-  if(id==='users'){loadUsers();loadVerificationReqs();}
-  if(id==='payments') loadPayments();
-  if(id==='coupons') loadCoupons();
-  if(id==='moderation') loadReports();
-  if(id==='charity') loadCharityQueue();
-  if(id==='support') loadSupport();
-  if(id==='schema'){
-    // Wait one frame so the tab is visible before rendering
-    requestAnimationFrame(()=>renderSchemaBuilder());
-  }
+  // Load data for the tab
+  if(id==='dashboard') loadDashboard();
+  if(id==='listings')  loadListings();
+  if(id==='users')     { loadUsers(); loadVerificationReqs(); }
+  if(id==='payments')  loadPayments();
+  if(id==='coupons')   loadCoupons();
+  if(id==='moderation')loadReports();
+  if(id==='charity')   loadCharityQueue();
+  if(id==='support')   loadSupport();
+  if(id==='schema')    renderSchemaBuilder();
   if(id==='settings'||id==='security') loadSettingsUI();
-  if(id==='pricing') loadPricingTab();
+  if(id==='pricing')   loadPricingTab();
 }
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -1198,10 +1201,7 @@ async function bulkApproveCharity(){
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 async function loadSettingsUI(){
   const data=await adminFetch('/api/admin/settings.php');
-  if(!data||!data.success){
-    showToast('Settings failed to load — check server connection','error');
-    return;
-  }
+  if(!data||!data.success) return;
   const cfg=data.data;
 
   const cfgMap={
@@ -1275,34 +1275,7 @@ function toggleApiKeyVisibility(inputId,btn){
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 //  SCHEMA BUILDER  (still uses localStorage â€” schema is frontend config)
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-const DEFAULT_SCHEMA={
-  categories:[
-    {id:'c1',label:'Vehicles',icon:'directions_car'},
-    {id:'c2',label:'Electronics',icon:'devices'},
-    {id:'c3',label:'Real Estate',icon:'home'},
-    {id:'c4',label:'Jobs & Services',icon:'work'},
-    {id:'c5',label:'Furniture & Home',icon:'chair'},
-    {id:'c6',label:'Fashion & Clothing',icon:'checkroom'},
-  ],
-  subcategories:[
-    {id:'s1',categoryId:'c1',label:'Cars'},{id:'s2',categoryId:'c1',label:'Bikes'},{id:'s3',categoryId:'c1',label:'Auto Parts'},
-    {id:'s4',categoryId:'c2',label:'Mobile Phones'},{id:'s5',categoryId:'c2',label:'Laptops'},{id:'s6',categoryId:'c2',label:'Cameras'},
-    {id:'s7',categoryId:'c3',label:'Apartments'},{id:'s8',categoryId:'c3',label:'Plots & Land'},
-    {id:'s9',categoryId:'c4',label:'IT & Software'},{id:'s10',categoryId:'c4',label:'Education & Tutoring'},
-    {id:'s11',categoryId:'c5',label:'Sofas & Chairs'},{id:'s12',categoryId:'c5',label:'Beds & Wardrobes'},
-    {id:'s13',categoryId:'c6',label:'Mens Clothing'},{id:'s14',categoryId:'c6',label:'Womens Clothing'},
-  ],
-  fields:[
-    {id:'f1',subcategoryId:'s1',label:'Mileage (km)',type:'number',options:''},
-    {id:'f2',subcategoryId:'s1',label:'Year of Manufacture',type:'number',options:''},
-    {id:'f3',subcategoryId:'s1',label:'Fuel Type',type:'select',options:'Petrol,Diesel,CNG,Electric,Hybrid'},
-    {id:'f4',subcategoryId:'s2',label:'Engine CC',type:'number',options:''},
-    {id:'f5',subcategoryId:'s4',label:'Storage',type:'select',options:'64GB,128GB,256GB,512GB'},
-    {id:'f6',subcategoryId:'s5',label:'RAM',type:'select',options:'4GB,8GB,16GB,32GB'},
-    {id:'f7',subcategoryId:'s7',label:'BHK',type:'select',options:'1BHK,2BHK,3BHK,4BHK+'},
-    {id:'f8',subcategoryId:'s7',label:'Furnished',type:'select',options:'Furnished,Semi-Furnished,Unfurnished'},
-  ]
-};
+const DEFAULT_SCHEMA={categories:[{id:'c1',label:'Vehicles',icon:'directions_car'},{id:'c2',label:'Electronics',icon:'devices'},{id:'c3',label:'Real Estate',icon:'home'},{id:'c4',label:'Jobs and Services',icon:'work'},{id:'c5',label:'Furniture and Home',icon:'chair'},{id:'c6',label:'Fashion and Clothing',icon:'checkroom'}],subcategories:[{id:'s1',categoryId:'c1',label:'Cars'},{id:'s2',categoryId:'c1',label:'Bikes'},{id:'s3',categoryId:'c1',label:'Auto Parts'},{id:'s4',categoryId:'c2',label:'Mobile Phones'},{id:'s5',categoryId:'c2',label:'Laptops'},{id:'s6',categoryId:'c2',label:'Cameras'},{id:'s7',categoryId:'c3',label:'Apartments'},{id:'s8',categoryId:'c3',label:'Plots and Land'},{id:'s9',categoryId:'c4',label:'IT and Software'},{id:'s10',categoryId:'c4',label:'Education and Tutoring'},{id:'s11',categoryId:'c5',label:'Sofas and Chairs'},{id:'s12',categoryId:'c5',label:'Beds and Wardrobes'},{id:'s13',categoryId:'c6',label:'Mens Clothing'},{id:'s14',categoryId:'c6',label:'Womens Clothing'}],fields:[{id:'f1',subcategoryId:'s1',label:'Mileage km',type:'number',options:''},{id:'f2',subcategoryId:'s1',label:'Year of Manufacture',type:'number',options:''},{id:'f3',subcategoryId:'s1',label:'Fuel Type',type:'select',options:'Petrol,Diesel,CNG,Electric,Hybrid'},{id:'f4',subcategoryId:'s4',label:'Storage',type:'select',options:'64GB,128GB,256GB,512GB'},{id:'f5',subcategoryId:'s5',label:'RAM',type:'select',options:'4GB,8GB,16GB,32GB'},{id:'f6',subcategoryId:'s7',label:'BHK',type:'select',options:'1BHK,2BHK,3BHK,4BHK+'},{id:'f7',subcategoryId:'s7',label:'Furnished',type:'select',options:'Furnished,Semi-Furnished,Unfurnished'}]};
 let curSchema={categories:[],subcategories:[],fields:[]};
 let activeCat=null,activeSub=null;
 let _schemaLoadedFromDB=false;
@@ -1316,7 +1289,7 @@ async function loadSchemaFromDB(){
     }
   }catch(e){}
   const saved=localStorage.getItem('zzz_classifieds_schema');
-  if(saved){try{const p=JSON.parse(saved);if(p&&p.categories&&p.categories.length>0){curSchema=p;_schemaLoadedFromDB=true;return;}}catch(e){}}
+  if(saved){try{curSchema=JSON.parse(saved);_schemaLoadedFromDB=true;return;}catch(e){}}
   if(window.ZZZ_SCHEMA&&window.ZZZ_SCHEMA.categories&&window.ZZZ_SCHEMA.categories.length>0){
     curSchema=JSON.parse(JSON.stringify(window.ZZZ_SCHEMA));
   }else{curSchema=DEFAULT_SCHEMA;}
@@ -1325,7 +1298,7 @@ async function loadSchemaFromDB(){
 
 async function renderSchemaBuilder(){
   if(!_schemaLoadedFromDB) await loadSchemaFromDB();
-  // Safety: if all fallbacks empty, seed with DEFAULT_SCHEMA and save to DB
+  // If still empty after all fallbacks, use DEFAULT_SCHEMA
   if(!curSchema.categories||curSchema.categories.length===0){
     curSchema=JSON.parse(JSON.stringify(DEFAULT_SCHEMA));
     saveSchemaToDB();
