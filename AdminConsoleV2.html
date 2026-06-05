@@ -152,8 +152,9 @@
   </div>
 
   <div class="nav-section-label">Classifieds</div>
-  <div class="nav-item" id="nav-listings" onclick="switchTab('listings')">
-    <span class="material-symbols-outlined mi">inventory_2</span>Listings
+  <div class="nav-item flex items-center justify-between" id="nav-listings" onclick="switchTab('listings')" style="display:flex; justify-content:space-between; align-items:center;">
+    <div><span class="material-symbols-outlined mi">inventory_2</span>Listings</div>
+    <span id="pendingListingsBadge" style="display:none; background:#ef4444; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:12px;">0</span>
   </div>
   <div class="nav-item" id="nav-users" onclick="switchTab('users')">
     <span class="material-symbols-outlined mi">group</span>Users
@@ -1029,19 +1030,19 @@ async function loadListings() {
 }
 async function approveListing(id) {
   const r = await apiPut('/api/admin/listings.php', {id, status:'active'});
-  if (r?.success) { showToast('Listing approved!'); logAction('APPROVE_LISTING','ID:'+id); loadListings(); }
+  if (r?.success) { showToast('Listing approved!'); logAction('APPROVE_LISTING','ID:'+id); loadListings(); updatePendingBadge(); }
   else showToast(r?.error||'Error approving listing','error');
 }
 async function rejectListing(id) {
   confirmAction('Reject Listing','This will reject and hide the listing. Confirm?',async()=>{
     const r = await apiPut('/api/admin/listings.php', {id, status:'rejected'});
-    if (r?.success) { showToast('Listing rejected','error'); logAction('REJECT_LISTING','ID:'+id); loadListings(); }
+    if (r?.success) { showToast('Listing rejected','error'); logAction('REJECT_LISTING','ID:'+id); loadListings(); updatePendingBadge(); }
     else showToast(r?.error||'Error','error');
   });
 }
 function viewListing(id) {
   showToast('Opening listing #'+id);
-  window.open('/listing.php?id='+id,'_blank');
+  window.open('/Listing Detail.html?id='+id,'_blank');
 }
 
 // ─────────────────────────────────────────────────────────
