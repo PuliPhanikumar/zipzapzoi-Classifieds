@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -112,10 +112,73 @@
           </div>
       </div>
 
-      <div class="lg:col-span-1">
-        <div class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-bouncy sticky top-24">
-          <h2 class="text-xl font-bold mb-4">Still need help?</h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Our support team usually responds within 24 hours.</p>
+      <div class="lg:col-span-1 space-y-5">
+
+        <!-- CONTACT DIRECTORY -->
+        <div class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-bouncy">
+          <h2 class="text-xl font-bold mb-5 flex items-center gap-2">
+            <span class="material-symbols-outlined text-secondary">contact_mail</span>
+            Contact Directory
+          </h2>
+
+          <!-- User Support -->
+          <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
+            <p class="text-xs font-black uppercase text-blue-600 dark:text-blue-400 mb-1 flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">support_agent</span> User Support
+            </p>
+            <a href="mailto:support@zipzapzoi.com" class="text-sm font-bold text-blue-700 dark:text-blue-300 hover:underline">support@zipzapzoi.com</a>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Account issues, ad problems, general help</p>
+          </div>
+
+          <!-- OTP / System Emails -->
+          <div class="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+            <p class="text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">mark_email_read</span> OTP &amp; System Emails
+            </p>
+            <span class="text-sm font-bold text-gray-700 dark:text-gray-300">noreply@zipzapzoi.com</span>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">OTP codes, listing approvals/rejections — do not reply</p>
+          </div>
+
+          <!-- Careers -->
+          <div class="mb-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-100 dark:border-purple-800">
+            <p class="text-xs font-black uppercase text-purple-600 dark:text-purple-400 mb-1 flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">work</span> Careers
+            </p>
+            <a href="mailto:careers@zipzapzoi.com" class="text-sm font-bold text-purple-700 dark:text-purple-300 hover:underline">careers@zipzapzoi.com</a>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Job openings &amp; internship applications</p>
+          </div>
+
+          <!-- Phone -->
+          <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800">
+            <p class="text-xs font-black uppercase text-green-600 dark:text-green-400 mb-1 flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">call</span> Phone
+            </p>
+            <a href="tel:+919052279988" class="text-sm font-bold text-green-700 dark:text-green-300 hover:underline">+91 90522 79988</a>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Mon–Sat, 10am–6pm IST</p>
+          </div>
+        </div>
+
+        <!-- BUSINESS & PARTNERSHIPS — HIGHLIGHTED -->
+        <div class="bg-gradient-to-br from-secondary to-primary p-6 rounded-2xl shadow-lg text-white relative overflow-hidden">
+          <div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
+          <div class="absolute -bottom-6 -left-4 w-32 h-32 bg-white/10 rounded-full"></div>
+          <div class="relative z-10">
+            <span class="material-symbols-outlined text-4xl mb-3 block">handshake</span>
+            <h3 class="text-lg font-black mb-1">Business &amp; Partnerships</h3>
+            <p class="text-sm text-white/80 mb-3">Web development, brand integrations, advertising, and strategic partnerships.</p>
+            <a href="mailto:puli.phanikumar@zipzapzoi.com"
+               class="inline-flex items-center gap-2 bg-white text-secondary font-black text-sm px-4 py-2.5 rounded-xl hover:bg-gray-100 transition-colors shadow-md">
+              <span class="material-symbols-outlined text-[16px]">email</span>
+              puli.phanikumar@zipzapzoi.com
+            </a>
+            <p class="text-xs text-white/70 mt-2">📞 +91 90522 79988</p>
+          </div>
+        </div>
+
+        <!-- SUPPORT FORM -->
+        <div class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-bouncy">
+          <h2 class="text-xl font-bold mb-1">Submit a Support Ticket</h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Our team responds within 24 hours.</p>
           
           <form id="contactForm" class="space-y-4">
             <div>
@@ -124,6 +187,7 @@
                 <option>Report a Bug</option>
                 <option>Report a User/Ad</option>
                 <option>Account Issue</option>
+                <option>Payment Issue</option>
                 <option>Other</option>
               </select>
             </div>
@@ -132,18 +196,46 @@
               <textarea id="ticketMsg" rows="4" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="Describe your issue..." required></textarea>
             </div>
             <button type="submit" class="w-full bg-secondary hover:bg-cyan-700 text-white font-bold py-3 rounded-xl transition-colors shadow-lg">
-              Send Request
+              Send to support@zipzapzoi.com
             </button>
           </form>
         </div>
+
       </div>
 
     </div>
   </main>
 
-  <footer class="bg-white dark:bg-card-dark border-t border-gray-200 dark:border-gray-700 py-8 mt-auto">
-    <div class="container mx-auto px-6 text-center text-sm text-gray-500 dark:text-gray-400">
-      &copy; 2024 ZipZapZoi. All Rights Reserved.
+  <footer class="bg-white dark:bg-card-dark border-t border-gray-200 dark:border-gray-700 py-10 mt-auto">
+    <div class="container mx-auto px-6 max-w-5xl">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="material-symbols-outlined text-primary text-2xl">all_inclusive</span>
+            <span class="font-black text-lg text-gray-800 dark:text-white">ZipZapZoi</span>
+          </div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">India's growing classifieds platform — post free ads, buy &amp; sell locally.</p>
+          <p class="text-sm font-bold text-gray-700 dark:text-gray-300 mt-3">📞 <a href="tel:+919052279988" class="hover:text-primary">+91 90522 79988</a></p>
+        </div>
+        <div>
+          <h4 class="font-black text-gray-800 dark:text-white mb-3">Contact Us</h4>
+          <ul class="space-y-2 text-sm text-gray-500 dark:text-gray-400">
+            <li>🎧 Support: <a href="mailto:support@zipzapzoi.com" class="font-bold text-secondary hover:underline">support@zipzapzoi.com</a></li>
+            <li>📧 System/OTP: <span class="font-bold">noreply@zipzapzoi.com</span></li>
+            <li>💼 Careers: <a href="mailto:careers@zipzapzoi.com" class="font-bold hover:underline">careers@zipzapzoi.com</a></li>
+          </ul>
+        </div>
+        <div class="bg-gradient-to-br from-secondary/10 to-primary/10 p-4 rounded-xl border border-secondary/20">
+          <h4 class="font-black text-gray-800 dark:text-white mb-1">🤝 Business &amp; Partnerships</h4>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Web development, brand collab &amp; advertising</p>
+          <a href="mailto:puli.phanikumar@zipzapzoi.com" class="text-sm font-black text-secondary hover:underline block">puli.phanikumar@zipzapzoi.com</a>
+          <a href="tel:+919052279988" class="text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-primary mt-1 block">+91 90522 79988</a>
+        </div>
+      </div>
+      <div class="border-t border-gray-100 dark:border-gray-800 pt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+        &copy; 2026 ZipZapZoi. All Rights Reserved. &nbsp;|&nbsp;
+        <a href="legal.html" class="hover:text-primary">Terms &amp; Privacy</a>
+      </div>
     </div>
   </footer>
 

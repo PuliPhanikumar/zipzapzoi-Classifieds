@@ -337,8 +337,8 @@ function sendOtpMail(string $toEmail, string $toName, string $otp, int $expiryMi
 
     $headers  = "MIME-Version: 1.0\r\n";
     $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-    $headers .= "From: ZipZapZoi <no-reply@zipzapzoi.com>\r\n";
-    $headers .= "Reply-To: no-reply@zipzapzoi.com\r\n";
+    $headers .= "From: ZipZapZoi <noreply@zipzapzoi.com>\r\n";
+    $headers .= "Reply-To: support@zipzapzoi.com\r\n";
     $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
 
     @mail($toEmail, $subject, $body, $headers);

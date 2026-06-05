@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -50,10 +50,10 @@
     .legal-content p { margin-bottom: 1rem; line-height: 1.7; color: #4b5563; }
     .legal-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; color: #4b5563; }
     .legal-content li { margin-bottom: 0.5rem; }
-    
     .tab-active { background-color: #019863; color: white; border-color: #019863; }
     .tab-inactive { background-color: white; color: #4b5563; border-color: #e5e7eb; }
     .tab-inactive:hover { background-color: #f9fafb; border-color: #d1d5db; }
+    .dark .tab-inactive { background-color: #1e293b; color: #94a3b8; border-color: #334155; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
@@ -76,7 +76,7 @@
     
     <div class="text-center mb-12">
       <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">Legal Center</h1>
-      <p class="text-gray-500 dark:text-gray-400">Last Updated: <span id="currentDate">October 24, 2023</span></p>
+      <p class="text-gray-500 dark:text-gray-400">Last Updated: <span id="currentDate">June 6, 2026</span></p>
     </div>
 
     <div class="flex flex-col md:flex-row gap-8">
@@ -97,65 +97,63 @@
 
       <div class="flex-1 bg-white dark:bg-card-dark p-8 rounded-2xl shadow-bouncy border border-gray-100 dark:border-gray-800 min-h-[600px]">
         
+        <!-- TERMS -->
         <div id="content-terms" class="legal-content animate-fade-in">
           <h2 class="!mt-0">Terms of Service</h2>
           <p>Welcome to ZipZapZoi. By accessing our website, you agree to these terms. Please read them carefully.</p>
-          
           <h3>1. Acceptance of Terms</h3>
           <p>By creating an account or using our services, you agree to comply with these terms. If you do not agree, you may not use the platform.</p>
-          
           <h3>2. User Accounts</h3>
           <p>You are responsible for maintaining the security of your account credentials. You must be at least 18 years old to use this service.</p>
-          
-          <h3>3. Content & Conduct</h3>
+          <h3>3. Content &amp; Conduct</h3>
           <p>You agree not to post illegal, offensive, or fraudulent content. ZipZapZoi reserves the right to remove any listing without prior notice.</p>
           <ul>
             <li>No prohibited items (drugs, weapons, hazardous materials).</li>
             <li>No hate speech or harassment.</li>
             <li>No spam or misleading listings.</li>
           </ul>
-
           <h3>4. Liability</h3>
-          <p>ZipZapZoi is a facilitator of transactions and is not responsible for the quality, safety, or legality of the items advertised.</p>
+          <p>ZipZapZoi is a facilitator of transactions and is not responsible for the quality, safety, or legality of items advertised.</p>
+          <h3>5. Contact &amp; Legal Queries</h3>
+          <p>For legal queries, email <a href="mailto:support@zipzapzoi.com" style="color:#019863;font-weight:700;">support@zipzapzoi.com</a> or call <a href="tel:+919052279988" style="color:#019863;font-weight:700;">+91 90522 79988</a>.</p>
         </div>
 
+        <!-- PRIVACY -->
         <div id="content-privacy" class="legal-content hidden animate-fade-in">
           <h2 class="!mt-0">Privacy Policy</h2>
           <p>Your privacy is important to us. This policy explains how we handle your data.</p>
-          
           <h3>1. Data We Collect</h3>
           <p>We collect information you provide directly to us, such as your name, email, phone number, and listing details.</p>
-          
           <h3>2. How We Use Data</h3>
           <ul>
             <li>To facilitate buying and selling.</li>
-            <li>To communicate with you about your account.</li>
+            <li>To communicate with you about your account via <strong>noreply@zipzapzoi.com</strong> (OTP and system emails).</li>
             <li>To prevent fraud and ensure safety.</li>
           </ul>
-
           <h3>3. Data Sharing</h3>
           <p>We do not sell your personal data to third parties. We may share data with law enforcement if required by law.</p>
-          
           <h3>4. Cookies</h3>
           <p>We use cookies to improve your experience and analyze site traffic.</p>
+          <h3>5. Contact</h3>
+          <p>For privacy concerns, email <a href="mailto:support@zipzapzoi.com" style="color:#019863;font-weight:700;">support@zipzapzoi.com</a>.</p>
         </div>
 
+        <!-- COMMUNITY -->
         <div id="content-community" class="legal-content hidden animate-fade-in">
           <h2 class="!mt-0">Community Guidelines</h2>
           <p>Help us keep ZipZapZoi safe and enjoyable for everyone.</p>
-          
           <h3>1. Be Respectful</h3>
           <p>Treat all users with kindness. Harassment, insults, and discrimination will result in an immediate ban.</p>
-          
           <h3>2. Be Honest</h3>
           <p>Describe your items accurately. Do not hide defects or use misleading photos.</p>
-          
           <h3>3. Stay Safe</h3>
           <ul>
             <li>Meet in public places.</li>
             <li>Inspect items before paying.</li>
             <li>Report suspicious behavior immediately.</li>
           </ul>
+          <h3>4. Report Violations</h3>
+          <p>Email <a href="mailto:support@zipzapzoi.com" style="color:#019863;font-weight:700;">support@zipzapzoi.com</a> to report any user or listing that violates our community standards.</p>
         </div>
 
       </div>
@@ -163,143 +161,69 @@
 
   </main>
 
-  <footer class="bg-white dark:bg-card-dark border-t border-gray-200 dark:border-gray-700 py-8 mt-auto">
+  <!-- ── CONTACT SECTION ── -->
+  <section class="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 py-12 mt-6">
+    <div class="container mx-auto px-6 max-w-5xl">
+      <h2 class="text-2xl font-black text-gray-800 dark:text-white mb-8 text-center">Contact Directory</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl shadow-sm border border-blue-100 dark:border-blue-900">
+          <span class="material-symbols-outlined text-blue-500 text-3xl mb-2 block">support_agent</span>
+          <h3 class="font-black text-gray-800 dark:text-white mb-1">User Support</h3>
+          <a href="mailto:support@zipzapzoi.com" class="text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline block">support@zipzapzoi.com</a>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Account, listing &amp; payment issues</p>
+        </div>
+
+        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+          <span class="material-symbols-outlined text-gray-400 text-3xl mb-2 block">mark_email_unread</span>
+          <h3 class="font-black text-gray-800 dark:text-white mb-1">OTP &amp; System</h3>
+          <span class="text-sm font-bold text-gray-700 dark:text-gray-300 block">noreply@zipzapzoi.com</span>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">OTP codes, listing approvals — do not reply</p>
+        </div>
+
+        <div class="bg-white dark:bg-card-dark p-5 rounded-2xl shadow-sm border border-purple-100 dark:border-purple-900">
+          <span class="material-symbols-outlined text-purple-500 text-3xl mb-2 block">work</span>
+          <h3 class="font-black text-gray-800 dark:text-white mb-1">Careers</h3>
+          <a href="mailto:careers@zipzapzoi.com" class="text-sm font-bold text-purple-600 dark:text-purple-400 hover:underline block">careers@zipzapzoi.com</a>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Jobs &amp; internship applications</p>
+        </div>
+
+        <div class="bg-gradient-to-br from-secondary to-primary p-5 rounded-2xl shadow-lg text-white">
+          <span class="material-symbols-outlined text-white text-3xl mb-2 block">handshake</span>
+          <h3 class="font-black mb-1">Business &amp; Partnerships</h3>
+          <a href="mailto:puli.phanikumar@zipzapzoi.com" class="text-sm font-black text-white hover:text-yellow-200 underline block break-all">puli.phanikumar@zipzapzoi.com</a>
+          <a href="tel:+919052279988" class="text-sm font-bold text-white/80 hover:text-white mt-1 block">📞 +91 90522 79988</a>
+          <p class="text-xs text-white/70 mt-1">Web dev, brand collab &amp; advertising</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <footer class="bg-white dark:bg-card-dark border-t border-gray-200 dark:border-gray-700 py-6 mt-auto">
     <div class="container mx-auto px-6 text-center text-sm text-gray-500 dark:text-gray-400">
-      &copy; 2024 ZipZapZoi. All Rights Reserved.
+      &copy; 2026 ZipZapZoi. All Rights Reserved. &nbsp;|&nbsp;
+      <a href="help.html" class="hover:text-primary">Help &amp; Support</a>
     </div>
   </footer>
 
   <script>
-    // Update Date
-    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
 
     function switchTab(tabId) {
-      // 1. Reset all Tabs
       document.querySelectorAll('aside button').forEach(btn => {
         btn.classList.remove('tab-active');
         btn.classList.add('tab-inactive');
       });
-
-      // 2. Activate Clicked Tab
       const activeBtn = document.getElementById('tab-' + tabId);
       activeBtn.classList.remove('tab-inactive');
       activeBtn.classList.add('tab-active');
-
-      // 3. Hide all Content
-      document.querySelectorAll('.legal-content').forEach(content => {
-        content.classList.add('hidden');
-      });
-
-      // 4. Show Selected Content
+      document.querySelectorAll('.legal-content').forEach(content => content.classList.add('hidden'));
       document.getElementById('content-' + tabId).classList.remove('hidden');
-      
-      // Scroll to top of content on mobile
-      if(window.innerWidth < 768) {
+      if (window.innerWidth < 768) {
         document.querySelector('main').scrollIntoView({ behavior: 'smooth' });
       }
     }
-  // ============================================
-// UNIVERSAL UTILITY FUNCTIONS (ADD TO ALL)
-// ============================================
-
-// CSRF Token Management
-function generateCsrfToken() {
-    return 'csrf_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-}
-
-function getCsrfToken() {
-    let token = sessionStorage.getItem('csrf_token');
-    if (!token) {
-        token = generateCsrfToken();
-        sessionStorage.setItem('csrf_token', token);
-    }
-    return token;
-}
-
-function setCsrfToken() {
-    const token = getCsrfToken();
-    const inputs = document.querySelectorAll('input[name="csrf_token"]');
-    inputs.forEach(input => input.value = token);
-}
-
-// Input Validation Functions
-function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function validatePhone(phone) {
-    const digits = phone.replace(/\D/g, '');
-    return digits.length === 10;
-}
-
-function validatePrice(price) {
-    const num = parseFloat(price);
-    return !isNaN(num) && num > 0 && num < 1000000;
-}
-
-function validatePassword(password) {
-    return password.length >= 8 &&
-           /[a-z]/.test(password) &&
-           /[A-Z]/.test(password) &&
-           /[0-9]/.test(password);
-}
-
-// Input Sanitization
-function sanitizeInput(input) {
-    const div = document.createElement('div');
-    div.textContent = input;
-    return div.innerHTML;
-}
-
-function sanitizeHTML(html) {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div.textContent;
-}
-
-// Error/Success Messages
-function showError(message) {
-    let errorDiv = document.getElementById('errorMessage');
-    if (!errorDiv) {
-        errorDiv = document.createElement('div');
-        errorDiv.id = 'errorMessage';
-        errorDiv.style.cssText = 'color: red; padding: 10px; margin: 10px 0; border: 1px solid red; border-radius: 4px; display: none;';
-        const form = document.querySelector('form');
-        if (form) form.parentElement.insertBefore(errorDiv, form);
-    }
-    errorDiv.textContent = message;
-    errorDiv.style.display = 'block';
-    errorDiv.setAttribute('role', 'alert');
-}
-
-function showSuccess(message) {
-    let successDiv = document.getElementById('successMessage');
-    if (!successDiv) {
-        successDiv = document.createElement('div');
-        successDiv.id = 'successMessage';
-        successDiv.style.cssText = 'color: green; padding: 10px; margin: 10px 0; border: 1px solid green; border-radius: 4px; display: none;';
-        const form = document.querySelector('form');
-        if (form) form.parentElement.insertBefore(successDiv, form);
-    }
-    successDiv.textContent = message;
-    successDiv.style.display = 'block';
-    successDiv.setAttribute('role', 'status');
-}
-
-function hideError() {
-    const errorDiv = document.getElementById('errorMessage');
-    if (errorDiv) errorDiv.style.display = 'none';
-}
-
-function hideSuccess() {
-    const successDiv = document.getElementById('successMessage');
-    if (successDiv) successDiv.style.display = 'none';
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    setCsrfToken();
-});
   </script>
   <script src="js/utils.js"></script>
 </body>
