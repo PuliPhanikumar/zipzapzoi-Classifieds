@@ -207,7 +207,7 @@ function createListing(): void {
     if (!$quota) {
         // Brand-new user: give them 3 free starter ads (no expiry)
         $db->prepare(
-            'INSERT INTO user_quotas (user_id, ads_remaining, ads_total, plan_id, expires_at, monthly_free_granted)
+            'INSERT INTO user_quotas (user_id, ads_remaining, total_granted, plan_id, expires_at, monthly_free_granted)
              VALUES (?, 3, 3, "free", NULL, NULL)
              ON DUPLICATE KEY UPDATE user_id = user_id'
         )->execute([$uid]);
@@ -283,16 +283,15 @@ function createListing(): void {
     $expires = date('Y-m-d H:i:s', strtotime('+30 days'));
     $db->prepare(
         'INSERT INTO listings
-         (user_id, title, description, category, subcategory, condition, price, price_type,
+         (user_id, title, description, category, subcategory, price, price_type,
           location_city, location_state, location_area, images, fields, status, expires_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )->execute([
         $uid,
         $title,
         clean($b['description'] ?? ''),
         $category,
         clean($b['subcategory'] ?? ''),
-        $condition,
         max(0, (float)($b['price'] ?? 0)),
         $priceType,
         clean($b['location_city']  ?? ''),
