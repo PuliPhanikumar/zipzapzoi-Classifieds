@@ -1799,6 +1799,18 @@ async function changeAdminPassword() {
 // ─────────────────────────────────────────────────────────
 //  INIT
 // ─────────────────────────────────────────────────────────
+async function updatePendingBadge() {
+  try {
+    const data = await apiGet('/api/admin/listings.php?status=pending_review');
+    const cnt = data?.data?.length || 0;
+    const badge = document.getElementById('pendingListingsBadge');
+    if (badge) {
+      badge.textContent = cnt;
+      badge.style.display = cnt > 0 ? 'inline-block' : 'none';
+    }
+  } catch(e) {}
+}
+
 async function updatePendingUsersBadge() {
   try {
     const data = await apiGet('/api/admin/users.php?verifications=1');
