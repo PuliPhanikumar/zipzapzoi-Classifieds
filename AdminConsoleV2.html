@@ -156,8 +156,9 @@
     <div><span class="material-symbols-outlined mi">inventory_2</span>Listings</div>
     <span id="pendingListingsBadge" style="display:none; background:#ef4444; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:12px;">0</span>
   </div>
-  <div class="nav-item" id="nav-users" onclick="switchTab('users')">
-    <span class="material-symbols-outlined mi">group</span>Users
+  <div class="nav-item flex items-center justify-between" id="nav-users" onclick="switchTab('users')" style="display:flex; justify-content:space-between; align-items:center;">
+    <div><span class="material-symbols-outlined mi">group</span>Users</div>
+    <span id="pendingUsersBadge" style="display:none; background:#ef4444; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:12px;">0</span>
   </div>
 
   <div class="nav-section-label">Revenue</div>
@@ -1042,7 +1043,7 @@ async function rejectListing(id) {
 }
 function viewListing(id) {
   showToast('Opening listing #'+id);
-  window.open('/Listing Detail.html?id='+id,'_blank');
+  window.open('/Listing Detail.html?id='+id+'&admin_preview=1','_blank');
 }
 
 // ─────────────────────────────────────────────────────────
@@ -1091,12 +1092,12 @@ async function toggleUserActive(id, active) {
 }
 async function approveVerification(id) {
   const r = await apiPut('/api/admin/users.php', {id, action:'approve_verification'});
-  if (r?.success) { showToast('Verification approved!'); loadVerificationReqs(); }
+  if (r?.success) { showToast('Verification approved!'); loadVerificationReqs(); updatePendingUsersBadge(); }
   else showToast(r?.error||'Error','error');
 }
 async function rejectVerification(id) {
   const r = await apiPut('/api/admin/users.php', {id, action:'reject_verification'});
-  if (r?.success) { showToast('Verification rejected'); loadVerificationReqs(); }
+  if (r?.success) { showToast('Verification rejected'); loadVerificationReqs(); updatePendingUsersBadge(); }
   else showToast(r?.error||'Error','error');
 }
 function openAddUserModal() {
@@ -1798,9 +1799,23 @@ async function changeAdminPassword() {
 // ─────────────────────────────────────────────────────────
 //  INIT
 // ─────────────────────────────────────────────────────────
+async function updatePendingUsersBadge() {
+  try {
+    const data = await apiGet('/api/admin/users.php?verifications=1');
+    const cnt = data?.data?.length || 0;
+    const badge = document.getElementById('pendingUsersBadge');
+    if (badge) {
+      badge.textContent = cnt;
+      badge.style.display = cnt > 0 ? 'inline-block' : 'none';
+    }
+  } catch(e) {}
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   startSessionTimer();
   loadDashboard();
+  updatePendingBadge();
+  updatePendingUsersBadge();
 });
 </script>
 </body>
