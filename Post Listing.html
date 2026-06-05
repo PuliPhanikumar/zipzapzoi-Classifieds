@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -428,18 +428,43 @@
     }).catch(function(){});
   }, 0);
 
-  // --- 2. MOCK DATA FOR INDIA LOCATIONS ---
+  // --- 2. INDIA LOCATIONS DATA ---
   const indiaData = {
-    "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Tirupati"],
-    "Karnataka": ["Bengaluru", "Mysuru", "Mangaluru", "Hubballi", "Belagavi"],
-    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad"],
-    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem"],
-    "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam"],
-    "Delhi": ["New Delhi", "North Delhi", "South Delhi", "East Delhi", "West Delhi"],
-    "West Bengal": ["Kolkata", "Howrah", "Durgapur", "Asansol", "Siliguri"],
-    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar"],
-    "Uttar Pradesh": ["Lucknow", "Kanpur", "Ghaziabad", "Agra", "Varanasi"],
-    "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Ajmer"]
+    "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Tirupati", "Kurnool", "Rajahmundry"],
+    "Arunachal Pradesh": ["Itanagar", "Naharlagun", "Pasighat"],
+    "Assam": ["Guwahati", "Silchar", "Dibrugarh", "Jorhat", "Nagaon"],
+    "Bihar": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Darbhanga"],
+    "Chhattisgarh": ["Raipur", "Bhilai", "Bilaspur", "Korba", "Durg"],
+    "Delhi": ["New Delhi", "North Delhi", "South Delhi", "East Delhi", "West Delhi", "Central Delhi"],
+    "Goa": ["Panaji", "Margao", "Vasco da Gama", "Mapusa", "Ponda"],
+    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar", "Gandhinagar"],
+    "Haryana": ["Gurugram", "Faridabad", "Panipat", "Ambala", "Hisar", "Rohtak"],
+    "Himachal Pradesh": ["Shimla", "Manali", "Dharamsala", "Solan", "Mandi"],
+    "Jharkhand": ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Deoghar"],
+    "Karnataka": ["Bengaluru", "Mysuru", "Mangaluru", "Hubballi", "Belagavi", "Kalaburagi", "Davangere"],
+    "Kerala": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur", "Kollam", "Alappuzha"],
+    "Madhya Pradesh": ["Bhopal", "Indore", "Jabalpur", "Gwalior", "Ujjain", "Sagar"],
+    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad", "Thane", "Navi Mumbai", "Solapur"],
+    "Manipur": ["Imphal", "Thoubal", "Bishnupur"],
+    "Meghalaya": ["Shillong", "Tura", "Jowai"],
+    "Mizoram": ["Aizawl", "Lunglei", "Champhai"],
+    "Nagaland": ["Kohima", "Dimapur", "Mokokchung"],
+    "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Berhampur", "Sambalpur"],
+    "Punjab": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda", "Mohali"],
+    "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Ajmer", "Bikaner", "Alwar"],
+    "Sikkim": ["Gangtok", "Namchi", "Mangan"],
+    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Erode", "Tiruppur", "Vellore"],
+    "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam", "Secunderabad"],
+    "Tripura": ["Agartala", "Dharmanagar", "Udaipur"],
+    "Uttar Pradesh": ["Lucknow", "Kanpur", "Ghaziabad", "Agra", "Varanasi", "Meerut", "Allahabad", "Noida", "Bareilly"],
+    "Uttarakhand": ["Dehradun", "Haridwar", "Roorkee", "Haldwani", "Rishikesh"],
+    "West Bengal": ["Kolkata", "Howrah", "Durgapur", "Asansol", "Siliguri", "Malda"],
+    "Andaman & Nicobar": ["Port Blair"],
+    "Chandigarh": ["Chandigarh"],
+    "Jammu & Kashmir": ["Srinagar", "Jammu", "Anantnag", "Baramulla"],
+    "Ladakh": ["Leh", "Kargil"],
+    "Lakshadweep": ["Kavaratti"],
+    "Puducherry": ["Puducherry", "Karaikal", "Mahe"]
   };
 
   // --- 3. DOM ELEMENTS ---
@@ -825,7 +850,6 @@
     // Auth gate — show modal if not logged in
     const activeUser = JSON.parse(localStorage.getItem('zzz_user') || 'null');
     if (!activeUser) {
-      // Save partial form data so user doesn't lose work when they return after registering
       const partial = {
         title:       document.getElementById('postTitle')?.value || '',
         description: document.getElementById('postDescription')?.value || '',
@@ -836,12 +860,9 @@
         city:        document.getElementById('citySelect')?.value || '',
       };
       sessionStorage.setItem('zzz_post_draft', JSON.stringify(partial));
-
-      // Set redirect target for both login and registration pages
       const redirectUrl = encodeURIComponent('Post Listing.html');
       document.getElementById('authGateRegister').href = 'User Registration.html?redirect=' + redirectUrl;
       document.getElementById('authGateLogin').href    = 'Login Page.html?redirect=' + redirectUrl;
-
       document.getElementById('authGateModal').classList.remove('hidden');
       return;
     }
@@ -882,20 +903,6 @@
     const negotiable = !!(document.getElementById('postNegotiable') && document.getElementById('postNegotiable').checked);
     const price      = isCharity ? 0 : (parseFloat(document.getElementById('postPrice').value) || 0);
 
-    const payload = {
-      title:          document.getElementById('postTitle').value.trim(),
-      description:    document.getElementById('postDescription').value.trim(),
-      category:       schema[currentCategoryKey].label,
-      subcategory:    subCategorySelect.value,
-      price,
-      price_type:     isCharity ? 'free' : (negotiable ? 'negotiable' : 'fixed'),
-      location_city:  document.getElementById('citySelect').value,
-      location_state: document.getElementById('stateSelect').value,
-      location_area:  document.getElementById('specificLocation').value,
-      images:         uploadedImages,
-      fields,
-    };
-
     // Disable buttons while posting
     finalSubmitBtn.disabled = true;
     finalSubmitBtn.innerHTML = '<span>Posting...</span><span class="material-symbols-outlined animate-spin">refresh</span>';
@@ -903,6 +910,45 @@
     confirmPostBtn.textContent = 'Posting...';
 
     try {
+      // ── Step 1: Upload images via FormData (avoids base64 payload size issues) ──
+      let imageUrls = [];
+      const fileInput = document.getElementById('fileInput');
+      const files = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
+      if (files.length > 0) {
+        const formData = new FormData();
+        const max = (currentCategory && currentCategory.photoLimit) ? currentCategory.photoLimit : 8;
+        files.slice(0, max).forEach(f => formData.append('images[]', f));
+        try {
+          const upRes = await fetch('/api/uploads.php', {
+            method: 'POST',
+            credentials: 'include',
+            body: formData,
+          });
+          const upText = await upRes.text();
+          try {
+            const upData = JSON.parse(upText);
+            if (upData.success && Array.isArray(upData.data.urls)) {
+              imageUrls = upData.data.urls;
+            }
+          } catch(e) { /* upload parse error — proceed without images */ }
+        } catch(e) { /* network error on upload — proceed without images */ }
+      }
+
+      // ── Step 2: POST listing JSON ──
+      const payload = {
+        title:          document.getElementById('postTitle').value.trim(),
+        description:    document.getElementById('postDescription').value.trim(),
+        category:       schema[currentCategoryKey].label,
+        subcategory:    subCategorySelect.value,
+        price,
+        price_type:     isCharity ? 'free' : (negotiable ? 'negotiable' : 'fixed'),
+        location_city:  document.getElementById('citySelect').value,
+        location_state: document.getElementById('stateSelect').value,
+        location_area:  document.getElementById('specificLocation').value,
+        images:         imageUrls,
+        fields,
+      };
+
       const url    = editId ? `/api/listings.php?id=${editId}` : '/api/listings.php';
       const method = editId ? 'PUT' : 'POST';
       const res    = await fetch(url, {
@@ -911,7 +957,19 @@
         credentials: 'include',
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
+
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); }
+      catch(e) {
+        console.error('Server response (non-JSON):', text);
+        showToast('Server error — please try again or contact support.', 'error');
+        finalSubmitBtn.disabled = false;
+        finalSubmitBtn.innerHTML = '<span>Post Now</span><span class="material-symbols-outlined">send</span>';
+        confirmPostBtn.disabled  = false;
+        confirmPostBtn.textContent = editId ? 'Update Listing' : 'Confirm & Post';
+        return;
+      }
 
       if (!data.success) {
         showToast(data.error || 'Failed to post. Please try again.', 'error');
@@ -926,7 +984,8 @@
       showPostSuccess(!!editId, isCharity);
 
     } catch (err) {
-      showToast('Network error. Please try again.', 'error');
+      console.error('Post listing error:', err);
+      showToast('Network error. Please check your connection and try again.', 'error');
       finalSubmitBtn.disabled = false;
       finalSubmitBtn.innerHTML = '<span>Post Now</span><span class="material-symbols-outlined">send</span>';
       confirmPostBtn.disabled  = false;

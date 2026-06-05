@@ -189,34 +189,51 @@ function createListing(): void {
     if (!$category) jsonError('Category is required.');
 
     $db = getDB();
+    $uid = (int)$user['id'];
 
-    // ── Quota check + monthly free ad grant ───────────────────────
+    // ── Ensure uploads directory exists ──────────────────────────────
+    $uploadDir = UPLOAD_DIR;
+    if (!is_dir($uploadDir)) {
+        @mkdir($uploadDir, 0755, true);
+    }
+
+    // ── Auto-create quota row for new users (3 free ads to start) ───
     $qStmt = $db->prepare(
         'SELECT ads_remaining, expires_at, monthly_free_granted FROM user_quotas WHERE user_id = ?'
     );
-    $qStmt->execute([(int)$user['id']]);
+    $qStmt->execute([$uid]);
     $quota = $qStmt->fetch();
+
+    if (!$quota) {
+        // Brand-new user: give them 3 free starter ads (no expiry)
+        $db->prepare(
+            'INSERT INTO user_quotas (user_id, ads_remaining, ads_total, plan_id, expires_at, monthly_free_granted)
+             VALUES (?, 3, 3, "free", NULL, NULL)
+             ON DUPLICATE KEY UPDATE user_id = user_id'
+        )->execute([$uid]);
+        $qStmt->execute([$uid]);
+        $quota = $qStmt->fetch();
+    }
 
     // Monthly free ad grant: 1 free ad per calendar month per account
     $thisMonth = date('Y-m');
     if ($quota && ($quota['monthly_free_granted'] ?? '') !== $thisMonth) {
-        // Grant 1 free ad for this calendar month
         $db->prepare(
             'UPDATE user_quotas
              SET ads_remaining = ads_remaining + 1,
                  monthly_free_granted = ?
              WHERE user_id = ?'
-        )->execute([$thisMonth, (int)$user['id']]);
+        )->execute([$thisMonth, $uid]);
         $quota['ads_remaining'] = ($quota['ads_remaining'] ?? 0) + 1;
     }
 
     if (!$quota) {
-        jsonError('No ad quota found. Please purchase a plan to post ads.');
+        jsonError('Could not create quota. Please contact support.');
     }
 
     // Check quota expiry (plan must be active to use remaining ads)
-    // Admin/super_admin have expires_at=NULL (unlimited)
-    if ($quota['expires_at'] && strtotime($quota['expires_at']) < time()) {
+    // NULL expires_at means unlimited (admin / no expiry)
+    if (!empty($quota['expires_at']) && strtotime($quota['expires_at']) < time()) {
         jsonError('Your ad plan has expired. Please purchase a new plan to continue posting.');
     }
 
@@ -224,12 +241,44 @@ function createListing(): void {
         jsonError('You have 0 ads remaining in your plan. Purchase a plan to post more ads.');
     }
 
+    // ── Handle images: base64 data URLs → save to disk ───────────────
+    $imageUrls = [];
+    $rawImages = $b['images'] ?? [];
+    if (is_array($rawImages)) {
+        $allowed = ['image/jpeg','image/png','image/webp','image/gif'];
+        $maxBytes = MAX_UPLOAD_MB * 1024 * 1024;
+        foreach (array_slice($rawImages, 0, 10) as $img) {
+            if (!is_string($img)) continue;
+            if (str_starts_with($img, 'data:image/')) {
+                // Base64 data URL → decode and save
+                if (preg_match('/^data:(image\/[a-z]+);base64,(.+)$/s', $img, $m)) {
+                    $mime     = $m[1];
+                    $decoded  = base64_decode($m[2], true);
+                    if (!$decoded || strlen($decoded) > $maxBytes) continue;
+                    if (!in_array($mime, $allowed)) continue;
+                    $ext  = explode('/', $mime)[1];
+                    $ext  = ($ext === 'jpeg') ? 'jpg' : $ext;
+                    $name = 'lst_' . $uid . '_' . uniqid() . '.' . $ext;
+                    $path = $uploadDir . $name;
+                    if (file_put_contents($path, $decoded) !== false) {
+                        $imageUrls[] = UPLOAD_URL . $name;
+                    }
+                }
+            } elseif (str_starts_with($img, '/') || str_starts_with($img, 'http')) {
+                // Already a URL
+                $imageUrls[] = $img;
+            }
+        }
+    }
+
     // ── Insert listing ────────────────────────────────────────────
+    $isCharity = ($b['price_type'] ?? '') === 'free' || ($category === 'Charity & Donations');
     $priceType = in_array($b['price_type'] ?? '', ['fixed','negotiable','free'])
                ? $b['price_type'] : 'fixed';
     $condition = in_array($b['condition'] ?? '', ['new','used','refurbished'])
                ? $b['condition'] : null;
-    $status    = 'pending_review'; // All new listings go to admin moderation queue
+    // Charity posts go to pending_review; others too (admin approval required)
+    $status    = 'pending_review';
 
     $expires = date('Y-m-d H:i:s', strtotime('+30 days'));
     $db->prepare(
@@ -238,7 +287,7 @@ function createListing(): void {
           location_city, location_state, location_area, images, fields, status, expires_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )->execute([
-        (int)$user['id'],
+        $uid,
         $title,
         clean($b['description'] ?? ''),
         $category,
@@ -249,22 +298,26 @@ function createListing(): void {
         clean($b['location_city']  ?? ''),
         clean($b['location_state'] ?? ''),
         clean($b['location_area']  ?? ''),
-        json_encode($b['images'] ?? []),
+        json_encode($imageUrls),
         json_encode($b['fields'] ?? []),
         $status,
         $expires,
     ]);
     $listingId = (int)$db->lastInsertId();
 
-    // ── Deduct quota atomically ───────────────────────────────────
-    $db->prepare(
-        'UPDATE user_quotas SET ads_remaining = ads_remaining - 1 WHERE user_id = ? AND ads_remaining > 0'
-    )->execute([(int)$user['id']]);
+    // ── Deduct quota (charity posts don't use quota) ──────────────
+    if (!$isCharity) {
+        $db->prepare(
+            'UPDATE user_quotas SET ads_remaining = ads_remaining - 1 WHERE user_id = ? AND ads_remaining > 0'
+        )->execute([$uid]);
+    }
 
     jsonOk([
         'id'      => $listingId,
         'status'  => $status,
-        'message' => 'Listing submitted for review! It will be live once approved.',
+        'message' => $isCharity
+            ? 'Charity post submitted! Our team will verify and approve it within 24 hours.'
+            : 'Ad submitted for review! It will be live once approved by admin.',
     ], 201);
 }
 
