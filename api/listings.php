@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ZipZapZoi Classifieds — Listings API
  * GET    /api/listings.php              → all listings (with filters)
@@ -272,7 +272,7 @@ function createListing(): void {
                     $ext  = explode('/', $mime)[1];
                     $ext  = ($ext === 'jpeg') ? 'jpg' : $ext;
                     $name = 'lst_' . $uid . '_' . uniqid() . '.' . $ext;
-                    $path = $uploadDir . $name;
+                    $path = UPLOAD_DIR . $name;
                     if (file_put_contents($path, $decoded) !== false) {
                         $imageUrls[] = UPLOAD_URL . $name;
                     }
