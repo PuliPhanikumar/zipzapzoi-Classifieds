@@ -133,6 +133,7 @@
   .password-wrap{position:relative;}
   .password-wrap input{padding-right:44px;}
   .password-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8;}
+  .listing-tab-btn:hover{background:#f8fafc;}
 </style>
 </head>
 <body>
@@ -243,17 +244,32 @@
     ══════════════════════════════════════════ -->
     <div id="tab-listings" class="tab-panel">
       <div class="card" style="padding:0;overflow:hidden;">
+        <!-- Header row -->
         <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:12px;background:#f8fafc;">
           <span style="font-weight:800;font-size:15px;flex:1;">Listings Database</span>
-          <input type="text" id="listingSearch" class="form-input" style="width:220px;padding:7px 12px;" placeholder="Search listings..." oninput="loadListings()">
-          <select id="listingStatusFilter" class="form-select" style="width:150px;padding:7px 12px;" onchange="loadListings()">
-            <option value="">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="pending_review">Pending</option>
-            <option value="expired">Expired</option>
-            <option value="rejected">Rejected</option>
-          </select>
+          <input type="text" id="listingSearch" class="form-input" style="width:200px;padding:7px 12px;" placeholder="Search listings..." oninput="loadListings()">
           <button onclick="window.open('Post Listing.html','_blank')" class="btn btn-primary btn-sm"><span class="material-symbols-outlined" style="font-size:15px;">add</span>Add Listing</button>
+        </div>
+        <!-- Status tabs -->
+        <div style="display:flex;gap:0;border-bottom:2px solid #f1f5f9;background:#fff;padding:0 20px;">
+          <button class="listing-tab-btn active" id="ltab-pending" onclick="switchListingTab('pending_review')"
+            style="padding:10px 18px;font-size:13px;font-weight:700;border:none;background:none;cursor:pointer;border-bottom:2px solid #ef4444;color:#ef4444;margin-bottom:-2px;display:flex;align-items:center;gap:6px;">
+            <span class="material-symbols-outlined" style="font-size:16px;">pending</span>Pending
+            <span id="pendingTabCount" style="background:#ef4444;color:#fff;border-radius:99px;font-size:10px;padding:1px 6px;"></span>
+          </button>
+          <button class="listing-tab-btn" id="ltab-active" onclick="switchListingTab('active')"
+            style="padding:10px 18px;font-size:13px;font-weight:700;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:#64748b;margin-bottom:-2px;display:flex;align-items:center;gap:6px;">
+            <span class="material-symbols-outlined" style="font-size:16px;">check_circle</span>Approved
+            <span id="activeTabCount" style="background:#16a34a;color:#fff;border-radius:99px;font-size:10px;padding:1px 6px;"></span>
+          </button>
+          <button class="listing-tab-btn" id="ltab-rejected" onclick="switchListingTab('rejected')"
+            style="padding:10px 18px;font-size:13px;font-weight:700;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:#64748b;margin-bottom:-2px;display:flex;align-items:center;gap:6px;">
+            <span class="material-symbols-outlined" style="font-size:16px;">cancel</span>Rejected
+          </button>
+          <button class="listing-tab-btn" id="ltab-" onclick="switchListingTab('')"
+            style="padding:10px 18px;font-size:13px;font-weight:700;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:#64748b;margin-bottom:-2px;display:flex;align-items:center;gap:6px;">
+            <span class="material-symbols-outlined" style="font-size:16px;">list</span>All
+          </button>
         </div>
         <div style="overflow-x:auto;">
           <table class="tbl"><thead><tr><th>Title</th><th>Seller</th><th>Category</th><th>Price</th><th>Status</th><th>Created</th><th style="text-align:right;">Actions</th></tr></thead>
@@ -266,19 +282,54 @@
          TAB: USERS
     ══════════════════════════════════════════ -->
     <div id="tab-users" class="tab-panel">
+
+      <!-- ── Section 1: Regular Users ── -->
       <div class="card" style="padding:0;overflow:hidden;margin-bottom:20px;">
         <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:12px;background:#f8fafc;">
-          <span style="font-weight:800;font-size:15px;flex:1;">User Management</span>
-          <input type="text" id="userSearch" class="form-input" style="width:220px;padding:7px 12px;" placeholder="Search users..." oninput="loadUsers()">
+          <div style="flex:1;">
+            <div style="font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px;">
+              <span class="material-symbols-outlined" style="color:#3b82f6;font-size:20px;">person</span>
+              Regular Users
+              <span id="userCountBadge" style="background:#3b82f6;color:#fff;border-radius:99px;font-size:11px;padding:2px 8px;"></span>
+            </div>
+            <div style="font-size:12px;color:#94a3b8;margin-top:2px;">Self-registered users verified via OTP. Suspend to block access.</div>
+          </div>
+          <input type="text" id="userSearch" class="form-input" style="width:200px;padding:7px 12px;" placeholder="Search users..." oninput="loadUsers()">
           <button onclick="exportUsersCSV()" class="btn btn-ghost btn-sm"><span class="material-symbols-outlined" style="font-size:15px;">download</span>Export CSV</button>
-          <button onclick="openAddUserModal()" class="btn btn-primary btn-sm"><span class="material-symbols-outlined" style="font-size:15px;">add</span>Add User</button>
+          <button onclick="openAddUserModal('user')" class="btn btn-primary btn-sm"><span class="material-symbols-outlined" style="font-size:15px;">person_add</span>Add User</button>
         </div>
         <div style="overflow-x:auto;">
-          <table class="tbl"><thead><tr><th>User</th><th>Email</th><th>Phone</th><th>Role</th><th>Verified</th><th>Joined</th><th style="text-align:right;">Actions</th></tr></thead>
+          <table class="tbl"><thead><tr>
+            <th>User</th><th>Email</th><th>Phone</th><th>Listings</th><th>Status</th><th>Joined</th>
+            <th style="text-align:right;">Actions</th>
+          </tr></thead>
           <tbody id="usersTableBody"><tr><td colspan="7"><div class="empty-state">Loading...</div></td></tr></tbody></table>
         </div>
       </div>
-      <!-- Verification Requests removed: users self-verify via OTP at registration. Admin manages users via Suspend/Activate only. -->
+
+      <!-- ── Section 2: Admins ── -->
+      <div class="card" style="padding:0;overflow:hidden;border-top:3px solid #7c3aed;">
+        <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:12px;background:#faf5ff;">
+          <div style="flex:1;">
+            <div style="font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px;">
+              <span class="material-symbols-outlined" style="color:#7c3aed;font-size:20px;">admin_panel_settings</span>
+              Admins &amp; Super Admins
+            </div>
+            <div style="font-size:12px;color:#94a3b8;margin-top:2px;">Only Super Admins can promote users to Admin. Be careful.</div>
+          </div>
+          <button onclick="openAddUserModal('admin')" class="btn btn-sm" style="background:#ede9fe;color:#7c3aed;border:1px solid #c4b5fd;font-weight:700;">
+            <span class="material-symbols-outlined" style="font-size:15px;">add</span>Add Admin
+          </button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="tbl"><thead><tr>
+            <th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th>
+            <th style="text-align:right;">Actions</th>
+          </tr></thead>
+          <tbody id="adminsTableBody"><tr><td colspan="6"><div class="empty-state">Loading...</div></td></tr></tbody></table>
+        </div>
+      </div>
+
     </div>
 
     <!-- ══════════════════════════════════════
@@ -998,29 +1049,63 @@ function renderAuditLogs() {
 // ─────────────────────────────────────────────────────────
 //  LISTINGS
 // ─────────────────────────────────────────────────────────
+// Active listing tab tracker
+let _currentListingStatus = 'pending_review';
+
+function switchListingTab(status) {
+  _currentListingStatus = status;
+  document.querySelectorAll('.listing-tab-btn').forEach(btn => {
+    btn.style.borderBottomColor = 'transparent';
+    btn.style.color = '#64748b';
+  });
+  const colors = {'pending_review':'#ef4444','active':'#16a34a','rejected':'#dc2626','':'#3b82f6'};
+  const activeBtn = document.getElementById('ltab-' + status);
+  if (activeBtn) {
+    activeBtn.style.borderBottomColor = colors[status] || '#3b82f6';
+    activeBtn.style.color = colors[status] || '#3b82f6';
+  }
+  loadListings();
+}
+
 async function loadListings() {
-  const q = document.getElementById('listingSearch')?.value||'';
-  const s = document.getElementById('listingStatusFilter')?.value||'';
-  const data = await apiGet(`/api/admin/listings.php?search=${encodeURIComponent(q)}&status=${encodeURIComponent(s)}`);
+  const q  = document.getElementById('listingSearch')?.value || '';
+  const s  = _currentListingStatus;
+  const data        = await apiGet('/api/admin/listings.php?search=' + encodeURIComponent(q) + '&status=' + encodeURIComponent(s));
+  const pendingData = await apiGet('/api/admin/listings.php?status=pending_review');
   const tbody = document.getElementById('listingsTableBody');
   if (!tbody) return;
-  if (!data||!data.success||!data.data?.length) {
-    tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><span class="material-symbols-outlined mi">inventory_2</span>No listings found.</div></td></tr>'; return;
+
+  // Update notification badges
+  const pendingCnt = pendingData?.data?.length || 0;
+  const ptc = document.getElementById('pendingTabCount');
+  if (ptc) ptc.textContent = pendingCnt > 0 ? pendingCnt : '';
+  const plb = document.getElementById('pendingListingsBadge');
+  if (plb) { plb.textContent = pendingCnt; plb.style.display = pendingCnt > 0 ? 'inline-block' : 'none'; }
+
+  if (!data || !data.success || !data.data?.length) {
+    const msgs = {'pending_review':'✅ No listings pending review!','active':'No active listings yet.','rejected':'No rejected listings.','':'No listings found.'};
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><span class="material-symbols-outlined mi">inventory_2</span>' + (msgs[s] || 'No listings found.') + '</div></td></tr>';
+    return;
   }
-  const statusBadge = s => ({active:'badge-green',pending_review:'badge-yellow',expired:'badge-gray',rejected:'badge-red'}[s]||'badge-gray');
-  tbody.innerHTML = data.data.map(l=>`<tr>
-    <td><div style="font-weight:600;font-size:13px;">${esc(l.title)}</div><div style="font-size:11px;color:#94a3b8;">#${l.id}</div></td>
-    <td style="font-size:12px;">${esc(l.seller_name||l.user_name||'')}</td>
-    <td style="font-size:12px;">${esc(l.category||'')}</td>
-    <td style="font-weight:700;">${l.price?fmtMoney(l.price):'Free'}</td>
-    <td><span class="badge ${statusBadge(l.status)}">${esc(l.status||'')}</span></td>
-    <td style="font-size:11px;color:#64748b;">${fmt(l.created_at)}</td>
-    <td style="text-align:right;">
-      <button onclick="viewListing(${l.id})" class="btn btn-ghost btn-sm">View</button>
-      ${l.status==='pending_review' ? `<button onclick="approveListing(${l.id})" class="btn btn-primary btn-sm">Approve</button><button onclick="rejectListing(${l.id})" class="btn btn-danger btn-sm">Reject</button>` : ````}
-    </td>
-  </tr>`).join('');
+  function statusBadge(st) { return ({active:'badge-green',pending_review:'badge-yellow',expired:'badge-gray',rejected:'badge-red'}[st] || 'badge-gray'); }
+  tbody.innerHTML = data.data.map(function(l) {
+    const actionBtns = l.status === 'pending_review'
+      ? '<button onclick="approveListing(' + l.id + ')" class="btn btn-primary btn-sm">Approve</button><button onclick="rejectListing(' + l.id + ')" class="btn btn-danger btn-sm">Reject</button>'
+      : '';
+    return '<tr>' +
+      '<td><div style="font-weight:600;font-size:13px;">' + esc(l.title) + '</div><div style="font-size:11px;color:#94a3b8;">#' + l.id + '</div></td>' +
+      '<td style="font-size:12px;">' + esc(l.seller_name || l.user_name || '') + '</td>' +
+      '<td style="font-size:12px;">' + esc(l.category || '') + '</td>' +
+      '<td style="font-weight:700;">' + (l.price ? fmtMoney(l.price) : 'Free') + '</td>' +
+      '<td><span class="badge ' + statusBadge(l.status) + '">' + esc(l.status || '') + '</span></td>' +
+      '<td style="font-size:11px;color:#64748b;">' + fmt(l.created_at) + '</td>' +
+      '<td style="text-align:right;">' +
+        '<button onclick="viewListing(' + l.id + ')" class="btn btn-ghost btn-sm">View</button>' +
+        actionBtns +
+      '</td></tr>';
+  }).join('');
 }
+
 async function approveListing(id) {
   const r = await apiPut('/api/admin/listings.php', {id, status:'active'});
   if (r?.success) { showToast('Listing approved!'); logAction('APPROVE_LISTING','ID:'+id); loadListings(); updatePendingBadge(); }
@@ -1042,37 +1127,71 @@ function viewListing(id) {
 //  USERS
 // ─────────────────────────────────────────────────────────
 async function loadUsers() {
-  const q = document.getElementById('userSearch')?.value||'';
-  const data = await apiGet(`/api/admin/users.php?search=${encodeURIComponent(q)}`);
+  const q = document.getElementById('userSearch')?.value || '';
+  const data = await apiGet('/api/admin/users.php?search=' + encodeURIComponent(q));
+  const allUsers = data?.data || [];
+
+  const regularUsers = allUsers.filter(function(u){ return u.role === 'user'; });
+  const adminUsers   = allUsers.filter(function(u){ return u.role === 'admin' || u.role === 'super_admin'; });
+
+  const cntBadge = document.getElementById('userCountBadge');
+  if (cntBadge) cntBadge.textContent = regularUsers.length > 0 ? regularUsers.length : '';
+
+  // Render regular users
   const tbody = document.getElementById('usersTableBody');
-  if (!tbody) return;
-  if (!data||!data.success||!data.data?.length) {
-    tbody.innerHTML='<tr><td colspan="7"><div class="empty-state">No users found.</div></td></tr>'; return;
+  if (tbody) {
+    if (!regularUsers.length) {
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">No regular users found.</div></td></tr>';
+    } else {
+      tbody.innerHTML = regularUsers.map(function(u) {
+        return '<tr>' +
+          '<td><div style="font-weight:700;font-size:13px;">' + esc(u.name) + '</div></td>' +
+          '<td style="font-size:12px;color:#64748b;">' + esc(u.email) + '</td>' +
+          '<td style="font-size:12px;">' + esc(u.phone || '-') + '</td>' +
+          '<td><span style="background:#dbeafe;color:#1d4ed8;border-radius:99px;padding:2px 8px;font-size:11px;font-weight:700;">' + (u.active_listings || 0) + ' listings</span></td>' +
+          '<td><span class="badge ' + (u.is_active ? 'badge-green' : 'badge-red') + '">' + (u.is_active ? 'Active' : 'Suspended') + '</span></td>' +
+          '<td style="font-size:11px;color:#94a3b8;">' + fmt(u.created_at) + '</td>' +
+          '<td style="text-align:right;white-space:nowrap;">' +
+            '<button onclick="openEditUserModal(' + u.id + ',\'' + esc(u.name) + '\',\'' + esc(u.email) + '\',\'' + esc(u.phone || '') + '\',\'' + esc(u.role) + '\')" class="btn btn-ghost btn-sm">Edit</button>' +
+            '<button onclick="toggleUserActive(' + u.id + ',' + (u.is_active ? 0 : 1) + ')" class="btn btn-sm ' + (u.is_active ? 'btn-danger' : 'btn-primary') + '" style="min-width:80px;">' + (u.is_active ? 'Suspend' : 'Reinstate') + '</button>' +
+          '</td></tr>';
+      }).join('');
+    }
   }
-  tbody.innerHTML = data.data.map(u=>`<tr>
-    <td><div style="font-weight:700;font-size:13px;">${esc(u.name)}</div></td>
-    <td style="font-size:12px;color:#64748b;">${esc(u.email)}</td>
-    <td style="font-size:12px;">${esc(u.phone||'—')}</td>
-    <td><span class="badge ${u.role==='admin'?'badge-purple':'badge-blue'}">${esc(u.role)}</span></td>
-    <td><span class="badge ${u.is_verified?'badge-green':'badge-gray'}">${u.is_verified?'Verified':'Unverified'}</span></td>
-    <td style="font-size:11px;color:#94a3b8;">${fmt(u.created_at)}</td>
-    <td style="text-align:right;">
-      <button onclick="openEditUserModal(${u.id},'${esc(u.name)}','${esc(u.email)}','${esc(u.phone||'')}','${esc(u.role)}')" class="btn btn-ghost btn-sm">Edit</button>
-      <button onclick="toggleUserActive(${u.id},${u.is_active?0:1})" class="btn btn-sm ${u.is_active?'btn-danger':'btn-primary'}">${u.is_active?'Suspend':'Activate'}</button>
-    </td>
-  </tr>`).join('');
+
+  // Render admins
+  const atbody = document.getElementById('adminsTableBody');
+  if (atbody) {
+    if (!adminUsers.length) {
+      atbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">No admins configured.</div></td></tr>';
+    } else {
+      atbody.innerHTML = adminUsers.map(function(u) {
+        return '<tr>' +
+          '<td><div style="font-weight:700;font-size:13px;">' + esc(u.name) + '</div></td>' +
+          '<td style="font-size:12px;color:#64748b;">' + esc(u.email) + '</td>' +
+          '<td><span class="badge ' + (u.role === 'super_admin' ? 'badge-purple' : 'badge-blue') + '">' + (u.role === 'super_admin' ? 'Super Admin' : 'Admin') + '</span></td>' +
+          '<td><span class="badge ' + (u.is_active ? 'badge-green' : 'badge-red') + '">' + (u.is_active ? 'Active' : 'Suspended') + '</span></td>' +
+          '<td style="font-size:11px;color:#94a3b8;">' + fmt(u.created_at) + '</td>' +
+          '<td style="text-align:right;white-space:nowrap;">' +
+            '<button onclick="openEditUserModal(' + u.id + ',\'' + esc(u.name) + '\',\'' + esc(u.email) + '\',\'' + esc(u.phone || '') + '\',\'' + esc(u.role) + '\')" class="btn btn-ghost btn-sm">Edit</button>' +
+            '<button onclick="toggleUserActive(' + u.id + ',' + (u.is_active ? 0 : 1) + ')" class="btn btn-sm ' + (u.is_active ? 'btn-danger' : 'btn-primary') + '">' + (u.is_active ? 'Suspend' : 'Reinstate') + '</button>' +
+          '</td></tr>';
+      }).join('');
+    }
+  }
 }
-// loadVerificationReqs removed — users self-verify via OTP. Admin only suspends/activates.
 async function toggleUserActive(id, active) {
   const r = await apiPut('/api/admin/users.php', {id, is_active:active});
   if (r?.success) { showToast(active?'User activated!':'User suspended!'); loadUsers(); }
   else showToast(r?.error||'Error','error');
 }
 // approveVerification / rejectVerification removed — users self-verify via registration OTP.
-function openAddUserModal() {
-  document.getElementById('userModalTitle').textContent='Add User';
+function openAddUserModal(defaultRole='user') {
+  document.getElementById('userModalTitle').textContent = defaultRole === 'admin' ? 'Add Admin' : 'Add User';
   document.getElementById('editUserId').value='';
   ['userNameInput','userEmailInput','userPhoneInput'].forEach(id=>{ const el=document.getElementById(id); if(el)el.value=''; });
+  const roleInput = document.getElementById('userRoleInput');
+  if (roleInput) roleInput.value = defaultRole;
   openModal('userModal');
 }
 function openEditUserModal(id,name,email,phone,role) {
