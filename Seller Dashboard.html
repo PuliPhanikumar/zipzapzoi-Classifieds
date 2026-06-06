@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -88,9 +88,7 @@
       <a href="#" onclick="quotaAwarePost(); return false;" class="sidebar-link">
         <span class="material-symbols-outlined text-[20px]">add_circle</span> Post New Ad
       </a>
-      <a href="#" onclick="requestVerification(); return false;" class="sidebar-link text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20" id="navVerifyBtn">
-        <span class="material-symbols-outlined text-[20px]">verified</span> Get Verified
-      </a>
+
       <a href="#" onclick="openEditProfile(); return false;" id="navProfileLink" class="sidebar-link">
         <span class="material-symbols-outlined text-[20px]">person</span> My Profile
       </a>
@@ -821,25 +819,7 @@
       window.location.href = 'Post Listing.html';
     };
 
-    // Verification request
-    window.requestVerification = async function() {
-      try {
-        const res  = await fetch('/api/auth.php?action=request_verification', {
-          method: 'POST',
-          credentials: 'include'
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast('Verification requested! Admin will review your profile.', 'success');
-          document.getElementById('navVerifyBtn').innerHTML =
-            '<span class="material-symbols-outlined text-[20px]">schedule</span> Pending Review';
-        } else {
-          showToast(data.error || 'Already verified or pending.', 'success');
-        }
-      } catch(e) {
-        showToast('Network error. Try again.', 'error');
-      }
-    };
+
 
 
     // ═══════════════════════════════════════════

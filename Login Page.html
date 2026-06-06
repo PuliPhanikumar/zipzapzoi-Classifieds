@@ -183,52 +183,7 @@
     </div>
 
     <!-- ══════════════ STEP 2: OTP VERIFICATION ══════════════ -->
-    <div id="stepOTP" class="hidden animate-fade-in">
-      <button onclick="backToLogin()" class="flex items-center gap-1 text-sm font-bold text-gray-400 hover:text-primary mb-6 transition-colors">
-        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Back
-      </button>
-
-      <!-- Lock icon -->
-      <div class="flex justify-center mb-6">
-        <div class="w-20 h-20 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center">
-          <span class="material-symbols-outlined text-primary text-4xl">shield_lock</span>
-        </div>
-      </div>
-
-      <div class="text-center mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Verify It's You</h2>
-        <p class="text-gray-500 dark:text-gray-400 text-sm">We sent a 6-digit code to</p>
-        <p class="font-bold text-gray-800 dark:text-white text-sm mt-1" id="otpSentTo">your email</p>
-      </div>
-
-      <!-- 6 OTP boxes -->
-      <div class="flex justify-center gap-2 mb-2" id="otpBoxes">
-        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp0" oninput="onOtpInput(0)" onkeydown="onOtpKeydown(event,0)" onpaste="onOtpPaste(event)">
-        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp1" oninput="onOtpInput(1)" onkeydown="onOtpKeydown(event,1)">
-        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp2" oninput="onOtpInput(2)" onkeydown="onOtpKeydown(event,2)">
-        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp3" oninput="onOtpInput(3)" onkeydown="onOtpKeydown(event,3)">
-        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp4" oninput="onOtpInput(4)" onkeydown="onOtpKeydown(event,4)">
-        <input type="text" maxlength="1" class="otp-input" inputmode="numeric" pattern="[0-9]" id="otp5" oninput="onOtpInput(5)" onkeydown="onOtpKeydown(event,5)">
-      </div>
-
-      <!-- Countdown -->
-      <p class="text-center text-sm text-gray-400 mb-6">
-        Code expires in <span id="otpCountdown" class="font-bold text-primary">10:00</span>
-      </p>
-
-      <button id="verifyBtn" onclick="verifyOtp()" class="btn-primary">
-        <span id="verifyBtnText">Verify & Sign In</span>
-        <span class="material-symbols-outlined text-[20px]" id="verifyBtnIcon">verified</span>
-      </button>
-
-      <p class="text-center text-sm text-gray-400 mt-5">
-        Didn't receive it? 
-        <button id="resendBtn" onclick="resendOtp()" class="font-bold text-primary hover:underline ml-1 disabled:opacity-40" disabled>
-          Resend Code
-        </button>
-        <span id="resendTimer" class="text-gray-400 ml-1">(30s)</span>
-      </p>
-    </div>
+    iv>
 
   </div>
 </div>
@@ -262,11 +217,7 @@
   if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
 
   // ─── State ────────────────────────────────────────────────
-  let _pendingUser  = null;   // {name, email} pending OTP
-  let _pendingEmail = null;   // email for verify_otp call
-  let _pendingPass  = null;   // password kept in memory for resend
-  let _countdownId  = null;
-  let _resendId     = null;
+  
 
   // ─── Utilities ────────────────────────────────────────────
   function showToast(msg, type = 'success') {
@@ -357,167 +308,7 @@
   }
 
   // ─── OTP Box Input Handling ────────────────────────────────
-  function onOtpInput(i) {
-    const el = document.getElementById(`otp${i}`);
-    el.value = el.value.replace(/\D/, '').slice(-1);
-    if (el.value) {
-      el.classList.add('filled');
-      if (i < 5) document.getElementById(`otp${i+1}`).focus();
-      else tryAutoVerify();
-    } else {
-      el.classList.remove('filled');
-    }
-  }
 
-  function onOtpKeydown(e, i) {
-    if (e.key === 'Backspace') {
-      const el = document.getElementById(`otp${i}`);
-      if (!el.value && i > 0) {
-        document.getElementById(`otp${i-1}`).focus();
-        document.getElementById(`otp${i-1}`).value = '';
-        document.getElementById(`otp${i-1}`).classList.remove('filled');
-      }
-    }
-    if (e.key === 'ArrowLeft' && i > 0) document.getElementById(`otp${i-1}`).focus();
-    if (e.key === 'ArrowRight' && i < 5) document.getElementById(`otp${i+1}`).focus();
-  }
-
-  function onOtpPaste(e) {
-    e.preventDefault();
-    const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
-    text.split('').forEach((ch, i) => {
-      const el = document.getElementById(`otp${i}`);
-      if (el) { el.value = ch; el.classList.add('filled'); }
-    });
-    if (text.length === 6) {
-      document.getElementById('otp5').focus();
-      tryAutoVerify();
-    } else {
-      const next = document.getElementById(`otp${text.length}`);
-      if (next) next.focus();
-    }
-  }
-
-  function getEnteredOtp() {
-    return [0,1,2,3,4,5].map(i => document.getElementById(`otp${i}`).value).join('');
-  }
-
-  function clearOtpBoxes() {
-    [0,1,2,3,4,5].forEach(i => {
-      const el = document.getElementById(`otp${i}`);
-      el.value = '';
-      el.classList.remove('filled');
-    });
-    document.getElementById('otp0').focus();
-  }
-
-  function tryAutoVerify() {
-    if (getEnteredOtp().length === 6) {
-      setTimeout(verifyOtp, 200);
-    }
-  }
-
-  // ─── Show / Hide Steps ────────────────────────────────────
-  function showOtpStep(user) {
-    _pendingUser = user;
-    document.getElementById('stepLogin').classList.add('hidden');
-    const otpStep = document.getElementById('stepOTP');
-    otpStep.classList.remove('hidden');
-    otpStep.classList.add('animate-fade-in');
-    document.getElementById('otpSentTo').textContent = user.email;
-    document.getElementById('otp0').focus();
-    // Reset countdown style
-    const el = document.getElementById('otpCountdown');
-    el.classList.remove('text-red-500');
-    el.classList.add('text-primary');
-  }
-
-  function backToLogin() {
-    clearInterval(_countdownId);
-    clearInterval(_resendId);
-    _currentOtp = null;
-    _pendingUser = null;
-    clearOtpBoxes();
-    document.getElementById('stepOTP').classList.add('hidden');
-    document.getElementById('stepLogin').classList.remove('hidden');
-    // Reset button
-    const btn = document.getElementById('loginBtn');
-    btn.disabled = false;
-    document.getElementById('btnText').textContent = 'Sign In';
-    document.getElementById('btnIcon').textContent = 'login';
-    document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px]';
-  }
-
-  // ─── Resend OTP ───────────────────────────────────────────
-  async function resendOtp() {
-    clearOtpBoxes();
-    startResendTimer(30);
-    try {
-      const res  = await fetch('/api/auth.php?action=login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email: _pendingEmail, password: _pendingPass })
-      });
-      const data = await res.json();
-      if (data.success) {
-        startCountdown((data.data.expires_in || 600) * 1000);
-        showToast(`New OTP sent to ${_pendingUser.email} 📧`, 'success');
-      } else {
-        showToast(data.error || 'Could not resend OTP. Please go back.', 'error');
-      }
-    } catch (err) {
-      showToast('Network error. Please go back and try again.', 'error');
-    }
-  }
-
-  // ─── Verify OTP (server-side) ─────────────────────────────
-  async function verifyOtp() {
-    const entered = getEnteredOtp();
-    if (entered.length < 6) { showToast('Please enter all 6 digits.', 'error'); return; }
-
-    const btn = document.getElementById('verifyBtn');
-    btn.disabled = true;
-    document.getElementById('verifyBtnText').textContent = 'Verifying...';
-    document.getElementById('verifyBtnIcon').className = 'material-symbols-outlined text-[20px] animate-spin';
-    document.getElementById('verifyBtnIcon').textContent = 'refresh';
-
-    try {
-      const res  = await fetch('/api/auth.php?action=verify_otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email: _pendingEmail, otp: entered, action: 'login' })
-      });
-      const data = await res.json();
-
-      if (!data.success) {
-        showToast(data.error || 'Incorrect OTP. Please try again.', 'error');
-        clearOtpBoxes();
-        btn.disabled = false;
-        document.getElementById('verifyBtnText').textContent = 'Verify & Sign In';
-        document.getElementById('verifyBtnIcon').className = 'material-symbols-outlined text-[20px]';
-        document.getElementById('verifyBtnIcon').textContent = 'verified';
-        const boxes = document.getElementById('otpBoxes');
-        boxes.style.animation = 'none'; boxes.offsetHeight;
-        boxes.style.animation = 'shake 0.4s ease';
-        return;
-      }
-
-      clearInterval(_countdownId);
-      showToast(`Welcome back, ${data.data.user.name.split(' ')[0]}! 🎉`);
-      loginSuccess(data.data.user);
-
-    } catch (err) {
-      showToast('Network error. Please try again.', 'error');
-      btn.disabled = false;
-      document.getElementById('verifyBtnText').textContent = 'Verify & Sign In';
-      document.getElementById('verifyBtnIcon').className = 'material-symbols-outlined text-[20px]';
-      document.getElementById('verifyBtnIcon').textContent = 'verified';
-    }
-  }
-
-  // ─── Final Login ──────────────────────────────────────────
   function loginSuccess(user) {
     // Save user info to localStorage for UI display (auth is via session cookie)
     localStorage.setItem('zzz_user', JSON.stringify(user));
