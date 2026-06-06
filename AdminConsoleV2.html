@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1181,8 +1181,9 @@ async function loadUsers() {
   }
 }
 async function toggleUserActive(id, active) {
-  const r = await apiPut('/api/admin/users.php', {id, is_active:active});
-  if (r?.success) { showToast(active?'User activated!':'User suspended!'); loadUsers(); }
+  const actionName = active ? 'unban' : 'ban';
+  const r = await apiPut('/api/admin/users.php', {id, action: actionName});
+  if (r?.success) { showToast(active?'User reinstated!':'User suspended!','success'); loadUsers(); }
   else showToast(r?.error||'Error','error');
 }
 // approveVerification / rejectVerification removed — users self-verify via registration OTP.
@@ -1530,7 +1531,7 @@ async function loadAbuseTracking() {
 }
 async function banUser(uid) {
   confirmAction('Ban User','This will suspend this user permanently. Continue?',async()=>{
-    const r = await apiPut('/api/admin/users.php',{id:uid,is_active:0});
+    const r = await apiPut('/api/admin/users.php',{id:uid,action:'ban'});
     if (r?.success) { showToast('User banned!','error'); loadAbuseTracking(); }
     else showToast(r?.error||'Error','error');
   });

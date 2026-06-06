@@ -30,7 +30,7 @@ function listUsers(): void {
     $stmt   = $db->prepare(
         "SELECT u.id, u.name, u.email, u.phone, u.role, u.is_verified, u.is_active,
                 u.city, u.state, u.created_at,
-                (SELECT COUNT(*) FROM listings l WHERE l.user_id = u.id AND l.status='active') AS active_listings
+                (SELECT COUNT(*) FROM listings l WHERE l.user_id = u.id) AS active_listings
          FROM users u
          WHERE (u.name LIKE :q OR u.email LIKE :q2)
          ORDER BY u.created_at DESC
