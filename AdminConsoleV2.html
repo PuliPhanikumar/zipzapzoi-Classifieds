@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1228,6 +1228,64 @@ async function exportUsersCSV() {
   a.download = 'zzz_users_'+new Date().toISOString().slice(0,10)+'.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   showToast('Downloaded '+data.data.length+' users as CSV!');
+}
+
+// ─────────────────────────────────────────────────────────
+//  FEEDBACK
+// ─────────────────────────────────────────────────────────
+async function loadFeedback() {
+  const status = document.getElementById('feedbackStatusFilter')?.value || 'all';
+  const data = await apiGet('/api/admin/feedback.php?status=' + status);
+  const tbody = document.getElementById('feedbackTableBody');
+  if (!tbody) return;
+
+  const unreadData = await apiGet('/api/admin/feedback.php?status=unread');
+  const unreadCnt = unreadData?.data?.feedbacks?.length || 0;
+  const badge = document.getElementById('feedbackBadge');
+  if (badge) {
+    badge.textContent = unreadCnt;
+    badge.style.display = unreadCnt > 0 ? 'inline-block' : 'none';
+  }
+
+  if (!data || !data.success || !data.data?.feedbacks?.length) {
+    tbody.innerHTML='<tr><td colspan="6"><div class="empty-state"><span class="material-symbols-outlined mi">inbox</span>No feedback found.</div></td></tr>'; return;
+  }
+  
+  const statusColors = {unread:'badge-yellow', read:'badge-blue', resolved:'badge-green'};
+  const typeIcons = {'Bug Report':'bug_report', 'Feature Request':'lightbulb', 'UI/UX Improvement':'palette', 'General Feedback':'chat', 'Other':'help'};
+  
+  tbody.innerHTML = data.data.feedbacks.map(function(f) {
+    const actionBtns = f.status !== 'resolved' 
+      ? '<button onclick="updateFeedbackStatus(' + f.id + ', \'resolved\')" class="btn btn-primary btn-sm">Resolve</button>' 
+      : '<button onclick="updateFeedbackStatus(' + f.id + ', \'unread\')" class="btn btn-ghost btn-sm">Reopen</button>';
+      
+    return '<tr>' +
+      '<td class="p-4">' +
+        '<div style="font-weight:700;font-size:13px;">' + esc(f.name) + '</div>' +
+        '<div style="font-size:11px;color:#64748b;">' + esc(f.email) + '</div>' +
+      '</td>' +
+      '<td class="p-4">' +
+        '<span class="flex items-center gap-1 text-xs font-bold text-gray-600 dark:text-gray-300">' +
+          '<span class="material-symbols-outlined text-[16px]">' + (typeIcons[f.type] || 'chat') + '</span> ' + esc(f.type) +
+        '</span>' +
+      '</td>' +
+      '<td class="p-4">' +
+        '<div class="text-sm text-gray-800 dark:text-gray-200 max-w-md truncate" title="' + esc(f.message) + '">' + esc(f.message) + '</div>' +
+      '</td>' +
+      '<td class="p-4"><span class="badge ' + (statusColors[f.status] || 'badge-gray') + '">' + esc(f.status) + '</span></td>' +
+      '<td class="p-4" style="font-size:11px;color:#94a3b8;">' + fmt(f.created_at) + '</td>' +
+      '<td class="p-4 text-right whitespace-nowrap">' +
+        '<button onclick="alert(\'Full Message:\\n\\n\' + `' + esc(f.message) + '`)" class="btn btn-ghost btn-sm">Read</button>' +
+        actionBtns +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+async function updateFeedbackStatus(id, status) {
+  const r = await apiPut('/api/admin/feedback.php', {id, status});
+  if (r?.success) { showToast('Feedback marked as ' + status); loadFeedback(); }
+  else showToast(r?.error||'Error updating','error');
 }
 
 // ─────────────────────────────────────────────────────────
