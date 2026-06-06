@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -156,9 +156,8 @@
     <div><span class="material-symbols-outlined mi">inventory_2</span>Listings</div>
     <span id="pendingListingsBadge" style="display:none; background:#ef4444; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:12px;">0</span>
   </div>
-  <div class="nav-item flex items-center justify-between" id="nav-users" onclick="switchTab('users')" style="display:flex; justify-content:space-between; align-items:center;">
-    <div><span class="material-symbols-outlined mi">group</span>Users</div>
-    <span id="pendingUsersBadge" style="display:none; background:#ef4444; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:12px;">0</span>
+  <div class="nav-item" id="nav-users" onclick="switchTab('users')">
+    <span class="material-symbols-outlined mi">group</span>Users
   </div>
 
   <div class="nav-section-label">Revenue</div>
@@ -279,13 +278,7 @@
           <tbody id="usersTableBody"><tr><td colspan="7"><div class="empty-state">Loading...</div></td></tr></tbody></table>
         </div>
       </div>
-      <div class="card" style="padding:0;overflow:hidden;">
-        <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;background:#f8fafc;font-weight:800;">Verification Requests</div>
-        <div style="overflow-x:auto;">
-          <table class="tbl"><thead><tr><th>User</th><th>Requested</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
-          <tbody id="verificationsTableBody"><tr><td colspan="4"><div class="empty-state">Loading...</div></td></tr></tbody></table>
-        </div>
-      </div>
+      <!-- Verification Requests removed: users self-verify via OTP at registration. Admin manages users via Suspend/Activate only. -->
     </div>
 
     <!-- ══════════════════════════════════════
@@ -1024,8 +1017,7 @@ async function loadListings() {
     <td style="font-size:11px;color:#64748b;">${fmt(l.created_at)}</td>
     <td style="text-align:right;">
       <button onclick="viewListing(${l.id})" class="btn btn-ghost btn-sm">View</button>
-      <button onclick="approveListing(${l.id})" class="btn btn-primary btn-sm">Approve</button>
-      <button onclick="rejectListing(${l.id})" class="btn btn-danger btn-sm">Reject</button>
+      ${l.status==='pending_review' ? `<button onclick="approveListing(${l.id})" class="btn btn-primary btn-sm">Approve</button><button onclick="rejectListing(${l.id})" class="btn btn-danger btn-sm">Reject</button>` : ````}
     </td>
   </tr>`).join('');
 }
@@ -1070,36 +1062,13 @@ async function loadUsers() {
     </td>
   </tr>`).join('');
 }
-async function loadVerificationReqs() {
-  const data = await apiGet('/api/admin/users.php?verifications=1');
-  const tbody = document.getElementById('verificationsTableBody');
-  if (!tbody) return;
-  if (!data?.success||!data.data?.length) { tbody.innerHTML='<tr><td colspan="4"><div class="empty-state">No pending verifications.</div></td></tr>'; return; }
-  tbody.innerHTML = data.data.map(v=>`<tr>
-    <td>${esc(v.name||v.email)}</td>
-    <td>${fmt(v.created_at)}</td>
-    <td><span class="badge badge-yellow">${esc(v.status||'pending')}</span></td>
-    <td style="text-align:right;">
-      <button onclick="approveVerification(${v.id})" class="btn btn-primary btn-sm">Approve</button>
-      <button onclick="rejectVerification(${v.id})" class="btn btn-danger btn-sm">Reject</button>
-    </td>
-  </tr>`).join('');
-}
+// loadVerificationReqs removed — users self-verify via OTP. Admin only suspends/activates.
 async function toggleUserActive(id, active) {
   const r = await apiPut('/api/admin/users.php', {id, is_active:active});
   if (r?.success) { showToast(active?'User activated!':'User suspended!'); loadUsers(); }
   else showToast(r?.error||'Error','error');
 }
-async function approveVerification(id) {
-  const r = await apiPut('/api/admin/users.php', {id, action:'approve_verification'});
-  if (r?.success) { showToast('Verification approved!'); loadVerificationReqs(); updatePendingUsersBadge(); }
-  else showToast(r?.error||'Error','error');
-}
-async function rejectVerification(id) {
-  const r = await apiPut('/api/admin/users.php', {id, action:'reject_verification'});
-  if (r?.success) { showToast('Verification rejected'); loadVerificationReqs(); updatePendingUsersBadge(); }
-  else showToast(r?.error||'Error','error');
-}
+// approveVerification / rejectVerification removed — users self-verify via registration OTP.
 function openAddUserModal() {
   document.getElementById('userModalTitle').textContent='Add User';
   document.getElementById('editUserId').value='';
@@ -1811,23 +1780,10 @@ async function updatePendingBadge() {
   } catch(e) {}
 }
 
-async function updatePendingUsersBadge() {
-  try {
-    const data = await apiGet('/api/admin/users.php?verifications=1');
-    const cnt = data?.data?.length || 0;
-    const badge = document.getElementById('pendingUsersBadge');
-    if (badge) {
-      badge.textContent = cnt;
-      badge.style.display = cnt > 0 ? 'inline-block' : 'none';
-    }
-  } catch(e) {}
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   startSessionTimer();
   loadDashboard();
   updatePendingBadge();
-  updatePendingUsersBadge();
 });
 </script>
 </body>

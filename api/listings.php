@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ZipZapZoi Classifieds — Listings API
  * GET    /api/listings.php              → all listings (with filters)
@@ -30,14 +30,27 @@ switch ($method) {
 // ─────────────────────────────────────────────────────────────────────
 function getAll(): void {
     $db     = getDB();
-    $where  = ['l.status = :status'];
-    $params = [':status' => $_GET['status'] ?? 'active'];
-
-    // Auto-filter: don't show listings whose expires_at has passed, even if status is still 'active'
-    // This prevents date-lapsed listings from appearing in search results without needing a cron job
     $requestedStatus = $_GET['status'] ?? 'active';
-    if ($requestedStatus === 'active') {
-        $where[] = '(l.expires_at IS NULL OR l.expires_at > NOW())';
+
+    // status=all: show all statuses for the authenticated owner viewing their own listings
+    // This is used by Seller Dashboard to show pending, active, rejected etc.
+    $ownerId = null;
+    if ($requestedStatus === 'all') {
+        $currentUser = getCurrentUser();
+        $ownerId = $currentUser ? (int)$currentUser['id'] : null;
+    }
+
+    if ($requestedStatus === 'all' && $ownerId) {
+        // No status filter — owner sees all their listings regardless of status
+        $where  = ['l.user_id = :owner_uid'];
+        $params = [':owner_uid' => $ownerId];
+    } else {
+        $where  = ['l.status = :status'];
+        $params = [':status' => $requestedStatus];
+        // Auto-filter: don't show expired listings in public active search
+        if ($requestedStatus === 'active') {
+            $where[] = '(l.expires_at IS NULL OR l.expires_at > NOW())';
+        }
     }
 
     if (!empty($_GET['category'])) {

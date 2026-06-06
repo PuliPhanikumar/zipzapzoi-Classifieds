@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ZipZapZoi Classifieds — Auth API
  * Actions: register | verify_otp | login | logout | me
@@ -122,7 +122,9 @@ function handleVerifyOtp(array $b): void {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// LOGIN — Step 1: check credentials, send OTP
+// LOGIN — verify credentials, issue session directly.
+// OTP is only required ONCE at registration to verify the email address.
+// Asking for OTP on every login would be 2FA — not required here.
 // ─────────────────────────────────────────────────────────────────────
 function handleLogin(array $b): void {
     $email    = strtolower(trim($b['email']    ?? ''));
@@ -140,23 +142,9 @@ function handleLogin(array $b): void {
         jsonError('Invalid email or password.', 401);
     }
 
-    // Generate & store OTP for login
-    $otp    = generateOtp();
-    $expiry = date('Y-m-d H:i:s', strtotime('+10 minutes'));
-    $db->prepare("DELETE FROM otp_tokens WHERE email = ? AND action = 'login'")->execute([$email]);
-    $db->prepare('INSERT INTO otp_tokens (email, otp_code, action, expires_at) VALUES (?, ?, ?, ?)')
-       ->execute([$email, $otp, 'login', $expiry]);
-
-    // Send OTP email via PHP mail (server-side — works without EmailJS)
-    sendOtpMail($email, $user['name'], $otp, 10);
-
-    jsonOk([
-        'message'    => 'OTP sent to your email.',
-        'otp'        => $otp,   // Also returned so browser can send via EmailJS as backup
-        'expires_in' => 600,
-        'to_name'    => $user['name'],
-        'to_email'   => $email,
-    ]);
+    // Issue session directly — email was already verified at registration
+    $token = createSession((int)$user['id']);
+    jsonOk(['user' => sanitizeUser($user), 'token' => $token, 'message' => 'Login successful.']);
 }
 
 // ─────────────────────────────────────────────────────────────────────

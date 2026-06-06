@@ -142,7 +142,7 @@
     <div id="stepLogin" class="animate-fade-in">
       <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">Sign In</h1>
-        <p class="text-gray-400 dark:text-gray-500">Enter your credentials to receive your OTP.</p>
+        <p class="text-gray-400 dark:text-gray-500">Enter your email and password to sign in.</p>
       </div>
 
       <form id="loginForm" class="space-y-5" novalidate>
@@ -169,8 +169,8 @@
         </div>
 
         <button type="submit" id="loginBtn" class="btn-primary mt-2">
-          <span id="btnText">Send OTP & Sign In</span>
-          <span class="material-symbols-outlined text-[20px]" id="btnIcon">send</span>
+          <span id="btnText">Sign In</span>
+          <span class="material-symbols-outlined text-[20px]" id="btnIcon">login</span>
         </button>
       </form>
 
@@ -443,8 +443,8 @@
     // Reset button
     const btn = document.getElementById('loginBtn');
     btn.disabled = false;
-    document.getElementById('btnText').textContent = 'Send OTP & Sign In';
-    document.getElementById('btnIcon').textContent = 'send';
+    document.getElementById('btnText').textContent = 'Sign In';
+    document.getElementById('btnIcon').textContent = 'login';
     document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px]';
   }
 
@@ -541,7 +541,7 @@
     if (!email || !password) { showToast('Please fill in all fields.', 'error'); return; }
 
     btn.disabled = true;
-    document.getElementById('btnText').textContent = 'Checking...';
+    document.getElementById('btnText').textContent = 'Signing in...';
     document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px] animate-spin';
     document.getElementById('btnIcon').textContent = 'refresh';
 
@@ -556,27 +556,22 @@
 
       if (!data.success) {
         btn.disabled = false;
-        document.getElementById('btnText').textContent = 'Send OTP & Sign In';
+        document.getElementById('btnText').textContent = 'Sign In';
         document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px]';
-        document.getElementById('btnIcon').textContent = 'send';
+        document.getElementById('btnIcon').textContent = 'login';
         showToast(data.error || 'Invalid email or password.', 'error');
         return;
       }
 
-      // Credentials valid — OTP sent by PHP server-side, just show OTP step
-      _pendingEmail = email;
-      _pendingPass  = password; // kept in memory for resend only
-      _pendingUser  = { name: data.data.to_name, email: data.data.to_email };
-      showOtpStep(_pendingUser);
-      startCountdown((data.data.expires_in || 600) * 1000);
-      startResendTimer(30);
-      showToast(`OTP sent to ${data.data.to_email} 📧`, 'success');
+      // Credentials valid — session created directly (OTP already verified once at registration)
+      showToast(`Welcome back, ${data.data.user.name.split(' ')[0]}! 🎉`, 'success');
+      loginSuccess(data.data.user);
 
     } catch (err) {
       btn.disabled = false;
-      document.getElementById('btnText').textContent = 'Send OTP & Sign In';
+      document.getElementById('btnText').textContent = 'Sign In';
       document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px]';
-      document.getElementById('btnIcon').textContent = 'send';
+      document.getElementById('btnIcon').textContent = 'login';
       showToast('Network error. Please check connection and try again.', 'error');
     }
   });
