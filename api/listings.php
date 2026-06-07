@@ -350,17 +350,55 @@ function updateListing(int $id): void {
         jsonError('You can only edit your own listings.', 403);
     }
 
+    $uid = (int)$user['id'];
+
+    // ── Process images: convert any base64 data URLs → disk files ──────
+    $processedImages = null;
+    if (array_key_exists('images', $b) && is_array($b['images'])) {
+        $allowed  = ['image/jpeg','image/png','image/webp','image/gif'];
+        $maxBytes = MAX_UPLOAD_MB * 1024 * 1024;
+        $processedImages = [];
+        foreach (array_slice($b['images'], 0, 10) as $img) {
+            if (!is_string($img)) continue;
+            if (str_starts_with($img, 'data:image/')) {
+                // Base64 data URL → decode and save to disk
+                if (preg_match('/^data:(image\/[a-z]+);base64,(.+)$/s', $img, $m)) {
+                    $mime    = $m[1];
+                    $decoded = base64_decode($m[2], true);
+                    if (!$decoded || strlen($decoded) > $maxBytes) continue;
+                    if (!in_array($mime, $allowed)) continue;
+                    $ext  = explode('/', $mime)[1];
+                    $ext  = ($ext === 'jpeg') ? 'jpg' : $ext;
+                    $name = 'lst_' . $uid . '_' . uniqid() . '.' . $ext;
+                    $path = UPLOAD_DIR . $name;
+                    if (file_put_contents($path, $decoded) !== false) {
+                        $processedImages[] = UPLOAD_URL . $name;
+                    }
+                }
+            } elseif (str_starts_with($img, '/') || str_starts_with($img, 'http')) {
+                // Already a stored URL — keep it as-is
+                $processedImages[] = $img;
+            }
+        }
+    }
+
     // Build dynamic SET
     $allowed = ['title','description','category','subcategory','price','price_type',
                 'location_city','location_state','location_area','images','fields','status'];
     $sets = []; $params = [];
     foreach ($allowed as $field) {
         if (!array_key_exists($field, $b)) continue;
-        if (in_array($field, ['images','fields'])) {
-            $sets[] = "{$field} = ?";
+        if ($field === 'images') {
+            // Use the processed images array (base64 already converted to URLs)
+            if ($processedImages !== null) {
+                $sets[]   = "images = ?";
+                $params[] = json_encode($processedImages);
+            }
+        } elseif ($field === 'fields') {
+            $sets[]   = "fields = ?";
             $params[] = json_encode($b[$field]);
         } else {
-            $sets[] = "{$field} = ?";
+            $sets[]   = "{$field} = ?";
             $params[] = is_string($b[$field]) ? clean($b[$field]) : $b[$field];
         }
     }
@@ -369,6 +407,7 @@ function updateListing(int $id): void {
     $db->prepare('UPDATE listings SET ' . implode(', ', $sets) . ' WHERE id = ?')->execute($params);
     jsonOk(['message' => 'Listing updated.']);
 }
+
 
 // ─────────────────────────────────────────────────────────────────────
 // DELETE LISTING
