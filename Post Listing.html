@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -910,28 +910,69 @@
     confirmPostBtn.textContent = 'Posting...';
 
     try {
-      // ── Step 1: Upload images via FormData (avoids base64 payload size issues) ──
+      // ── Step 1: Compress + Upload images ─────────────────────────────
       let imageUrls = [];
       const fileInput = document.getElementById('fileInput');
       const files = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
+
       if (files.length > 0) {
-        const formData = new FormData();
+        // Client-side image compression (resize to max 1600px, 85% quality)
+        // This handles large mobile camera photos (3-8MB) before they hit the server
+        async function compressImage(file) {
+          return new Promise((resolve) => {
+            const MAX_PX = 1600;
+            const QUALITY = 0.85;
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = () => {
+              URL.revokeObjectURL(url);
+              let { width, height } = img;
+              if (width > MAX_PX || height > MAX_PX) {
+                if (width > height) { height = Math.round(height * MAX_PX / width); width = MAX_PX; }
+                else                { width  = Math.round(width  * MAX_PX / height); height = MAX_PX; }
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = width; canvas.height = height;
+              canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+              canvas.toBlob(blob => resolve(blob || file), 'image/jpeg', QUALITY);
+            };
+            img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+            img.src = url;
+          });
+        }
+
         const max = (currentCategory && currentCategory.photoLimit) ? currentCategory.photoLimit : 8;
-        files.slice(0, max).forEach(f => formData.append('images[]', f));
+        const toUpload = files.slice(0, max);
+
+        // Compress all images in parallel
+        const compressed = await Promise.all(toUpload.map(f => compressImage(f)));
+
+        const formData = new FormData();
+        compressed.forEach((blob, i) => {
+          formData.append('images[]', blob, toUpload[i].name.replace(/\.[^.]+$/, '.jpg'));
+        });
+
         try {
-          const upRes = await fetch('/api/uploads.php', {
+          const upRes  = await fetch('/api/uploads.php', {
             method: 'POST',
             credentials: 'include',
             body: formData,
           });
           const upText = await upRes.text();
-          try {
-            const upData = JSON.parse(upText);
-            if (upData.success && Array.isArray(upData.data.urls)) {
-              imageUrls = upData.data.urls;
-            }
-          } catch(e) { /* upload parse error — proceed without images */ }
-        } catch(e) { /* network error on upload — proceed without images */ }
+          let upData;
+          try { upData = JSON.parse(upText); } catch(e) {
+            // Non-JSON response — server error
+            showToast('Image upload failed (server error). Listing will be posted without photos.', 'error');
+            upData = null;
+          }
+          if (upData && upData.success && Array.isArray(upData.data.urls)) {
+            imageUrls = upData.data.urls;
+          } else if (upData && !upData.success) {
+            showToast('Image upload failed: ' + (upData.error || 'Unknown error') + '. Listing posted without photos.', 'error');
+          }
+        } catch(e) {
+          showToast('Network error uploading images. Listing will be posted without photos.', 'error');
+        }
       }
 
       // ── Step 2: POST listing JSON ──

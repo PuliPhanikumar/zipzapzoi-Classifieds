@@ -25,7 +25,7 @@ define('SESSION_DAYS', 30);
 define('SESSION_SECONDS', SESSION_DAYS * 24 * 3600);
 define('UPLOAD_DIR', __DIR__ . '/../uploads/listings/');
 define('UPLOAD_URL', '/uploads/listings/');
-define('MAX_UPLOAD_MB', 5);
+define('MAX_UPLOAD_MB', 10);
 
 // ── PDO Connection ────────────────────────────────────────────────────
 function getDB(): PDO {
