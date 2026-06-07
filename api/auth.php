@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ZipZapZoi Classifieds — Auth API
  * Actions: register | verify_otp | login | logout | me
@@ -206,6 +206,27 @@ function handleMe(): void {
     );
     $mStmt->execute([(int)$user['id']]);
     $full['unread_messages'] = (int)$mStmt->fetchColumn();
+
+    // ── Listing status notifications (last 7 days) ──────────────────
+    $nStmt = $db->prepare(
+        "SELECT id, title, status, updated_at
+         FROM listings
+         WHERE user_id = ?
+           AND status IN ('active','rejected')
+           AND updated_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+         ORDER BY updated_at DESC
+         LIMIT 10"
+    );
+    $nStmt->execute([(int)$user['id']]);
+    $notifs = $nStmt->fetchAll();
+    foreach ($notifs as &$n) {
+        $n['id'] = (int)$n['id'];
+        $n['message'] = $n['status'] === 'active'
+            ? '✅ Your ad "' . $n['title'] . '" was approved and is now live!'
+            : '❌ Your ad "' . $n['title'] . '" was rejected by admin.';
+    }
+    $full['listing_notifications'] = $notifs;
+    $full['unread_notifications']  = count($notifs);
 
     jsonOk(['user' => $full]);
 }

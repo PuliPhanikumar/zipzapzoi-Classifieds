@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -186,6 +186,9 @@
           <a href="Classifieds Plans.html" class="text-[11px] text-yellow-300 font-black hover:underline">Get More Ads →</a>
         </div>
       </div>
+
+      <!-- ── LISTING STATUS NOTIFICATIONS ── -->
+      <div id="listingNotifBanner" class="hidden space-y-2"></div>
 
       <!-- ── GREETING + POST BUTTON ──────── -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -541,6 +544,29 @@
           msgBadge.classList.remove('hidden');
         } else {
           sideBadge.classList.add('hidden'); msgBadge.classList.add('hidden');
+        }
+
+        // ── Listing status notifications ──────────────────────────────
+        const notifs = me.listing_notifications || [];
+        const notifBanner = document.getElementById('listingNotifBanner');
+        if (notifBanner && notifs.length > 0) {
+          notifBanner.classList.remove('hidden');
+          notifBanner.innerHTML = notifs.map(n => {
+            const isApproved = n.status === 'active';
+            const bg   = isApproved ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800';
+            const icon = isApproved ? 'check_circle' : 'cancel';
+            const col  = isApproved ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400';
+            return `<div class="flex items-start gap-3 p-4 rounded-2xl border ${bg}">
+              <span class="material-symbols-outlined ${col} text-[22px] flex-shrink-0">${icon}</span>
+              <div class="flex-1">
+                <p class="text-sm font-black text-gray-900 dark:text-white">${n.message}</p>
+                <p class="text-xs text-gray-500 mt-0.5">${new Date(n.updated_at).toLocaleString('en-IN')}</p>
+              </div>
+              ${isApproved ? `<a href="Listing Detail.html?id=${n.id}" class="flex-shrink-0 text-xs font-black text-green-600 hover:underline">View Ad →</a>` : ''}
+            </div>`;
+          }).join('');
+        } else if (notifBanner) {
+          notifBanner.classList.add('hidden');
         }
 
         // Plan widget

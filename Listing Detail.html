@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -95,7 +95,18 @@
       /* Micro Animations */
       @keyframes slideUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
       .animate-in { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        #listingMap { height: 220px; border-radius: 16px; z-index: 1; }
+      #listingMap { height: 220px; border-radius: 16px; z-index: 1; }
+
+      /* Lightbox */
+      #lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:1000; align-items:center; justify-content:center; }
+      #lightbox.open { display:flex; }
+      #lightboxImg { max-width:90vw; max-height:88vh; object-fit:contain; border-radius:12px; box-shadow:0 40px 80px rgba(0,0,0,0.6); transition:opacity .2s; }
+      .lb-btn { position:absolute; background:rgba(255,255,255,0.12); border:none; color:#fff; border-radius:50%; width:48px; height:48px; font-size:24px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s; }
+      .lb-btn:hover { background:rgba(255,255,255,0.25); }
+      #lbClose { top:16px; right:20px; }
+      #lbPrev  { left:12px; top:50%; transform:translateY(-50%); }
+      #lbNext  { right:12px; top:50%; transform:translateY(-50%); }
+      #lbCounter { position:absolute; bottom:16px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,0.7); font-size:13px; font-weight:700; letter-spacing:.05em; }
   </style>
 </head>
 <body class="font-display min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
@@ -265,7 +276,15 @@
       </div>
     </div>
 
-    
+    <!-- Lightbox -->
+    <div id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer" onclick="if(event.target===this)closeLightbox()">
+      <button class="lb-btn" id="lbClose" onclick="closeLightbox()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+      <button class="lb-btn" id="lbPrev"  onclick="lbStep(-1)"      aria-label="Previous"><span class="material-symbols-outlined">chevron_left</span></button>
+      <img id="lightboxImg" src="" alt="Full size image" />
+      <button class="lb-btn" id="lbNext"  onclick="lbStep(1)"       aria-label="Next"><span class="material-symbols-outlined">chevron_right</span></button>
+      <div id="lbCounter"></div>
+    </div>
+
     <!-- Floating Chat Widget -->
     <div id="floatingChatWidget" class="fixed bottom-6 right-6 w-96 h-[500px] bg-white dark:bg-card-dark rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col z-50 transform transition-transform duration-300 translate-y-[120%]">
       
@@ -403,7 +422,7 @@
         const images = Array.isArray(l.images) ? l.images : [];
         const gallery = document.getElementById('imageGallery');
         gallery.innerHTML = images.length > 0
-          ? images.map((img, i) => `<img src="${img}" class="gallery-item ${i===0?'main-img':''}" onclick="window.open('${img}','_blank')">`).join('')
+          ? images.map((img, i) => `<img src="${img}" class="gallery-item ${i===0?'main-img':''}" onclick="openLightbox(${i})" title="Click to enlarge">`).join('')
           : `<img src="https://placehold.co/800x600/f0f4f8/9ca3af?text=No+Image" class="gallery-item main-img">`;
 
         // Map
@@ -590,12 +609,13 @@
       }
 
       // â”€â”€â”€ SELLER PROFILE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // ─── SELLER PROFILE ──────────────────────────────────────────────
       function viewSellerProfile() {
         if (!currentListing) return;
         window.location.href = 'profile.html?sellerId=' + encodeURIComponent(currentListing.user_id);
       }
 
-      // â”€â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // ─── HELPERS ─────────────────────────────────────────────────────
       function timeAgo(dateStr) {
         if (!dateStr) return 'Just now';
         const d    = new Date(dateStr);
