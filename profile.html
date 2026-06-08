@@ -86,71 +86,81 @@
 <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl">
 
   <!-- Profile Card -->
-  <div class="bg-white dark:bg-card-dark rounded-3xl shadow-bouncy overflow-hidden mb-8">
+  <div class="bg-white dark:bg-card-dark rounded-[2rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] overflow-hidden mb-10 border border-gray-100 dark:border-gray-800 transition-all duration-500 hover:shadow-[0_30px_60px_-15px_rgba(1,152,99,0.15)] group relative z-10">
     <!-- Cover -->
-    <div class="h-40 md:h-52 bg-gradient-to-br from-secondary via-primary to-green-400 relative">
+    <div class="h-48 md:h-64 bg-gradient-to-br from-[#019863] via-[#4D96A9] to-[#0f172a] relative overflow-hidden">
+      <!-- Decorative background elements -->
+      <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-30"></div>
+      <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
+      
       <button onclick="openReportModal()"
-        class="absolute top-4 right-4 bg-white/20 hover:bg-white dark:bg-card-dark/40 text-white p-2 rounded-full backdrop-blur-sm shadow transition-colors" title="Report User">
-        <span class="material-symbols-outlined">flag</span>
+        class="absolute top-4 right-4 bg-black/20 hover:bg-white dark:bg-card-dark/40 hover:text-red-500 text-white p-2.5 rounded-full backdrop-blur-md shadow-lg transition-all duration-300 hover:scale-110 active:scale-95" title="Report User">
+        <span class="material-symbols-outlined text-[20px]">flag</span>
       </button>
     </div>
 
-    <div class="px-6 md:px-8 pb-8">
+    <div class="px-5 md:px-10 pb-10">
       <!-- Avatar + Name row -->
-      <div class="flex flex-col md:flex-row items-start md:items-end gap-4 md:gap-6 -mt-14 md:-mt-16">
+      <div class="flex flex-col md:flex-row items-center md:items-end gap-6 -mt-20 md:-mt-24 relative z-20">
 
-        <div class="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-white dark:border-card-dark shadow-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-4xl font-bold text-white flex-shrink-0">
-          <span id="profileInitial">U</span>
+        <!-- Avatar -->
+        <div class="w-36 h-36 md:w-40 md:h-40 rounded-[2.5rem] md:rounded-[3rem] border-[6px] border-white dark:border-card-dark shadow-[0_15px_35px_-5px_rgba(0,0,0,0.2)] dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.6)] bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-5xl font-black text-white flex-shrink-0 transition-transform duration-500 hover:-translate-y-2 hover:shadow-[0_25px_50px_-12px_rgba(1,152,99,0.5)] rotate-3 hover:rotate-0">
+          <span id="profileInitial" class="drop-shadow-md">U</span>
         </div>
 
-        <div class="flex-1 min-w-0 pt-2">
-          <div class="flex flex-wrap items-center gap-2">
-            <h1 id="profileName" class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Loading...</h1>
-            <span id="verifiedBadge" class="material-symbols-outlined text-blue-500 hidden" title="Verified Seller">verified</span>
+        <!-- Info -->
+        <div class="flex-1 min-w-0 pt-2 text-center md:text-left flex flex-col items-center md:items-start w-full">
+          <div class="flex flex-wrap justify-center md:justify-start items-center gap-2">
+            <h1 id="profileName" class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">Loading...</h1>
+            <span id="verifiedBadge" class="material-symbols-outlined text-blue-500 hidden text-[28px] drop-shadow-sm" title="Verified Seller">verified</span>
           </div>
-          <p class="text-gray-500 dark:text-gray-400 font-medium mt-1 text-sm">
-            <span class="material-symbols-outlined text-sm align-middle mr-1">location_on</span>
-            <span id="sellerLoc">India</span> · Active Member
+          <p class="text-gray-500 dark:text-gray-400 font-bold mt-1.5 text-sm flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800/50 px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700 w-max">
+            <span class="material-symbols-outlined text-sm text-primary">location_on</span>
+            <span id="sellerLoc">India</span>
           </p>
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex flex-wrap gap-2 w-full md:w-auto mt-2 md:mt-0">
+        <div class="flex flex-wrap justify-center md:justify-end gap-3 w-full md:w-auto mt-6 md:mt-0">
           <button onclick="startChat()"
-            class="bg-secondary hover:bg-cyan-700 text-white px-5 py-2.5 rounded-xl font-bold flex gap-2 items-center shadow-lg transition-transform hover:-translate-y-0.5 text-sm">
-            <span class="material-symbols-outlined text-base">chat</span> Chat
+            class="bg-gradient-to-r from-primary to-secondary hover:from-secondary hover:to-primary text-white px-6 py-3 rounded-2xl font-bold flex gap-2 items-center shadow-[0_10px_20px_-5px_rgba(1,152,99,0.4)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_15px_25px_-5px_rgba(1,152,99,0.6)] active:scale-95 text-sm border border-transparent">
+            <span class="material-symbols-outlined text-base">chat</span> Message
           </button>
           <button onclick="openReviewModal()" id="btnLeaveReview"
-            class="hidden bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2.5 rounded-xl font-bold flex gap-2 items-center shadow-lg transition-transform hover:-translate-y-0.5 text-sm">
-            <span class="material-symbols-outlined text-base">star</span> Review
+            class="hidden bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white px-6 py-3 rounded-2xl font-bold flex gap-2 items-center shadow-[0_10px_20px_-5px_rgba(234,179,8,0.4)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_15px_25px_-5px_rgba(234,179,8,0.6)] active:scale-95 text-sm border border-transparent">
+            <span class="material-symbols-outlined text-base">star</span> Rate User
           </button>
           <button onclick="shareProfile()"
-            class="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 px-5 py-2.5 rounded-xl font-bold flex gap-2 items-center transition-colors text-sm">
-            <span class="material-symbols-outlined text-base">share</span> Share
+            class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 px-4 py-3 rounded-2xl font-bold flex gap-2 items-center shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:-translate-y-1 hover:shadow-md active:scale-95 text-sm">
+            <span class="material-symbols-outlined text-base">share</span>
           </button>
         </div>
       </div>
 
       <!-- Stats Row -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
-        <div class="text-center p-4 bg-gray-50 dark:bg-gray-800/60 hover:bg-white dark:hover:bg-gray-800 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
-          <div class="flex justify-center items-center gap-1 text-yellow-500 mb-1">
-            <span class="text-3xl font-black text-gray-900 dark:text-white">4.8</span>
-            <span class="material-symbols-outlined text-xl">star</span>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5 mt-10 pt-8 border-t border-gray-100 dark:border-gray-800">
+        <!-- Stat Card 1 -->
+        <div class="group/stat text-center p-5 bg-white dark:bg-gray-800/40 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-3xl transition-all duration-300 hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.4)] hover:-translate-y-1.5 border border-gray-100 dark:border-gray-700/50 hover:border-yellow-200 dark:hover:border-yellow-900/50">
+          <div class="flex justify-center items-center gap-1 text-yellow-500 mb-1.5 transform transition-transform group-hover/stat:scale-110">
+            <span class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">4.8</span>
+            <span class="material-symbols-outlined text-[22px] drop-shadow-sm">star</span>
           </div>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Rating</p>
+          <p class="text-[11px] md:text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mt-1">Rating</p>
         </div>
-        <div class="text-center p-4 bg-gray-50 dark:bg-gray-800/60 hover:bg-white dark:hover:bg-gray-800 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
-          <p class="text-3xl font-black text-gray-900 dark:text-white mb-1">98%</p>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Response</p>
+        <!-- Stat Card 2 -->
+        <div class="group/stat text-center p-5 bg-white dark:bg-gray-800/40 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-3xl transition-all duration-300 hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.4)] hover:-translate-y-1.5 border border-gray-100 dark:border-gray-700/50 hover:border-blue-200 dark:hover:border-blue-900/50">
+          <p class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-1.5 transform transition-transform group-hover/stat:scale-110 text-blue-500 dark:text-blue-400">98%</p>
+          <p class="text-[11px] md:text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mt-1">Response</p>
         </div>
-        <div class="text-center p-4 bg-gray-50 dark:bg-gray-800/60 hover:bg-white dark:hover:bg-gray-800 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
-          <p class="text-3xl font-black text-gray-900 dark:text-white mb-1">2 Hrs</p>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Reply Time</p>
+        <!-- Stat Card 3 -->
+        <div class="group/stat text-center p-5 bg-white dark:bg-gray-800/40 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-3xl transition-all duration-300 hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.4)] hover:-translate-y-1.5 border border-gray-100 dark:border-gray-700/50 hover:border-purple-200 dark:hover:border-purple-900/50">
+          <p class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-1.5 transform transition-transform group-hover/stat:scale-110 text-purple-500 dark:text-purple-400">2<span class="text-lg md:text-xl font-bold ml-1">Hrs</span></p>
+          <p class="text-[11px] md:text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mt-1">Reply Time</p>
         </div>
-        <div class="text-center p-4 bg-gray-50 dark:bg-gray-800/60 hover:bg-white dark:hover:bg-gray-800 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
-          <p id="activeCount" class="text-3xl font-black text-gray-900 dark:text-white mb-1">0</p>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Listings</p>
+        <!-- Stat Card 4 -->
+        <div class="group/stat text-center p-5 bg-white dark:bg-gray-800/40 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-3xl transition-all duration-300 hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.4)] hover:-translate-y-1.5 border border-gray-100 dark:border-gray-700/50 hover:border-primary/30 dark:hover:border-primary/30">
+          <p id="activeCount" class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-1.5 transform transition-transform group-hover/stat:scale-110 text-primary dark:text-primary">0</p>
+          <p class="text-[11px] md:text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mt-1">Listings</p>
         </div>
       </div>
     </div>
@@ -316,7 +326,7 @@ async function loadProfile() {
   grid.innerHTML = '<div class="col-span-full py-10 text-center"><div class="animate-pulse flex flex-col items-center"><div class="h-8 w-8 bg-gray-200 rounded-full mb-2"></div><div class="h-4 w-32 bg-gray-200 rounded"></div></div></div>';
   
   try {
-    const listingsRes = await fetch(`/api/listings.php?user_id=${sellerId}&status=active`, { credentials: 'include' }).then(r => r.json());
+    const listingsRes = await API.Listings.getAll({ user_id: sellerId, status: 'active' });
     const sellerListings = listingsRes.data && listingsRes.data.listings ? listingsRes.data.listings : [];
 
     if (sellerListings.length > 0) {
@@ -324,21 +334,22 @@ async function loadProfile() {
           const img = item.images?.[0] || item.image || 'https://via.placeholder.com/400?text=No+Image';
           return `
           <a href="Listing Detail.html?id=${item.id}"
-            class="bg-white dark:bg-card-dark rounded-2xl shadow-sm hover:shadow-bouncy border border-gray-100 dark:border-gray-800 overflow-hidden transition-transform hover:-translate-y-1 block group">
-            <div class="h-48 w-full bg-gray-100 dark:bg-gray-800 relative overflow-hidden">
+            class="bg-white dark:bg-card-dark rounded-3xl shadow-[0_10px_20px_-5px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-10px_rgba(1,152,99,0.2)] border border-gray-100 dark:border-gray-800 overflow-hidden transition-all duration-500 hover:-translate-y-2 block group relative z-10">
+            <div class="h-56 w-full bg-gray-100 dark:bg-gray-800 relative overflow-hidden">
                <img src="${img}"
                  loading="lazy"
-                 class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                 class="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
                  onerror="this.src='https://via.placeholder.com/400?text=No+Image'">
-               <span class="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm font-bold uppercase">
+               <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+               <span class="absolute top-3 left-3 bg-white/90 dark:bg-black/70 text-gray-900 dark:text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-md font-bold shadow-sm">
                  ${item.category}
                </span>
             </div>
-            <div class="p-4">
-              <h3 class="font-bold text-gray-800 dark:text-white truncate mb-1">${item.title}</h3>
-              <p class="text-primary text-xl font-bold">&#8377; ${Number(item.price || 0).toLocaleString('en-IN')}</p>
-              <div class="text-xs text-gray-400 mt-2 flex items-center gap-1">
-                 <span class="material-symbols-outlined text-sm">location_on</span> ${item.city || item.location || 'India'}
+            <div class="p-5">
+              <h3 class="font-bold text-gray-800 dark:text-white truncate mb-1.5 text-lg group-hover:text-primary transition-colors">${item.title}</h3>
+              <p class="text-primary text-2xl font-black tracking-tight">&#8377; ${Number(item.price || 0).toLocaleString('en-IN')}</p>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-3 flex items-center gap-1.5 font-medium bg-gray-50 dark:bg-gray-800/50 w-max px-2.5 py-1 rounded-md">
+                 <span class="material-symbols-outlined text-sm text-secondary">location_on</span> ${item.city || item.location || 'India'}
               </div>
             </div>
           </a>`;
