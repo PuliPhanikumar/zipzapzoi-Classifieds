@@ -4,8 +4,11 @@
  * DB: u572945141_Classifieds_db | Host: Hostinger
  */
 
-// ── CORS Headers ──────────────────────────────────────────────────────
+// ── CORS Headers & Cache Prevention ─────────────────────────────────────
 header('Content-Type: application/json; charset=UTF-8');
+header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
 header('Access-Control-Allow-Origin: https://www.zipzapzoi.com');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
