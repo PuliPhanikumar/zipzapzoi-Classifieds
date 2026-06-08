@@ -821,6 +821,9 @@ const TITLES = {
 // ─────────────────────────────────────────────────────────
 async function api(url, opts={}) {
   try {
+    if (!opts.method || opts.method.toUpperCase() === 'GET') {
+      url += (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+    }
     const res = await fetch(url, {
       credentials:'include',
       headers:{'Content-Type':'application/json', ...(opts.headers||{})},

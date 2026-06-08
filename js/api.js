@@ -10,7 +10,6 @@ const API = (() => {
 
   // ── Core fetch helper ─────────────────────────────────────────
   async function req(endpoint, options = {}) {
-    const url = `${BASE}/${endpoint}`;
     const defaults = {
       credentials: 'include',  // send session cookie automatically
       headers: {},
@@ -20,6 +19,13 @@ const API = (() => {
       merged.headers['Content-Type'] = 'application/json';
       merged.body = JSON.stringify(merged.body);
     }
+    
+    // Add cache-buster to bypass Hostinger LiteSpeed caching for GET requests
+    if (!merged.method || merged.method.toUpperCase() === 'GET') {
+      endpoint += (endpoint.includes('?') ? '&' : '?') + '_t=' + Date.now();
+    }
+    const url = `${BASE}/${endpoint}`;
+
     try {
       const res  = await fetch(url, merged);
       const data = await res.json();
