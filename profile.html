@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -132,25 +132,25 @@
       </div>
 
       <!-- Stats Row -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
-        <div class="text-center p-4 bg-gray-50 dark:bg-gray-800/60 rounded-2xl">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
+        <div class="text-center p-4 bg-gray-50 dark:bg-gray-800/60 hover:bg-white dark:hover:bg-gray-800 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
           <div class="flex justify-center items-center gap-1 text-yellow-500 mb-1">
-            <span class="text-2xl font-bold text-gray-800 dark:text-white">4.8</span>
+            <span class="text-3xl font-black text-gray-900 dark:text-white">4.8</span>
             <span class="material-symbols-outlined text-xl">star</span>
           </div>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Rating</p>
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Rating</p>
         </div>
-        <div class="text-center p-4 bg-gray-50 dark:bg-gray-800/60 rounded-2xl">
-          <p class="text-2xl font-bold text-gray-800 dark:text-white">98%</p>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Response</p>
+        <div class="text-center p-4 bg-gray-50 dark:bg-gray-800/60 hover:bg-white dark:hover:bg-gray-800 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
+          <p class="text-3xl font-black text-gray-900 dark:text-white mb-1">98%</p>
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Response</p>
         </div>
-        <div class="text-center p-4 bg-gray-50 dark:bg-gray-800/60 rounded-2xl">
-          <p class="text-2xl font-bold text-gray-800 dark:text-white">2 Hrs</p>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Reply Time</p>
+        <div class="text-center p-4 bg-gray-50 dark:bg-gray-800/60 hover:bg-white dark:hover:bg-gray-800 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
+          <p class="text-3xl font-black text-gray-900 dark:text-white mb-1">2 Hrs</p>
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Reply Time</p>
         </div>
-        <div class="text-center p-4 bg-gray-50 dark:bg-gray-800/60 rounded-2xl">
-          <p id="activeCount" class="text-2xl font-bold text-gray-800 dark:text-white">0</p>
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Listings</p>
+        <div class="text-center p-4 bg-gray-50 dark:bg-gray-800/60 hover:bg-white dark:hover:bg-gray-800 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
+          <p id="activeCount" class="text-3xl font-black text-gray-900 dark:text-white mb-1">0</p>
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Listings</p>
         </div>
       </div>
     </div>
@@ -270,7 +270,7 @@ if (!sellerId) {
 // Avatar + Review button
 if (currentUser) {
   document.getElementById('navAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
-  if (currentUser.id !== sellerId) {
+  if (String(currentUser.id) !== String(sellerId)) {
      document.getElementById('btnLeaveReview').classList.remove('hidden');
   }
 } else {
