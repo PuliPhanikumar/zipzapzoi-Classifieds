@@ -1046,6 +1046,78 @@
 
   closePreview.onclick = hideModal;
   closePreviewBtn.onclick = hideModal;
+
+  // --- MAP PICKER LOGIC (Leaflet.js) ---
+  let mapInstance = null;
+  let mapMarker = null;
+
+  window.toggleMapPicker = function() {
+    const section = document.getElementById('mapPickerSection');
+    const btn = document.getElementById('mapToggleBtn');
+    
+    if (section.style.display === 'block') {
+      section.style.display = 'none';
+      btn.textContent = 'Show Map';
+      return;
+    }
+    
+    section.style.display = 'block';
+    btn.textContent = 'Hide Map';
+
+    if (!mapInstance) {
+      // Default center: India
+      mapInstance = L.map('pickMap').setView([20.5937, 78.9629], 5);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(mapInstance);
+
+      mapMarker = L.marker([20.5937, 78.9629], {draggable: true}).addTo(mapInstance);
+
+      const updateInputs = (lat, lng) => {
+        document.getElementById('pickedLat').value = lat;
+        document.getElementById('pickedLng').value = lng;
+        
+        // Reverse geocode to get area name
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.address) {
+              const addr = data.address;
+              const shortAddress = [
+                  addr.road || '', 
+                  addr.suburb || addr.neighbourhood || '', 
+                  addr.city || addr.town || addr.county || ''
+              ].filter(Boolean).join(', ');
+              document.getElementById('specificLocation').value = shortAddress || data.display_name;
+              
+              if(addr.state) {
+                 const stateOptions = Array.from(document.getElementById('stateSelect').options);
+                 const match = stateOptions.find(opt => opt.value.toLowerCase() === addr.state.toLowerCase());
+                 if(match) {
+                     document.getElementById('stateSelect').value = match.value;
+                     document.getElementById('stateSelect').dispatchEvent(new Event('change'));
+                 }
+              }
+            }
+          }).catch(err => console.error("Geocoding failed:", err));
+      };
+
+      mapMarker.on('dragend', function(e) {
+        const pos = mapMarker.getLatLng();
+        updateInputs(pos.lat, pos.lng);
+      });
+
+      mapInstance.on('click', function(e) {
+        mapMarker.setLatLng(e.latlng);
+        updateInputs(e.latlng.lat, e.latlng.lng);
+      });
+    }
+    
+    // Fix leaflet sizing issue when rendering inside a previously hidden div
+    setTimeout(() => mapInstance.invalidateSize(), 100);
+  };
+
 // --- LOCATION AUTO-DETECT LOGIC ---
   window.detectLocation = function() {
     const statusEl = document.getElementById('locationStatus');
