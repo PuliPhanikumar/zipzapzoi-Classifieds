@@ -966,6 +966,37 @@
     // ═══════════════════════════════════════════
     //  11. EDIT PROFILE
     // ═══════════════════════════════════════════
+    let _epAvatarUrl = null;
+
+    async function uploadAvatarFile(input) {
+      if (!input.files || !input.files[0]) return;
+      const file = input.files[0];
+      
+      const loading = document.getElementById('epAvatarLoading');
+      if (loading) loading.classList.remove('hidden');
+      
+      try {
+        const res = await window.API.Uploads.image(file);
+        if (res?.success && res.data?.url) {
+           _epAvatarUrl = res.data.url;
+           document.getElementById('epAvatarInitial').classList.add('hidden');
+           const imgEl = document.getElementById('epAvatarImg');
+           if (imgEl) {
+             imgEl.src = _epAvatarUrl;
+             imgEl.classList.remove('hidden');
+           }
+           showToast('Avatar uploaded successfully!', 'success');
+        } else {
+           showToast(res?.error || 'Failed to upload avatar', 'error');
+        }
+      } catch (err) {
+        showToast('Error uploading avatar', 'error');
+      } finally {
+        if (loading) loading.classList.add('hidden');
+        input.value = ''; 
+      }
+    }
+
     function openEditProfile() {
       const user = window.ZZZ ? window.ZZZ.getCurrentUser()
                               : JSON.parse(localStorage.getItem('zzz_user') || 'null');
