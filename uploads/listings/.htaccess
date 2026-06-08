@@ -1,17 +1,7 @@
 # Block PHP execution in uploads directory (security)
-<FilesMatch "\.(php|php3|php4|php5|php7|php8|phtml|pl|py|jsp|asp|htm|html|shtml|sh|cgi)$">
-    Require all denied
-    # Fallback for Apache 2.2
+<FilesMatch "\.(php|php3|php4|php5|php7|php8|phtml)$">
     Order allow,deny
     Deny from all
-</FilesMatch>
-
-# Allow image files only
-<FilesMatch "\.(jpg|jpeg|png|webp|gif|svg|ico)$">
-    Require all granted
-    # Fallback for Apache 2.2
-    Order allow,deny
-    Allow from all
 </FilesMatch>
 
 Options -Indexes

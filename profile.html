@@ -408,7 +408,7 @@ function closeReportModal() {
     document.getElementById('reportModalContent').classList.add('scale-95');
     setTimeout(() => document.getElementById('reportModal').classList.add('hidden'), 200);
 }
-function submitReport() {
+async function submitReport() {
     const reason = document.getElementById('reportReason').value;
     const details = document.getElementById('reportDetails').value.trim();
     const newFlag = {
