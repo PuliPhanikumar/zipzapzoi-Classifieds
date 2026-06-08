@@ -86,36 +86,36 @@
 <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl">
 
   <!-- Profile Card -->
-  <div class="bg-white dark:bg-card-dark rounded-[2rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] overflow-hidden mb-10 border border-gray-100 dark:border-gray-800 transition-all duration-500 hover:shadow-[0_30px_60px_-15px_rgba(1,152,99,0.15)] group relative z-10">
+  <div class="bg-white dark:bg-[#1e293b] rounded-[3rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.4)] mb-12 relative z-10 border-[3px] border-white dark:border-transparent">
     <!-- Cover -->
-    <div class="h-48 md:h-64 bg-gradient-to-br from-[#019863] via-[#4D96A9] to-[#0f172a] relative overflow-hidden">
-      <!-- Decorative background elements -->
-      <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-30"></div>
-      <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
+    <div class="h-48 md:h-60 bg-gradient-to-r from-teal-200 to-emerald-200 dark:from-teal-900 dark:to-emerald-800 rounded-t-[2.8rem] relative overflow-hidden">
+      <!-- Playful bubbly shapes -->
+      <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-white/30 rounded-full blur-xl"></div>
+      <div class="absolute top-5 right-10 w-24 h-24 bg-white/40 rounded-full blur-lg"></div>
       
       <button onclick="openReportModal()"
-        class="absolute top-4 right-4 bg-black/20 hover:bg-white dark:bg-card-dark/40 hover:text-red-500 text-white p-2.5 rounded-full backdrop-blur-md shadow-lg transition-all duration-300 hover:scale-110 active:scale-95" title="Report User">
-        <span class="material-symbols-outlined text-[20px]">flag</span>
+        class="absolute top-5 right-5 bg-white/50 hover:bg-white dark:bg-black/30 dark:hover:bg-black/50 text-gray-700 dark:text-white p-3 rounded-full backdrop-blur-md shadow-sm transition-all duration-300 hover:scale-110 active:scale-95 border-2 border-white/60 dark:border-white/10" title="Report User">
+        <span class="material-symbols-outlined text-[22px]">flag</span>
       </button>
     </div>
 
-    <div class="px-5 md:px-10 pb-10">
+    <div class="px-6 md:px-12 pb-12">
       <!-- Avatar + Name row -->
       <div class="flex flex-col md:flex-row items-center md:items-end gap-6 -mt-20 md:-mt-24 relative z-20">
 
         <!-- Avatar -->
-        <div class="w-36 h-36 md:w-40 md:h-40 rounded-[2.5rem] md:rounded-[3rem] border-[6px] border-white dark:border-card-dark shadow-[0_15px_35px_-5px_rgba(0,0,0,0.2)] dark:shadow-[0_15px_35px_-5px_rgba(0,0,0,0.6)] bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-5xl font-black text-white flex-shrink-0 transition-transform duration-500 hover:-translate-y-2 hover:shadow-[0_25px_50px_-12px_rgba(1,152,99,0.5)] rotate-3 hover:rotate-0">
-          <span id="profileInitial" class="drop-shadow-md">U</span>
+        <div class="w-40 h-40 md:w-44 md:h-44 rounded-full border-[8px] border-white dark:border-[#1e293b] shadow-[0_20px_40px_-10px_rgba(20,184,166,0.3)] dark:shadow-none bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-6xl font-black text-white flex-shrink-0 transition-transform duration-500 hover:scale-105">
+          <span id="profileInitial" class="drop-shadow-sm">U</span>
         </div>
 
         <!-- Info -->
         <div class="flex-1 min-w-0 pt-2 text-center md:text-left flex flex-col items-center md:items-start w-full">
           <div class="flex flex-wrap justify-center md:justify-start items-center gap-2">
-            <h1 id="profileName" class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">Loading...</h1>
-            <span id="verifiedBadge" class="material-symbols-outlined text-blue-500 hidden text-[28px] drop-shadow-sm" title="Verified Seller">verified</span>
+            <h1 id="profileName" class="text-3xl md:text-4xl font-black text-gray-800 dark:text-white tracking-tight">Loading...</h1>
+            <span id="verifiedBadge" class="material-symbols-outlined text-emerald-500 hidden text-[32px] drop-shadow-sm" title="Verified Seller">verified</span>
           </div>
-          <p class="text-gray-500 dark:text-gray-400 font-bold mt-1.5 text-sm flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800/50 px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700 w-max">
-            <span class="material-symbols-outlined text-sm text-primary">location_on</span>
+          <p class="text-emerald-700 dark:text-emerald-300 font-bold mt-2 text-sm flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/30 px-4 py-2 rounded-full border-2 border-emerald-100 dark:border-emerald-800/50 w-max">
+            <span class="material-symbols-outlined text-[18px]">location_on</span>
             <span id="sellerLoc">India</span>
           </p>
         </div>
@@ -123,44 +123,43 @@
         <!-- Action Buttons -->
         <div class="flex flex-wrap justify-center md:justify-end gap-3 w-full md:w-auto mt-6 md:mt-0">
           <button onclick="startChat()"
-            class="bg-gradient-to-r from-primary to-secondary hover:from-secondary hover:to-primary text-white px-6 py-3 rounded-2xl font-bold flex gap-2 items-center shadow-[0_10px_20px_-5px_rgba(1,152,99,0.4)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_15px_25px_-5px_rgba(1,152,99,0.6)] active:scale-95 text-sm border border-transparent">
-            <span class="material-symbols-outlined text-base">chat</span> Message
+            class="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3.5 rounded-full font-black flex gap-2 items-center shadow-[0_15px_30px_-5px_rgba(16,185,129,0.4)] transition-all duration-300 hover:-translate-y-1 active:scale-95 text-[15px] border-b-4 border-emerald-700">
+            <span class="material-symbols-outlined text-xl">chat_bubble</span> Message
           </button>
           <button onclick="openReviewModal()" id="btnLeaveReview"
-            class="hidden bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white px-6 py-3 rounded-2xl font-bold flex gap-2 items-center shadow-[0_10px_20px_-5px_rgba(234,179,8,0.4)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_15px_25px_-5px_rgba(234,179,8,0.6)] active:scale-95 text-sm border border-transparent">
-            <span class="material-symbols-outlined text-base">star</span> Rate User
+            class="hidden bg-amber-400 hover:bg-amber-500 text-amber-900 px-8 py-3.5 rounded-full font-black flex gap-2 items-center shadow-[0_15px_30px_-5px_rgba(251,191,36,0.4)] transition-all duration-300 hover:-translate-y-1 active:scale-95 text-[15px] border-b-4 border-amber-600">
+            <span class="material-symbols-outlined text-xl">kid_star</span> Rate
           </button>
           <button onclick="shareProfile()"
-            class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 px-4 py-3 rounded-2xl font-bold flex gap-2 items-center shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:-translate-y-1 hover:shadow-md active:scale-95 text-sm">
-            <span class="material-symbols-outlined text-base">share</span>
+            class="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 w-12 h-12 rounded-full font-bold flex items-center justify-center shadow-sm border-b-4 border-gray-300 dark:border-gray-900 transition-all duration-300 hover:-translate-y-1 active:scale-95">
+            <span class="material-symbols-outlined text-[22px]">ios_share</span>
           </button>
         </div>
       </div>
 
       <!-- Stats Row -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5 mt-10 pt-8 border-t border-gray-100 dark:border-gray-800">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-12 pt-10 border-t-2 border-dashed border-gray-100 dark:border-gray-800">
         <!-- Stat Card 1 -->
-        <div class="group/stat text-center p-5 bg-white dark:bg-gray-800/40 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-3xl transition-all duration-300 hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.4)] hover:-translate-y-1.5 border border-gray-100 dark:border-gray-700/50 hover:border-yellow-200 dark:hover:border-yellow-900/50">
-          <div class="flex justify-center items-center gap-1 text-yellow-500 mb-1.5 transform transition-transform group-hover/stat:scale-110">
-            <span class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">4.8</span>
-            <span class="material-symbols-outlined text-[22px] drop-shadow-sm">star</span>
+        <div class="group/stat text-center p-6 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-[2rem] transition-all duration-300 hover:-translate-y-2 border-2 border-amber-100 dark:border-amber-800/50">
+          <div class="flex justify-center items-center gap-1 text-amber-500 mb-2 transform transition-transform group-hover/stat:scale-110 group-hover/stat:rotate-3">
+            <span class="text-4xl md:text-5xl font-black text-amber-700 dark:text-amber-400 tracking-tighter">4.8</span>
           </div>
-          <p class="text-[11px] md:text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mt-1">Rating</p>
+          <p class="text-xs md:text-[13px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-wider">Rating</p>
         </div>
         <!-- Stat Card 2 -->
-        <div class="group/stat text-center p-5 bg-white dark:bg-gray-800/40 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-3xl transition-all duration-300 hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.4)] hover:-translate-y-1.5 border border-gray-100 dark:border-gray-700/50 hover:border-blue-200 dark:hover:border-blue-900/50">
-          <p class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-1.5 transform transition-transform group-hover/stat:scale-110 text-blue-500 dark:text-blue-400">98%</p>
-          <p class="text-[11px] md:text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mt-1">Response</p>
+        <div class="group/stat text-center p-6 bg-sky-50 dark:bg-sky-900/20 hover:bg-sky-100 dark:hover:bg-sky-900/30 rounded-[2rem] transition-all duration-300 hover:-translate-y-2 border-2 border-sky-100 dark:border-sky-800/50">
+          <p class="text-4xl md:text-5xl font-black text-sky-600 dark:text-sky-400 tracking-tighter mb-2 transform transition-transform group-hover/stat:scale-110 group-hover/stat:-rotate-3">98%</p>
+          <p class="text-xs md:text-[13px] font-black text-sky-500 dark:text-sky-500 uppercase tracking-wider">Response</p>
         </div>
         <!-- Stat Card 3 -->
-        <div class="group/stat text-center p-5 bg-white dark:bg-gray-800/40 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-3xl transition-all duration-300 hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.4)] hover:-translate-y-1.5 border border-gray-100 dark:border-gray-700/50 hover:border-purple-200 dark:hover:border-purple-900/50">
-          <p class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-1.5 transform transition-transform group-hover/stat:scale-110 text-purple-500 dark:text-purple-400">2<span class="text-lg md:text-xl font-bold ml-1">Hrs</span></p>
-          <p class="text-[11px] md:text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mt-1">Reply Time</p>
+        <div class="group/stat text-center p-6 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-[2rem] transition-all duration-300 hover:-translate-y-2 border-2 border-purple-100 dark:border-purple-800/50">
+          <p class="text-4xl md:text-5xl font-black text-purple-600 dark:text-purple-400 tracking-tighter mb-2 transform transition-transform group-hover/stat:scale-110 group-hover/stat:rotate-3">2<span class="text-xl md:text-2xl font-bold ml-1 text-purple-400">h</span></p>
+          <p class="text-xs md:text-[13px] font-black text-purple-500 dark:text-purple-500 uppercase tracking-wider">Reply Time</p>
         </div>
         <!-- Stat Card 4 -->
-        <div class="group/stat text-center p-5 bg-white dark:bg-gray-800/40 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-3xl transition-all duration-300 hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.4)] hover:-translate-y-1.5 border border-gray-100 dark:border-gray-700/50 hover:border-primary/30 dark:hover:border-primary/30">
-          <p id="activeCount" class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-1.5 transform transition-transform group-hover/stat:scale-110 text-primary dark:text-primary">0</p>
-          <p class="text-[11px] md:text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mt-1">Listings</p>
+        <div class="group/stat text-center p-6 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-[2rem] transition-all duration-300 hover:-translate-y-2 border-2 border-emerald-100 dark:border-emerald-800/50">
+          <p id="activeCount" class="text-4xl md:text-5xl font-black text-emerald-600 dark:text-emerald-400 tracking-tighter mb-2 transform transition-transform group-hover/stat:scale-110 group-hover/stat:-rotate-3">0</p>
+          <p class="text-xs md:text-[13px] font-black text-emerald-500 dark:text-emerald-500 uppercase tracking-wider">Listings</p>
         </div>
       </div>
     </div>
@@ -334,22 +333,21 @@ async function loadProfile() {
           const img = item.images?.[0] || item.image || 'https://via.placeholder.com/400?text=No+Image';
           return `
           <a href="Listing Detail.html?id=${item.id}"
-            class="bg-white dark:bg-card-dark rounded-3xl shadow-[0_10px_20px_-5px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-10px_rgba(1,152,99,0.2)] border border-gray-100 dark:border-gray-800 overflow-hidden transition-all duration-500 hover:-translate-y-2 block group relative z-10">
-            <div class="h-56 w-full bg-gray-100 dark:bg-gray-800 relative overflow-hidden">
+            class="bg-white dark:bg-[#1e293b] rounded-[2rem] shadow-[0_15px_30px_-10px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-10px_rgba(20,184,166,0.2)] border-4 border-gray-50 hover:border-emerald-100 dark:border-transparent dark:hover:border-emerald-900/50 overflow-hidden transition-all duration-300 hover:-translate-y-2 block group relative z-10">
+            <div class="h-56 w-full bg-emerald-50 dark:bg-gray-800 p-2 pb-0">
                <img src="${img}"
                  loading="lazy"
-                 class="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
+                 class="h-full w-full object-cover rounded-t-3xl group-hover:scale-105 transition-transform duration-500"
                  onerror="this.src='https://via.placeholder.com/400?text=No+Image'">
-               <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-               <span class="absolute top-3 left-3 bg-white/90 dark:bg-black/70 text-gray-900 dark:text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-md font-bold shadow-sm">
+               <span class="absolute top-4 left-4 bg-emerald-500 text-white text-xs px-4 py-1.5 rounded-full font-black shadow-md shadow-emerald-500/30">
                  ${item.category}
                </span>
             </div>
-            <div class="p-5">
-              <h3 class="font-bold text-gray-800 dark:text-white truncate mb-1.5 text-lg group-hover:text-primary transition-colors">${item.title}</h3>
-              <p class="text-primary text-2xl font-black tracking-tight">&#8377; ${Number(item.price || 0).toLocaleString('en-IN')}</p>
-              <div class="text-xs text-gray-500 dark:text-gray-400 mt-3 flex items-center gap-1.5 font-medium bg-gray-50 dark:bg-gray-800/50 w-max px-2.5 py-1 rounded-md">
-                 <span class="material-symbols-outlined text-sm text-secondary">location_on</span> ${item.city || item.location || 'India'}
+            <div class="p-6">
+              <h3 class="font-black text-gray-800 dark:text-white truncate mb-2 text-xl group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">${item.title}</h3>
+              <p class="text-emerald-500 dark:text-emerald-400 text-2xl font-black tracking-tight">&#8377; ${Number(item.price || 0).toLocaleString('en-IN')}</p>
+              <div class="text-sm text-gray-500 dark:text-gray-400 mt-4 flex items-center gap-1.5 font-bold bg-gray-50 dark:bg-gray-800/50 w-max px-3 py-1.5 rounded-xl border border-gray-100 dark:border-gray-700">
+                 <span class="material-symbols-outlined text-base text-emerald-400">location_on</span> ${item.city || item.location || 'India'}
               </div>
             </div>
           </a>`;
