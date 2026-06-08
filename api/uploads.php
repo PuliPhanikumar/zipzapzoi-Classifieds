@@ -22,16 +22,36 @@ $maxBytes = MAX_UPLOAD_MB * 1024 * 1024;
 $finfo    = new finfo(FILEINFO_MIME_TYPE);
 
 function processFile(array $file, array $allowed, int $maxBytes, finfo $finfo): ?array {
-    if ($file['error'] !== UPLOAD_ERR_OK)  return null;
-    if ($file['size'] > $maxBytes)          return null;
+    $logMsg = date('Y-m-d H:i:s') . " - processFile called. File info: " . json_encode($file) . "\n";
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        $logMsg .= "Error: upload failed with code " . $file['error'] . "\n";
+        file_put_contents(__DIR__ . '/upload_log.txt', $logMsg, FILE_APPEND);
+        return null;
+    }
+    if ($file['size'] > $maxBytes) {
+        $logMsg .= "Error: size " . $file['size'] . " exceeds max " . $maxBytes . "\n";
+        file_put_contents(__DIR__ . '/upload_log.txt', $logMsg, FILE_APPEND);
+        return null;
+    }
     $mimeType = $finfo->file($file['tmp_name']);
-    if (!array_key_exists($mimeType, $allowed)) return null;
+    $logMsg .= "MIME detected: " . $mimeType . "\n";
+    if (!array_key_exists($mimeType, $allowed)) {
+        $logMsg .= "Error: MIME " . $mimeType . " not in allowed list\n";
+        file_put_contents(__DIR__ . '/upload_log.txt', $logMsg, FILE_APPEND);
+        return null;
+    }
 
     $ext      = $allowed[$mimeType];
     $filename = 'lst_' . time() . '_' . bin2hex(random_bytes(6)) . '.' . $ext;
     $destPath = UPLOAD_DIR . $filename;
-    if (!move_uploaded_file($file['tmp_name'], $destPath)) return null;
+    if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+        $logMsg .= "Error: move_uploaded_file failed to " . $destPath . "\n";
+        file_put_contents(__DIR__ . '/upload_log.txt', $logMsg, FILE_APPEND);
+        return null;
+    }
 
+    $logMsg .= "Success: saved to " . $destPath . "\n";
+    file_put_contents(__DIR__ . '/upload_log.txt', $logMsg, FILE_APPEND);
     return [
         'url'      => UPLOAD_URL . $filename,
         'filename' => $filename,
@@ -39,6 +59,8 @@ function processFile(array $file, array $allowed, int $maxBytes, finfo $finfo): 
         'type'     => $mimeType,
     ];
 }
+
+file_put_contents(__DIR__ . '/upload_log.txt', date('Y-m-d H:i:s') . " - POST received. FILES: " . json_encode($_FILES) . "\n", FILE_APPEND);
 
 $results = [];
 
