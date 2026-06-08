@@ -299,27 +299,28 @@ async function loadProfile() {
   let isVerified = false;
   let activeListingsCount = 0;
   
+  let sellerAvatar = null;
   // 1. Fetch Profile Data
   try {
-    const profileRes = await fetch(`/api/users.php?id=${sellerId}`, { credentials: 'include' }).then(r => r.json());
+    const profileRes = await window.API.Users.get(sellerId);
     if(profileRes.success && profileRes.data) {
       sellerName = profileRes.data.name || sellerName;
       sellerLocation = profileRes.data.city || profileRes.data.state || sellerLocation;
-      isVerified = profileRes.data.is_verified;
+      isVerified = profileRes.data.is_verified || profileRes.data.verified;
       activeListingsCount = profileRes.data.active_listings || 0;
+      sellerAvatar = profileRes.data.avatar || null;
     }
   } catch(e) {
     console.error('Error fetching profile:', e);
   }
 
   document.getElementById('activeCount').textContent = activeListingsCount;
-  document.getElementById('activeCount').textContent = activeListingsCount;
   document.getElementById('profileName').textContent = sellerName;
   
-  if (sellerData.avatar) {
+  if (sellerAvatar) {
       document.getElementById('profileInitial').classList.add('hidden');
       const img = document.getElementById('profileImage');
-      img.src = sellerData.avatar;
+      img.src = sellerAvatar;
       img.classList.remove('hidden');
   } else {
       document.getElementById('profileInitial').textContent = sellerName.charAt(0).toUpperCase();
