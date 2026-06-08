@@ -344,12 +344,23 @@
 
       <!-- Avatar Preview -->
       <div class="flex justify-center pt-6 pb-2">
-        <div class="relative">
-          <div id="epAvatarPreview" class="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-3xl font-black shadow-lg">U</div>
-          <div class="absolute bottom-0 right-0 w-7 h-7 bg-primary rounded-full flex items-center justify-center shadow">
-            <span class="material-symbols-outlined text-white text-[14px]">edit</span>
+        <label class="relative cursor-pointer group" id="avatarUploadContainer">
+          <input type="file" id="epAvatarUpload" accept="image/*" class="hidden" onchange="uploadAvatarFile(this)">
+          
+          <div id="epAvatarPreviewWrapper" class="w-24 h-24 rounded-full border-4 border-gray-100 dark:border-gray-800 bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-4xl font-black shadow-lg overflow-hidden transition-transform group-hover:scale-105">
+            <span id="epAvatarInitial">U</span>
+            <img id="epAvatarImg" src="" class="hidden w-full h-full object-cover">
           </div>
-        </div>
+          
+          <div class="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-card-dark transition-transform group-hover:scale-110">
+            <span class="material-symbols-outlined text-white text-[16px]">add_a_photo</span>
+          </div>
+
+          <!-- Loading Overlay -->
+          <div id="epAvatarLoading" class="hidden absolute inset-0 bg-black/50 rounded-full flex items-center justify-center backdrop-blur-sm">
+             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+          </div>
+        </label>
       </div>
 
       <!-- Form -->
@@ -966,7 +977,22 @@
       document.getElementById('epCity').value  = user.city  || '';
       document.getElementById('epBio').value   = user.bio   || '';
       document.getElementById('epEmail').value = user.email || '';
-      document.getElementById('epAvatarPreview').textContent = (user.name || 'U').charAt(0).toUpperCase();
+      
+      _epAvatarUrl = user.avatar || null;
+      if (_epAvatarUrl) {
+         document.getElementById('epAvatarInitial').classList.add('hidden');
+         const imgEl = document.getElementById('epAvatarImg');
+         if(imgEl) {
+           imgEl.src = _epAvatarUrl;
+           imgEl.classList.remove('hidden');
+         }
+      } else {
+         document.getElementById('epAvatarInitial').textContent = (user.name || 'U').charAt(0).toUpperCase();
+         document.getElementById('epAvatarInitial').classList.remove('hidden');
+         const imgEl = document.getElementById('epAvatarImg');
+         if(imgEl) imgEl.classList.add('hidden');
+      }
+      
       document.getElementById('epViewPublicLink').href = 'profile.html?sellerId=' + user.id;
 
       // Show modal
@@ -999,13 +1025,13 @@
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ name, phone, city }),
+          body: JSON.stringify({ name, phone, city, avatar: _epAvatarUrl }),
         });
         const data = await res.json();
         if (!data.success) { showToast(data.error || 'Failed to save.', 'error'); return; }
 
         // Update localStorage cache
-        const updated = { ...user, name, phone, city };
+        const updated = { ...user, name, phone, city, avatar: _epAvatarUrl };
         localStorage.setItem('zzz_user', JSON.stringify(updated));
         document.getElementById('userName').textContent = name.split(' ')[0];
         showToast('✅ Profile saved successfully!', 'success');

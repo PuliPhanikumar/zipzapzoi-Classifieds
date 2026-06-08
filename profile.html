@@ -104,8 +104,9 @@
       <div class="flex flex-col md:flex-row items-center md:items-end gap-6 -mt-20 md:-mt-24 relative z-20">
 
         <!-- Avatar -->
-        <div class="w-40 h-40 md:w-44 md:h-44 rounded-full border-[8px] border-white dark:border-[#1e293b] shadow-[0_20px_40px_-10px_rgba(20,184,166,0.3)] dark:shadow-none bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-6xl font-black text-white flex-shrink-0 transition-transform duration-500 hover:scale-105">
+        <div id="profileAvatarContainer" class="w-40 h-40 md:w-44 md:h-44 rounded-full border-[8px] border-white dark:border-[#1e293b] shadow-[0_20px_40px_-10px_rgba(20,184,166,0.3)] dark:shadow-none bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-6xl font-black text-white flex-shrink-0 transition-transform duration-500 hover:scale-105 overflow-hidden">
           <span id="profileInitial" class="drop-shadow-sm">U</span>
+          <img id="profileImage" src="" class="hidden w-full h-full object-cover">
         </div>
 
         <!-- Info -->
@@ -312,8 +313,20 @@ async function loadProfile() {
   }
 
   document.getElementById('activeCount').textContent = activeListingsCount;
+  document.getElementById('activeCount').textContent = activeListingsCount;
   document.getElementById('profileName').textContent = sellerName;
-  document.getElementById('profileInitial').textContent = sellerName.charAt(0).toUpperCase();
+  
+  if (sellerData.avatar) {
+      document.getElementById('profileInitial').classList.add('hidden');
+      const img = document.getElementById('profileImage');
+      img.src = sellerData.avatar;
+      img.classList.remove('hidden');
+  } else {
+      document.getElementById('profileInitial').textContent = sellerName.charAt(0).toUpperCase();
+      document.getElementById('profileInitial').classList.remove('hidden');
+      document.getElementById('profileImage').classList.add('hidden');
+  }
+  
   document.getElementById('sellerLoc').textContent = sellerLocation;
 
   if (isVerified) {
