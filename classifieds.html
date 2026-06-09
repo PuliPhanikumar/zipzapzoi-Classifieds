@@ -615,7 +615,7 @@
             idx = (idx + 1) % images.length;
             imgEl.src = images[idx];
             Array.from(dotsContainer.children).forEach((dot, i) => {
-               dot.className = \`w-1.5 h-1.5 rounded-full \${i===idx?'bg-white':'bg-white/50'}\`;
+               dot.className = `w-1.5 h-1.5 rounded-full ${i===idx?'bg-white':'bg-white/50'}`;
             });
           }, 1200); // cycle every 1.2s
         } catch(e) {}

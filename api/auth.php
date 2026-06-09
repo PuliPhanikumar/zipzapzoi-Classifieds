@@ -391,9 +391,8 @@ function sendOtpMail(string $toEmail, string $toName, string $otp, int $expiryMi
 }
 
 function getUserById(int $id): ?array {
-    $stmt = getDB()->prepare(
-        'SELECT id, name, email, phone, role, avatar, city, state, is_verified, created_at, referral_code FROM users WHERE id = ?'
-    );
+    // Select * to prevent SQL errors if new columns (e.g. referral_code) are missing on the live server
+    $stmt = getDB()->prepare('SELECT * FROM users WHERE id = ?');
     $stmt->execute([$id]);
     return $stmt->fetch() ?: null;
 }
