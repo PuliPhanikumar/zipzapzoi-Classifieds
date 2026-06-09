@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -10,15 +10,15 @@
   </script>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="ZipZapZoi Help Centre — Find answers to your questions about posting ads, payments, account management and more."/>
+  <meta name="description" content="ZipZapZoi Help Center and FAQ. Find answers to your questions about listings, payments, accounts, and safety."/>
   <meta property="og:type" content="website"/>
   <meta property="og:url" content="https://zipzapzoi.com/help.html"/>
-  <meta property="og:title" content="Help &amp; Support — ZipZapZoi"/>
-  <meta property="og:description" content="Get help with your ZipZapZoi account, listings, payments and more."/>
+  <meta property="og:title" content="Help Center & FAQ — ZipZapZoi"/>
+  <meta property="og:description" content="Need help? Find quick answers and support at the ZipZapZoi Help Center."/>
   <meta property="og:image" content="https://zipzapzoi.com/og-image.png"/>
   <meta name="robots" content="index, follow"/>
   <link rel="canonical" href="https://zipzapzoi.com/help.html"/>
-  <title>ZipZapZoi - Help Center</title>
+  <title>ZipZapZoi - Help Center & FAQ</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
@@ -45,10 +45,8 @@
   </script>
   <style>
     .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-    /* Accordion Transition */
-    .faq-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
-    .faq-open .faq-content { max-height: 500px; transition: max-height 0.5s ease-in; }
-    .faq-open .icon-rotate { transform: rotate(180deg); }
+    details > summary { list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
@@ -63,382 +61,125 @@
       </div>
       <div class="flex items-center gap-6">
         <a href="classifieds.html" class="text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-primary transition-colors">Back to Home</a>
-        <div class="h-9 w-9 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-md border-2 border-white" id="userAvatar">U</div>
       </div>
     </div>
   </header>
 
-  <section class="bg-primary text-white py-16 px-6 text-center relative overflow-hidden">
-    <div class="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-    <div class="relative z-10 max-w-2xl mx-auto">
-      <h1 class="text-4xl font-bold mb-4">How can we help you?</h1>
-      <div class="relative">
-        <span class="material-symbols-outlined absolute left-4 top-3.5 text-gray-400">search</span>
-        <input type="text" id="searchInput" placeholder="Search for answers (e.g., 'payment', 'scam', 'password')" 
-               class="w-full pl-12 pr-4 py-3 rounded-full text-gray-800 dark:text-white focus:ring-4 focus:ring-green-400/50 outline-none shadow-lg transition-shadow">
+  <main class="flex-grow container mx-auto px-6 py-12 max-w-4xl">
+    
+    <div class="text-center mb-12">
+      <h1 class="text-5xl font-black text-gray-900 dark:text-white mb-4">Help Center & FAQ</h1>
+      <p class="text-xl text-gray-500 dark:text-gray-400">How can we help you today?</p>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <a href="contact.html" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 text-center hover:shadow-md transition-shadow group">
+        <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-2xl">support_agent</span>
+        </div>
+        <h3 class="font-bold text-lg mb-1 dark:text-white">Contact Support</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Get in touch with our team</p>
+      </a>
+      <a href="legal.html" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 text-center hover:shadow-md transition-shadow group">
+        <div class="w-12 h-12 bg-green-50 dark:bg-green-900/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-2xl">policy</span>
+        </div>
+        <h3 class="font-bold text-lg mb-1 dark:text-white">Legal & Policies</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Terms, Privacy & Refunds</p>
+      </a>
+      <a href="Feedback.html" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 text-center hover:shadow-md transition-shadow group">
+        <div class="w-12 h-12 bg-orange-50 dark:bg-orange-900/20 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-2xl">bug_report</span>
+        </div>
+        <h3 class="font-bold text-lg mb-1 dark:text-white">Report an Issue</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Found a bug or scam?</p>
+      </a>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="bg-white dark:bg-card-dark p-8 md:p-12 rounded-[2rem] shadow-bouncy border border-gray-100 dark:border-gray-800">
+      <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-8 text-center">Frequently Asked Questions</h2>
+      
+      <div class="space-y-4">
+        
+        <!-- FAQ Item 1 -->
+        <details class="group border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 open:bg-white dark:open:bg-card-dark transition-all">
+          <summary class="flex justify-between items-center font-bold cursor-pointer list-none p-5 text-gray-800 dark:text-white">
+            <span>How do I post a free ad?</span>
+            <span class="transition group-open:rotate-180 material-symbols-outlined text-gray-400">expand_more</span>
+          </summary>
+          <div class="text-gray-600 dark:text-gray-300 px-5 pb-5 leading-relaxed">
+            Every user gets 6 free ads per month! Simply log in to your account, go to the Seller Dashboard, and click the "Post Ad" button. Follow the easy steps to add photos, set a price, and publish.
+          </div>
+        </details>
+
+        <!-- FAQ Item 2 -->
+        <details class="group border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 open:bg-white dark:open:bg-card-dark transition-all">
+          <summary class="flex justify-between items-center font-bold cursor-pointer list-none p-5 text-gray-800 dark:text-white">
+            <span>Are payments on ZipZapZoi secure?</span>
+            <span class="transition group-open:rotate-180 material-symbols-outlined text-gray-400">expand_more</span>
+          </summary>
+          <div class="text-gray-600 dark:text-gray-300 px-5 pb-5 leading-relaxed">
+            Yes, completely! We use Razorpay, an industry-leading payment gateway. We support UPI, Credit/Debit Cards, Net Banking, and Wallets. We never store your card details on our servers.
+          </div>
+        </details>
+
+        <!-- FAQ Item 3 -->
+        <details class="group border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 open:bg-white dark:open:bg-card-dark transition-all">
+          <summary class="flex justify-between items-center font-bold cursor-pointer list-none p-5 text-gray-800 dark:text-white">
+            <span>How does the refund policy work?</span>
+            <span class="transition group-open:rotate-180 material-symbols-outlined text-gray-400">expand_more</span>
+          </summary>
+          <div class="text-gray-600 dark:text-gray-300 px-5 pb-5 leading-relaxed">
+            If your plan fails to activate after a successful payment, or if there is a duplicate charge, we will automatically refund the amount within 5-7 business days. Please refer to our <a href="legal.html" class="text-primary hover:underline">Refund Policy</a> for more details.
+          </div>
+        </details>
+
+        <!-- FAQ Item 4 -->
+        <details class="group border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 open:bg-white dark:open:bg-card-dark transition-all">
+          <summary class="flex justify-between items-center font-bold cursor-pointer list-none p-5 text-gray-800 dark:text-white">
+            <span>How do I edit or delete my listing?</span>
+            <span class="transition group-open:rotate-180 material-symbols-outlined text-gray-400">expand_more</span>
+          </summary>
+          <div class="text-gray-600 dark:text-gray-300 px-5 pb-5 leading-relaxed">
+            Go to your <a href="Seller Dashboard.html" class="text-primary hover:underline">Seller Dashboard</a>, find the active listing, and click the "Edit" or "Delete" icon. Changes will reflect instantly on the platform.
+          </div>
+        </details>
+
+        <!-- FAQ Item 5 -->
+        <details class="group border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 open:bg-white dark:open:bg-card-dark transition-all">
+          <summary class="flex justify-between items-center font-bold cursor-pointer list-none p-5 text-gray-800 dark:text-white">
+            <span>How can I protect myself from scams?</span>
+            <span class="transition group-open:rotate-180 material-symbols-outlined text-gray-400">expand_more</span>
+          </summary>
+          <div class="text-gray-600 dark:text-gray-300 px-5 pb-5 leading-relaxed">
+            Always meet in public, safe locations. Never share your OTP, UPI PIN, or sensitive bank details with a buyer or seller. If a deal seems too good to be true, it probably is. Always verify the item in person before making a payment.
+          </div>
+        </details>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── CONTACT SECTION ── -->
+  <section class="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 py-12 mt-6">
+    <div class="container mx-auto px-6 max-w-5xl">
+      <h2 class="text-2xl font-black text-gray-800 dark:text-white mb-8 text-center">Still need help?</h2>
+      <div class="flex justify-center">
+         <a href="contact.html" class="bg-primary text-white font-bold px-8 py-3 rounded-xl shadow-lg hover:bg-green-700 transition-colors">Contact Support Team</a>
       </div>
     </div>
   </section>
 
-  <main class="flex-grow container mx-auto px-6 py-12 max-w-5xl">
-    
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-      <button onclick="filterCategory('Buying')" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-bouncy hover:-translate-y-1 transition-all text-center group">
-        <span class="material-symbols-outlined text-4xl text-blue-500 mb-2 group-hover:scale-110 transition-transform">shopping_bag</span>
-        <h3 class="font-bold text-gray-700 dark:text-gray-200">Buying</h3>
-      </button>
-      <button onclick="filterCategory('Selling')" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-bouncy hover:-translate-y-1 transition-all text-center group">
-        <span class="material-symbols-outlined text-4xl text-green-500 mb-2 group-hover:scale-110 transition-transform">storefront</span>
-        <h3 class="font-bold text-gray-700 dark:text-gray-200">Selling</h3>
-      </button>
-      <button onclick="filterCategory('Account')" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-bouncy hover:-translate-y-1 transition-all text-center group">
-        <span class="material-symbols-outlined text-4xl text-purple-500 mb-2 group-hover:scale-110 transition-transform">manage_accounts</span>
-        <h3 class="font-bold text-gray-700 dark:text-gray-200">Account</h3>
-      </button>
-      <button onclick="filterCategory('Safety')" class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-sm hover:shadow-bouncy hover:-translate-y-1 transition-all text-center group">
-        <span class="material-symbols-outlined text-4xl text-red-500 mb-2 group-hover:scale-110 transition-transform">shield</span>
-        <h3 class="font-bold text-gray-700 dark:text-gray-200">Safety</h3>
-      </button>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-      
-      <div class="lg:col-span-2">
-        <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white flex items-center gap-2">
-          <span class="material-symbols-outlined text-primary">quiz</span> Frequently Asked Questions
-        </h2>
-        
-        <div id="faqContainer" class="space-y-4">
-          </div>
-      </div>
-
-      <div class="lg:col-span-1 space-y-5">
-
-        <!-- CONTACT DIRECTORY -->
-        <div class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-bouncy">
-          <h2 class="text-xl font-bold mb-5 flex items-center gap-2">
-            <span class="material-symbols-outlined text-secondary">contact_mail</span>
-            Contact Directory
-          </h2>
-
-          <!-- User Support -->
-          <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
-            <p class="text-xs font-black uppercase text-blue-600 dark:text-blue-400 mb-1 flex items-center gap-1">
-              <span class="material-symbols-outlined text-[14px]">support_agent</span> User Support
-            </p>
-            <a href="Feedback.html" class="text-sm font-bold text-blue-700 dark:text-blue-300 hover:underline">Feedback & Support</a>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Account issues, ad problems, general help</p>
-          </div>
-
-          <!-- OTP / System Emails -->
-          <div class="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-            <p class="text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-1">
-              <span class="material-symbols-outlined text-[14px]">mark_email_read</span> OTP &amp; System Emails
-            </p>
-            <span class="text-sm font-bold text-gray-700 dark:text-gray-300">noreply@zipzapzoi.com</span>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">OTP codes, listing approvals/rejections — do not reply</p>
-          </div>
-
-          <!-- Careers -->
-          <div class="mb-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-100 dark:border-purple-800">
-            <p class="text-xs font-black uppercase text-purple-600 dark:text-purple-400 mb-1 flex items-center gap-1">
-              <span class="material-symbols-outlined text-[14px]">work</span> Careers
-            </p>
-            <a href="mailto:careers@zipzapzoi.com" class="text-sm font-bold text-purple-700 dark:text-purple-300 hover:underline">careers@zipzapzoi.com</a>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Job openings &amp; internship applications</p>
-          </div>
-
-          <!-- Phone -->
-          <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800">
-            <p class="text-xs font-black uppercase text-green-600 dark:text-green-400 mb-1 flex items-center gap-1">
-              <span class="material-symbols-outlined text-[14px]">call</span> Phone
-            </p>
-            <a href="tel:+919052279988" class="text-sm font-bold text-green-700 dark:text-green-300 hover:underline">+91 90522 79988</a>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Mon–Sat, 10am–6pm IST</p>
-          </div>
-        </div>
-
-        <!-- BUSINESS & PARTNERSHIPS — HIGHLIGHTED -->
-        <div class="bg-gradient-to-br from-secondary to-primary p-6 rounded-2xl shadow-lg text-white relative overflow-hidden">
-          <div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
-          <div class="absolute -bottom-6 -left-4 w-32 h-32 bg-white/10 rounded-full"></div>
-          <div class="relative z-10">
-            <span class="material-symbols-outlined text-4xl mb-3 block">handshake</span>
-            <h3 class="text-lg font-black mb-1">Business &amp; Partnerships</h3>
-            <p class="text-sm text-white/80 mb-3">Web development, brand integrations, advertising, and strategic partnerships.</p>
-            <a href="mailto:puli.phanikumar@zipzapzoi.com"
-               class="inline-flex items-center gap-2 bg-white text-secondary font-black text-sm px-4 py-2.5 rounded-xl hover:bg-gray-100 transition-colors shadow-md">
-              <span class="material-symbols-outlined text-[16px]">email</span>
-              puli.phanikumar@zipzapzoi.com
-            </a>
-            <p class="text-xs text-white/70 mt-2">📞 +91 90522 79988</p>
-          </div>
-        </div>
-
-        <!-- SUPPORT FORM -->
-        <div class="bg-white dark:bg-card-dark p-6 rounded-2xl shadow-bouncy">
-          <h2 class="text-xl font-bold mb-1">Submit a Support Ticket</h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Our team responds within 24 hours.</p>
-          
-          <form id="contactForm" class="space-y-4">
-            <div>
-              <label class="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-1">Topic</label>
-              <select id="ticketTopic" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none">
-                <option>Report a Bug</option>
-                <option>Report a User/Ad</option>
-                <option>Account Issue</option>
-                <option>Payment Issue</option>
-                <option>Other</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-1">Message</label>
-              <textarea id="ticketMsg" rows="4" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" placeholder="Describe your issue..." required></textarea>
-            </div>
-            <button type="submit" class="w-full bg-secondary hover:bg-cyan-700 text-white font-bold py-3 rounded-xl transition-colors shadow-lg">
-              Send to support@zipzapzoi.com
-            </button>
-          </form>
-        </div>
-
-      </div>
-
-    </div>
-  </main>
-
-  <footer class="bg-white dark:bg-card-dark border-t border-gray-200 dark:border-gray-700 py-10 mt-auto">
-    <div class="container mx-auto px-6 max-w-5xl">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-        <div>
-          <div class="flex items-center gap-2 mb-3">
-            <span class="material-symbols-outlined text-primary text-2xl">all_inclusive</span>
-            <span class="font-black text-lg text-gray-800 dark:text-white">ZipZapZoi</span>
-          </div>
-          <p class="text-sm text-gray-500 dark:text-gray-400">India's growing classifieds platform — post free ads, buy &amp; sell locally.</p>
-          <p class="text-sm font-bold text-gray-700 dark:text-gray-300 mt-3">📞 <a href="tel:+919052279988" class="hover:text-primary">+91 90522 79988</a></p>
-        </div>
-        <div>
-          <h4 class="font-black text-gray-800 dark:text-white mb-3">Contact Us</h4>
-          <ul class="space-y-2 text-sm text-gray-500 dark:text-gray-400">
-            <li>🎧 Support: <a href="Feedback.html" class="font-bold text-secondary hover:underline">Feedback & Support</a></li>
-            <li>📧 System/OTP: <span class="font-bold">noreply@zipzapzoi.com</span></li>
-            <li>💼 Careers: <a href="mailto:careers@zipzapzoi.com" class="font-bold hover:underline">careers@zipzapzoi.com</a></li>
-          </ul>
-        </div>
-        <div class="bg-gradient-to-br from-secondary/10 to-primary/10 p-4 rounded-xl border border-secondary/20">
-          <h4 class="font-black text-gray-800 dark:text-white mb-1">🤝 Business &amp; Partnerships</h4>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Web development, brand collab &amp; advertising</p>
-          <a href="mailto:puli.phanikumar@zipzapzoi.com" class="text-sm font-black text-secondary hover:underline block">puli.phanikumar@zipzapzoi.com</a>
-          <a href="tel:+919052279988" class="text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-primary mt-1 block">+91 90522 79988</a>
-        </div>
-      </div>
-      <div class="border-t border-gray-100 dark:border-gray-800 pt-6 text-center text-sm text-gray-500 dark:text-gray-400">
-        &copy; 2026 ZipZapZoi. All Rights Reserved. &nbsp;|&nbsp;
-        <a href="legal.html" class="hover:text-primary">Terms &amp; Privacy</a>
-      </div>
+  <footer class="bg-white dark:bg-card-dark border-t border-gray-200 dark:border-gray-700 py-6 mt-auto">
+    <div class="container mx-auto px-6 text-center text-sm text-gray-500 dark:text-gray-400">
+      &copy; 2026 ZipZapZoi. All Rights Reserved. &nbsp;|&nbsp;
+      <a href="legal.html" class="hover:text-primary">Legal Center</a>
     </div>
   </footer>
 
-  <script>
-    // --- 1. AUTH & SETUP ---
-    const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
-    if(currentUser) {
-        document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
-    } else {
-        document.getElementById('userAvatar').textContent = 'G';
-    }
-
-    // --- 2. FAQ DATA & RENDER LOGIC (unchanged) ---
-    const faqs = [
-      { category: 'Buying', q: "How do I contact a seller?", a: "Go to the listing page and click the 'Chat' or 'Call' button. You must be logged in to start a conversation." },
-      { category: 'Buying', q: "Is payment handled on ZipZapZoi?", a: "Currently, we connect buyers and sellers. Payments should be made in person. Avoid sending money in advance." },
-      { category: 'Selling', q: "How do I post an ad?", a: "Click the 'Post Listing' button in the top right corner. Fill in the details, upload photos, and your ad will go live instantly." },
-      { category: 'Selling', q: "Can I edit my listing?", a: "Yes. Go to your Seller Dashboard > My Listings, and click the Edit (pencil) icon." },
-      { category: 'Account', q: "I forgot my password.", a: "On the Login page, click 'Forgot Password' to receive a reset link via email." },
-      { category: 'Safety', q: "How to avoid scams?", a: "Never share OTPs. Inspect items in person. Do not pay upfront for delivery charges. Report suspicious users immediately." },
-      { category: 'Safety', q: "How do I report a user?", a: "Go to the user's profile or listing page and click the 'Flag' or 'Report' icon." }
-    ];
-
-    const faqContainer = document.getElementById('faqContainer');
-
-    function renderFAQs(filterText = '', categoryFilter = '') {
-      faqContainer.innerHTML = '';
-      const filtered = faqs.filter(item => {
-        const matchesText = item.q.toLowerCase().includes(filterText.toLowerCase()) || item.a.toLowerCase().includes(filterText.toLowerCase());
-        const matchesCat = categoryFilter ? item.category === categoryFilter : true;
-        return matchesText && matchesCat;
-      });
-
-      if (filtered.length === 0) {
-        faqContainer.innerHTML = `<div class="text-center p-8 text-gray-400">No results found. Try a different search.</div>`;
-        return;
-      }
-
-      filtered.forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = "bg-white dark:bg-card-dark border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden cursor-pointer hover:shadow-sm transition-shadow";
-        div.onclick = () => toggleAccordion(index);
-        div.id = `faq-wrapper-${index}`;
-        div.innerHTML = `
-          <div class="p-4 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
-            <h3 class="font-bold text-gray-800 dark:text-white text-sm md:text-base">${item.q}</h3>
-            <span class="material-symbols-outlined text-gray-400 transition-transform duration-300 icon-rotate" id="icon-${index}">expand_more</span>
-          </div>
-          <div class="faq-content bg-white dark:bg-card-dark px-4 text-gray-600 dark:text-gray-300 text-sm leading-relaxed" id="content-${index}">
-            <div class="py-4 border-t border-gray-100 dark:border-gray-800">${item.a}</div>
-          </div>
-        `;
-        faqContainer.appendChild(div);
-      });
-    }
-
-    function toggleAccordion(index) {
-      const wrapper = document.getElementById(`faq-wrapper-${index}`);
-      const wasOpen = wrapper.classList.contains('faq-open');
-      document.querySelectorAll('[id^="faq-wrapper-"]').forEach(el => el.classList.remove('faq-open'));
-      if (!wasOpen) wrapper.classList.add('faq-open');
-    }
-
-    window.filterCategory = (cat) => {
-      document.getElementById('searchInput').value = '';
-      renderFAQs('', cat);
-    };
-
-    document.getElementById('searchInput').addEventListener('input', (e) => renderFAQs(e.target.value));
-
-    // --- 3. UPDATED CONTACT FORM LOGIC ---
-    document.getElementById('contactForm').onsubmit = (e) => {
-      e.preventDefault();
-      
-      const topic = document.getElementById('ticketTopic').value;
-      const msg = document.getElementById('ticketMsg').value;
-      
-      // Create Ticket Object
-      const newTicket = {
-          id: 'tkt_' + Date.now(),
-          userId: currentUser ? currentUser.id : 'guest',
-          userName: currentUser ? currentUser.name : 'Guest User',
-          email: currentUser ? currentUser.email : 'Not Provided',
-          topic: topic,
-          message: msg,
-          status: 'Open', // Open, Resolved
-          timestamp: new Date().toISOString()
-      };
-
-      // Save to LocalStorage
-      const tickets = JSON.parse(localStorage.getItem('zzz_support_tickets') || '[]');
-      tickets.unshift(newTicket); // Add to top
-      localStorage.setItem('zzz_support_tickets', JSON.stringify(tickets));
-      
-      alert(`✅ Support Request Sent!\nReference ID: ${newTicket.id}\nOur team will review your "${topic}" request shortly.`);
-      document.getElementById('contactForm').reset();
-    };
-
-    // Initial Load
-    renderFAQs();
-// ============================================
-// UNIVERSAL UTILITY FUNCTIONS (ADD TO ALL)
-// ============================================
-
-// CSRF Token Management
-function generateCsrfToken() {
-    return 'csrf_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-}
-
-function getCsrfToken() {
-    let token = sessionStorage.getItem('csrf_token');
-    if (!token) {
-        token = generateCsrfToken();
-        sessionStorage.setItem('csrf_token', token);
-    }
-    return token;
-}
-
-function setCsrfToken() {
-    const token = getCsrfToken();
-    const inputs = document.querySelectorAll('input[name="csrf_token"]');
-    inputs.forEach(input => input.value = token);
-}
-
-// Input Validation Functions
-function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function validatePhone(phone) {
-    const digits = phone.replace(/\D/g, '');
-    return digits.length === 10;
-}
-
-function validatePrice(price) {
-    const num = parseFloat(price);
-    return !isNaN(num) && num > 0 && num < 1000000;
-}
-
-function validatePassword(password) {
-    return password.length >= 8 &&
-           /[a-z]/.test(password) &&
-           /[A-Z]/.test(password) &&
-           /[0-9]/.test(password);
-}
-
-// Input Sanitization
-function sanitizeInput(input) {
-    const div = document.createElement('div');
-    div.textContent = input;
-    return div.innerHTML;
-}
-
-function sanitizeHTML(html) {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div.textContent;
-}
-
-// Error/Success Messages
-function showError(message) {
-    let errorDiv = document.getElementById('errorMessage');
-    if (!errorDiv) {
-        errorDiv = document.createElement('div');
-        errorDiv.id = 'errorMessage';
-        errorDiv.style.cssText = 'color: red; padding: 10px; margin: 10px 0; border: 1px solid red; border-radius: 4px; display: none;';
-        const form = document.querySelector('form');
-        if (form) form.parentElement.insertBefore(errorDiv, form);
-    }
-    errorDiv.textContent = message;
-    errorDiv.style.display = 'block';
-    errorDiv.setAttribute('role', 'alert');
-}
-
-function showSuccess(message) {
-    let successDiv = document.getElementById('successMessage');
-    if (!successDiv) {
-        successDiv = document.createElement('div');
-        successDiv.id = 'successMessage';
-        successDiv.style.cssText = 'color: green; padding: 10px; margin: 10px 0; border: 1px solid green; border-radius: 4px; display: none;';
-        const form = document.querySelector('form');
-        if (form) form.parentElement.insertBefore(successDiv, form);
-    }
-    successDiv.textContent = message;
-    successDiv.style.display = 'block';
-    successDiv.setAttribute('role', 'status');
-}
-
-function hideError() {
-    const errorDiv = document.getElementById('errorMessage');
-    if (errorDiv) errorDiv.style.display = 'none';
-}
-
-function hideSuccess() {
-    const successDiv = document.getElementById('successMessage');
-    if (successDiv) successDiv.style.display = 'none';
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    setCsrfToken();
-});
-</script>
   <script src="js/utils.js"></script>
 </body>
 </html>

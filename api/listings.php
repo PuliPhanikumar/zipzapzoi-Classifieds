@@ -204,6 +204,26 @@ function createListing(): void {
     $db = getDB();
     $uid = (int)$user['id'];
 
+    // ── Duplicate Detection ──────────────────────────────────────────
+    if (!empty($user['phone'])) {
+        $dupStmt = $db->prepare("
+            SELECT l.id 
+            FROM listings l
+            JOIN users u ON l.user_id = u.id
+            WHERE l.title = ? 
+              AND u.phone = ?
+              AND l.created_at > DATE_SUB(NOW(), INTERVAL 30 DAY)
+        ");
+        $dupStmt->execute([$title, $user['phone']]);
+    } else {
+        $dupStmt = $db->prepare("SELECT id FROM listings WHERE user_id = ? AND title = ? AND created_at > DATE_SUB(NOW(), INTERVAL 30 DAY)");
+        $dupStmt->execute([$uid, $title]);
+    }
+    
+    if ($dupStmt->fetch()) {
+        jsonError('Duplicate ad detected. An ad with this title was already posted from your phone number recently.');
+    }
+
     // ── Ensure uploads directory exists ──────────────────────────────
     $uploadDir = UPLOAD_DIR;
     if (!is_dir($uploadDir)) {

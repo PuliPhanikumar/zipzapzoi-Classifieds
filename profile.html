@@ -137,6 +137,26 @@
           </button>
         </div>
       </div>
+      
+      <!-- Referral & Gamification (Only visible to the user themselves) -->
+      <div id="referralSection" class="hidden mt-8 pt-6 border-t-2 border-dashed border-gray-100 dark:border-gray-800 flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center border-2 border-amber-200 dark:border-amber-700/50">
+            <span class="material-symbols-outlined text-amber-500 text-[28px]">military_tech</span>
+          </div>
+          <div>
+            <h4 class="font-bold text-gray-800 dark:text-white">ZipZapZoi Pro</h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Share your code & earn free ads!</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <div class="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2.5 rounded-xl font-mono font-bold text-lg text-primary tracking-wider" id="userReferralCode">ZZZ-XYZ</div>
+          <button onclick="copyReferral()" class="bg-white dark:bg-card-dark hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl font-bold shadow-sm transition-all active:scale-95 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">content_copy</span> Copy
+          </button>
+        </div>
+      </div>
 
       <!-- Stats Row -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-12 pt-10 border-t-2 border-dashed border-gray-100 dark:border-gray-800">
@@ -292,6 +312,13 @@ if (document.documentElement.classList.contains('dark')) {
   document.getElementById('themeIcon').textContent = 'light_mode';
 }
 
+function copyReferral() {
+    const code = document.getElementById('userReferralCode').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      showToast('Referral code copied! Share it to get +2 Free Ads!');
+    });
+}
+
 /* ========== LOAD PROFILE ========== */
 async function loadProfile() {
   let sellerName = "ZipZapZoi User";
@@ -304,11 +331,18 @@ async function loadProfile() {
   try {
     const profileRes = await window.API.Users.get(sellerId);
     if(profileRes.success && profileRes.data) {
-      sellerName = profileRes.data.name || sellerName;
-      sellerLocation = profileRes.data.city || profileRes.data.state || sellerLocation;
-      isVerified = profileRes.data.is_verified || profileRes.data.verified;
-      activeListingsCount = profileRes.data.active_listings || 0;
-      sellerAvatar = profileRes.data.avatar || null;
+      const u = profileRes.data;
+      sellerName = u.name || sellerName;
+      sellerLocation = u.city || u.state || sellerLocation;
+      isVerified = u.is_verified || u.verified;
+      activeListingsCount = u.active_listings || 0;
+      sellerAvatar = u.avatar || null;
+      
+      if (currentUser && currentUser.id == sellerId && u.referral_code) {
+        document.getElementById('referralSection').classList.remove('hidden');
+        document.getElementById('referralSection').classList.add('flex');
+        document.getElementById('userReferralCode').textContent = u.referral_code;
+      }
     }
   } catch(e) {
     console.error('Error fetching profile:', e);
@@ -378,13 +412,53 @@ async function loadProfile() {
     grid.innerHTML = '<div class="col-span-full py-10 text-center text-red-500 font-bold">Error loading listings.</div>';
   }
 
-  // 3. Reviews — no reviews API yet, show clean empty state
+  // 3. Fetch Reviews
   const reviewContainer = document.getElementById('content-reviews');
-  reviewContainer.innerHTML = `
-    <div class="text-center py-12 text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
-       <span class="material-symbols-outlined text-5xl mb-3 block opacity-40">star_half</span>
-       <p class="font-medium">No reviews yet for this seller.</p>
-    </div>`;
+  try {
+    const revRes = await fetch(`/api/reviews.php?seller_id=${sellerId}`).then(r => r.json());
+    if (revRes.success && revRes.data) {
+       const stats = revRes.data.stats;
+       const reviews = revRes.data.reviews;
+
+       // Update overall rating UI
+       if (stats.total > 0) {
+         document.querySelector('.group\\/stat .text-amber-700').textContent = stats.average.toFixed(1);
+       }
+
+       if (reviews.length > 0) {
+          reviewContainer.innerHTML = reviews.map(r => {
+             const starsHtml = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+             const buyerInitial = r.buyer_name ? r.buyer_name.charAt(0).toUpperCase() : '?';
+             const avatarHtml = r.buyer_avatar 
+               ? `<img src="${r.buyer_avatar}" class="w-12 h-12 rounded-full object-cover shadow-sm">` 
+               : `<div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg shadow-sm">${buyerInitial}</div>`;
+             
+             return `
+             <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex gap-4">
+               ${avatarHtml}
+               <div class="flex-1">
+                 <div class="flex justify-between items-start">
+                   <h4 class="font-bold text-gray-800 dark:text-white">${r.buyer_name || 'User'}</h4>
+                   <span class="text-xs text-gray-400">${new Date(r.created_at).toLocaleDateString()}</span>
+                 </div>
+                 <div class="text-yellow-400 text-sm tracking-widest my-1">${starsHtml}</div>
+                 <p class="text-gray-600 dark:text-gray-300 mt-2 text-sm leading-relaxed">${r.comment || ''}</p>
+               </div>
+             </div>`;
+          }).join('');
+          reviewContainer.classList.remove('space-y-4');
+          reviewContainer.classList.add('grid', 'gap-4');
+       } else {
+          reviewContainer.innerHTML = `
+            <div class="text-center py-12 text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+               <span class="material-symbols-outlined text-5xl mb-3 block opacity-40">star_half</span>
+               <p class="font-medium">No reviews yet for this seller.</p>
+            </div>`;
+       }
+    }
+  } catch(e) {
+    console.error('Error fetching reviews:', e);
+  }
 }
 
 /* ========== TABS ========== */
@@ -479,14 +553,14 @@ async function submitReview() {
     if (stars === 0) return showToast("Please select a star rating", "error");
     if (!text) return showToast("Please write a review", "error");
     try {
-      const res = await fetch('/api/users.php?action=review', {
+      const res = await fetch('/api/reviews.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
           seller_id: sellerId,
           rating: stars,
-          text
+          comment: text
         })
       });
       const data = await res.json();

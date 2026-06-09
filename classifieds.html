@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -150,7 +150,7 @@
             </div>
             
             <div class="sm:w-1/3 w-full flex items-center px-6 h-12">
-              <span class="material-symbols-outlined text-gray-400 cursor-pointer hover:text-primary transition-colors" onclick="showToast('Detecting location...')">my_location</span>
+              <span class="material-symbols-outlined text-gray-400 cursor-pointer hover:text-primary transition-colors" onclick="autoDetectLocation(this)">my_location</span>
               <input id="searchLoc" class="w-full bg-transparent border-none focus:ring-0 text-sm ml-2 placeholder-gray-400 font-bold dark:text-white" placeholder="City or Zip" type="text" onkeypress="if(event.key === 'Enter') executeSearch()"/>
             </div>
             
@@ -170,6 +170,23 @@
           </div>
         </div>
       </section>
+
+      <!-- TRENDING ADS MARQUEE -->
+      <section class="bg-emerald-50 dark:bg-emerald-900/20 border-b border-emerald-100 dark:border-emerald-800/50 py-3 overflow-hidden">
+        <div class="flex items-center">
+          <div class="px-4 font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap flex items-center gap-2 z-10 bg-emerald-50 dark:bg-card-dark/50 shadow-[10px_0_10px_-5px_rgba(16,185,129,0.1)]">
+            <span class="material-symbols-outlined">trending_up</span> TRENDING NOW
+          </div>
+          <div class="flex-1 overflow-hidden relative">
+            <div id="trendingMarquee" class="flex gap-8 whitespace-nowrap animate-[marquee_20s_linear_infinite] hover:[animation-play-state:paused]">
+              <!-- Injected via JS -->
+            </div>
+          </div>
+        </div>
+      </section>
+      <style>
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+      </style>
 
       <!-- MAIN CONTENT -->
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex flex-col lg:flex-row gap-8">
@@ -209,6 +226,18 @@
 
         <!-- 3D GRID -->
         <div class="flex-1 min-w-0">
+          
+          <!-- RECENTLY VIEWED (Dynamically injected) -->
+          <div id="recentlyViewedContainer" class="mb-10 hidden">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-xl font-black text-gray-900 dark:text-white tracking-tight">Recently Viewed</h2>
+              <button onclick="clearRecentViews()" class="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors">Clear</button>
+            </div>
+            <div id="recentlyViewedGrid" class="flex gap-4 overflow-x-auto pb-4 snap-x custom-scroll">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
           <div class="flex justify-between items-center mb-6">
             <h2 id="gridTitle" class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Fresh Recommendations</h2>
             <select id="sortFilter" onchange="renderGrid()" class="bg-transparent text-sm font-bold text-gray-600 dark:text-gray-300 border-none focus:ring-0 cursor-pointer">
@@ -301,6 +330,7 @@
         if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
         renderAuth();
         renderCategories();
+        renderRecentViews();
         renderGrid();
 
         // Background schema refresh from DB
@@ -383,6 +413,37 @@
         renderGrid();
       }
 
+      function renderRecentViews() {
+        const recents = JSON.parse(localStorage.getItem('zzz_recents') || '[]');
+        const container = document.getElementById('recentlyViewedContainer');
+        const grid = document.getElementById('recentlyViewedGrid');
+        
+        if (recents.length === 0) {
+          if(container) container.classList.add('hidden');
+          return;
+        }
+
+        if(container) container.classList.remove('hidden');
+        if(grid) {
+          grid.innerHTML = recents.map(l => `
+            <a href="Listing Detail.html?id=${l.id}" class="snap-start shrink-0 w-48 bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-lg transition-all group block">
+              <div class="h-32 bg-gray-100 dark:bg-gray-800 overflow-hidden relative">
+                <img src="${l.img}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+              </div>
+              <div class="p-3">
+                <h4 class="font-bold text-gray-900 dark:text-white text-sm truncate mb-1">${l.title}</h4>
+                <p class="text-primary font-black text-sm">\u20b9${parseFloat(l.price||0).toLocaleString('en-IN')}</p>
+              </div>
+            </a>
+          `).join('');
+        }
+      }
+
+      function clearRecentViews() {
+        localStorage.removeItem('zzz_recents');
+        renderRecentViews();
+      }
+
       // =====================================
       // 5. 3D GRID RENDER (API WIRED)
       // =====================================
@@ -428,6 +489,7 @@
           const res = await (window.ZZZ && window.ZZZ.api ? window.ZZZ.api.fetch(`/api/listings.php?${params.toString()}`) : fetch(`/api/listings.php?${params.toString()}`).then(r => r.json()));
           
           let filtered = res.data ? res.data.listings : (res.listings || []);
+          populateTrending(filtered);
           
           // Apply local condition filter since API doesn't support condition filter natively yet
           const cond = document.getElementById('conditionFilter').value;
@@ -479,9 +541,13 @@
               <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer relative group opacity-0 animate-pop" style="animation-delay: ${timeDelay}s" onclick="window.location.href='Listing Detail.html?id=${l.id}'">
                 
                 <!-- Image Area -->
-                <div class="relative h-56 overflow-hidden bg-gray-100 dark:bg-gray-900">
+                <div class="relative h-56 overflow-hidden bg-gray-100 dark:bg-gray-900" 
+                     onmouseenter="startHoverGallery(this, '${encodeURIComponent(JSON.stringify(l.images || []))}')"
+                     onmouseleave="stopHoverGallery(this, '${l.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}')">
                   <img src="${l.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
                   
+                  <!-- Progress Dots -->
+                  <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 gallery-dots"></div>
                   <!-- Category Badge -->
                   <div class="absolute top-4 left-4 bg-white/90 dark:bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-gray-800 dark:text-white uppercase tracking-wider card-image-wrap">
                     ${l.category}
@@ -517,6 +583,54 @@
         }
       }
 
+      // Populate Trending Marquee
+      function populateTrending(listings) {
+        const marquee = document.getElementById('trendingMarquee');
+        if (!marquee) return;
+        const sorted = [...listings].sort((a,b) => (b.views||0) - (a.views||0)).slice(0, 10);
+        if (sorted.length === 0) {
+          marquee.parentElement.parentElement.style.display = 'none';
+          return;
+        }
+        marquee.innerHTML = sorted.map(l => `
+          <a href="Listing Detail.html?id=${l.id}" class="text-gray-700 dark:text-gray-300 hover:text-primary transition-colors font-bold text-sm flex items-center gap-2">
+            <img src="${l.images?.[0] || 'https://via.placeholder.com/40x30'}" class="w-6 h-6 rounded object-cover shadow-sm">
+            ${l.title} - <span class="text-primary tracking-tight">₹${Number(l.price).toLocaleString()}</span>
+          </a>
+        `).join('<span class="text-emerald-200 dark:text-emerald-800 font-black">•</span>');
+      }
+
+      // Hover Gallery Logic
+      function startHoverGallery(container, imagesJsonStr) {
+        try {
+          const images = JSON.parse(decodeURIComponent(imagesJsonStr));
+          if (!images || images.length <= 1) return;
+          const imgEl = container.querySelector('img');
+          const dotsContainer = container.querySelector('.gallery-dots');
+          
+          dotsContainer.innerHTML = images.map((_, i) => `<div class="w-1.5 h-1.5 rounded-full ${i===0?'bg-white':'bg-white/50'}"></div>`).join('');
+          
+          let idx = 0;
+          container._galleryInterval = setInterval(() => {
+            idx = (idx + 1) % images.length;
+            imgEl.src = images[idx];
+            Array.from(dotsContainer.children).forEach((dot, i) => {
+               dot.className = \`w-1.5 h-1.5 rounded-full \${i===idx?'bg-white':'bg-white/50'}\`;
+            });
+          }, 1200); // cycle every 1.2s
+        } catch(e) {}
+      }
+      function stopHoverGallery(container, defaultSrc) {
+        if (container._galleryInterval) {
+          clearInterval(container._galleryInterval);
+          container._galleryInterval = null;
+        }
+        const imgEl = container.querySelector('img');
+        if (imgEl) imgEl.src = defaultSrc;
+        const dotsContainer = container.querySelector('.gallery-dots');
+        if (dotsContainer) dotsContainer.innerHTML = '';
+      }
+
       // =====================================
       // 6. ACTIONS
       // =====================================
@@ -542,6 +656,25 @@
         document.getElementById('gridTitle').textContent = 'Fresh Recommendations';
         renderCategories();
         renderGrid();
+      }
+
+      async function autoDetectLocation(btn) {
+        btn.classList.add('animate-spin');
+        try {
+          const res = await fetch('https://ipapi.co/json/');
+          const data = await res.json();
+          if (data && data.city) {
+             document.getElementById('searchLoc').value = data.city;
+             showToast(`Location detected: ${data.city}`);
+             executeSearch();
+          } else {
+             showToast("Could not detect location.", "error");
+          }
+        } catch(e) {
+          showToast("Error detecting location.", "error");
+        } finally {
+          btn.classList.remove('animate-spin');
+        }
       }
 
       async function toggleFav(id, btn) {

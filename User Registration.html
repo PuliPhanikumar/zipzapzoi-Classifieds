@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -211,6 +211,17 @@
             I agree to the <a href="legal.html" class="text-primary font-bold hover:underline" onclick="event.stopPropagation()">Terms of Service</a> and <a href="legal.html" class="text-primary font-bold hover:underline" onclick="event.stopPropagation()">Privacy Policy</a>.
           </label>
         </div>
+        
+        <div>
+          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="referral_code">Referral Code (Optional)</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">group_add</span>
+            <input type="text" id="referral_code" class="input-field" placeholder="Enter referral code for +2 free ads!" autocomplete="off"/>
+          </div>
+        </div>
+
+        <!-- Honeypot for spam protection -->
+        <input type="text" id="hp_website" name="website" style="display:none" tabindex="-1" autocomplete="off">
 
         <button type="submit" id="regBtn" class="btn-primary mt-4">
           <span id="btnText">Continue →  Verify OTP</span>
@@ -542,7 +553,9 @@
     const phone    = document.getElementById('phone').value.trim();
     const email    = document.getElementById('email').value.trim().toLowerCase();
     const password = document.getElementById('password').value;
+    const refCode  = document.getElementById('referral_code').value.trim();
     const terms    = document.getElementById('terms').checked;
+    const honeypot = document.getElementById('hp_website').value;
     const btn      = document.getElementById('regBtn');
 
     if (!name || !phone || !email || !password) { showToast('Please fill in all fields.', 'error'); return; }
@@ -560,7 +573,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ name, phone, email, password })
+        body: JSON.stringify({ name, phone, email, password, referral_code: refCode, hp_website: honeypot })
       });
       const data = await res.json();
 
@@ -589,6 +602,19 @@
       document.getElementById('btnIcon').className = 'material-symbols-outlined text-[20px]';
       document.getElementById('btnIcon').textContent = 'send';
       showToast('Network error. Please check connection and try again.', 'error');
+    }
+  });
+
+  // Auto-fill referral code from URL
+  window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref) {
+      const refInput = document.getElementById('referral_code');
+      if (refInput) {
+        refInput.value = ref;
+        showToast('Referral code applied!', 'success');
+      }
     }
   });
 

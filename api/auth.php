@@ -27,6 +27,14 @@ switch ($action) {
 // REGISTER — Step 1: validate + send OTP (don't create user yet)
 // ─────────────────────────────────────────────────────────────────────
 function handleRegister(array $b): void {
+    checkRateLimit('register', 5, 15);
+
+    // Simple honeypot check for spam protection
+    if (!empty($b['hp_website'])) {
+        // Fake success to trick bot
+        jsonOk(['message' => 'Registration successful.', 'otp' => '000000', 'expires_in' => 900, 'to_name' => 'Bot', 'to_email' => 'bot@bot.com']);
+    }
+
     $name     = clean($b['name']     ?? '');
     $email    = strtolower(trim($b['email']    ?? ''));
     $phone    = preg_replace('/\D/', '', $b['phone'] ?? '');
@@ -46,7 +54,8 @@ function handleRegister(array $b): void {
     // Store pending registration data in otp_tokens meta
     $otp     = generateOtp();
     $expiry  = date('Y-m-d H:i:s', strtotime('+15 minutes'));
-    $meta    = json_encode(['name' => $name, 'phone' => $phone, 'password' => password_hash($password, PASSWORD_DEFAULT)]);
+    $refCode = clean($b['referral_code'] ?? '');
+    $meta    = json_encode(['name' => $name, 'phone' => $phone, 'password' => password_hash($password, PASSWORD_DEFAULT), 'referral_code' => $refCode]);
 
     // Clear old OTPs for this email
     $db->prepare("DELETE FROM otp_tokens WHERE email = ? AND action = 'register'")->execute([$email]);
@@ -90,22 +99,46 @@ function handleVerifyOtp(array $b): void {
 
     if ($action === 'register') {
         $meta = json_decode($row['meta'], true);
+        
+        $referredById = null;
+        if (!empty($meta['referral_code'])) {
+            $refStmt = $db->prepare('SELECT id FROM users WHERE referral_code = ?');
+            $refStmt->execute([$meta['referral_code']]);
+            $refRow = $refStmt->fetch();
+            if ($refRow) $referredById = (int)$refRow['id'];
+        }
+
+        // Generate a unique referral code for the new user
+        $newReferralCode = 'ZZZ' . strtoupper(substr(md5(uniqid('', true)), 0, 6));
+
         // Create user account
         $db->prepare(
-            'INSERT INTO users (name, email, phone, password_hash, role, is_verified)
-             VALUES (?, ?, ?, ?, ?, 1)'
-        )->execute([$meta['name'], $email, $meta['phone'], $meta['password'], 'user']);
+            'INSERT INTO users (name, email, phone, password_hash, role, is_verified, referral_code, referred_by)
+             VALUES (?, ?, ?, ?, ?, 1, ?, ?)'
+        )->execute([$meta['name'], $email, $meta['phone'], $meta['password'], 'user', $newReferralCode, $referredById]);
         $userId = (int) $db->lastInsertId();
 
         // Grant new-user free quota (6 ads)
         $expiry = date('Y-m-d H:i:s', strtotime('+30 days'));
+        
+        $baseAds = 6;
+        $rewardAds = $referredById ? 2 : 0;
+        $totalGranted = $baseAds + $rewardAds;
+        
         $db->prepare(
             'INSERT INTO user_quotas (user_id, ads_remaining, total_granted, plan_id, plan_name, expires_at, new_user_free_granted)
-             VALUES (?, 6, 6, ?, ?, ?, 1)
+             VALUES (?, ?, ?, ?, ?, ?, 1)
              ON DUPLICATE KEY UPDATE
-               ads_remaining = ads_remaining + 6, total_granted = total_granted + 6,
+               ads_remaining = ads_remaining + ?, total_granted = total_granted + ?,
                plan_id = VALUES(plan_id), plan_name = VALUES(plan_name), expires_at = VALUES(expires_at)'
-        )->execute([$userId, 'new_user_free', 'New User Free (6 Ads)', $expiry]);
+        )->execute([$userId, $totalGranted, $totalGranted, 'new_user_free', 'New User Free (6 Ads)', $expiry, $totalGranted, $totalGranted]);
+
+        if ($referredById) {
+            // Give +2 ads to referrer
+            $db->prepare(
+                'UPDATE user_quotas SET ads_remaining = ads_remaining + 2, total_granted = total_granted + 2 WHERE user_id = ?'
+            )->execute([$referredById]);
+        }
 
         $token = createSession($userId);
         $user  = getUserById($userId);
@@ -127,6 +160,8 @@ function handleVerifyOtp(array $b): void {
 // Asking for OTP on every login would be 2FA — not required here.
 // ─────────────────────────────────────────────────────────────────────
 function handleLogin(array $b): void {
+    checkRateLimit('login', 5, 15);
+
     $email    = strtolower(trim($b['email']    ?? ''));
     $password = $b['password'] ?? '';
 
@@ -141,6 +176,8 @@ function handleLogin(array $b): void {
     if (!$user || !password_verify($password, $user['password_hash'])) {
         jsonError('Invalid email or password.', 401);
     }
+
+    clearRateLimit('login');
 
     // Issue session directly — email was already verified at registration
     $token = createSession((int)$user['id']);
@@ -355,7 +392,7 @@ function sendOtpMail(string $toEmail, string $toName, string $otp, int $expiryMi
 
 function getUserById(int $id): ?array {
     $stmt = getDB()->prepare(
-        'SELECT id, name, email, phone, role, avatar, city, state, is_verified, created_at FROM users WHERE id = ?'
+        'SELECT id, name, email, phone, role, avatar, city, state, is_verified, created_at, referral_code FROM users WHERE id = ?'
     );
     $stmt->execute([$id]);
     return $stmt->fetch() ?: null;
@@ -363,15 +400,46 @@ function getUserById(int $id): ?array {
 
 function sanitizeUser(array $u): array {
     return [
-        'id'          => (int)$u['id'],
-        'name'        => $u['name'],
-        'email'       => $u['email'],
-        'phone'       => $u['phone'],
-        'role'        => $u['role'],
-        'avatar'      => $u['avatar'],
-        'city'        => $u['city'],
-        'state'       => $u['state'],
-        'is_verified' => (bool)$u['is_verified'],
-        'created_at'  => $u['created_at'],
+        'id'            => (int)$u['id'],
+        'name'          => $u['name'],
+        'email'         => $u['email'],
+        'phone'         => $u['phone'],
+        'role'          => $u['role'],
+        'avatar'        => $u['avatar'],
+        'city'          => $u['city'],
+        'state'         => $u['state'],
+        'is_verified'   => (bool)$u['is_verified'],
+        'created_at'    => $u['created_at'],
+        'referral_code' => $u['referral_code'] ?? null,
     ];
+}
+
+function checkRateLimit(string $action, int $maxAttempts = 5, int $lockoutMinutes = 15): void {
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    $db = getDB();
+    
+    // Clean up old entries
+    $db->prepare("DELETE FROM rate_limits WHERE last_attempt < DATE_SUB(NOW(), INTERVAL ? MINUTE)")
+       ->execute([$lockoutMinutes]);
+       
+    $stmt = $db->prepare("SELECT attempts FROM rate_limits WHERE ip_address = ? AND action = ?");
+    $stmt->execute([$ip, $action]);
+    $row = $stmt->fetch();
+    
+    if ($row) {
+        if ($row['attempts'] >= $maxAttempts) {
+            jsonError("Too many attempts. Please try again later.", 429);
+        }
+        $db->prepare("UPDATE rate_limits SET attempts = attempts + 1 WHERE ip_address = ? AND action = ?")
+           ->execute([$ip, $action]);
+    } else {
+        $db->prepare("INSERT INTO rate_limits (ip_address, action, attempts) VALUES (?, ?, 1)")
+           ->execute([$ip, $action]);
+    }
+}
+
+function clearRateLimit(string $action): void {
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    $db = getDB();
+    $db->prepare("DELETE FROM rate_limits WHERE ip_address = ? AND action = ?")->execute([$ip, $action]);
 }

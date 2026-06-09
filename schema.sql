@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS `users` (
   `is_active`            TINYINT(1)    NOT NULL DEFAULT 1,
   `created_at`           DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`           DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `referral_code`        VARCHAR(20)   UNIQUE DEFAULT NULL,
+  `referred_by`          INT UNSIGNED  DEFAULT NULL,
   UNIQUE KEY `uq_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -163,3 +165,23 @@ CREATE TABLE IF NOT EXISTS `user_quotas` (
 INSERT INTO `user_quotas` (`user_id`, `ads_remaining`, `total_granted`, `plan_id`, `plan_name`)
 SELECT id, 9999, 9999, 'admin_unlimited', 'Admin Unlimited'
 FROM `users` WHERE `email` = 'admin@zipzapzoi.com';
+-- Create reviews table
+CREATE TABLE IF NOT EXISTS `reviews` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `seller_id` INT UNSIGNED NOT NULL,
+  `buyer_id` INT UNSIGNED NOT NULL,
+  `rating` TINYINT UNSIGNED NOT NULL CHECK(rating BETWEEN 1 AND 5),
+  `comment` TEXT DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`seller_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`buyer_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  UNIQUE KEY `uq_review` (`seller_id`, `buyer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS rate_limits (
+    ip_address VARCHAR(45) NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    attempts INT DEFAULT 1,
+    last_attempt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (ip_address, action)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

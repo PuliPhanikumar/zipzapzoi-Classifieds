@@ -1,33 +1,4 @@
 User-agent: *
 Allow: /
 
-# Public-facing pages
-Allow: /classifieds.html
-Allow: /SearchResult.html
-Allow: /Listing Detail.html
-Allow: /Classifieds LandingPage.html
-Allow: /Classifieds Plans.html
-Allow: /Post Listing.html
-Allow: /profile.html
-Allow: /help.html
-Allow: /legal.html
-Allow: /index.html
-Allow: /dashboard.html
-
-# Disallow private/admin/auth pages from indexing
-Disallow: /AdminConsoleV2.html
-Disallow: /Seller Dashboard.html
-Disallow: /favorites.html
-Disallow: /Inbox.html
-Disallow: /Payment.html
-Disallow: /Login Page.html
-Disallow: /User Registration.html
-Disallow: /forgot password.html
-Disallow: /reset-password.html
-Disallow: /api/
-
-# Disallow source/backend files
-Disallow: /js/
-Disallow: /scratch/
-
-Sitemap: https://zipzapzoi.com/sitemap.xml
+Sitemap: https://www.zipzapzoi.com/sitemap.xml

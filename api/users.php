@@ -117,6 +117,7 @@ function handleReport(): void {
     $b    = getBody();
 
     $reportedId = (int)($b['reportedBy'] ?? $b['reported_user_id'] ?? 0);
+    $listingId  = (int)($b['listing_id'] ?? 0);
     $reason     = clean($b['reason']  ?? 'Other');
     $details    = clean($b['details'] ?? '');
     $db         = getDB();
@@ -127,6 +128,7 @@ function handleReport(): void {
                 id              INT AUTO_INCREMENT PRIMARY KEY,
                 reported_by     INT NOT NULL,
                 reported_user   INT,
+                listing_id      INT,
                 reason          VARCHAR(200),
                 details         TEXT,
                 status          VARCHAR(50) DEFAULT \'pending\',
@@ -134,8 +136,8 @@ function handleReport(): void {
             )'
         );
         $db->prepare(
-            'INSERT INTO user_reports (reported_by, reported_user, reason, details) VALUES (?, ?, ?, ?)'
-        )->execute([(int)$user['id'], $reportedId ?: null, $reason, $details]);
+            'INSERT INTO user_reports (reported_by, reported_user, listing_id, reason, details) VALUES (?, ?, ?, ?, ?)'
+        )->execute([(int)$user['id'], $reportedId ?: null, $listingId ?: null, $reason, $details]);
     } catch (\Exception $e) {
         error_log('user_reports error: ' . $e->getMessage());
     }

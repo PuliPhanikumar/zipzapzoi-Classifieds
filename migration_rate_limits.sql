@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS rate_limits (
+    ip_address VARCHAR(45) NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    attempts INT DEFAULT 1,
+    last_attempt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (ip_address, action)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
