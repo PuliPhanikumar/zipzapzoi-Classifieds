@@ -175,7 +175,7 @@ function getOne(int $id): void {
     // Similar listings
     $sim = $db->prepare(
         'SELECT id, title, price, images, location_city FROM listings
-         WHERE category = ? AND id != ? AND status = ? LIMIT 6'
+         WHERE category = ? AND id != ? AND status = ? AND (expires_at IS NULL OR expires_at > NOW()) LIMIT 6'
     );
     $sim->execute([$row['category'], $id, 'active']);
     $similar = $sim->fetchAll();
@@ -313,7 +313,8 @@ function createListing(): void {
     // Charity posts go to pending_review; others too (admin approval required)
     $status    = 'pending_review';
 
-    $expires = date('Y-m-d H:i:s', strtotime('+30 days'));
+    $expiresDays = $isCharity ? 10 : 30;
+    $expires = date('Y-m-d H:i:s', strtotime("+{$expiresDays} days"));
     $db->prepare(
         'INSERT INTO listings
          (user_id, title, description, category, subcategory, price, price_type,
