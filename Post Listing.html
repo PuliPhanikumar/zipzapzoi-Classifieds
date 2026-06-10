@@ -574,13 +574,10 @@
       // Show quota bar
       if (quotaBar) {
         const cUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-        if (cUser && window.ZZZ && window.ZZZ.Plans) {
-          const q = window.ZZZ.Plans.getUserQuota(cUser.id);
-          if (q) {
-            quotaBar.classList.remove('hidden');
-            document.getElementById('quotaStatusText').textContent =
-              `You have ${q.adsRemaining} ad${q.adsRemaining !== 1 ? 's' : ''} remaining (${q.planName || 'Free Plan'})`;
-          }
+        if (cUser && cUser.quota) {
+          quotaBar.classList.remove('hidden');
+          document.getElementById('quotaStatusText').textContent =
+            `You have ${cUser.quota.ads_remaining || 0} ad${(cUser.quota.ads_remaining || 0) !== 1 ? 's' : ''} remaining (${cUser.quota.plan_name || 'Free Plan'})`;
         }
       }
     }
