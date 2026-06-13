@@ -313,7 +313,7 @@ function createListing(): void {
     // Charity posts go to pending_review; others too (admin approval required)
     $status    = 'pending_review';
 
-    $expiresDays = $isCharity ? 10 : 30;
+    $expiresDays = $isCharity ? 12 : 30;  // Charity = 12 days (free service), Standard = 30 days
     $expires = date('Y-m-d H:i:s', strtotime("+{$expiresDays} days"));
     $db->prepare(
         'INSERT INTO listings
