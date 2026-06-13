@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -206,17 +206,21 @@
       }
 
       async function removeFav(id) {
-        if (window.ZZZ && window.ZZZ.api) {
-          try {
-            await window.ZZZ.api.fetch(`/api/favorites.php?listing_id=${id}`, { method: 'DELETE' });
-          } catch(e) {
-            console.error('Remove fav error:', e);
+        try {
+          const res = await fetch(`/api/favorites.php?listing_id=${id}`, {
+            method: 'DELETE',
+            credentials: 'include'
+          });
+          const data = await res.json();
+          if (!data.success) {
+            console.error('Remove fav error:', data.error);
+            showToast('Could not remove from favorites.', 'error');
             return;
           }
-        } else {
-           // fallback local 
-           const favIds = JSON.parse(localStorage.getItem('zzz_favorites') || '[]').filter(f => f !== id);
-           localStorage.setItem('zzz_favorites', JSON.stringify(favIds));
+        } catch(e) {
+          console.error('Remove fav error:', e);
+          showToast('Network error. Try again.', 'error');
+          return;
         }
         const card = document.getElementById(`card-${id}`);
         if (card) {

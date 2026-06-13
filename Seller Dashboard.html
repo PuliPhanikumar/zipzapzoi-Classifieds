@@ -834,34 +834,135 @@
     }
     window.editItem = editItem;
 
-    // Promote / Boost
-    async function promoteItem(id) {
-      // Check if user already has a paid plan via the server data already loaded
-      const item = allMyListings.find(i => i.id === id);
+    // ── REAL Boost Flow via Razorpay ──────────────────────────────
+    let _boostListingId = null;
+    let _boostDays = 7;
+    const BOOST_PRICES = { 1: 29, 7: 149, 30: 399 };
+
+    function promoteItem(id) {
+      const item = allMyListings.find(i => String(i.id) === String(id));
       if (!item) return;
-      // All boosts now go through the backend
-      try {
-        const res  = await fetch(`/api/listings.php?id=${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ boosted: true })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast('\u26a1 Listing boosted to top!', 'success');
-          loadDashboard();
-        } else {
-          // Redirect to upgrade if server denies (quota/plan check)
-          if (confirm('\u26a1 Boost puts your listing at the top of search results.\n\nUpgrade to a paid plan to unlock boosting.\n\nGo to Plans & Pricing now?')) {
-            window.location.href = 'Classifieds Plans.html';
-          }
-        }
-      } catch(e) {
-        showToast('Network error. Try again.', 'error');
+      if (item.status !== 'active') {
+        showToast('Only active listings can be boosted.', 'error');
+        return;
       }
+      _boostListingId = id;
+      _boostDays = 7; // default
+      // Render boost modal listing info
+      document.getElementById('boostListingTitle').textContent = item.title;
+      document.getElementById('boostListingCat').textContent = item.category + ' · ' + (item.location_city || 'India');
+      selectBoostDuration(7);
+      const modal = document.getElementById('boostModal');
+      modal.classList.remove('hidden');
+      setTimeout(() => document.getElementById('boostModalContent').classList.remove('scale-95', 'opacity-0'), 10);
     }
     window.promoteItem = promoteItem;
+
+    function closeBoostModal() {
+      document.getElementById('boostModalContent').classList.add('scale-95', 'opacity-0');
+      setTimeout(() => document.getElementById('boostModal').classList.add('hidden'), 200);
+      _boostListingId = null;
+    }
+    window.closeBoostModal = closeBoostModal;
+
+    function selectBoostDuration(days) {
+      _boostDays = days;
+      [1, 7, 30].forEach(d => {
+        const btn = document.getElementById('boostOpt' + d);
+        if (!btn) return;
+        if (d === days) {
+          btn.className = 'flex flex-col items-center p-4 rounded-2xl border-2 border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 cursor-pointer transition-all';
+        } else {
+          btn.className = 'flex flex-col items-center p-4 rounded-2xl border-2 border-gray-200 dark:border-gray-700 cursor-pointer hover:border-yellow-300 transition-all';
+        }
+      });
+      const price = BOOST_PRICES[days];
+      const gst = Math.round(price * 0.18);
+      const total = price + gst;
+      document.getElementById('boostPriceSummary').textContent = `₹${price} + ₹${gst} GST = ₹${total} total`;
+      document.getElementById('boostPayBtn').textContent = `⚡ Boost for ₹${total}`;
+    }
+    window.selectBoostDuration = selectBoostDuration;
+
+    async function initiateBoostPayment() {
+      if (!_boostListingId || !_boostDays) return;
+      const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      if (!user) { showToast('Please log in first.', 'error'); return; }
+
+      const basePrice = BOOST_PRICES[_boostDays];
+      const gst       = Math.round(basePrice * 0.18);
+      const totalAmount = basePrice + gst;
+      const amountPaise = totalAmount * 100;
+
+      if (typeof Razorpay === 'undefined') {
+        showToast('Payment system loading… Please try again.', 'error');
+        return;
+      }
+
+      const rzpCfg = JSON.parse(localStorage.getItem('zzz_api_config') || '{}');
+      const rzpKey = rzpCfg.razorpayKey || 'rzp_live_SugQ3leLrB2iW6';
+
+      const btn = document.getElementById('boostPayBtn');
+      btn.disabled = true;
+      btn.textContent = 'Opening Payment…';
+
+      const options = {
+        key: rzpKey,
+        amount: amountPaise,
+        currency: 'INR',
+        name: 'ZipZapZoi — Ad Boost',
+        description: `${_boostDays}-Day Featured Boost · ₹${basePrice}`,
+        prefill: { name: user.name || '', email: user.email || '', contact: user.phone || '' },
+        notes: { listing_id: _boostListingId, boost_days: _boostDays },
+        theme: { color: '#f59e0b' },
+        handler: async function(response) {
+          // Payment succeeded — call boost API
+          try {
+            const res = await fetch('/api/boost.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                listing_id:          _boostListingId,
+                boost_days:          _boostDays,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id:   response.razorpay_order_id,
+                razorpay_signature:  response.razorpay_signature,
+              })
+            });
+            const data = await res.json();
+            if (data.success) {
+              closeBoostModal();
+              showToast(data.data?.message || '⚡ Listing Boosted!', 'success');
+              loadDashboard();
+            } else {
+              showToast(data.error || 'Boost verification failed. Contact support.', 'error');
+            }
+          } catch(e) {
+            showToast('Network error verifying boost payment.', 'error');
+          }
+          btn.disabled = false;
+          btn.textContent = `⚡ Boost for ₹${totalAmount}`;
+        },
+        modal: {
+          ondismiss: function() {
+            btn.disabled = false;
+            btn.textContent = `⚡ Boost for ₹${totalAmount}`;
+            showToast('Payment cancelled.', 'error');
+          }
+        }
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.on('payment.failed', function(r) {
+        showToast('Payment failed: ' + (r.error.description || 'Please try again.'), 'error');
+        btn.disabled = false;
+        btn.textContent = `⚡ Boost for ₹${totalAmount}`;
+      });
+      rzp.open();
+    }
+    window.initiateBoostPayment = initiateBoostPayment;
+
 
     // Quota-Aware Post
     window.quotaAwarePost = function() {
@@ -1096,5 +1197,100 @@
     });
 
   </script>
+
+<!-- ══════════════════════════════════════════════
+     BOOST AD MODAL
+══════════════════════════════════════════════ -->
+<div id="boostModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center p-4">
+  <div id="boostModalContent"
+       class="w-full max-w-md bg-white dark:bg-card-dark rounded-3xl shadow-2xl overflow-hidden transform scale-95 opacity-0 transition-all duration-200">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-yellow-400 to-orange-400 p-6 relative">
+      <button onclick="closeBoostModal()" class="absolute top-4 right-4 text-white/80 hover:text-white transition-colors">
+        <span class="material-symbols-outlined text-[26px]">close</span>
+      </button>
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-white text-4xl">bolt</span>
+        <div>
+          <h3 class="text-xl font-black text-white">Boost Your Ad</h3>
+          <p class="text-yellow-100 text-sm">Appear at the top of search results</p>
+        </div>
+      </div>
+      <!-- Listing info -->
+      <div class="mt-4 bg-white/20 backdrop-blur-sm rounded-xl p-3">
+        <p id="boostListingTitle" class="font-black text-white text-sm truncate">Listing Title</p>
+        <p id="boostListingCat" class="text-yellow-100 text-xs mt-0.5">Category · City</p>
+      </div>
+    </div>
+
+    <div class="p-6 space-y-5">
+      <!-- Duration Picker -->
+      <div>
+        <p class="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Choose Boost Duration</p>
+        <div class="grid grid-cols-3 gap-3">
+          <div id="boostOpt1" onclick="selectBoostDuration(1)"
+               class="flex flex-col items-center p-4 rounded-2xl border-2 border-gray-200 dark:border-gray-700 cursor-pointer hover:border-yellow-300 transition-all">
+            <span class="text-2xl font-black text-gray-900 dark:text-white">₹29</span>
+            <span class="text-xs text-gray-500 mt-1 font-bold">1 Day</span>
+          </div>
+          <div id="boostOpt7" onclick="selectBoostDuration(7)"
+               class="flex flex-col items-center p-4 rounded-2xl border-2 border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 cursor-pointer transition-all">
+            <span class="text-[10px] font-black text-yellow-600 dark:text-yellow-400 uppercase mb-1">Best</span>
+            <span class="text-2xl font-black text-gray-900 dark:text-white">₹149</span>
+            <span class="text-xs text-gray-500 mt-1 font-bold">7 Days</span>
+          </div>
+          <div id="boostOpt30" onclick="selectBoostDuration(30)"
+               class="flex flex-col items-center p-4 rounded-2xl border-2 border-gray-200 dark:border-gray-700 cursor-pointer hover:border-yellow-300 transition-all">
+            <span class="text-2xl font-black text-gray-900 dark:text-white">₹399</span>
+            <span class="text-xs text-gray-500 mt-1 font-bold">30 Days</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Price Summary -->
+      <div class="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-xs text-gray-400 dark:text-gray-500 font-bold">Total (incl. 18% GST)</p>
+          <p id="boostPriceSummary" class="text-sm font-black text-gray-700 dark:text-white">₹149 + ₹27 GST = ₹176 total</p>
+        </div>
+        <span class="material-symbols-outlined text-yellow-400 text-3xl">receipt_long</span>
+      </div>
+
+      <!-- What you get -->
+      <div class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-yellow-500 text-[18px]">check_circle</span>
+          Listing appears at the <strong>top of all search results</strong>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-yellow-500 text-[18px]">check_circle</span>
+          <strong>⚡ Boosted</strong> badge on your listing card
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-yellow-500 text-[18px]">check_circle</span>
+          10x more views, <strong>more enquiries</strong>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-yellow-500 text-[18px]">check_circle</span>
+          Secure payment via <strong>Razorpay</strong>
+        </div>
+      </div>
+
+      <!-- Pay Button -->
+      <button id="boostPayBtn" onclick="initiateBoostPayment()"
+              class="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-white font-black py-4 rounded-2xl shadow-lg transition-all active:scale-[0.98] text-lg flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+        ⚡ Boost for ₹176
+      </button>
+
+      <p class="text-center text-xs text-gray-400">
+        <span class="material-symbols-outlined text-[12px] text-green-500">verified_user</span>
+        100% Secure · Powered by Razorpay
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Razorpay SDK (needed for Dashboard boost flow) -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </body>
 </html>

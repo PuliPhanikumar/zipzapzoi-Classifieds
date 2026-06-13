@@ -163,19 +163,19 @@
         <!-- Stat Card 1 -->
         <div class="group/stat text-center p-6 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-[2rem] transition-all duration-300 hover:-translate-y-2 border-2 border-amber-100 dark:border-amber-800/50">
           <div class="flex justify-center items-center gap-1 text-amber-500 mb-2 transform transition-transform group-hover/stat:scale-110 group-hover/stat:rotate-3">
-            <span class="text-4xl md:text-5xl font-black text-amber-700 dark:text-amber-400 tracking-tighter">4.8</span>
+            <span id="statRating" class="text-4xl md:text-5xl font-black text-amber-700 dark:text-amber-400 tracking-tighter">—</span>
           </div>
           <p class="text-xs md:text-[13px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-wider">Rating</p>
         </div>
         <!-- Stat Card 2 -->
         <div class="group/stat text-center p-6 bg-sky-50 dark:bg-sky-900/20 hover:bg-sky-100 dark:hover:bg-sky-900/30 rounded-[2rem] transition-all duration-300 hover:-translate-y-2 border-2 border-sky-100 dark:border-sky-800/50">
-          <p class="text-4xl md:text-5xl font-black text-sky-600 dark:text-sky-400 tracking-tighter mb-2 transform transition-transform group-hover/stat:scale-110 group-hover/stat:-rotate-3">98%</p>
-          <p class="text-xs md:text-[13px] font-black text-sky-500 dark:text-sky-500 uppercase tracking-wider">Response</p>
+          <p id="statReviews" class="text-4xl md:text-5xl font-black text-sky-600 dark:text-sky-400 tracking-tighter mb-2 transform transition-transform group-hover/stat:scale-110 group-hover/stat:-rotate-3">0</p>
+          <p class="text-xs md:text-[13px] font-black text-sky-500 dark:text-sky-500 uppercase tracking-wider">Reviews</p>
         </div>
         <!-- Stat Card 3 -->
         <div class="group/stat text-center p-6 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-[2rem] transition-all duration-300 hover:-translate-y-2 border-2 border-purple-100 dark:border-purple-800/50">
-          <p class="text-4xl md:text-5xl font-black text-purple-600 dark:text-purple-400 tracking-tighter mb-2 transform transition-transform group-hover/stat:scale-110 group-hover/stat:rotate-3">2<span class="text-xl md:text-2xl font-bold ml-1 text-purple-400">h</span></p>
-          <p class="text-xs md:text-[13px] font-black text-purple-500 dark:text-purple-500 uppercase tracking-wider">Reply Time</p>
+          <p id="statMemberSince" class="text-4xl md:text-5xl font-black text-purple-600 dark:text-purple-400 tracking-tighter mb-2 transform transition-transform group-hover/stat:scale-110 group-hover/stat:rotate-3">—</p>
+          <p class="text-xs md:text-[13px] font-black text-purple-500 dark:text-purple-500 uppercase tracking-wider">Member Since</p>
         </div>
         <!-- Stat Card 4 -->
         <div class="group/stat text-center p-6 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-[2rem] transition-all duration-300 hover:-translate-y-2 border-2 border-emerald-100 dark:border-emerald-800/50">
@@ -337,6 +337,12 @@ async function loadProfile() {
       isVerified = u.is_verified || u.verified;
       activeListingsCount = u.active_listings || 0;
       sellerAvatar = u.avatar || null;
+
+      // Member Since year
+      const memberSince = u.created_at ? new Date(u.created_at).getFullYear() : null;
+      if (memberSince && document.getElementById('statMemberSince')) {
+        document.getElementById('statMemberSince').textContent = memberSince;
+      }
       
       if (currentUser && currentUser.id == sellerId && u.referral_code) {
         document.getElementById('referralSection').classList.remove('hidden');
@@ -394,8 +400,8 @@ async function loadProfile() {
             <div class="p-6">
               <h3 class="font-black text-gray-800 dark:text-white truncate mb-2 text-xl group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">${item.title}</h3>
               <p class="text-emerald-500 dark:text-emerald-400 text-2xl font-black tracking-tight">&#8377; ${Number(item.price || 0).toLocaleString('en-IN')}</p>
-              <div class="text-sm text-gray-500 dark:text-gray-400 mt-4 flex items-center gap-1.5 font-bold bg-gray-50 dark:bg-gray-800/50 w-max px-3 py-1.5 rounded-xl border border-gray-100 dark:border-gray-700">
-                 <span class="material-symbols-outlined text-base text-emerald-400">location_on</span> ${item.city || item.location || 'India'}
+               <div class="text-sm text-gray-500 dark:text-gray-400 mt-4 flex items-center gap-1.5 font-bold bg-gray-50 dark:bg-gray-800/50 w-max px-3 py-1.5 rounded-xl border border-gray-100 dark:border-gray-700">
+                  <span class="material-symbols-outlined text-base text-emerald-400">location_on</span> ${item.location_city || item.location_state || item.location || 'India'}
               </div>
             </div>
           </a>`;
@@ -420,9 +426,12 @@ async function loadProfile() {
        const stats = revRes.data.stats;
        const reviews = revRes.data.reviews;
 
-       // Update overall rating UI
        if (stats.total > 0) {
-         document.querySelector('.group\\/stat .text-amber-700').textContent = stats.average.toFixed(1);
+         document.getElementById('statRating').textContent = parseFloat(stats.average).toFixed(1);
+         document.getElementById('statReviews').textContent = stats.total;
+       } else {
+         document.getElementById('statRating').textContent = 'New';
+         document.getElementById('statReviews').textContent = '0';
        }
 
        if (reviews.length > 0) {
@@ -442,7 +451,7 @@ async function loadProfile() {
                    <span class="text-xs text-gray-400">${new Date(r.created_at).toLocaleDateString()}</span>
                  </div>
                  <div class="text-yellow-400 text-sm tracking-widest my-1">${starsHtml}</div>
-                 <p class="text-gray-600 dark:text-gray-300 mt-2 text-sm leading-relaxed">${r.comment || ''}</p>
+              <p class="text-gray-600 dark:text-gray-300 mt-2 text-sm leading-relaxed">${r.review_text || r.comment || ''}</p>
                </div>
              </div>`;
           }).join('');

@@ -51,6 +51,11 @@ function handleRegister(array $b): void {
     $exists->execute([$email]);
     if ($exists->fetch()) jsonError('An account with this email already exists.');
 
+    // ── Block duplicate phone — one free trial per mobile number ──
+    $phoneExists = $db->prepare('SELECT id FROM users WHERE phone = ?');
+    $phoneExists->execute([$phone]);
+    if ($phoneExists->fetch()) jsonError('An account with this mobile number already exists. Each mobile number can only have one account.');
+
     // Store pending registration data in otp_tokens meta
     $otp     = generateOtp();
     $expiry  = date('Y-m-d H:i:s', strtotime('+15 minutes'));
@@ -131,7 +136,7 @@ function handleVerifyOtp(array $b): void {
              ON DUPLICATE KEY UPDATE
                ads_remaining = ads_remaining + ?, total_granted = total_granted + ?,
                plan_id = VALUES(plan_id), plan_name = VALUES(plan_name), expires_at = VALUES(expires_at)'
-        )->execute([$userId, $totalGranted, $totalGranted, 'new_user_free', 'New User Free (6 Ads)', $expiry, $totalGranted, $totalGranted]);
+        )->execute([$userId, $totalGranted, $totalGranted, 'new_user_free', 'New User Free', $expiry, $totalGranted, $totalGranted]);
 
         if ($referredById) {
             // Give +2 ads to referrer

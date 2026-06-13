@@ -105,11 +105,12 @@ function getAll(): void {
     $whereSQL = implode(' AND ', $where);
     $sql = "SELECT l.*, u.name AS seller_name, u.avatar AS seller_avatar,
                    u.city AS seller_city, u.phone AS seller_phone,
-                   (SELECT COUNT(*) FROM favorites f WHERE f.listing_id = l.id) AS favorite_count
+                   (SELECT COUNT(*) FROM favorites f WHERE f.listing_id = l.id) AS favorite_count,
+                   (l.boosted = 1 AND l.boosted_until > NOW()) AS is_boosted_active
             FROM listings l
             JOIN users u ON u.id = l.user_id
             WHERE {$whereSQL}
-            ORDER BY {$sort}
+            ORDER BY is_boosted_active DESC, {$sort}
             LIMIT :limit OFFSET :offset";
 
     $stmt = $db->prepare($sql);
@@ -363,12 +364,24 @@ function updateListing(int $id): void {
     $db   = getDB();
 
     // Check ownership (or admin)
-    $stmt = $db->prepare('SELECT user_id FROM listings WHERE id = ?');
+    $stmt = $db->prepare('SELECT user_id, status, expires_at FROM listings WHERE id = ?');
     $stmt->execute([$id]);
     $listing = $stmt->fetch();
     if (!$listing) jsonError('Listing not found.', 404);
     if ((int)$listing['user_id'] !== (int)$user['id'] && !in_array($user['role'], ['admin','super_admin'])) {
         jsonError('You can only edit your own listings.', 403);
+    }
+
+    // ── Security: block re-activating an expired listing via status field ──
+    // Only admins can force-reactivate; regular users must renew via renewal.php
+    if (!in_array($user['role'], ['admin','super_admin'])) {
+        $requestedStatus = $b['status'] ?? null;
+        if ($requestedStatus === 'active') {
+            $expiresAt = $listing['expires_at'] ? strtotime($listing['expires_at']) : 0;
+            if ($expiresAt > 0 && $expiresAt < time()) {
+                jsonError('This listing has expired. Please renew it to make it active again.', 403);
+            }
+        }
     }
 
     $uid = (int)$user['id'];
@@ -405,7 +418,7 @@ function updateListing(int $id): void {
 
     // Build dynamic SET
     $allowed = ['title','description','category','subcategory','price','price_type',
-                'location_city','location_state','location_area','images','fields','status'];
+                'location_city','location_state','location_area','images','fields','status','boosted'];
     $sets = []; $params = [];
     foreach ($allowed as $field) {
         if (!array_key_exists($field, $b)) continue;

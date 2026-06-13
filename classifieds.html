@@ -553,11 +553,15 @@
                     ${l.category}
                   </div>
 
+                  <!-- ⚡ Boosted Badge -->
+                  ${l.is_boosted_active ? `<div class="absolute top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg flex items-center gap-1 animate-pulse card-image-wrap">⚡ Featured</div>` : ''}
+
                   <!-- Favorite Button -->
                   <button onclick="event.stopPropagation(); toggleFav('${l.id}', this)" class="fav-btn absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center card-image-wrap ${isFav ? 'active' : ''}">
                     <span class="material-symbols-outlined text-xl">favorite</span>
                   </button>
                 </div>
+
 
                 <!-- Details Area -->
                 <div class="p-6">
