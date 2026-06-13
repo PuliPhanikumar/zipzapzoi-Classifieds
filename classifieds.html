@@ -114,6 +114,15 @@
       @keyframes popIn { from { opacity:0; transform: scale(0.9) translateY(20px); } to { opacity:1; transform: scale(1) translateY(0); } }
       .animate-pop { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     </style>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HVTZDKTMJ9"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-HVTZDKTMJ9');
+    </script>
 </head>
 <body class="font-display min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
     

@@ -108,6 +108,15 @@
       #lbNext  { right:12px; top:50%; transform:translateY(-50%); }
       #lbCounter { position:absolute; bottom:16px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,0.7); font-size:13px; font-weight:700; letter-spacing:.05em; }
   </style>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HVTZDKTMJ9"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-HVTZDKTMJ9');
+    </script>
 </head>
 <body class="font-display min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
     
@@ -269,6 +278,45 @@
 
       </section>
     </main>
+
+    <!-- ─── REPORT MODAL ───────────────────────────────────────────────── -->
+    <div id="reportModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-white dark:bg-card-dark rounded-3xl shadow-2xl overflow-hidden">
+        <div class="bg-gradient-to-r from-red-500 to-orange-500 p-5 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-white text-3xl">flag</span>
+            <div>
+              <h3 class="text-lg font-black text-white">Report Listing</h3>
+              <p class="text-red-100 text-xs">Help keep ZipZapZoi safe</p>
+            </div>
+          </div>
+          <button onclick="closeReportModal()" class="text-white/80 hover:text-white">
+            <span class="material-symbols-outlined text-2xl">close</span>
+          </button>
+        </div>
+        <div class="p-5">
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Reporting: <span id="reportListingTitle" class="font-bold text-gray-900 dark:text-white"></span>
+          </p>
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Reason for Report</label>
+          <select id="reportReasonSelect" class="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white mb-5 focus:ring-2 focus:ring-red-400 outline-none">
+            <option value="">Select a reason…</option>
+            <option>Scam / Fraud</option>
+            <option>Misleading Price</option>
+            <option>Duplicate Listing</option>
+            <option>Inappropriate Content</option>
+            <option>Wrong Category</option>
+            <option>Item Already Sold</option>
+            <option>Other</option>
+          </select>
+          <button id="reportSubmitBtn" onclick="submitReport()"
+            class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-3 rounded-2xl transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed">
+            Submit Report
+          </button>
+          <p class="text-center text-xs text-gray-400 mt-3">False reports may result in account suspension.</p>
+        </div>
+      </div>
+    </div>
 
     <!-- Make Offer Modal -->
     <div id="offerModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
@@ -556,6 +604,51 @@
       // ─── SHARE ──────────────────────────────────────────────────────────
       function shareListing() {
         navigator.clipboard.writeText(window.location.href).then(() => showToast('Link copied to clipboard!', 'success'));
+      }
+
+      // ─── REPORT LISTING ─────────────────────────────────────────────────
+      function reportListing() {
+        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if (!user) {
+          window.location.href = 'Login Page.html?redirect=' + encodeURIComponent('Listing Detail.html?id=' + currentListing.id);
+          return;
+        }
+        if (String(user.id) === String(currentListing.user_id)) {
+          showToast('You cannot report your own listing.', 'error');
+          return;
+        }
+        document.getElementById('reportListingTitle').textContent = currentListing.title || 'this listing';
+        document.getElementById('reportReasonSelect').value = '';
+        document.getElementById('reportModal').classList.remove('hidden');
+      }
+      function closeReportModal() {
+        document.getElementById('reportModal').classList.add('hidden');
+      }
+      async function submitReport() {
+        const reason = document.getElementById('reportReasonSelect').value;
+        if (!reason) { showToast('Please select a reason.', 'error'); return; }
+        const btn = document.getElementById('reportSubmitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Submitting…';
+        try {
+          const res  = await fetch('/api/reports.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ listing_id: currentListing.id, reason })
+          });
+          const data = await res.json();
+          if (data.success) {
+            closeReportModal();
+            showToast('✅ Report submitted. Our team will review within 24 hours.', 'success');
+          } else {
+            showToast(data.error || 'Could not submit report.', 'error');
+          }
+        } catch(e) {
+          showToast('Network error. Try again.', 'error');
+        }
+        btn.disabled = false;
+        btn.textContent = 'Submit Report';
       }
 
       // ——————————————————————————————————————————————————————————
