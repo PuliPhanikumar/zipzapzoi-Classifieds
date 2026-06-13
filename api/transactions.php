@@ -141,7 +141,7 @@ function recordTransaction(array $user): void {
                total_granted = total_granted + VALUES(total_granted),
                plan_id    = VALUES(plan_id),
                plan_name  = VALUES(plan_name),
-               expires_at = VALUES(expires_at)'
+               expires_at = GREATEST(IFNULL(expires_at, '2000-01-01'), VALUES(expires_at))'
         )->execute([(int)$user['id'], $ads, $ads, $planId, $planName, $expires]);
     }
 
