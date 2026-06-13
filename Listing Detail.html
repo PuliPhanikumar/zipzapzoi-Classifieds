@@ -155,6 +155,7 @@
           <div class="mb-6 flex justify-between items-start">
             <div>
               <span id="detailCategory" class="text-xs font-bold bg-primary/10 text-primary px-3 py-1 rounded-full uppercase tracking-wider mb-3 inline-block">Category</span>
+              <span id="detailBoostBadge" class="ml-2 text-xs font-black bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 rounded-full uppercase tracking-wider mb-3 inline-flex items-center gap-1 shadow-sm" style="display:none;">⚡ Featured</span>
               <h1 id="detailTitle" class="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white leading-tight mb-2">Loading...</h1>
               <div class="flex flex-wrap items-center gap-4 text-sm font-bold text-gray-500 dark:text-gray-400">
                 <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">location_on</span> <span id="detailLocation">Location</span></span>
@@ -408,6 +409,13 @@
         document.getElementById('detailPrice').textContent    =
           l.price_type === 'free' ? 'FREE' : '\u20b9' + parseFloat(l.price || 0).toLocaleString('en-IN');
 
+        // ⚡ Boosted badge
+        const boostBadgeEl = document.getElementById('detailBoostBadge');
+        if (boostBadgeEl) {
+          const isBoosted = l.boosted == 1 && l.boosted_until && new Date(l.boosted_until) > new Date();
+          boostBadgeEl.style.display = isBoosted ? 'inline-flex' : 'none';
+        }
+
         const locStr = [l.location_city, l.location_state].filter(Boolean).join(', ') || 'Local';
         document.getElementById('detailLocation').textContent = locStr;
         document.getElementById('detailTime').textContent     = timeAgo(l.created_at);
@@ -427,6 +435,7 @@
         }
         
         document.getElementById('detailDescription').textContent = l.description || '';
+
 
         // Seller
         document.getElementById('sellerName').textContent  = l.seller_name || 'Anonymous';

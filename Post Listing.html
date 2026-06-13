@@ -645,22 +645,62 @@
   
   fileInput.addEventListener('change', function() {
     photoPreview.innerHTML = '';
-    uploadedImages = []; // Clear previous
+    uploadedImages = [];
     const files = Array.from(this.files);
     const max = (currentCategory && currentCategory.photoLimit) ? currentCategory.photoLimit : 8;
-    
+    const MAX_BYTES  = 5 * 1024 * 1024;
+    const WARN_BYTES = 2 * 1024 * 1024;
+
+    const oldBanner = document.getElementById('imgSizeWarnBanner');
+    if (oldBanner) oldBanner.remove();
+
+    let oversized = 0, warned = 0;
+
     files.slice(0, max).forEach(file => {
+      if (file.size > MAX_BYTES) {
+        oversized++;
+        const div = document.createElement('div');
+        div.className = 'aspect-square rounded-lg border-2 border-red-400 bg-red-50 dark:bg-red-900/20 flex flex-col items-center justify-center text-center p-1';
+        div.innerHTML = `<span class="material-symbols-outlined text-red-500 text-2xl">broken_image</span>
+          <p class="text-red-600 font-black text-[9px] mt-1">${(file.size/1024/1024).toFixed(1)}MB</p>
+          <p class="text-red-400 text-[9px]">Too large!</p>`;
+        photoPreview.appendChild(div);
+        return;
+      }
       const reader = new FileReader();
       reader.onload = function(e) {
-        uploadedImages.push(e.target.result); // Save Base64
+        uploadedImages.push(e.target.result);
         const div = document.createElement('div');
         div.className = 'aspect-square rounded-lg bg-cover bg-center border border-gray-300 relative group overflow-hidden';
         div.style.backgroundImage = `url(${e.target.result})`;
-        div.innerHTML = `<div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white text-xs">Cover</div>`;
+        const badge = file.size > WARN_BYTES
+          ? `<div class="absolute bottom-0 inset-x-0 bg-orange-500/90 text-white text-[8px] font-black text-center py-0.5">⚠ ${(file.size/1024/1024).toFixed(1)}MB</div>`
+          : '';
+        div.innerHTML = `<div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white text-xs">Cover</div>${badge}`;
         photoPreview.appendChild(div);
-      }
+        if (file.size > WARN_BYTES) warned++;
+      };
       reader.readAsDataURL(file);
     });
+
+    setTimeout(() => {
+      if (oversized > 0 || warned > 0) {
+        const banner = document.createElement('div');
+        banner.id = 'imgSizeWarnBanner';
+        if (oversized > 0) {
+          banner.className = 'mt-2 bg-red-50 dark:bg-red-900/20 border border-red-300 rounded-xl p-3 flex items-start gap-2 text-sm';
+          banner.innerHTML = `<span class="material-symbols-outlined text-red-500 text-xl flex-shrink-0">error</span>
+            <div><p class="text-red-700 dark:text-red-400 font-black">${oversized} photo${oversized>1?'s':''} skipped — over 5MB limit</p>
+            <p class="text-red-500 text-xs mt-0.5">Compress free at <a href="https://squoosh.app" target="_blank" class="underline font-bold">squoosh.app</a> then re-upload.</p></div>`;
+        } else {
+          banner.className = 'mt-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-300 rounded-xl p-3 flex items-start gap-2 text-sm';
+          banner.innerHTML = `<span class="material-symbols-outlined text-orange-500 text-xl flex-shrink-0">warning</span>
+            <div><p class="text-orange-700 dark:text-orange-400 font-black">${warned} large photo${warned>1?'s':''} — may be slow on mobile</p>
+            <p class="text-orange-500 text-xs mt-0.5">Tip: Compress at <a href="https://squoosh.app" target="_blank" class="underline font-bold">squoosh.app</a> for faster uploads.</p></div>`;
+        }
+        photoPreview.after(banner);
+      }
+    }, 300);
   });
 
 
