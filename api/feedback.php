@@ -1,11 +1,12 @@
 <?php
+/**
+ * ZipZapZoi - Feedback API
+ */
 require_once 'config.php';
 
-header('Content-Type: application/json');
-
-// Ensure table exists
+// Auto-create table
 try {
-    $pdo->exec("
+    getDB()->exec("
         CREATE TABLE IF NOT EXISTS user_feedback (
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT NULL,
@@ -17,76 +18,61 @@ try {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ");
-} catch(PDOException $e) {
-    error_log("Failed to create user_feedback table: " . $e->getMessage());
-}
+} catch(PDOException $e) {}
 
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'POST') {
-    $data = json_decode(file_get_contents('php://input'), true);
+    $b = getBody();
     
-    $name = trim($data['name'] ?? '');
-    $email = trim($data['email'] ?? '');
-    $type = trim($data['type'] ?? 'General');
-    $message = trim($data['message'] ?? '');
-    $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
-
-    if (empty($name) || empty($email) || empty($message)) {
-        jsonError('Name, email, and message are required.');
+    $name = clean($b['name'] ?? '');
+    $email = clean($b['email'] ?? '');
+    $type = clean($b['type'] ?? 'General');
+    $message = clean($b['message'] ?? '');
+    
+    // Try to get user_id from token if provided
+    $userId = null;
+    $headers = getallheaders();
+    $auth = $headers['Authorization'] ?? '';
+    if ($auth && preg_match('/Bearer\s+(.*)$/i', $auth, $m)) {
+        $db = getDB();
+        $stmt = $db->prepare('SELECT user_id FROM sessions WHERE token=? AND expires_at > NOW()');
+        $stmt->execute([$m[1]]);
+        $userId = $stmt->fetchColumn() ?: null;
     }
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        jsonError('Invalid email address.');
-    }
+    if (!$name || !$email || !$message) jsonError('Name, email, and message are required.');
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) jsonError('Invalid email address.');
 
-    try {
-        $stmt = $pdo->prepare('INSERT INTO user_feedback (user_id, name, email, type, message) VALUES (?, ?, ?, ?, ?)');
-        $stmt->execute([$userId, $name, $email, $type, $message]);
-        jsonOk(['message' => 'Feedback submitted successfully. Thank you!']);
-    } catch(PDOException $e) {
-        error_log("Feedback Insert Error: " . $e->getMessage());
-        jsonError('Failed to submit feedback. Please try again later.');
-    }
+    $db = getDB();
+    $stmt = $db->prepare('INSERT INTO user_feedback (user_id, name, email, type, message) VALUES (?, ?, ?, ?, ?)');
+    $stmt->execute([$userId, $name, $email, $type, $message]);
+    
+    jsonOk(['message' => 'Feedback submitted successfully. Thank you!']);
 
 } elseif ($method === 'GET') {
-    // Admin only
-    requireAdmin();
-    
+    $admin = requireAdmin();
+    $db = getDB();
     $status = $_GET['status'] ?? 'all';
     
-    try {
-        if ($status === 'all') {
-            $stmt = $pdo->query("SELECT * FROM user_feedback ORDER BY created_at DESC");
-        } else {
-            $stmt = $pdo->prepare("SELECT * FROM user_feedback WHERE status = ? ORDER BY created_at DESC");
-            $stmt->execute([$status]);
-        }
-        $feedbacks = $stmt->fetchAll();
-        jsonOk(['feedbacks' => $feedbacks]);
-    } catch(PDOException $e) {
-        jsonError('Failed to fetch feedback.');
+    if ($status === 'all') {
+        $stmt = $db->query("SELECT * FROM user_feedback ORDER BY created_at DESC");
+    } else {
+        $stmt = $db->prepare("SELECT * FROM user_feedback WHERE status = ? ORDER BY created_at DESC");
+        $stmt->execute([$status]);
     }
+    jsonOk(['data' => $stmt->fetchAll()]);
 
 } elseif ($method === 'PUT') {
-    // Admin only
-    requireAdmin();
-    $data = json_decode(file_get_contents('php://input'), true);
+    $admin = requireAdmin();
+    $b = getBody();
+    $id = $b['id'] ?? null;
+    $status = $b['status'] ?? null;
     
-    $id = $data['id'] ?? null;
-    $status = $data['status'] ?? null;
+    if (!$id || !in_array($status, ['unread', 'read', 'resolved'])) jsonError('Invalid ID or status.');
     
-    if (!$id || !in_array($status, ['unread', 'read', 'resolved'])) {
-        jsonError('Invalid ID or status.');
-    }
-    
-    try {
-        $stmt = $pdo->prepare("UPDATE user_feedback SET status = ? WHERE id = ?");
-        $stmt->execute([$status, $id]);
-        jsonOk(['message' => 'Feedback status updated.']);
-    } catch(PDOException $e) {
-        jsonError('Failed to update feedback.');
-    }
+    getDB()->prepare("UPDATE user_feedback SET status = ? WHERE id = ?")->execute([$status, $id]);
+    jsonOk(['message' => 'Feedback status updated.']);
 } else {
-    jsonError('Method not allowed.');
+    jsonError('Method not allowed', 405);
 }
