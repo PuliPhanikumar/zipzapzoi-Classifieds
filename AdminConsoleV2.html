@@ -1653,7 +1653,7 @@ async function resolveTicket(id) {
 async function loadCharityQueue() {
   const q = document.getElementById('charitySearch')?.value||'';
   const f = document.getElementById('charityFilter')?.value||'';
-  const data = await apiGet(`/api/admin/listings.php?charity=1&search=${encodeURIComponent(q)}&status=${encodeURIComponent(f)}`);
+  const data = await apiGet(`/api/admin/listings.php?type=charity&search=${encodeURIComponent(q)}&status=${encodeURIComponent(f)}`);
   const tbody = document.getElementById('charityQueueBody');
   if (!tbody) return;
   const all = data?.data||[];
