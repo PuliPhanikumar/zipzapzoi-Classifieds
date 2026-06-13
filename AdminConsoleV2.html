@@ -441,10 +441,13 @@
     <div id="tab-moderation" class="tab-panel">
       <div class="grid-2">
         <div class="card" style="padding:0;overflow:hidden;">
-          <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;background:#f8fafc;font-weight:800;color:#dc2626;">🚩 Active Reports Queue</div>
-          <div style="max-height:350px;overflow-y:auto;">
-            <table class="tbl"><thead><tr><th>Listing</th><th>Reporter</th><th>Reason</th><th>Actions</th></tr></thead>
-            <tbody id="reportsTableBody"><tr><td colspan="4"><div class="empty-state">Loading...</div></td></tr></tbody></table>
+          <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;background:#f8fafc;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-weight:800;color:#dc2626;">🚩 Active Reports Queue</span>
+            <button onclick="loadReports()" class="btn btn-ghost btn-sm"><span class="material-symbols-outlined" style="font-size:14px;">refresh</span> Refresh</button>
+          </div>
+          <div style="max-height:400px;overflow-y:auto;">
+            <table class="tbl"><thead><tr><th>Listing</th><th>Reporter</th><th>Reason</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+            <tbody id="reportsTableBody"><tr><td colspan="5"><div class="empty-state">Loading...</div></td></tr></tbody></table>
           </div>
         </div>
         <div class="card" style="padding:0;overflow:hidden;">
@@ -1506,42 +1509,108 @@ async function grantQuota(uid) {
 // ─────────────────────────────────────────────────────────
 //  MODERATION
 // ─────────────────────────────────────────────────────────
+let _reportsCache = null;
+
 async function loadReports() {
   const data = await apiGet('/api/admin/reports.php');
+  _reportsCache = data;
   const tbody = document.getElementById('reportsTableBody');
   if (!tbody) return;
-  if (!data?.success||!data.data?.length) { tbody.innerHTML='<tr><td colspan="4"><div class="empty-state">No active reports. All clear!</div></td></tr>'; return; }
-  tbody.innerHTML = data.data.map(r=>`<tr>
-    <td style="font-size:12px;max-width:180px;">${esc(r.listing_title||r.listing_id||'')}</td>
-    <td style="font-size:12px;">${esc(r.reporter_name||r.reporter_email||'')}</td>
-    <td style="font-size:12px;">${esc(r.reason||'')}</td>
-    <td>
-      <button onclick="resolveReport(${r.id},'dismissed')" class="btn btn-ghost btn-sm">Dismiss</button>
-      <button onclick="resolveReport(${r.id},'actioned')" class="btn btn-danger btn-sm">Remove Listing</button>
+
+  const reports = data?.data?.reports || [];
+  if (!reports.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><span class="material-symbols-outlined mi">verified</span>No pending reports — all clear!</div></td></tr>';
+    return;
+  }
+
+  // Filter to show only pending reports first
+  const pending  = reports.filter(r => r.status === 'pending');
+  const reviewed = reports.filter(r => r.status !== 'pending');
+  const sorted   = [...pending, ...reviewed];
+
+  tbody.innerHTML = sorted.map(r => {
+    const statusBadge = r.status === 'pending'
+      ? '<span class="badge badge-red">Pending</span>'
+      : r.status === 'reviewed'
+        ? '<span class="badge badge-blue">Reviewed</span>'
+        : '<span class="badge badge-gray">Dismissed</span>';
+    return `<tr>
+      <td>
+        <div style="font-weight:700;font-size:13px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(r.listing_title || 'Listing #'+r.listing_id)}</div>
+        <div style="font-size:11px;color:#94a3b8;">Seller: ${esc(r.seller_name||'—')} &nbsp;·&nbsp; #${r.listing_id}</div>
+      </td>
+      <td style="font-size:12px;">${esc(r.reporter_name||r.reporter_email||'—')}</td>
+      <td style="font-size:12px;max-width:160px;">${esc(r.reason||'No reason given')}</td>
+      <td>${statusBadge}</td>
+      <td style="text-align:right;white-space:nowrap;">
+        <a href="Listing Detail.html?id=${r.listing_id}" target="_blank" class="btn btn-ghost btn-sm">View</a>
+        ${r.status === 'pending' ? `
+        <button onclick="resolveReport(${r.id},'dismissed')" class="btn btn-ghost btn-sm">Dismiss</button>
+        <button onclick="resolveReport(${r.id},'reviewed', ${r.listing_id})" class="btn btn-danger btn-sm">Remove Ad</button>
+        ` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Also refresh abuse tracking from cached data
+  renderAbuseTable(data?.data?.abuse_tracking || []);
+}
+
+async function resolveReport(id, status, listingId) {
+  // Map 'actioned' → 'reviewed' for the API
+  const apiStatus = status === 'actioned' ? 'reviewed' : status;
+  const r = await apiPut('/api/admin/reports.php', {id, status: apiStatus});
+  if (!r?.success) { showToast(r?.error || 'Error updating report', 'error'); return; }
+
+  // If removing, also reject the listing on server
+  if (listingId && status === 'reviewed') {
+    const lr = await apiPut('/api/admin/listings.php', {id: listingId, status: 'rejected'});
+    if (lr?.success) {
+      showToast('Report actioned — listing removed!', 'success');
+      logAction('REPORT_REMOVE_LISTING', `Report #${id} → listing #${listingId} rejected`);
+    } else {
+      showToast('Report marked reviewed but listing removal failed.', 'warning');
+    }
+  } else {
+    showToast('Report dismissed.');
+  }
+  loadReports();
+}
+
+async function loadAbuseTracking() {
+  // Abuse data comes from the same endpoint — reuse cached or fetch fresh
+  const data = _reportsCache || await apiGet('/api/admin/reports.php');
+  renderAbuseTable(data?.data?.abuse_tracking || []);
+}
+
+function renderAbuseTable(abuse) {
+  const tbody = document.getElementById('abuseTableBody');
+  if (!tbody) return;
+  if (!abuse.length) {
+    tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state">No abuse detected.</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = abuse.map(u => `<tr>
+    <td><div style="font-weight:700;font-size:13px;">${esc(u.seller_name||'Unknown')}</div></td>
+    <td style="text-align:center;">
+      <span class="badge ${u.report_count >= 5 ? 'badge-red' : u.report_count >= 3 ? 'badge-yellow' : 'badge-gray'}">${u.report_count} reports</span>
+    </td>
+    <td style="text-align:right;">
+      <button onclick="viewSellerListings(${u.seller_id})" class="btn btn-ghost btn-sm">View Ads</button>
+      <button onclick="banUser(${u.seller_id})" class="btn btn-danger btn-sm">Ban Seller</button>
     </td>
   </tr>`).join('');
 }
-async function resolveReport(id, status) {
-  const r = await apiPut('/api/admin/reports.php', {id, status});
-  if (r?.success) { showToast('Report '+status+'!'); loadReports(); }
-  else showToast(r?.error||'Error','error');
+
+function viewSellerListings(sellerId) {
+  window.open('profile.html?id=' + sellerId, '_blank');
 }
-async function loadAbuseTracking() {
-  const data = await apiGet('/api/admin/reports.php?abuse=1');
-  const tbody = document.getElementById('abuseTableBody');
-  if (!tbody) return;
-  if (!data?.success||!data.data?.length) { tbody.innerHTML='<tr><td colspan="3"><div class="empty-state">No abuse detected.</div></td></tr>'; return; }
-  tbody.innerHTML = data.data.map(u=>`<tr>
-    <td>${esc(u.name||u.email)}</td>
-    <td style="text-align:center;font-weight:700;color:#dc2626;">${u.report_count}</td>
-    <td style="text-align:right;"><button onclick="banUser(${u.id})" class="btn btn-danger btn-sm">Ban User</button></td>
-  </tr>`).join('');
-}
+
 async function banUser(uid) {
-  confirmAction('Ban User','This will suspend this user permanently. Continue?',async()=>{
-    const r = await apiPut('/api/admin/users.php',{id:uid,action:'ban'});
-    if (r?.success) { showToast('User banned!','error'); loadAbuseTracking(); }
-    else showToast(r?.error||'Error','error');
+  confirmAction('Ban User', 'This will permanently suspend this user and hide their listings. Continue?', async () => {
+    const r = await apiPut('/api/admin/users.php', {id: uid, action: 'ban'});
+    if (r?.success) { showToast('User banned!', 'error'); logAction('BAN_USER', 'User ID: '+uid); loadAbuseTracking(); }
+    else showToast(r?.error || 'Error banning user', 'error');
   });
 }
 async function saveAIRules() {
