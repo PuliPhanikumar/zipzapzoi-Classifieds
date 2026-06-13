@@ -100,8 +100,9 @@ function updateUser(array $admin): void {
     switch ($act) {
         case 'ban':
             $db->prepare('UPDATE users SET is_active=0 WHERE id=?')->execute([$id]);
+            $db->prepare("UPDATE listings SET status='rejected' WHERE user_id=? AND status='active'")->execute([$id]);
             adminLog($admin, 'BAN_USER', "User ID: $id");
-            jsonOk(['message' => 'User banned.']);
+            jsonOk(['message' => 'User banned and active listings removed.']);
 
         case 'unban':
             $db->prepare('UPDATE users SET is_active=1 WHERE id=?')->execute([$id]);
