@@ -15,7 +15,7 @@
   <meta property="og:url" content="https://zipzapzoi.com/Post Listing.html"/>
   <meta property="og:title" content="Post a Free Ad — ZipZapZoi Classifieds"/>
   <meta property="og:description" content="Sell your items fast. Post a free classified ad on ZipZapZoi and reach local buyers across India."/>
-  <meta property="og:image" content="https://zipzapzoi.com/og-image.png"/>
+  <meta property="og:image" content="https://www.zipzapzoi.com/images/default-share.png"/>
   <meta name="robots" content="index, follow"/>
   <link rel="canonical" href="https://zipzapzoi.com/Post Listing.html"/>
   <title>ZipZapZoi - Post Your Ad</title>
@@ -492,10 +492,13 @@
   const photoLimitText = document.getElementById('photoLimitText');
   const finalSubmitBtn = document.getElementById('finalSubmitBtn');
   const confirmPostBtn = document.getElementById('confirmPostBtn');
+  const photoPreview = document.getElementById('photoPreview');
+  const fileInput = document.getElementById('fileInput');
 
   let currentCategory = null;
   let currentCategoryKey = null;
   let uploadedImages = []; // Array to store image data URLs
+  let selectedFilesArray = []; // Array to natively store selected File objects
 
   // --- 4. INITIALIZATION ---
   
@@ -648,14 +651,10 @@
     progressBar.style.width = '33%';
   });
 
-  // Photo Preview Logic
-  const fileInput = document.getElementById('fileInput');
-  const photoPreview = document.getElementById('photoPreview');
-  
-  fileInput.addEventListener('change', function() {
+  // --- 5.1 PHOTO RENDERER ---
+  function renderPhotos() {
     photoPreview.innerHTML = '';
     uploadedImages = [];
-    const files = Array.from(this.files);
     const max = (currentCategory && currentCategory.photoLimit) ? currentCategory.photoLimit : 8;
     const MAX_BYTES  = 5 * 1024 * 1024;
     const WARN_BYTES = 2 * 1024 * 1024;
@@ -665,27 +664,38 @@
 
     let oversized = 0, warned = 0;
 
-    files.slice(0, max).forEach(file => {
+    selectedFilesArray.forEach((file, index) => {
       if (file.size > MAX_BYTES) {
         oversized++;
         const div = document.createElement('div');
-        div.className = 'aspect-square rounded-lg border-2 border-red-400 bg-red-50 dark:bg-red-900/20 flex flex-col items-center justify-center text-center p-1';
+        div.className = 'aspect-square rounded-lg border-2 border-red-400 bg-red-50 dark:bg-red-900/20 flex flex-col items-center justify-center text-center p-1 relative';
         div.innerHTML = `<span class="material-symbols-outlined text-red-500 text-2xl">broken_image</span>
           <p class="text-red-600 font-black text-[9px] mt-1">${(file.size/1024/1024).toFixed(1)}MB</p>
-          <p class="text-red-400 text-[9px]">Too large!</p>`;
+          <p class="text-red-400 text-[9px]">Too large!</p>
+          <button type="button" onclick="window.removePhoto(${index})" class="absolute top-1 right-1 bg-white/80 dark:bg-black/50 rounded-full p-1 shadow-sm hover:text-red-500 transition-colors"><span class="material-symbols-outlined text-[14px]">delete</span></button>`;
         photoPreview.appendChild(div);
         return;
       }
       const reader = new FileReader();
       reader.onload = function(e) {
-        uploadedImages.push(e.target.result);
+        uploadedImages[index] = e.target.result;
         const div = document.createElement('div');
-        div.className = 'aspect-square rounded-lg bg-cover bg-center border border-gray-300 relative group overflow-hidden';
+        div.className = 'aspect-square rounded-lg bg-cover bg-center border border-gray-300 relative group overflow-hidden shadow-sm';
         div.style.backgroundImage = `url(${e.target.result})`;
         const badge = file.size > WARN_BYTES
-          ? `<div class="absolute bottom-0 inset-x-0 bg-orange-500/90 text-white text-[8px] font-black text-center py-0.5">⚠ ${(file.size/1024/1024).toFixed(1)}MB</div>`
+          ? `<div class="absolute bottom-0 inset-x-0 bg-orange-500/90 text-white text-[8px] font-black text-center py-0.5">⚠️ ${(file.size/1024/1024).toFixed(1)}MB</div>`
           : '';
-        div.innerHTML = `<div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white text-xs">Cover</div>${badge}`;
+          
+        let hoverControls = `<div class="absolute inset-0 bg-black/50 hidden group-hover:flex flex-col items-center justify-center text-white gap-2 transition-all">`;
+        if(index > 0) {
+            hoverControls += `<button type="button" onclick="window.makeCoverPhoto(${index})" class="text-[10px] font-bold bg-secondary/80 hover:bg-secondary px-2 py-1 rounded-full flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">star</span> Make Cover</button>`;
+        } else {
+            hoverControls += `<span class="text-[10px] font-bold bg-primary/80 px-2 py-1 rounded-full flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">check_circle</span> Cover</span>`;
+        }
+        hoverControls += `<button type="button" onclick="window.removePhoto(${index})" class="text-[10px] font-bold bg-red-500/80 hover:bg-red-500 px-2 py-1 rounded-full flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">delete</span> Delete</button>`;
+        hoverControls += `</div>`;
+          
+        div.innerHTML = `${hoverControls}${badge}`;
         photoPreview.appendChild(div);
         if (file.size > WARN_BYTES) warned++;
       };
@@ -710,6 +720,37 @@
         photoPreview.after(banner);
       }
     }, 300);
+  }
+
+  // Global functions so onclick can reach them
+  window.removePhoto = function(index) {
+      selectedFilesArray.splice(index, 1);
+      renderPhotos();
+  };
+  
+  window.makeCoverPhoto = function(index) {
+      const file = selectedFilesArray.splice(index, 1)[0];
+      selectedFilesArray.unshift(file);
+      renderPhotos();
+  };
+
+  fileInput.addEventListener('change', function() {
+    const newFiles = Array.from(this.files);
+    const max = (currentCategory && currentCategory.photoLimit) ? currentCategory.photoLimit : 8;
+    
+    // Add new files until we hit the max limit
+    for(let file of newFiles) {
+        if(selectedFilesArray.length < max) {
+            selectedFilesArray.push(file);
+        } else {
+            showToast('Maximum ' + max + ' photos allowed.', 'error');
+            break;
+        }
+    }
+    
+    // Clear input so selecting same file again triggers change event
+    fileInput.value = '';
+    renderPhotos();
   });
 
 
@@ -958,8 +999,7 @@
     try {
       // ── Step 1: Compress + Upload images ─────────────────────────────
       let imageUrls = [];
-      const fileInput = document.getElementById('fileInput');
-      const files = fileInput && fileInput.files ? Array.from(fileInput.files) : [];
+      const files = selectedFilesArray;
 
       if (files.length > 0) {
         // Client-side image compression (resize to max 1600px, 85% quality)
