@@ -20,6 +20,7 @@ switch ($action) {
     case 'reset_password':       handleResetPassword($body);     break;
     case 'request_sensitive_otp':handleSensitiveOtp($body);      break;
     case 'verify_sensitive_otp': handleVerifySensitiveOtp($body);break;
+    case 'update_fcm':           handleUpdateFcm($body);         break;
     default:                     jsonError('Unknown action', 400);
 }
 
@@ -32,7 +33,7 @@ function handleRegister(array $b): void {
     // Simple honeypot check for spam protection
     if (!empty($b['hp_website'])) {
         // Fake success to trick bot
-        jsonOk(['message' => 'Registration successful.', 'otp' => '000000', 'expires_in' => 900, 'to_name' => 'Bot', 'to_email' => 'bot@bot.com']);
+        jsonOk(['message' => 'Registration successful.', 'expires_in' => 900, 'to_name' => 'Bot', 'to_email' => 'bot@bot.com']);
     }
 
     $name     = clean($b['name']     ?? '');
@@ -73,7 +74,6 @@ function handleRegister(array $b): void {
 
     jsonOk([
         'message'    => 'OTP sent to your email.',
-        'otp'        => $otp,       // Also returned so browser can send via EmailJS as backup
         'expires_in' => 900,
         'to_name'    => $name,
         'to_email'   => $email,
@@ -114,7 +114,7 @@ function handleVerifyOtp(array $b): void {
         }
 
         // Generate a unique referral code for the new user
-        $newReferralCode = 'ZZZ' . strtoupper(substr(md5(uniqid('', true)), 0, 6));
+        $newReferralCode = 'ZZZ' . strtoupper(substr(bin2hex(random_bytes(16)), 0, 6));
 
         // Create user account
         $db->prepare(
@@ -123,7 +123,7 @@ function handleVerifyOtp(array $b): void {
         )->execute([$meta['name'], $email, $meta['phone'], $meta['password'], 'user', $newReferralCode, $referredById]);
         $userId = (int) $db->lastInsertId();
 
-        // Grant new-user free quota (6 ads)
+        // Grant new-user free quota (3 ads)
         $expiry = date('Y-m-d H:i:s', strtotime('+30 days'));
         
         $baseAds = 6;
@@ -297,9 +297,12 @@ function handleForgotPassword(array $b): void {
        ->execute([$user['id'], $token, $expiry]);
 
     $resetLink = 'https://www.zipzapzoi.com/reset-password.html?token=' . $token;
+    
+    // Send email server-side
+    sendPasswordResetMail($email, $user['name'], $resetLink);
+    
     jsonOk([
-        'message'    => 'Reset link generated.',
-        'reset_link' => $resetLink,     // Frontend sends this via EmailJS
+        'message'    => 'If that email exists, a reset link has been sent.',
         'to_name'    => $user['name'],
         'to_email'   => $email,
     ]);
@@ -341,7 +344,11 @@ function handleSensitiveOtp(array $b): void {
     $db->prepare("DELETE FROM otp_tokens WHERE email = ? AND action = 'sensitive_action'")->execute([$user['email']]);
     $db->prepare('INSERT INTO otp_tokens (email, otp_code, action, expires_at) VALUES (?, ?, ?, ?)')
        ->execute([$user['email'], $otp, 'sensitive_action', $expiry]);
-    jsonOk(['otp' => $otp, 'to_email' => $user['email'], 'to_name' => $user['name'], 'expires_in' => 600]);
+       
+    // Send email server-side
+    sendOtpMail($user['email'], $user['name'], $otp, 10);
+    
+    jsonOk(['to_email' => $user['email'], 'to_name' => $user['name'], 'expires_in' => 600]);
 }
 
 function handleVerifySensitiveOtp(array $b): void {
@@ -355,6 +362,24 @@ function handleVerifySensitiveOtp(array $b): void {
     if (!$row) jsonError('Invalid or expired OTP.');
     $db->prepare('UPDATE otp_tokens SET used = 1 WHERE id = ?')->execute([$row['id']]);
     jsonOk(['verified' => true]);
+}
+
+function handleUpdateFcm(array $b): void {
+    $user = requireAuth();
+    $token = trim($b['token'] ?? '');
+    if (!$token) jsonError('Token required');
+    $db = getDB();
+    try {
+        $db->prepare('UPDATE users SET fcm_token = ? WHERE id = ?')->execute([$token, $user['id']]);
+    } catch (Exception $e) {
+        // If column doesn't exist, ignore for now (migration script must be run by admin on hostinger DB)
+        if (strpos($e->getMessage(), 'Unknown column') !== false) {
+            // Ignore silently
+        } else {
+            throw $e;
+        }
+    }
+    jsonOk();
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -395,11 +420,36 @@ function sendOtpMail(string $toEmail, string $toName, string $otp, int $expiryMi
     @mail($toEmail, $subject, $body, $headers);
 }
 
+function sendPasswordResetMail(string $toEmail, string $toName, string $resetLink): void {
+    $subject = "ZipZapZoi - Password Reset Request";
+    $body = "
+<!DOCTYPE html>
+<html><body style='margin:0;padding:0;background:#f0f4f8;font-family:Arial,sans-serif;'>
+<div style='max-width:480px;margin:40px auto;background:#fff;border-radius:16px;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,0.08);'>
+  <div style='text-align:center;margin-bottom:32px;'>
+    <h1 style='color:#019863;margin:0;font-size:28px;'>ZipZapZoi</h1>
+  </div>
+  <p style='color:#374151;font-size:16px;margin:0 0 8px;'>Hello <strong>{$toName}</strong>,</p>
+  <p style='color:#374151;font-size:15px;margin:0 0 28px;'>Click the link below to reset your password:</p>
+  <div style='text-align:center;margin-bottom:28px;'>
+    <a href='{$resetLink}' style='background:#019863;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;display:inline-block;'>Reset Password</a>
+  </div>
+  <p style='color:#9ca3af;font-size:12px;text-align:center;margin:0;'>If you didn't request this, please ignore this email.</p>
+</div>
+</body></html>";
+    $headers  = "MIME-Version: 1.0\r\n";
+    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+    $headers .= "From: ZipZapZoi <noreply@zipzapzoi.com>\r\n";
+    $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
+
+    @mail($toEmail, $subject, $body, $headers);
+}
+
 function getUserById(int $id): ?array {
-    // Select * to prevent SQL errors if new columns (e.g. referral_code) are missing on the live server
     $stmt = getDB()->prepare('SELECT * FROM users WHERE id = ?');
     $stmt->execute([$id]);
-    return $stmt->fetch() ?: null;
+    $row = $stmt->fetch();
+    return $row ? sanitizeUser($row) : null;
 }
 
 function sanitizeUser(array $u): array {

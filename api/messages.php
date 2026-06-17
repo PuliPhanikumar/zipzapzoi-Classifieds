@@ -8,6 +8,7 @@
  * GET  /api/messages.php?action=unread_count → unread count
  */
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/fcm_helper.php';
 
 $user   = requireAuth();
 $method = $_SERVER['REQUEST_METHOD'];
@@ -90,10 +91,11 @@ function sendMessage(array $user): void {
     if ($toId === (int)$user['id']) jsonError('Cannot message yourself.');
 
     $db = getDB();
-    // Verify recipient exists
-    $chk = $db->prepare('SELECT id FROM users WHERE id = ? AND is_active = 1');
+    // Verify recipient exists and fetch fcm_token
+    $chk = $db->prepare('SELECT id, fcm_token FROM users WHERE id = ? AND is_active = 1');
     $chk->execute([$toId]);
-    if (!$chk->fetch()) jsonError('Recipient not found.', 404);
+    $recipient = $chk->fetch();
+    if (!$recipient) jsonError('Recipient not found.', 404);
 
     $db->prepare(
         'INSERT INTO messages (from_user_id, to_user_id, listing_id, subject, body)
@@ -102,8 +104,15 @@ function sendMessage(array $user): void {
         (int)$user['id'], $toId,
         !empty($b['listing_id']) ? (int)$b['listing_id'] : null,
         clean($b['subject'] ?? ''),
-        clean($body),
+        clean($body)
     ]);
+    
+    // Send Push Notification if FCM token exists
+    if (!empty($recipient['fcm_token'])) {
+        $senderName = $user['name'] ?: 'Someone';
+        sendFcmPush($recipient['fcm_token'], "New Message from $senderName", clean($body));
+    }
+
     jsonOk(['message' => 'Message sent.'], 201);
 }
 

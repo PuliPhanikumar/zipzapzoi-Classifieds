@@ -74,6 +74,10 @@ const API = (() => {
     /** Verify sensitive action OTP */
     verifySensitiveOtp: (otp) =>
       post('auth.php?action=verify_sensitive_otp', { otp }),
+
+    /** Sync FCM Push Token from Android App */
+    updateFcmToken: (token) =>
+      post('auth.php?action=update_fcm', { token }),
   };
 
   // ── Listings ──────────────────────────────────────────────────
@@ -206,6 +210,17 @@ window.API = API;
 // ── Auto-update unread badge using real API ───────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   if (!API.isLoggedIn()) return;
+  
+  // 1. Sync FCM Token from Android App if available
+  if (window.AndroidApp && typeof window.AndroidApp.getFcmToken === 'function') {
+    const fcmToken = window.AndroidApp.getFcmToken();
+    if (fcmToken && fcmToken.length > 5) {
+      // Sync without awaiting so it doesn't block UI
+      API.Auth.updateFcmToken(fcmToken).catch(console.error);
+    }
+  }
+
+  // 2. Fetch Unread Count
   try {
     const res = await API.Messages.unreadCount();
     if (res.success) {
