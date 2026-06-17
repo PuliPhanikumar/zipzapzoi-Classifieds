@@ -20,6 +20,7 @@ switch ($action) {
     case 'reset_password':       handleResetPassword($body);     break;
     case 'request_sensitive_otp':handleSensitiveOtp($body);      break;
     case 'verify_sensitive_otp': handleVerifySensitiveOtp($body);break;
+    case 'validate_reset_token': handleValidateResetToken();     break;
     case 'update_fcm':           handleUpdateFcm($body);         break;
     default:                     jsonError('Unknown action', 400);
 }
@@ -331,6 +332,26 @@ function handleResetPassword(array $b): void {
     // Invalidate all sessions for security
     $db->prepare('DELETE FROM sessions WHERE user_id = ?')->execute([$row['user_id']]);
     jsonOk(['message' => 'Password reset successfully. Please log in with your new password.']);
+}
+
+function handleValidateResetToken(): void {
+    $token = trim($_GET['token'] ?? '');
+    if (!$token) jsonError('Token missing');
+    $db  = getDB();
+    $now = date('Y-m-d H:i:s');
+    $stmt = $db->prepare('SELECT id, user_id FROM reset_tokens WHERE token = ? AND expires_at > ? AND used = 0');
+    $stmt->execute([$token, $now]);
+    $row = $stmt->fetch();
+    if (!$row) {
+        jsonError('Invalid or expired reset link. Please request a new one.');
+    }
+    
+    // Also fetch the user's email to display it securely
+    $uStmt = $db->prepare('SELECT email FROM users WHERE id = ?');
+    $uStmt->execute([$row['user_id']]);
+    $userRow = $uStmt->fetch();
+    
+    jsonOk(['valid' => true, 'email' => $userRow['email'] ?? '']);
 }
 
 // ─────────────────────────────────────────────────────────────────────
