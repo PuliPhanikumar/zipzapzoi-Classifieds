@@ -311,8 +311,15 @@ function createListing(): void {
                ? $b['price_type'] : 'fixed';
     $condition = in_array($b['condition'] ?? '', ['new','used','refurbished'])
                ? $b['condition'] : null;
-    // Charity posts go to pending_review; others too (admin approval required)
+    // Charity posts go to pending_review; others too (unless auto approve is on)
     $status    = 'pending_review';
+    if (!$isCharity) {
+        $autoApproveStmt = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'auto_approve_listings'");
+        $autoApprove = $autoApproveStmt->fetchColumn();
+        if ($autoApprove === 'true' || $autoApprove === '1') {
+            $status = 'active';
+        }
+    }
 
     $expiresDays = $isCharity ? 12 : 30;  // Charity = 12 days (free service), Standard = 30 days
     $expires = date('Y-m-d H:i:s', strtotime("+{$expiresDays} days"));

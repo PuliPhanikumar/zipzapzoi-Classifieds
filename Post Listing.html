@@ -908,7 +908,12 @@
     setTimeout(() => { t.classList.add('translate-y-4', 'opacity-0'); setTimeout(() => t.remove(), 300); }, 4000);
   }
 
-  function showPostSuccess(isEdit, isCharity) {
+  function showPostSuccess(isEdit, isCharity, status) {
+    let msg = isEdit ? 'Your listing has been updated.' : 'Your ad has been posted successfully!';
+    if (status === 'pending_review' || isCharity) {
+      msg = 'Your ad has been posted and sent for moderator approval. It will go live once verified.';
+    }
+
     document.querySelector('main').innerHTML = `
       <div class="min-h-[60vh] flex flex-col items-center justify-center text-center px-4 py-16">
         <div class="w-24 h-24 rounded-full ${isCharity ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-green-100 dark:bg-green-900/30'} flex items-center justify-center mx-auto mb-6">
@@ -918,7 +923,7 @@
           ${isEdit ? 'Listing Updated! ✅' : isCharity ? 'Charity Post Submitted! 💛' : 'Ad Posted Successfully! 🎉'}
         </h2>
         <p class="text-gray-500 dark:text-gray-400 max-w-md mb-4 text-base">
-          ${isEdit ? 'Your listing has been updated.' : isCharity ? 'Your charity post is under review. Our team will verify and approve it within 24 hours.' : 'Your ad is under moderation review and will go live within 2 hours.'}
+          ${msg}
         </p>
         ${isCharity ? '<p class="text-sm font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-5 py-3 rounded-xl mb-6 max-w-sm">⚠️ Charity posts are verified by our moderation team. Fake posts will lead to permanent account suspension.</p>' : ''}
         <div class="flex flex-col sm:flex-row gap-4 mt-2">
@@ -1108,7 +1113,8 @@
         return;
       }
 
-      showPostSuccess(!!editId, isCharity);
+      hideModal();
+      showPostSuccess(!!editId, isCharity, data.status || 'pending_review');
 
     } catch (err) {
       console.error('Post listing error:', err);
