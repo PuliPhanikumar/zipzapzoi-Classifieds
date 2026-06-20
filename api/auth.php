@@ -490,31 +490,37 @@ function sanitizeUser(array $u): array {
 }
 
 function checkRateLimit(string $action, int $maxAttempts = 5, int $lockoutMinutes = 15): void {
-    $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
-    $db = getDB();
-    
-    // Clean up old entries
-    $db->prepare("DELETE FROM rate_limits WHERE last_attempt < DATE_SUB(NOW(), INTERVAL ? MINUTE)")
-       ->execute([$lockoutMinutes]);
-       
-    $stmt = $db->prepare("SELECT attempts FROM rate_limits WHERE ip_address = ? AND action = ?");
-    $stmt->execute([$ip, $action]);
-    $row = $stmt->fetch();
-    
-    if ($row) {
-        if ($row['attempts'] >= $maxAttempts) {
-            jsonError("Too many attempts. Please try again later.", 429);
+    try {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        $db = getDB();
+
+        // Clean up old entries
+        $db->prepare("DELETE FROM rate_limits WHERE last_attempt < DATE_SUB(NOW(), INTERVAL ? MINUTE)")
+           ->execute([$lockoutMinutes]);
+
+        $stmt = $db->prepare("SELECT attempts FROM rate_limits WHERE ip_address = ? AND action = ?");
+        $stmt->execute([$ip, $action]);
+        $row = $stmt->fetch();
+
+        if ($row) {
+            if ($row['attempts'] >= $maxAttempts) {
+                jsonError("Too many attempts. Please try again in {$lockoutMinutes} minutes.", 429);
+            }
+            $db->prepare("UPDATE rate_limits SET attempts = attempts + 1, last_attempt = NOW() WHERE ip_address = ? AND action = ?")
+               ->execute([$ip, $action]);
+        } else {
+            $db->prepare("INSERT INTO rate_limits (ip_address, action, attempts) VALUES (?, ?, 1)")
+               ->execute([$ip, $action]);
         }
-        $db->prepare("UPDATE rate_limits SET attempts = attempts + 1 WHERE ip_address = ? AND action = ?")
-           ->execute([$ip, $action]);
-    } else {
-        $db->prepare("INSERT INTO rate_limits (ip_address, action, attempts) VALUES (?, ?, 1)")
-           ->execute([$ip, $action]);
+    } catch (\Throwable $e) {
     }
 }
 
 function clearRateLimit(string $action): void {
-    $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
-    $db = getDB();
-    $db->prepare("DELETE FROM rate_limits WHERE ip_address = ? AND action = ?")->execute([$ip, $action]);
+    try {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        $db = getDB();
+        $db->prepare("DELETE FROM rate_limits WHERE ip_address = ? AND action = ?")->execute([$ip, $action]);
+    } catch (\Throwable $e) {
+    }
 }

@@ -19,10 +19,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 // ── Database Credentials ──────────────────────────────────────────────
 $envFile = __DIR__ . '/.env';
 if (file_exists($envFile)) {
-    $envVariables = parse_ini_file($envFile);
-    foreach ($envVariables as $key => $value) {
-        putenv("$key=$value");
-        $_ENV[$key] = $value;
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (is_array($lines)) {
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line) || $line[0] === '#') continue;
+            if (strpos($line, '=') !== false) {
+                list($key, $value) = explode('=', $line, 2);
+                $key = trim($key);
+                $value = trim($value, " \t\n\r\0\x0B\"'");
+                putenv("$key=$value");
+                $_ENV[$key] = $value;
+            }
+        }
     }
 }
 
