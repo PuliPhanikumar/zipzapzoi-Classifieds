@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -15,7 +15,7 @@
   <meta property="og:url" content="https://zipzapzoi.com/SearchResult.html"/>
   <meta property="og:title" content="Search Classifieds — ZipZapZoi"/>
   <meta property="og:description" content="Find the best local deals. Search and filter classified ads by category, city, and more on ZipZapZoi."/>
-  <meta property="og:image" content="https://zipzapzoi.com/og-image.png"/>
+  <meta property="og:image" content="https://www.zipzapzoi.com/images/default-share.png"/>
   <meta name="robots" content="index, follow"/>
   <link rel="canonical" href="https://zipzapzoi.com/SearchResult.html"/>
     <title>ZipZapZoi - Search Results</title>
@@ -23,6 +23,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
       tailwind.config = {
         darkMode: "class",
@@ -92,6 +93,7 @@
       gtag('js', new Date());
       gtag('config', 'G-HVTZDKTMJ9');
     </script>
+  <link rel="canonical" href="https://www.zipzapzoi.com/SearchResult.html" />
 </head>
 <body class="font-display min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
     
@@ -232,6 +234,17 @@
           || { categories: [], subcategories: [] };
       }
 
+            window.addEventListener('popstate', (e) => {
+        const p = new URLSearchParams(window.location.search);
+        document.getElementById('searchQuery').value = p.get('q') || '';
+        document.getElementById('catFilter').value = p.get('category') || 'all';
+        document.getElementById('sortFilter').value = p.get('sort') || 'newest';
+        currentQuery = document.getElementById('searchQuery').value;
+        currentLoc = p.get('loc') || '';
+        updateSubcategories();
+        if (p.get('subcategory')) document.getElementById('subcatFilter').value = p.get('subcategory');
+        renderResults(false);
+      });
       document.addEventListener('DOMContentLoaded', async () => {
         if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
 
@@ -303,12 +316,13 @@
         }
       }
 
-      function renderResults() {
+      function renderResults(updateUrl = true) {
         const schema = getSchema();
         const grid  = document.getElementById('resultsGrid');
         const empty = document.getElementById('emptyState');
         const count = document.getElementById('resultCount');
 
+        if (updateUrl) { const params = new URLSearchParams(); if (currentQuery) params.set('q', currentQuery); if (currentLoc) params.set('loc', currentLoc); const c = document.getElementById('catFilter').value; if (c !== 'all') params.set('category', c); const sc = document.getElementById('subcatFilter').value; if (sc && sc !== 'all') params.set('subcategory', sc); const s = document.getElementById('sortFilter').value; if (s !== 'newest') params.set('sort', s); const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : ''); if (window.location.search !== '?' + params.toString()) window.history.pushState({}, '', newUrl); }
         grid.classList.remove('hidden');
         empty.classList.add('hidden'); empty.classList.remove('flex');
 
@@ -321,7 +335,7 @@
           </div>`).join('');
         count.textContent = 'Searching...';
 
-        setTimeout(() => {
+        
           const q      = currentQuery.trim().toLowerCase();
           const loc    = currentLoc.trim().toLowerCase();
           const cat    = document.getElementById('catFilter').value;
@@ -378,29 +392,29 @@
                    onclick="window.location.href='Listing Detail.html?id=${l.id}'">
                 <div class="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-900">
                   <img src="${img}" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
-                  <div class="absolute top-4 left-4 bg-white/90 dark:bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-gray-800 dark:text-white uppercase tracking-wider">
-                    ${l.category || 'General'}
+                  <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-gray-800 uppercase tracking-wider shadow-sm card-image-wrap">
+                    ${escapeHtml(l.category || 'General')}
                   </div>
                   <button onclick="event.stopPropagation(); toggleFav('${l.id}', this)"
                           class="fav-btn absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center ${isFav ? 'active' : ''}">
                     <span class="material-symbols-outlined text-xl">favorite</span>
                   </button>
                 </div>
-                <div class="p-5">
-                  <div class="flex justify-between items-start mb-1">
-                    <h3 class="text-base font-bold text-gray-900 dark:text-white truncate pr-2">${l.title}</h3>
-                    <p class="text-lg font-black text-primary whitespace-nowrap">&#8377;${Number(l.price || 0).toLocaleString('en-IN')}</p>
+                <div class="p-4 sm:p-5 flex flex-col flex-grow">
+                  <div class="flex justify-between items-start mb-1 gap-2">
+                    <h3 class="text-base font-bold text-gray-900 dark:text-white truncate pr-2">${escapeHtml(l.title)}</h3>
+                    <p class="text-lg font-black text-primary tracking-tight whitespace-nowrap">₹${Number(l.price || 0).toLocaleString('en-IN')}</p>
                   </div>
-                  <div class="flex items-center gap-2 text-xs font-bold text-gray-400 dark:text-gray-500 mt-3">
-                    <span class="material-symbols-outlined text-[14px]">location_on</span>
-                    <span>${l.location || l.city || 'Local'}</span>
+                  <div class="flex items-center gap-2 text-xs font-bold text-gray-400 dark:text-gray-500 mt-auto pt-3">
+                    <span class="material-symbols-outlined text-[16px]">location_on</span>
+                    <span class="truncate">${escapeHtml(l.location || l.city || 'Local')}</span>
                   </div>
                 </div>
               </div>`;
           }).join('');
 
           window.dispatchEvent(new Event('zzz:resultsRendered'));
-        }, 400);
+        
       }
 
       async function toggleFav(id, btn) {
@@ -496,9 +510,9 @@
           const img = l.image || l.images?.[0] || 'https://via.placeholder.com/180x80?text=No+Image';
           const popup = L.popup({ maxWidth: 200, className: 'zzz-map-popup' }).setContent(`
             <div class="map-popup-card">
-              <img src="${img}" alt="${l.title}" onerror="this.src='https://via.placeholder.com/180x80?text=No+Image'">
-              <p style="font-weight:700;font-size:13px;margin:0 0 4px;line-height:1.3">${l.title}</p>
-              <p style="color:#019863;font-weight:800;font-size:14px;margin:0 0 8px">₹${Number(l.price||0).toLocaleString()}</p>
+              <img src="${img}" alt="${escapeHtml(l.title)}" onerror="this.src='https://via.placeholder.com/180x80?text=No+Image'">
+              <p style="font-weight:700;font-size:13px;margin:0 0 4px;line-height:1.3">${escapeHtml(l.title)}</p>
+              <p style="color:#019863;font-weight:900;margin:0 0 8px">₹${Number(l.price).toLocaleString()}</p>
               <a href="Listing Detail.html?id=${l.id}" style="display:block;text-align:center;background:#019863;color:white;padding:6px;border-radius:8px;font-weight:700;font-size:12px;text-decoration:none">View Listing</a>
             </div>
           `);

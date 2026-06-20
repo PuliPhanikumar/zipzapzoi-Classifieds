@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -14,7 +14,7 @@
   <meta property="og:url" content="https://zipzapzoi.com/Payment.html"/>
   <meta property="og:title" content="Secure Payment — ZipZapZoi"/>
   <meta property="og:description" content="Complete your ZipZapZoi plan purchase securely via UPI, Card or Net Banking."/>
-  <meta property="og:image" content="https://zipzapzoi.com/og-image.png"/>
+  <meta property="og:image" content="https://www.zipzapzoi.com/images/default-share.png"/>
   <meta name="robots" content="index, follow"/>
   <link rel="canonical" href="https://zipzapzoi.com/Payment.html"/>
   <title>ZipZapZoi — Secure Payment</title>
@@ -27,7 +27,7 @@
       darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+          fontFamily: { sans: ['Outfit', 'sans-serif'] },
           colors: {
             primary: '#019863',
             secondary: '#4D96A9',
@@ -41,7 +41,7 @@
     }
   </script>
   <style>
-    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+    * { font-family: 'Outfit', sans-serif; }
     .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24; }
     .tab-btn { transition: all 0.2s; }
     .tab-btn.active { background: #019863; color: white; }
@@ -477,8 +477,10 @@
       baseFee = selectedPlan.price || 0;
       discountAmt = Math.round((baseFee * discountPct) / 100);
       const afterDiscount = baseFee - discountAmt;
-      gstAmt = baseFee > 0 ? Math.round(afterDiscount * 0.18) : 0;
-      totalAmt = afterDiscount + gstAmt;
+      totalAmt = afterDiscount;
+      const baseFeeExcl = Math.round(totalAmt / 1.18);
+      gstAmt = baseFee > 0 ? (totalAmt - baseFeeExcl) : 0;
+      // totalAmt already calculated
 
       // Show payment form now that plan is verified
       document.getElementById('paymentPage').style.display = 'block';
@@ -593,7 +595,7 @@
       'Activating your plan...'
     ];
 
-    function initiatePayment() {
+    async function initiatePayment() {
       if (!selectedPlan) { showToast('No plan selected. Go back and choose a plan.', 'error'); return; }
 
       // Determine selected method for prefill (Razorpay shows all anyway)
@@ -624,8 +626,27 @@
                       : activeTab.includes('net')      ? ['block.netbanking', 'block.upi', 'block.card', 'block.wallet']
                       :                                  ['block.wallet', 'block.upi', 'block.card', 'block.netbanking'];
 
+      // Fetch key from backend dynamically
+      let rzpKey = '';
+      try {
+        const cfg = await fetch('/api/schema.php').then(r => r.json());
+        if (cfg.success && cfg.razorpay_key) {
+            rzpKey = cfg.razorpay_key;
+        }
+      } catch(e) {}
+
+      if (!rzpKey) {
+        const _rzpTestCfg = JSON.parse(localStorage.getItem('zzz_api_config') || '{}');
+        rzpKey = _rzpTestCfg.razorpayKey || '';
+      }
+
+      if (!rzpKey) {
+        showToast('Payment gateway is not configured. Please contact support.', 'error');
+        return;
+      }
+
       const options = {
-        key: 'rzp_live_SugQ3leLrB2iW6',
+        key: rzpKey,
         amount: amountInPaise,
         currency: 'INR',
         name: 'ZipZapZoi Classifieds',

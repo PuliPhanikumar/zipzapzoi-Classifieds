@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -14,7 +14,7 @@
   <meta property="og:url" content="https://zipzapzoi.com/Classifieds Plans.html"/>
   <meta property="og:title" content="Classifieds Plans &amp; Pricing — ZipZapZoi"/>
   <meta property="og:description" content="Choose the right plan to post more ads and get noticed faster on ZipZapZoi Classifieds."/>
-  <meta property="og:image" content="https://zipzapzoi.com/og-image.png"/>
+  <meta property="og:image" content="https://www.zipzapzoi.com/images/default-share.png"/>
   <meta name="robots" content="index, follow"/>
   <link rel="canonical" href="https://zipzapzoi.com/Classifieds Plans.html"/>
   <title>ZipZapZoi - Plans & Pricing</title>
@@ -707,7 +707,7 @@
       function getRazorpayCfg() {
         const saved = JSON.parse(localStorage.getItem('zzz_api_config') || '{}');
         return {
-          key:      saved.razorpayKey      || 'rzp_live_SugQ3leLrB2iW6',
+          key:      saved.razorpayKey      || '',
           currency: saved.razorpayCurrency || 'INR'
         };
       }
@@ -822,7 +822,7 @@
       }
       const _rzpTestCfg = JSON.parse(localStorage.getItem('zzz_api_config') || '{}');
       const testOptions = {
-        key: _rzpTestCfg.razorpayKey || 'rzp_live_SugQ3leLrB2iW6',
+        key: _rzpTestCfg.razorpayKey || '',
         amount: 100, // ₹1 in paise
         currency: _rzpTestCfg.razorpayCurrency || 'INR',
         name: 'ZipZapZoi',

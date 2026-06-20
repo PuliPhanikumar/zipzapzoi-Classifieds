@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -15,7 +15,7 @@
   <meta property="og:url" content="https://zipzapzoi.com/classifieds.html"/>
   <meta property="og:title" content="ZipZapZoi Classifieds — Buy &amp; Sell Locally in India"/>
   <meta property="og:description" content="Explore local classified ads across all categories. Post your ad free and connect with buyers near you."/>
-  <meta property="og:image" content="https://zipzapzoi.com/og-image.png"/>
+  <meta property="og:image" content="https://www.zipzapzoi.com/images/default-share.png"/>
   <meta name="robots" content="index, follow"/>
   <link rel="canonical" href="https://zipzapzoi.com/classifieds.html"/>
     <title>ZipZapZoi - Marketplace</title>
@@ -123,6 +123,7 @@
       gtag('js', new Date());
       gtag('config', 'G-HVTZDKTMJ9');
     </script>
+  <link rel="canonical" href="https://www.zipzapzoi.com/classifieds.html" />
 </head>
 <body class="font-display min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
     
@@ -439,9 +440,9 @@
               <div class="h-32 bg-gray-100 dark:bg-gray-800 overflow-hidden relative">
                 <img src="${l.img}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
               </div>
-              <div class="p-3">
-                <h4 class="font-bold text-gray-900 dark:text-white text-sm truncate mb-1">${l.title}</h4>
-                <p class="text-primary font-black text-sm">\u20b9${parseFloat(l.price||0).toLocaleString('en-IN')}</p>
+              <div class="p-3 bg-white dark:bg-card-dark relative z-10">
+                <h4 class="font-bold text-gray-900 dark:text-white text-sm truncate mb-1">${escapeHtml(l.title)}</h4>
+                <div class="flex items-center justify-between text-xs font-black text-primary">₹${parseFloat(l.price||0).toLocaleString('en-IN')}</div>
               </div>
             </a>
           `).join('');
@@ -559,7 +560,7 @@
                   <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 gallery-dots"></div>
                   <!-- Category Badge -->
                   <div class="absolute top-4 left-4 bg-white/90 dark:bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-gray-800 dark:text-white uppercase tracking-wider card-image-wrap">
-                    ${l.category}
+                    ${escapeHtml(l.category || 'General')}
                   </div>
 
                   <!-- ⚡ Boosted Badge -->
@@ -574,15 +575,13 @@
 
                 <!-- Details Area -->
                 <div class="p-6">
-                  <div class="flex justify-between items-start mb-2">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white truncate pr-4">${l.title}</h3>
-                    <p class="text-xl font-black text-primary">₹${Number(l.price).toLocaleString()}</p>
-                  </div>
+                  <h3 class="text-lg font-bold text-gray-900 dark:text-white truncate pr-4">${escapeHtml(l.title)}</h3>
+                  <div class="text-2xl font-black text-primary my-2 tracking-tight">₹${Number(l.price).toLocaleString()}</div>
                   
-                  <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4">${l.description}</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4">${escapeHtml(l.description || '')}</p>
                   
                   <div class="flex items-center gap-4 text-xs font-bold text-gray-400 dark:text-gray-500 pt-4 border-t border-gray-100 dark:border-gray-800">
-                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">location_on</span> ${l.location_city || l.location || 'Local'}</span>
+                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">location_on</span> ${escapeHtml(l.location_city || l.location || 'Local')}</span>
                     <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> ${l.created_at ? new Date(l.created_at).toLocaleDateString() : 'Just now'}</span>
                   </div>
                 </div>
@@ -608,7 +607,7 @@
         marquee.innerHTML = sorted.map(l => `
           <a href="Listing Detail.html?id=${l.id}" class="text-gray-700 dark:text-gray-300 hover:text-primary transition-colors font-bold text-sm flex items-center gap-2">
             <img src="${l.images?.[0] || 'https://via.placeholder.com/40x30'}" class="w-6 h-6 rounded object-cover shadow-sm">
-            ${l.title} - <span class="text-primary tracking-tight">₹${Number(l.price).toLocaleString()}</span>
+            ${escapeHtml(l.title)} - <span class="text-primary tracking-tight">₹${Number(l.price).toLocaleString()}</span>
           </a>
         `).join('<span class="text-emerald-200 dark:text-emerald-800 font-black">•</span>');
       }

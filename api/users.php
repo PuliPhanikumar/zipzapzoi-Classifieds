@@ -51,6 +51,13 @@ function getProfile(string $id): void {
 
     $profile['id']          = (int)$profile['id'];
     $profile['is_verified'] = (bool)$profile['is_verified'];
+
+    // Strip PII for public profiles
+    if ($id !== 'me') {
+        unset($profile['email']);
+        unset($profile['phone']);
+    }
+
     jsonOk($profile);
 }
 

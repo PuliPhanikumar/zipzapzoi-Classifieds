@@ -5,7 +5,6 @@
  * POST /api/reviews.php -> { seller_id, rating, comment }
  */
 require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/db.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -42,7 +41,7 @@ if ($method === 'GET') {
 
 if ($method === 'POST') {
     $user = requireAuth();
-    $b = getJsonBody();
+    $b = getBody();
     
     $sellerId = (int)($b['seller_id'] ?? 0);
     $rating = (int)($b['rating'] ?? 0);

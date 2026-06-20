@@ -15,7 +15,7 @@
   <meta property="og:url" content="https://zipzapzoi.com/profile.html"/>
   <meta property="og:title" content="Seller Profile — ZipZapZoi"/>
   <meta property="og:description" content="View seller profile and listings on ZipZapZoi Classifieds."/>
-  <meta property="og:image" content="https://zipzapzoi.com/og-image.png"/>
+  <meta property="og:image" content="https://www.zipzapzoi.com/images/default-share.png"/>
   <meta name="robots" content="index, follow"/>
   <link rel="canonical" href="https://zipzapzoi.com/profile.html"/>
   <title>ZipZapZoi - Seller Profile</title>
@@ -402,16 +402,17 @@ async function loadProfile() {
                  loading="lazy"
                  class="h-full w-full object-cover rounded-t-3xl group-hover:scale-105 transition-transform duration-500"
                  onerror="this.src='https://via.placeholder.com/400?text=No+Image'">
-               <span class="absolute top-4 left-4 bg-emerald-500 text-white text-xs px-4 py-1.5 rounded-full font-black shadow-md shadow-emerald-500/30">
-                 ${item.category}
-               </span>
             </div>
             <div class="p-6">
-              <h3 class="font-black text-gray-800 dark:text-white truncate mb-2 text-xl group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">${item.title}</h3>
+                <div class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center justify-between">
+                 ${escapeHtml(item.category || 'General')}
+                </div>
+                <h3 class="font-black text-gray-800 dark:text-white truncate mb-2 text-xl group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">${escapeHtml(item.title)}</h3>
               <p class="text-emerald-500 dark:text-emerald-400 text-2xl font-black tracking-tight">&#8377; ${Number(item.price || 0).toLocaleString('en-IN')}</p>
-               <div class="text-sm text-gray-500 dark:text-gray-400 mt-4 flex items-center gap-1.5 font-bold bg-gray-50 dark:bg-gray-800/50 w-max px-3 py-1.5 rounded-xl border border-gray-100 dark:border-gray-700">
-                  <span class="material-symbols-outlined text-base text-emerald-400">location_on</span> ${item.location_city || item.location_state || item.location || 'India'}
-              </div>
+               <div class="flex items-center justify-between mt-4">
+                <div class="text-xs text-gray-400 flex items-center gap-1 font-medium">
+                  <span class="material-symbols-outlined text-base text-emerald-400">location_on</span> ${escapeHtml(item.location_city || item.location_state || item.location || 'India')}
+                </div>
             </div>
           </a>`;
         }).join('');
@@ -445,7 +446,7 @@ async function loadProfile() {
 
        if (reviews.length > 0) {
           reviewContainer.innerHTML = reviews.map(r => {
-             const starsHtml = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+             const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
              const buyerInitial = r.buyer_name ? r.buyer_name.charAt(0).toUpperCase() : '?';
              const avatarHtml = r.buyer_avatar 
                ? `<img src="${r.buyer_avatar}" class="w-12 h-12 rounded-full object-cover shadow-sm">` 
@@ -455,13 +456,13 @@ async function loadProfile() {
              <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex gap-4">
                ${avatarHtml}
                <div class="flex-1">
-                 <div class="flex justify-between items-start">
-                   <h4 class="font-bold text-gray-800 dark:text-white">${r.buyer_name || 'User'}</h4>
-                   <span class="text-xs text-gray-400">${new Date(r.created_at).toLocaleDateString()}</span>
+              <div class="flex items-center justify-between mb-1">
+                  <h4 class="font-bold text-gray-800 dark:text-white">${escapeHtml(r.buyer_name || 'User')}</h4>
+                  <span class="text-xs text-gray-400">${new Date(r.created_at).toLocaleDateString()}</span>
                  </div>
-                 <div class="text-yellow-400 text-sm tracking-widest my-1">${starsHtml}</div>
-              <p class="text-gray-600 dark:text-gray-300 mt-2 text-sm leading-relaxed">${r.review_text || r.comment || ''}</p>
-               </div>
+                 <div class="text-yellow-400 text-sm tracking-widest">${stars}</div>
+              <p class="text-gray-600 dark:text-gray-300 mt-2 text-sm leading-relaxed">${escapeHtml(r.review_text || r.comment || '')}</p>
+            </div>
              </div>`;
           }).join('');
           reviewContainer.classList.remove('space-y-4');

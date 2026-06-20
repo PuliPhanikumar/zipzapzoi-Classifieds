@@ -14,7 +14,7 @@
   <meta property="og:url" content="https://zipzapzoi.com/Seller Dashboard.html"/>
   <meta property="og:title" content="Seller Dashboard — ZipZapZoi"/>
   <meta property="og:description" content="Manage your listings, view stats and track messages on ZipZapZoi."/>
-  <meta property="og:image" content="https://zipzapzoi.com/og-image.png"/>
+  <meta property="og:image" content="https://www.zipzapzoi.com/images/default-share.png"/>
   <meta name="robots" content="index, follow"/>
   <link rel="canonical" href="https://zipzapzoi.com/Seller Dashboard.html"/>
   <title>ZipZapZoi — Seller Dashboard</title>
@@ -76,7 +76,7 @@
   ═══════════════════════════ -->
   <aside class="hidden md:flex w-64 bg-white dark:bg-card-dark border-r border-gray-100 dark:border-gray-800 flex-col sticky top-0 h-screen z-30 flex-shrink-0">
     <!-- Logo -->
-    <a href="Classifieds LandingPage.html" class="flex items-center gap-2 px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+    <a href="index.html" class="flex items-center gap-2 px-6 py-5 border-b border-gray-100 dark:border-gray-800">
       <span class="material-symbols-outlined text-primary text-3xl">all_inclusive</span>
       <span class="font-black text-lg text-gray-900 dark:text-white">ZipZapZoi</span>
     </a>
@@ -579,7 +579,7 @@
             return `<div class="flex items-start gap-3 p-4 rounded-2xl border ${bg}">
               <span class="material-symbols-outlined ${col} text-[22px] flex-shrink-0">${icon}</span>
               <div class="flex-1">
-                <p class="text-sm font-black text-gray-900 dark:text-white">${n.message}</p>
+                <p class="text-sm font-black text-gray-900 dark:text-white">${escapeHtml(n.message)}</p>
                 <p class="text-xs text-gray-500 mt-0.5">${new Date(n.updated_at).toLocaleString('en-IN')}</p>
               </div>
               ${isApproved ? `<a href="Listing Detail.html?id=${n.id}" class="flex-shrink-0 text-xs font-black text-green-600 hover:underline">View Ad →</a>` : ''}
@@ -708,14 +708,14 @@
           <div class="listing-card bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col sm:flex-row gap-4 items-start sm:items-center p-4 relative">
             <div class="relative flex-shrink-0">
               <a href="Listing Detail.html?id=${item.id}" target="_blank">
-                <img src="${imgSrc}" alt="${item.title}" class="w-full sm:w-20 h-20 object-cover rounded-xl bg-gray-100 dark:bg-gray-800 hover:opacity-90 transition-opacity" onerror="this.src='https://via.placeholder.com/80x80/f0f4f8/999?text=No+Img'"/>
+                <img src="${imgSrc}" alt="${escapeHtml(item.title)}" class="w-full sm:w-20 h-20 object-cover rounded-xl bg-gray-100 dark:bg-gray-800 hover:opacity-90 transition-opacity" onerror="this.src='https://via.placeholder.com/80x80/f0f4f8/999?text=No+Img'"/>
               </a>
               ${isPremium ? '<span class="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-[9px] font-black px-1.5 py-0.5 rounded-full">★ TOP</span>' : ''}
             </div>
 
             <div class="flex-1 min-w-0">
               <div class="flex flex-wrap items-center gap-2 mb-1">
-                <a href="Listing Detail.html?id=${item.id}" target="_blank" class="font-black text-gray-900 dark:text-white text-sm truncate max-w-xs hover:text-primary transition-colors">${item.title}</a>
+                <a href="Listing Detail.html?id=${item.id}" target="_blank" class="font-black text-gray-900 dark:text-white text-sm truncate max-w-xs hover:text-primary transition-colors">${escapeHtml(item.title)}</a>
                 ${statusPill(status)}
                 ${expiryBadge}
               </div>
@@ -744,7 +744,7 @@
                 <button onclick="promoteItem('${item.id}')" class="flex-1 sm:flex-none px-3 py-2 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 text-yellow-700 dark:text-yellow-400 rounded-lg text-xs font-black transition-colors flex items-center justify-center gap-1">
                   <span class="material-symbols-outlined text-[13px]">bolt</span> Boost
                 </button>
-                ${showRenewBtn ? `<button onclick="openRenewalModal('${item.id}', '${item.title}')" class="absolute -top-3 right-4 shadow-lg flex-1 sm:flex-none px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-black transition-colors flex items-center justify-center gap-1 animate-pulse">
+                ${showRenewBtn ? `<button onclick="openRenewalModal('${item.id}', '${escapeHtml(item.title).replace(/'/g, "\\'")}')" class="absolute -top-3 right-4 shadow-lg flex-1 sm:flex-none px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-black transition-colors flex items-center justify-center gap-1 animate-pulse">
                   <span class="material-symbols-outlined text-[13px]">autorenew</span> Renew Now
                 </button>` : ''}
                 <button onclick="editItem('${item.id}')" class="flex-1 sm:flex-none px-3 py-2 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-black transition-colors">
@@ -754,7 +754,7 @@
                 <a href="Listing Detail.html?id=${item.id}" target="_blank" class="flex-1 sm:flex-none px-3 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-xs font-black transition-colors flex items-center justify-center gap-1">
                   <span class="material-symbols-outlined text-[13px]">open_in_new</span> View
                 </a>
-                <button onclick="openRenewalModal('${item.id}', '${item.title}')" class="flex-1 sm:flex-none px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-black transition-colors flex items-center justify-center gap-1 animate-pulse">
+                <button onclick="openRenewalModal('${item.id}', '${escapeHtml(item.title).replace(/'/g, "\\'")}')" class="flex-1 sm:flex-none px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-black transition-colors flex items-center justify-center gap-1 animate-pulse">
                   <span class="material-symbols-outlined text-[13px]">autorenew</span> Renew — ₹16
                 </button>
               `}

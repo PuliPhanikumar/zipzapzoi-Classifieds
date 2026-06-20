@@ -43,9 +43,8 @@ function getSchema(): void {
         ];
     }
     
-    // Fetch Active Coupons
-    $coupons = $db->query("SELECT code, discount_pct FROM coupons WHERE is_active=1")->fetchAll();
-    $schema['coupons'] = $coupons ?: [];
+    // Fetch Active Coupons (Removed from public schema for security)
+    $schema['coupons'] = [];
     
     // Fetch Plan Config
     $plan_config = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'plan_config'")->fetchColumn();
@@ -54,6 +53,10 @@ function getSchema(): void {
     // Fetch Featured Prices
     $feat_prices = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'featured_prices'")->fetchColumn();
     $schema['plan_config_extras'] = $feat_prices ? json_decode($feat_prices, true) : null;
+
+    // Fetch Razorpay Public Key
+    $rzp_key = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'razorpay_key'")->fetchColumn();
+    $schema['razorpay_key'] = $rzp_key ?: '';
 
     jsonOk($schema);
 }

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ZipZapZoi Classifieds — Shared Utilities
  * Include this file in every page: <script src="js/utils.js"></script>
  */
@@ -91,7 +91,6 @@ window.ZZZ.getClassifiedsSchema = function getClassifiedsSchema() {
 window.ZZZ.getCurrentUser = function getCurrentUserCompat() {
     return (
         window.ZZZ.read('zzz_user', null) ||
-        window.ZZZ.read('zipzapzoi_current_user', null) ||
         window.ZZZ.safeParse(sessionStorage.getItem('zzz_user'), null)
     );
 };
@@ -99,10 +98,8 @@ window.ZZZ.getCurrentUser = function getCurrentUserCompat() {
 window.ZZZ.setCurrentUser = function setCurrentUserCompat(user) {
     if (user) {
         localStorage.setItem('zzz_user', JSON.stringify(user));
-        localStorage.setItem('zipzapzoi_current_user', JSON.stringify(user));
     } else {
         localStorage.removeItem('zzz_user');
-        localStorage.removeItem('zipzapzoi_current_user');
         sessionStorage.removeItem('zzz_user');
     }
     localStorage.setItem('zzz_data_updated_at', String(Date.now()));
@@ -412,3 +409,17 @@ window.addEventListener('storage', (e) => {
     }
   });
 })();
+
+window.escapeHtml = function(unsafe) {
+  if (unsafe === null || unsafe === undefined) return '';
+  return String(unsafe).replace(/[&<>"'`]/g, function (match) {
+    switch (match) {
+      case '&': return '&amp;';
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '"': return '&quot;';
+      case "'": return '&#39;';
+      case '`': return '&#96;';
+    }
+  });
+};

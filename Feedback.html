@@ -370,7 +370,7 @@
     });
 
     // Dark mode check
-    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!localStorage.getItem('zzz_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark');
     }
   </script>

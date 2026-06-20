@@ -8,7 +8,7 @@ const ZZZDataManager = (function() {
   'use strict';
 
   const STORAGE_KEY = 'zipzapzoi_data';
-  const USER_KEY = 'zipzapzoi_current_user';
+  const USER_KEY = 'zzz_user';
 
   // Initialize default data structure
   let appData = {

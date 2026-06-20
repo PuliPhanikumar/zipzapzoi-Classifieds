@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f172a">
+<title>ZZZ Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;width:100%;overflow:hidden;font-family:'Inter',sans-serif;background:#0f172a;color:#f1f5f9;}
+:root{--brand:#22c55e;--brand-dim:#16a34a;--brand-glow:rgba(34,197,94,.15);--surface:#1e293b;--surface2:#263245;--border:#334155;--muted:#64748b;--text:#f1f5f9;--text2:#cbd5e1;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--purple:#8b5cf6;--bottom-bar-h:72px;--topbar-h:60px;}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh;}
+#topbar{height:var(--topbar-h);background:#0f172a;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;}
+#topbar h1{font-size:17px;font-weight:800;flex:1;letter-spacing:-.3px;}
+#topbar h1 span{color:var(--brand);}
+#contentWrap{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--bottom-bar-h) + 8px);}
+#bottomNav{height:var(--bottom-bar-h);background:#0f172a;border-top:1px solid var(--border);display:flex;align-items:stretch;padding:0 4px;padding-bottom:env(safe-area-inset-bottom);flex-shrink:0;}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border-radius:16px;margin:6px 2px;color:var(--muted);position:relative;transition:color .2s;}
+.bnav-item .mi{font-size:22px;transition:transform .2s;}
+.bnav-item .bnav-label{font-size:10px;font-weight:600;}
+.bnav-item.active{color:var(--brand);}
+.bnav-item.active .mi{transform:scale(1.1);}
+.bnav-badge{position:absolute;top:4px;right:calc(50% - 18px);background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:99px;min-width:16px;text-align:center;display:none;}
+.bnav-badge.show{display:block;}
+.screen{display:none;padding:16px;}
+.screen.active{display:block;}
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.stat-card{background:var(--surface);border-radius:20px;padding:18px 16px;border:1px solid var(--border);position:relative;overflow:hidden;}
+.stat-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.stat-val{font-size:26px;font-weight:900;line-height:1;}
+.stat-val.green{color:var(--brand);}
+.stat-val.blue{color:var(--blue);}
+.stat-val.amber{color:var(--amber);}
+.stat-val.purple{color:var(--purple);}
+.stat-icon{position:absolute;right:14px;top:14px;font-size:28px;opacity:.15;}
+.stat-icon.green{color:var(--brand);}
+.stat-icon.blue{color:var(--blue);}
+.stat-icon.amber{color:var(--amber);}
+.stat-icon.purple{color:var(--purple);}
+.section-card{background:var(--surface);border-radius:20px;border:1px solid var(--border);margin-bottom:14px;overflow:hidden;}
+.list-row{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;cursor:pointer;}
+.list-row:last-child{border-bottom:none;}
+.list-row:active{background:var(--surface2);}
+.list-avatar{width:42px;height:42px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--brand);flex-shrink:0;}
+.list-body{flex:1;min-width:0;}
+.list-title{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.list-sub{font-size:12px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chip{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700;}
+.chip-green{background:rgba(34,197,94,.15);color:var(--brand);}
+.chip-red{background:rgba(239,68,68,.15);color:var(--red);}
+.chip-amber{background:rgba(245,158,11,.15);color:var(--amber);}
+.chip-blue{background:rgba(59,130,246,.15);color:var(--blue);}
+.chip-gray{background:rgba(100,116,139,.15);color:var(--muted);}
+.chip-purple{background:rgba(139,92,246,.15);color:var(--purple);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border-radius:14px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:'Inter',sans-serif;}
+.btn-primary{background:var(--brand);color:#fff;}
+.btn-primary:active{background:var(--brand-dim);}
+.btn-danger{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);}
+.btn-ghost{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+.form-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px;}
+.form-input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;padding:12px 14px;font-size:14px;font-family:'Inter',sans-serif;color:var(--text);outline:none;-webkit-appearance:none;}
+.form-input:focus{border-color:var(--brand);}
+.form-group{margin-bottom:14px;}
+.settings-section{background:var(--surface);border-radius:20px;border:1px solid var(--border);margin-bottom:14px;overflow:hidden;}
+.s-hdr{padding:14px 16px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.s-hdr .mi{font-size:16px;color:var(--brand);}
+.settings-row{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);cursor:pointer;}
+.settings-row:last-child{border-bottom:none;}
+.settings-row:active{background:var(--surface2);}
+.s-icon{width:36px;height:36px;border-radius:12px;background:var(--brand-glow);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.s-icon .mi{font-size:18px;color:var(--brand);}
+.s-body{flex:1;}
+.s-title{font-size:14px;font-weight:600;}
+.s-sub{font-size:12px;color:var(--muted);margin-top:1px;}
+.toggle{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:26px;transition:.3s;}
+.toggle-slider:before{position:absolute;content:'';height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;}
+input:checked + .toggle-slider{background:var(--brand);}
+input:checked + .toggle-slider:before{transform:translateX(20px);}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal-sheet{background:var(--surface);border-radius:28px 28px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom));width:100%;max-height:90vh;overflow-y:auto;animation:slideUp .3s ease;}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 20px;}
+.modal-title{font-size:18px;font-weight:800;margin-bottom:20px;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+#toastBox{position:fixed;top:calc(var(--topbar-h) + 12px);left:12px;right:12px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{background:#1e293b;border:1px solid var(--border);color:#fff;padding:12px 16px;border-radius:16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:toastIn .25s ease;}
+.toast.success{background:#14532d;border-color:#16a34a;}
+.toast.error{background:#450a0a;border-color:var(--red);}
+@keyframes toastIn{from{transform:translateY(-16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-center{display:flex;justify-content:center;padding:40px 0;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty-state .mi{font-size:48px;display:block;margin-bottom:12px;color:var(--border);}
+.icon-btn{background:var(--surface2);border:1px solid var(--border);border-radius:12px;width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);}
+.profile-hero{background:linear-gradient(135deg,var(--brand-dim),var(--brand));border-radius:20px;padding:24px;margin-bottom:14px;display:flex;align-items:center;gap:16px;}
+.profile-avatar{width:64px;height:64px;border-radius:50%;background:rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;flex-shrink:0;}
+.action-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.action-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;}
+.action-card:active{background:var(--surface2);}
+.action-card .mi{font-size:26px;color:var(--brand);}
+.action-card .ac-label{font-size:12px;font-weight:600;color:var(--text2);}
+.log-row{padding:12px 16px;display:flex;gap:12px;border-bottom:1px solid var(--border);}
+.log-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);margin-top:5px;flex-shrink:0;}
+.sec-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+.filter-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.filter-row::-webkit-scrollbar{display:none;}
+.filter-btn{white-space:nowrap;padding:8px 16px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-family:'Inter',sans-serif;}
+.filter-btn.active{background:var(--brand);color:#fff;border-color:var(--brand);}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="topbar">
+  <div class="icon-btn" onclick="location.reload()"><span class="material-symbols-outlined mi">refresh</span></div>
+  <h1 id="pageTitle"><span>ZZZ</span> Admin</h1>
+  <div class="icon-btn"><span class="material-symbols-outlined mi">notifications</span></div>
+</div>
+
+<div id="contentWrap">
+
+<!-- DASHBOARD -->
+<div class="screen active" id="screen-dashboard">
+  <div class="stat-row">
+    <div class="stat-card"><span class="material-symbols-outlined stat-icon green">group</span><div class="stat-label">Total Users</div><div class="stat-val green" id="statUsers">...</div></div>
+    <div class="stat-card"><span class="material-symbols-outlined stat-icon blue">inventory_2</span><div class="stat-label">Listings</div><div class="stat-val blue" id="statListings">...</div></div>
+  </div>
+  <div class="stat-row">
+    <div class="stat-card"><span class="material-symbols-outlined stat-icon amber">support_agent</span><div class="stat-label">Tickets</div><div class="stat-val amber" id="statTickets">0</div></div>
+    <div class="stat-card"><span class="material-symbols-outlined stat-icon purple">payments</span><div class="stat-label">Revenue</div><div class="stat-val purple" id="statRev">...</div></div>
+  </div>
+  <div class="sec-title">Quick Actions</div>
+  <div class="action-row">
+    <div class="action-card" onclick="switchScreen('listings')"><span class="material-symbols-outlined mi">inventory_2</span><span class="ac-label">Listings</span></div>
+    <div class="action-card" onclick="switchScreen('users')"><span class="material-symbols-outlined mi">manage_accounts</span><span class="ac-label">Users</span></div>
+    <div class="action-card" onclick="switchScreen('moderation')"><span class="material-symbols-outlined mi">gavel</span><span class="ac-label">Moderation</span></div>
+    <div class="action-card" onclick="switchScreen('settings')"><span class="material-symbols-outlined mi">settings</span><span class="ac-label">Settings</span></div>
+  </div>
+  <div class="sec-title">Recent Activity</div>
+  <div class="section-card" id="dashLogs"><div class="loader-center"><div class="spinner"></div></div></div>
+</div>
+
+<!-- LISTINGS -->
+<div class="screen" id="screen-listings">
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="filterListings(this,'all')">All</button>
+    <button class="filter-btn" onclick="filterListings(this,'pending_review')">Pending</button>
+    <button class="filter-btn" onclick="filterListings(this,'active')">Active</button>
+    <button class="filter-btn" onclick="filterListings(this,'rejected')">Rejected</button>
+  </div>
+  <div class="section-card" id="listingsContainer"><div class="loader-center"><div class="spinner"></div></div></div>
+</div>
+
+<!-- USERS -->
+<div class="screen" id="screen-users">
+  <div style="margin-bottom:12px;"><input class="form-input" type="search" id="userSearch" placeholder="Search users..." oninput="searchUsers(this.value)"></div>
+  <div class="section-card" id="usersContainer"><div class="loader-center"><div class="spinner"></div></div></div>
+</div>
+
+<!-- MODERATION -->
+<div class="screen" id="screen-moderation">
+  <div class="section-card" id="reportsContainer"><div class="loader-center"><div class="spinner"></div></div></div>
+</div>
+
+<!-- SETTINGS -->
+<div class="screen" id="screen-settings">
+  <div class="profile-hero">
+    <div class="profile-avatar" id="adminInitial">A</div>
+    <div><div style="font-size:18px;font-weight:800;color:#fff;" id="adminName">Admin</div><div style="font-size:12px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.06em;">Super Admin</div></div>
+  </div>
+  <div class="settings-section">
+    <div class="s-hdr"><span class="material-symbols-outlined mi">tune</span>Platform</div>
+    <div class="settings-row" onclick="openModal('siteModal')"><div class="s-icon"><span class="material-symbols-outlined mi">language</span></div><div class="s-body"><div class="s-title">Site Identity</div><div class="s-sub">Name, tagline, contact</div></div><span class="material-symbols-outlined" style="color:var(--muted);font-size:18px">chevron_right</span></div>
+    <div class="settings-row" onclick="openModal('listingModal')"><div class="s-icon"><span class="material-symbols-outlined mi">inventory_2</span></div><div class="s-body"><div class="s-title">Listing Config</div><div class="s-sub">Expiry, upload limits</div></div><span class="material-symbols-outlined" style="color:var(--muted);font-size:18px">chevron_right</span></div>
+    <div class="settings-row"><div class="s-icon"><span class="material-symbols-outlined mi">auto_awesome</span></div><div class="s-body"><div class="s-title">Auto-Approve Listings</div><div class="s-sub">Skip manual review</div></div><label class="toggle"><input type="checkbox" id="autoApproveToggle" onchange="saveAutoApprove(this.checked)"><span class="toggle-slider"></span></label></div>
+  </div>
+  <div class="settings-section">
+    <div class="s-hdr"><span class="material-symbols-outlined mi">shield</span>Security</div>
+    <div class="settings-row" onclick="openModal('pwdModal')"><div class="s-icon" style="background:rgba(239,68,68,.15)"><span class="material-symbols-outlined mi" style="color:var(--red)">lock_reset</span></div><div class="s-body"><div class="s-title">Change Password</div><div class="s-sub">Update admin credentials</div></div><span class="material-symbols-outlined" style="color:var(--muted);font-size:18px">chevron_right</span></div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-row" onclick="handleLogout()"><div class="s-icon" style="background:rgba(239,68,68,.15)"><span class="material-symbols-outlined mi" style="color:var(--red)">logout</span></div><div class="s-body"><div class="s-title" style="color:var(--red)">Sign Out</div><div class="s-sub">End admin session</div></div></div>
+  </div>
+  <div style="text-align:center;padding:16px 0 32px;color:var(--muted);font-size:11px;">ZZZ Admin v2.0 &bull; ZipZapZoi Classifieds</div>
+</div>
+
+</div><!-- end contentWrap -->
+
+<div id="bottomNav">
+  <div class="bnav-item active" id="bnav-dashboard" onclick="switchScreen('dashboard')"><span class="material-symbols-outlined mi">dashboard</span><span class="bnav-label">Dashboard</span></div>
+  <div class="bnav-item" id="bnav-listings" onclick="switchScreen('listings')"><span class="material-symbols-outlined mi">inventory_2</span><span class="bnav-label">Listings</span><span class="bnav-badge" id="pendingBadge">0</span></div>
+  <div class="bnav-item" id="bnav-users" onclick="switchScreen('users')"><span class="material-symbols-outlined mi">group</span><span class="bnav-label">Users</span></div>
+  <div class="bnav-item" id="bnav-moderation" onclick="switchScreen('moderation')"><span class="material-symbols-outlined mi">gavel</span><span class="bnav-label">Reports</span></div>
+  <div class="bnav-item" id="bnav-settings" onclick="switchScreen('settings')"><span class="material-symbols-outlined mi">person</span><span class="bnav-label">Account</span></div>
+</div>
+</div>
+
+<div id="toastBox"></div>
+
+<div class="modal-overlay" id="pwdModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Change Password</div><div class="form-group"><label class="form-label">New Password</label><input class="form-input" type="password" id="newPwd" placeholder="Min 8 characters"></div><div class="form-group"><label class="form-label">Confirm Password</label><input class="form-input" type="password" id="confPwd" placeholder="Re-enter password"></div><div style="display:flex;gap:10px;margin-top:6px;"><button class="btn btn-ghost" onclick="closeModal('pwdModal')" style="flex:1">Cancel</button><button class="btn btn-primary" onclick="doChangePwd()" style="flex:1">Update</button></div></div></div>
+<div class="modal-overlay" id="siteModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Site Identity</div><div class="form-group"><label class="form-label">Site Name</label><input class="form-input" id="cfgSiteName" placeholder="ZipZapZoi Classifieds"></div><div class="form-group"><label class="form-label">Tagline</label><input class="form-input" id="cfgTagline" placeholder="Buy and Sell Everything"></div><div class="form-group"><label class="form-label">Support Email</label><input class="form-input" type="email" id="cfgSupportEmail" placeholder="support@zipzapzoi.com"></div><div style="display:flex;gap:10px;margin-top:6px;"><button class="btn btn-ghost" onclick="closeModal('siteModal')" style="flex:1">Cancel</button><button class="btn btn-primary" onclick="saveSiteIdentity()" style="flex:1">Save</button></div></div></div>
+<div class="modal-overlay" id="listingModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Listing Config</div><div class="form-group"><label class="form-label">Listing Expiry (days)</label><input class="form-input" type="number" id="cfgExpiry" placeholder="60"></div><div class="form-group"><label class="form-label">Max Upload (MB)</label><input class="form-input" type="number" id="cfgUploadSize" placeholder="5"></div><div class="form-group"><label class="form-label">Max Images per Listing</label><input class="form-input" type="number" id="cfgMaxImages" placeholder="10"></div><div style="display:flex;gap:10px;margin-top:6px;"><button class="btn btn-ghost" onclick="closeModal('listingModal')" style="flex:1">Cancel</button><button class="btn btn-primary" onclick="saveListingConfig()" style="flex:1">Save</button></div></div></div>
+<div class="modal-overlay" id="listingDetailModal"><div class="modal-sheet"><div class="modal-handle"></div><div id="listingDetailContent"></div></div></div>
+<div class="modal-overlay" id="userDetailModal"><div class="modal-sheet"><div class="modal-handle"></div><div id="userDetailContent"></div></div></div>
+
+<script>
+var BASE='https://www.zipzapzoi.com';
+var currentFilter='all';
+var allUsers=[];
+function getToken(){return localStorage.getItem('zipzapzoi_token')||sessionStorage.getItem('zipzapzoi_token');}
+async function api(path,method,body){
+  method=method||'GET';
+  var h={'Content-Type':'application/json'};
+  var t=getToken();if(t)h['Authorization']='Bearer '+t;
+  var o={method:method,headers:h};
+  if(body)o.body=JSON.stringify(body);
+  try{var r=await fetch(BASE+path,o);return await r.json();}catch(e){return {error:'Network error'};}
+}
+function toast(msg,type){
+  type=type||'success';
+  var icons={success:'check_circle',error:'error'};
+  var el=document.createElement('div');
+  el.className='toast '+type;
+  el.innerHTML='<span class="material-symbols-outlined" style="font-size:18px">'+icons[type]+'</span><span>'+msg+'</span>';
+  document.getElementById('toastBox').appendChild(el);
+  setTimeout(function(){el.remove();},3500);
+}
+function switchScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.querySelectorAll('.bnav-item').forEach(function(b){b.classList.remove('active');});
+  var s=document.getElementById('screen-'+id);
+  var b=document.getElementById('bnav-'+id);
+  if(s)s.classList.add('active');
+  if(b)b.classList.add('active');
+  document.getElementById('contentWrap').scrollTop=0;
+  var titles={dashboard:'Dashboard',listings:'Listings',users:'Users',moderation:'Reports',settings:'Account'};
+  document.getElementById('pageTitle').innerHTML='<span>ZZZ</span> '+(titles[id]||id);
+  if(id==='listings'&&!s.dataset.loaded){loadListings();s.dataset.loaded=1;}
+  if(id==='users'&&!s.dataset.loaded){loadUsers();s.dataset.loaded=1;}
+  if(id==='moderation'&&!s.dataset.loaded){loadReports();s.dataset.loaded=1;}
+}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('open');});});
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+async function loadDashboard(){
+  var d=await api('/api/admin/dashboard.php');
+  var s=(d&&d.stats)||d||{};
+  document.getElementById('statUsers').textContent=s.total_users||'--';
+  document.getElementById('statListings').textContent=s.active_listings||'--';
+  document.getElementById('statTickets').textContent=s.open_tickets||'0';
+  document.getElementById('statRev').textContent=s.total_revenue?'Rs.'+Number(s.total_revenue).toLocaleString('en-IN'):'Rs.0';
+  var logs=(d&&d.logs)||[];
+  var logEl=document.getElementById('dashLogs');
+  if(!logs.length){logEl.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">receipt_long</span><p>No recent activity</p></div>';}
+  else{logEl.innerHTML=logs.slice(0,8).map(function(l){return '<div class="log-row"><div class="log-dot"></div><div><div style="font-size:13px;font-weight:600;">'+esc(l.action||'')+'</div><div style="font-size:12px;color:var(--muted)">'+esc(l.detail||'')+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+esc(l.created_at||'')+'</div></div></div>';}).join('');}
+  var pend=(d&&d.pending_listings)||0;
+  var badge=document.getElementById('pendingBadge');
+  badge.textContent=pend;badge.classList.toggle('show',pend>0);
+  try{var u=JSON.parse(localStorage.getItem('zipzapzoi_current_user')||'{}');document.getElementById('adminName').textContent=u.name||'Admin';document.getElementById('adminInitial').textContent=(u.name||'A')[0].toUpperCase();}catch(e){}
+}
+async function loadListings(){
+  var con=document.getElementById('listingsContainer');
+  con.innerHTML='<div class="loader-center"><div class="spinner"></div></div>';
+  var path=currentFilter==='all'?'/api/admin/listings.php':'/api/admin/listings.php?status='+currentFilter;
+  var d=await api(path);
+  var items=(d&&(d.data||d.listings))||[];
+  if(!items.length){con.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">inventory_2</span><p>No listings found</p></div>';return;}
+  var cm={active:'chip-green',pending_review:'chip-amber',rejected:'chip-red'};
+  con.innerHTML=items.map(function(l){var c=cm[l.status]||'chip-gray';return '<div class="list-row" onclick="openLD(\''+encodeURIComponent(JSON.stringify(l))+'\')"><div class="list-avatar">'+esc((l.title||'L')[0].toUpperCase())+'</div><div class="list-body"><div class="list-title">'+esc(l.title||'Untitled')+'</div><div class="list-sub">'+esc(l.category||'')+(l.price?' · Rs.'+Number(l.price).toLocaleString('en-IN'):'')+'</div></div><span class="chip '+c+'">'+esc((l.status||'').replace(/_/g,' '))+'</span></div>';}).join('');
+}
+function filterListings(btn,f){currentFilter=f;document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');var s=document.getElementById('screen-listings');s.dataset.loaded=1;loadListings();}
+function openLD(enc){try{var l=JSON.parse(decodeURIComponent(enc));var cm={active:'chip-green',pending_review:'chip-amber',rejected:'chip-red'};var c=cm[l.status]||'chip-gray';var ip=l.status==='pending_review';document.getElementById('listingDetailContent').innerHTML='<div class="modal-title">'+esc(l.title||'Listing')+'</div><div style="margin-bottom:12px"><span class="chip '+c+'">'+esc((l.status||'').replace(/_/g,' '))+'</span></div><div class="form-group"><div class="form-label">Category</div><div>'+esc(l.category||'—')+'</div></div><div class="form-group"><div class="form-label">Price</div><div>Rs. '+Number(l.price||0).toLocaleString('en-IN')+'</div></div><div class="form-group"><div class="form-label">Description</div><div style="font-size:13px;color:var(--text2)">'+esc(l.description||'—')+'</div></div>'+(ip?'<div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-danger" onclick="la('+l.id+',\'rejected\')" style="flex:1">Reject</button><button class="btn btn-primary" onclick="la('+l.id+',\'active\')" style="flex:1">Approve</button></div>':'<div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-ghost" onclick="closeModal(\'listingDetailModal\')" style="flex:1">Close</button><button class="btn btn-danger" onclick="la('+l.id+',\'delete\')" style="flex:1">Delete</button></div>');openModal('listingDetailModal');}catch(e){}}
+async function la(id,action){var r=await api('/api/admin/listings.php','POST',{action:action,listing_id:id});if(r&&(r.success||r.message)){toast(action==='active'?'Listing Approved!':'Done');closeModal('listingDetailModal');loadListings();}else toast((r&&r.error)||'Error','error');}
+async function loadUsers(){var con=document.getElementById('usersContainer');con.innerHTML='<div class="loader-center"><div class="spinner"></div></div>';var d=await api('/api/admin/users.php');allUsers=(d&&(d.data||d.users||(Array.isArray(d)?d:[])))||[];renderUsers(allUsers);}
+function renderUsers(users){var con=document.getElementById('usersContainer');if(!users.length){con.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">group</span><p>No users found</p></div>';return;}con.innerHTML=users.map(function(u){return '<div class="list-row" onclick="openUD(\''+encodeURIComponent(JSON.stringify(u))+'\')"><div class="list-avatar">'+esc((u.name||u.email||'U')[0].toUpperCase())+'</div><div class="list-body"><div class="list-title">'+esc(u.name||'User')+'</div><div class="list-sub">'+esc(u.email||'')+'</div></div><span class="chip '+(u.is_active?'chip-green':'chip-red')+'">'+(u.is_active?'Active':'Banned')+'</span></div>';}).join('');}
+function searchUsers(q){renderUsers(allUsers.filter(function(u){return (u.name||'').toLowerCase().includes(q.toLowerCase())||(u.email||'').toLowerCase().includes(q.toLowerCase());}));}
+function openUD(enc){try{var u=JSON.parse(decodeURIComponent(enc));document.getElementById('userDetailContent').innerHTML='<div class="modal-title">'+esc(u.name||'User')+'</div><div class="form-group"><div class="form-label">Email</div><div>'+esc(u.email||'—')+'</div></div><div class="form-group"><div class="form-label">Phone</div><div>'+esc(u.phone||'—')+'</div></div><div class="form-group"><div class="form-label">Role</div><span class="chip chip-purple">'+esc(u.role||'user')+'</span></div><div class="form-group"><div class="form-label">Status</div><span class="chip '+(u.is_active?'chip-green':'chip-red')+'">'+(u.is_active?'Active':'Banned')+'</span></div><div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-ghost" onclick="closeModal(\'userDetailModal\')" style="flex:1">Close</button><button class="btn '+(u.is_active?'btn-danger':'btn-primary')+'" onclick="toggleBan('+u.id+','+u.is_active+')" style="flex:1">'+(u.is_active?'Ban User':'Unban')+'</button></div>';openModal('userDetailModal');}catch(e){}}
+async function toggleBan(id,isActive){var r=await api('/api/admin/users.php','POST',{action:isActive?'ban':'unban',user_id:id});if(r&&(r.success||r.message)){toast('User updated');closeModal('userDetailModal');loadUsers();}else toast((r&&r.error)||'Error','error');}
+async function loadReports(){var con=document.getElementById('reportsContainer');con.innerHTML='<div class="loader-center"><div class="spinner"></div></div>';var d=await api('/api/admin/reports.php');var items=(d&&(d.data||d.reports||(Array.isArray(d)?d:[])))||[];if(!items.length){con.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">gavel</span><p>No reports to review</p></div>';return;}con.innerHTML=items.map(function(r){return '<div class="list-row"><div class="list-avatar" style="background:rgba(239,68,68,.1);color:var(--red)"><span class="material-symbols-outlined" style="font-size:20px">flag</span></div><div class="list-body"><div class="list-title">'+esc(r.reason||'Report')+'</div><div class="list-sub">Listing #'+esc(r.listing_id||'?')+' · '+esc(r.reporter_email||'')+'</div></div><span class="chip chip-amber">Review</span></div>';}).join('');}
+async function doChangePwd(){var pwd=document.getElementById('newPwd').value;var cpwd=document.getElementById('confPwd').value;if(!pwd||pwd.length<8){toast('Min 8 characters','error');return;}if(pwd!==cpwd){toast('Passwords do not match','error');return;}var r=await api('/api/admin/settings.php','POST',{action:'change_password',password:pwd});if(r&&r.success){toast('Password updated!');closeModal('pwdModal');document.getElementById('newPwd').value='';document.getElementById('confPwd').value='';}else toast((r&&r.error)||'Error','error');}
+async function saveSiteIdentity(){var r=await api('/api/admin/settings.php','POST',{settings:{site_name:document.getElementById('cfgSiteName').value,site_tagline:document.getElementById('cfgTagline').value,support_email:document.getElementById('cfgSupportEmail').value}});if(r&&r.success){toast('Saved!');closeModal('siteModal');}else toast((r&&r.error)||'Error','error');}
+async function saveListingConfig(){var r=await api('/api/admin/settings.php','POST',{settings:{listing_expiry_days:document.getElementById('cfgExpiry').value,max_upload_mb:document.getElementById('cfgUploadSize').value,max_images_per_listing:document.getElementById('cfgMaxImages').value}});if(r&&r.success){toast('Saved!');closeModal('listingModal');}else toast((r&&r.error)||'Error','error');}
+async function saveAutoApprove(val){await api('/api/admin/settings.php','POST',{settings:{auto_approve_listings:val?'1':'0'}});toast(val?'Auto-approve enabled':'Auto-approve disabled');}
+function handleLogout(){if(!confirm('Sign out of admin?'))return;localStorage.removeItem('zipzapzoi_token');sessionStorage.removeItem('zipzapzoi_token');localStorage.removeItem('zipzapzoi_current_user');window.location.href=BASE+'/Login%20Page.html';}
+document.addEventListener('DOMContentLoaded',function(){if(!getToken()){window.location.href=BASE+'/Login%20Page.html?redirect=AdminConsoleMobile.html';return;}loadDashboard();});
+</script>
+</body>
+</html>

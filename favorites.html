@@ -15,7 +15,7 @@
   <meta property="og:url" content="https://zipzapzoi.com/favorites.html"/>
   <meta property="og:title" content="My Favourites — ZipZapZoi"/>
   <meta property="og:description" content="Access your saved listings on ZipZapZoi Classifieds."/>
-  <meta property="og:image" content="https://zipzapzoi.com/og-image.png"/>
+  <meta property="og:image" content="https://www.zipzapzoi.com/images/default-share.png"/>
   <meta name="robots" content="index, follow"/>
   <link rel="canonical" href="https://zipzapzoi.com/favorites.html"/>
     <title>ZipZapZoi - My Favorites</title>
@@ -190,7 +190,7 @@
                 <div class="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-900">
                   <img src="${img}" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
                   <div class="absolute top-4 left-4 bg-white/90 dark:bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-gray-800 dark:text-white uppercase tracking-wider card-image-wrap">
-                    ${l.category || 'General'}
+                    ${escapeHtml(l.category || 'General')}
                   </div>
                   <button onclick="event.stopPropagation(); removeFav('${l.id}')" class="fav-btn absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center card-image-wrap" title="Remove from favorites">
                     <span class="material-symbols-outlined text-xl">favorite</span>
@@ -198,12 +198,12 @@
                 </div>
                 <div class="p-5">
                   <div class="flex justify-between items-start mb-1">
-                    <h3 class="text-base font-bold text-gray-900 dark:text-white truncate pr-2">${l.title}</h3>
+                    <h3 class="text-base font-bold text-gray-900 dark:text-white truncate pr-2">${escapeHtml(l.title)}</h3>
                     <p class="text-lg font-black text-primary whitespace-nowrap">&#8377;${Number(l.price || 0).toLocaleString('en-IN')}</p>
                   </div>
                   <div class="flex items-center gap-2 text-xs font-bold text-gray-400 dark:text-gray-500 mt-3">
                     <span class="material-symbols-outlined text-[14px]">location_on</span>
-                    <span>${l.location_city || l.location || l.city || 'Local'}</span>
+                    <span>${escapeHtml(l.location_city || l.location || l.city || 'Local')}</span>
                   </div>
                 </div>
               </div>`;

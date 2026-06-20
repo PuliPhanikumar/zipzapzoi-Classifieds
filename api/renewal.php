@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * ZipZapZoi — Listing Renewal API
  *
@@ -82,7 +82,7 @@ if ($dup->fetch()) {
 }
 
 // ── 7. Verify amount via Razorpay API (₹16 = 1600 paise) ─────────
-$expectedPaise = 1600;
+$expectedPaise = 2000; // Matches api/transactions.php renewal plan
 $keys  = getRazorpayKeys();
 $keyId = $keys['razorpay_key']    ?? '';
 $secret= $keys['razorpay_secret'] ?? '';

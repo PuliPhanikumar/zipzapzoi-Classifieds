@@ -55,7 +55,7 @@ $targetUrl = "/Listing Detail.html?id=" . urlencode($id);
     <meta property="og:title" content="<?= $fullTitle ?>" />
     <meta property="og:description" content="<?= $description ?>" />
     <meta property="og:image" content="<?= $imageUrl ?>" />
-    <meta property="og:url" content="<?= $protocol . $domain . $_SERVER['REQUEST_URI'] ?>" />
+    <meta property="og:url" content="<?= $protocol . $domain . htmlspecialchars($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8') ?>" />
     <meta property="og:type" content="website" />
     
     <!-- Twitter Card Meta Tags -->

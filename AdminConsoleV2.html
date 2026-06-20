@@ -134,6 +134,25 @@
   .password-wrap input{padding-right:44px;}
   .password-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8;}
   .listing-tab-btn:hover{background:#f8fafc;}
+
+  /* Mobile Sidebar Overlay */
+  #mobileSidebarOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9;backdrop-filter:blur(2px);}
+  #mobileSidebarOverlay.active{display:block;}
+
+  /* Responsive Media Query */
+  @media (max-width: 768px) {
+    #sidebar { position:fixed; top:0; left:0; bottom:0; transform:translateX(-100%); transition:transform 0.3s ease; z-index:10; box-shadow:4px 0 24px rgba(0,0,0,.1); }
+    #sidebar.open { transform:translateX(0); }
+    #topbar { padding:0 16px; gap:12px; }
+    #topbar h2 { font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    #contentArea { padding:16px; }
+    .grid-4, .grid-3, .grid-2, .form-row-2, .form-row-3 { grid-template-columns: 1fr; gap:12px; }
+    .schema-grid { grid-template-columns: 1fr; height:auto; display:flex; flex-direction:column; gap:16px; }
+    .schema-panel { min-height: 400px; }
+    #hamburgerBtn { display:inline-flex !important; }
+    .btn-sm { padding:6px 10px; font-size:11px; }
+    #sessionTimerBadge { display:none !important; }
+  }
 </style>
 
     <!-- Google Analytics -->
@@ -141,6 +160,21 @@
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
+      function toggleMobileSidebar(forceState) {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('mobileSidebarOverlay');
+  if (forceState === false) {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+    return;
+  }
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('active');
+}
+
+// ════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════
       gtag('js', new Date());
       gtag('config', 'G-HVTZDKTMJ9');
     </script>
@@ -150,6 +184,7 @@
 <!-- ═══════════════════════════════════════════════════
      SIDEBAR
 ════════════════════════════════════════════════════════ -->
+<div id="mobileSidebarOverlay" onclick="toggleMobileSidebar()"></div>
 <div id="sidebar">
   <div class="nav-logo">
     <span class="material-symbols-outlined" style="color:var(--brand);font-size:26px;">admin_panel_settings</span>
@@ -216,6 +251,7 @@
 <div id="main">
   <!-- Topbar -->
   <div id="topbar">
+    <button id="hamburgerBtn" onclick="toggleMobileSidebar()" class="btn-icon" style="display:none;" title="Menu"><span class="material-symbols-outlined">menu</span></button>
     <h2 id="pageTitle">Dashboard &amp; Analytics</h2>
     <span id="sessionTimerBadge" style="font-size:12px;font-weight:700;color:#64748b;background:#f1f5f9;padding:5px 14px;border-radius:99px;">Session: 60:00</span>
     <button onclick="toggleDarkMode()" class="btn-icon" title="Dark Mode"><span class="material-symbols-outlined">dark_mode</span></button>
@@ -880,6 +916,7 @@ const adminPut   = (url, data) => apiPut(url, data);
 //  TAB SWITCHING
 // ─────────────────────────────────────────────────────────
 function switchTab(id) {
+  if(window.innerWidth <= 768) toggleMobileSidebar(false);
   // Hide all panels
   document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
   // Show target
@@ -2052,3 +2089,5 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
+

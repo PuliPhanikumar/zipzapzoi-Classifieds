@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -14,7 +14,7 @@
   <meta property="og:url" content="https://zipzapzoi.com/User Registration.html"/>
   <meta property="og:title" content="Create Account — ZipZapZoi Classifieds"/>
   <meta property="og:description" content="Sign up for ZipZapZoi to post free ads and connect with local buyers across India."/>
-  <meta property="og:image" content="https://zipzapzoi.com/og-image.png"/>
+  <meta property="og:image" content="https://www.zipzapzoi.com/images/default-share.png"/>
   <meta name="robots" content="index, follow"/>
   <link rel="canonical" href="https://zipzapzoi.com/User Registration.html"/>
   <title>ZipZapZoi – Create Account</title>
@@ -118,7 +118,7 @@
   <div class="hidden lg:flex w-5/12 relative overflow-hidden flex-col justify-between p-10" style="background: linear-gradient(135deg, #019863 0%, #4D96A9 100%);">
     <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 24px 24px;"></div>
     
-    <a href="Classifieds LandingPage.html" class="relative z-10 flex items-center gap-2 text-white font-bold text-xl">
+    <a href="index.html" class="relative z-10 flex items-center gap-2 text-white font-bold text-xl">
       <span class="material-symbols-outlined text-3xl">all_inclusive</span> ZipZapZoi
     </a>
 
@@ -153,7 +153,7 @@
   <div class="w-full lg:w-7/12 p-8 md:p-12 flex flex-col justify-center bg-white dark:bg-card-dark">
 
     <!-- Mobile logo -->
-    <a href="Classifieds LandingPage.html" class="lg:hidden flex items-center gap-2 text-primary font-bold text-xl mb-6">
+    <a href="index.html" class="lg:hidden flex items-center gap-2 text-primary font-bold text-xl mb-6">
       <span class="material-symbols-outlined text-3xl">all_inclusive</span> ZipZapZoi
     </a>
 
@@ -506,7 +506,7 @@
       // Account created! Save user to localStorage for UI
       const user = data.data.user;
       localStorage.setItem('zzz_user', JSON.stringify(user));
-      localStorage.setItem('zipzapzoi_current_user', JSON.stringify(user));
+      localStorage.removeItem('zipzapzoi_current_user');
       clearInterval(_countdownId);
 
       document.getElementById('stepOTP').classList.add('hidden');

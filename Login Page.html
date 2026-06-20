@@ -12,12 +12,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta property="og:type" content="website"/>
   <meta property="og:url" content="https://zipzapzoi.com/Login Page.html"/>
-  <meta property="og:title" content="Login — ZipZapZoi Classifieds"/>
+  <meta property="og:title" content="Login � ZipZapZoi Classifieds"/>
   <meta property="og:description" content="Log into your ZipZapZoi account to post ads, manage listings and message buyers."/>
-  <meta property="og:image" content="https://zipzapzoi.com/og-image.png"/>
+  <meta property="og:image" content="https://www.zipzapzoi.com/images/default-share.png"/>
   <meta name="robots" content="index, follow"/>
   <link rel="canonical" href="https://zipzapzoi.com/Login Page.html"/>
-  <title>ZipZapZoi – Sign In</title>
+  <title>ZipZapZoi � Sign In</title>
   <meta name="description" content="Sign in to your ZipZapZoi account to manage listings, chat with buyers, and discover local deals."/>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
@@ -112,7 +112,7 @@
   <div class="hidden md:flex w-5/12 relative overflow-hidden flex-col justify-between p-10" style="background: linear-gradient(135deg, #019863 0%, #4D96A9 100%);">
     <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 24px 24px;"></div>
     
-    <a href="Classifieds LandingPage.html" class="relative z-10 flex items-center gap-2 text-white font-bold text-xl">
+    <a href="index.html" class="relative z-10 flex items-center gap-2 text-white font-bold text-xl">
       <span class="material-symbols-outlined text-3xl">all_inclusive</span> ZipZapZoi
     </a>
 
@@ -136,18 +136,18 @@
       </div>
     </div>
 
-    <p class="relative z-10 text-green-100 text-xs opacity-70">© 2026 ZipZapZoi. All Rights Reserved.</p>
+    <p class="relative z-10 text-green-100 text-xs opacity-70">� 2026 ZipZapZoi. All Rights Reserved.</p>
   </div>
 
   <!-- RIGHT PANEL -->
   <div class="w-full md:w-7/12 p-8 md:p-12 flex flex-col justify-center">
 
     <!-- Mobile logo -->
-    <a href="Classifieds LandingPage.html" class="md:hidden flex items-center gap-2 text-primary font-bold text-xl mb-8">
+    <a href="index.html" class="md:hidden flex items-center gap-2 text-primary font-bold text-xl mb-8">
       <span class="material-symbols-outlined text-3xl">all_inclusive</span> ZipZapZoi
     </a>
 
-    <!-- ══════════════ STEP 1: LOGIN FORM ══════════════ -->
+    <!-- -------------- STEP 1: LOGIN FORM -------------- -->
     <div id="stepLogin" class="animate-fade-in">
       <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">Sign In</h1>
@@ -167,7 +167,7 @@
           <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="password">Password</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">lock</span>
-            <input type="password" id="password" class="input-field" placeholder="••••••••" required autocomplete="current-password"/>
+            <input type="password" id="password" class="input-field" placeholder="��������" required autocomplete="current-password"/>
             <button type="button" onclick="togglePass()" class="absolute right-3 top-3.5 text-gray-400 hover:text-primary transition-colors">
               <span id="eyeIcon" class="material-symbols-outlined text-[20px]">visibility</span>
             </button>
@@ -191,16 +191,16 @@
 
     </div>
 
-    <!-- ══════════════ STEP 2: OTP VERIFICATION ══════════════ -->
+    <!-- -------------- STEP 2: OTP VERIFICATION -------------- -->
   </div>
 </div>
 
 <script src="js/utils.js"></script>
 <script>
-  // ═══════════════════════════════════════════════════════════
-  // EmailJS Config — managed via Admin Console > Global Settings > API & Integrations
-  // Keys update automatically when saved in admin — no code change needed
-  // ═══════════════════════════════════════════════════════════
+  // -----------------------------------------------------------
+  // EmailJS Config � managed via Admin Console > Global Settings > API & Integrations
+  // Keys update automatically when saved in admin � no code change needed
+  // -----------------------------------------------------------
   function getApiCfg() {
     const saved = JSON.parse(localStorage.getItem('zzz_api_config') || '{}');
     return {
@@ -223,10 +223,10 @@
   // Sync dark mode icon
   if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
 
-  // ─── State ────────────────────────────────────────────────
+  // --- State ------------------------------------------------
   
 
-  // ─── Utilities ────────────────────────────────────────────
+  // --- Utilities --------------------------------------------
   function showToast(msg, type = 'success') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
@@ -254,12 +254,12 @@
   }
 
 
-  // ─── OTP Generation ───────────────────────────────────────
+  // --- OTP Generation ---------------------------------------
   function generateOtp() {
     return String(Math.floor(100000 + Math.random() * 900000));
   }
 
-  // ─── Send OTP via EmailJS ──────────────────────────────────
+  // --- Send OTP via EmailJS ----------------------------------
   async function sendOtpEmail(userObj, otpCode) {
     try {
       await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
@@ -269,14 +269,14 @@
         expiry_mins: getApiCfg().otpExpiry || '10',
         email:       userObj.email,
       });
-      showToast(`OTP sent to ${userObj.email} 📧`, 'success');
+      showToast(`OTP sent to ${userObj.email} ??`, 'success');
     } catch (err) {
       console.error('EmailJS error:', err);
       showToast('Failed to send OTP email. Please try again or contact support.', 'error');
     }
   }
 
-  // ─── Countdown Timer ──────────────────────────────────────
+  // --- Countdown Timer --------------------------------------
   function startCountdown(durationMs) {
     clearInterval(_countdownId);
     const el = document.getElementById('otpCountdown');
@@ -314,12 +314,12 @@
     }, 1000);
   }
 
-  // ─── OTP Box Input Handling ────────────────────────────────
+  // --- OTP Box Input Handling --------------------------------
 
   function loginSuccess(user) {
     // Save user info to localStorage for UI display (auth is via session cookie)
     localStorage.setItem('zzz_user', JSON.stringify(user));
-    localStorage.setItem('zipzapzoi_current_user', JSON.stringify(user));
+    localStorage.removeItem('zipzapzoi_current_user');
     _pendingPass = null; // Clear password from memory
     const redirect = new URLSearchParams(window.location.search).get('redirect');
     setTimeout(() => {
@@ -329,7 +329,7 @@
     }, 800);
   }
 
-  // ─── Form Submit (Step 1) — calls real PHP API ───────────
+  // --- Form Submit (Step 1) � calls real PHP API -----------
   document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const email    = document.getElementById('email').value.trim().toLowerCase();
@@ -361,8 +361,8 @@
         return;
       }
 
-      // Credentials valid — session created directly (OTP already verified once at registration)
-      showToast(`Welcome back, ${data.data.user.name.split(' ')[0]}! 🎉`, 'success');
+      // Credentials valid � session created directly (OTP already verified once at registration)
+      showToast(`Welcome back, ${data.data.user.name.split(' ')[0]}! ??`, 'success');
       loginSuccess(data.data.user);
 
     } catch (err) {

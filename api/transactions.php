@@ -37,9 +37,6 @@ function recordTransaction(array $user): void {
 
     $planId   = clean($b['plan_id']   ?? '');
     $planName = clean($b['plan_name'] ?? '');
-    $amount   = (float)($b['amount'] ?? 0);
-    $ads      = (int)($b['ads']  ?? 0);
-    $days     = (int)($b['days'] ?? 30);
 
     // Payment identifiers (required for paid plans)
     $rzpPaymentId = clean($b['razorpay_payment_id'] ?? '');
@@ -47,7 +44,39 @@ function recordTransaction(array $user): void {
     $rzpSignature = clean($b['razorpay_signature']  ?? '');
 
     if (!$planId) jsonError('plan_id is required.');
-    if ($ads < 0 || $days < 0) jsonError('Invalid ads/days value.');
+
+    $db = getDB();
+
+    // ── Validate Plan Server-Side ────────────────────────────────────
+    $cfgRes = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'plan_config'")->fetchColumn();
+    $serverPlans = $cfgRes ? json_decode($cfgRes, true) : [];
+    
+    if (empty($serverPlans)) {
+        // Fallback plans if not set in DB
+        $serverPlans = [
+            ['id' => 'monthly_free', 'price' => 0, 'ads' => 1, 'days' => 30],
+            ['id' => 'extra_ad', 'price' => 16, 'ads' => 1, 'days' => 30],
+            ['id' => 'renewal', 'price' => 20, 'ads' => 1, 'days' => 60],
+            ['id' => 'starter', 'price' => 66, 'ads' => 5, 'days' => 30],
+            ['id' => 'growth', 'price' => 149, 'ads' => 15, 'days' => 30],
+            ['id' => 'business', 'price' => 249, 'ads' => 30, 'days' => 30],
+            ['id' => 'pro', 'price' => 499, 'ads' => 100, 'days' => 30],
+        ];
+    }
+    
+    $planDef = null;
+    foreach ($serverPlans as $p) {
+        if ($p['id'] === $planId) {
+            $planDef = $p;
+            break;
+        }
+    }
+    
+    if (!$planDef) jsonError('Invalid plan selected.');
+    
+    $amount = (float)$planDef['price'];
+    $ads    = (int)$planDef['ads'];
+    $days   = (int)$planDef['days'];
 
     $db = getDB();
 
@@ -112,9 +141,16 @@ function recordTransaction(array $user): void {
         }
     } else {
         // Free transaction (e.g. free plan, admin grant) — no Razorpay needed
-        // For safety: ensure ads granted doesn't exceed what's defined for free plans
-        if ($ads > 10) {
-            jsonError('Free plan cannot grant more than 10 ads. Contact admin.', 422);
+        if ($planId === 'monthly_free') {
+            // Check if already claimed this month
+            $startOfMonth = date('Y-m-01 00:00:00');
+            $chk = $db->prepare("SELECT id FROM transactions WHERE user_id = ? AND plan_id = 'monthly_free' AND created_at >= ?");
+            $chk->execute([(int)$user['id'], $startOfMonth]);
+            if ($chk->fetch()) {
+                jsonError('You have already claimed your free ad for this month.');
+            }
+        } else {
+            jsonError('Unauthorized free plan request. Only monthly_free is allowed.', 403);
         }
     }
 

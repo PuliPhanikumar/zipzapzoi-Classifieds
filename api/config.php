@@ -17,10 +17,19 @@ header('Access-Control-Allow-Credentials: true');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
 // ── Database Credentials ──────────────────────────────────────────────
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'u572945141_Classifieds_db');
-define('DB_USER', 'u572945141_Classifieds_db');  // ← Replace with your DB username from hPanel
-define('DB_PASS', 'Dhiyanshi#28');           // ← Replace with your DB password
+$envFile = __DIR__ . '/.env';
+if (file_exists($envFile)) {
+    $envVariables = parse_ini_file($envFile);
+    foreach ($envVariables as $key => $value) {
+        putenv("$key=$value");
+        $_ENV[$key] = $value;
+    }
+}
+
+define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
+define('DB_NAME', $_ENV['DB_NAME'] ?? 'u572945141_Classifieds_db');
+define('DB_USER', $_ENV['DB_USER'] ?? 'u572945141_Classifieds_db');
+define('DB_PASS', $_ENV['DB_PASS'] ?? '');
 define('DB_CHARSET', 'utf8mb4');
 
 // ── Session / Cookie Settings ─────────────────────────────────────────
@@ -85,7 +94,7 @@ function getCurrentUser(): ?array {
             'path'     => '/',
             'secure'   => true,
             'httponly' => true,
-            'samesite' => 'Lax',
+            'samesite' => 'Strict',
         ]);
         return $user;
     } catch (PDOException $e) {
@@ -141,7 +150,7 @@ function createSession(int $userId): string {
         'path'     => '/',
         'secure'   => true,
         'httponly' => true,
-        'samesite' => 'Lax',
+        'samesite' => 'Strict',
     ]);
     return $token;
 }
@@ -152,7 +161,13 @@ function destroySession(): void {
     if ($token) {
         getDB()->prepare('DELETE FROM sessions WHERE token = ?')->execute([$token]);
     }
-    setcookie(SESSION_COOKIE, '', ['expires' => time() - 3600, 'path' => '/']);
+    setcookie(SESSION_COOKIE, '', [
+        'expires'  => time() - 3600,
+        'path'     => '/',
+        'secure'   => true,
+        'httponly' => true,
+        'samesite' => 'Strict',
+    ]);
 }
 
 // ── Razorpay Keys (loaded from system_settings table) ────────────

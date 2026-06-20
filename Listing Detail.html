@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -15,7 +15,7 @@
   <meta property="og:url" content="https://zipzapzoi.com/Listing Detail.html"/>
   <meta property="og:title" content="Listing Details — ZipZapZoi"/>
   <meta property="og:description" content="View ad details, photos, seller info and contact options on ZipZapZoi Classifieds."/>
-  <meta property="og:image" content="https://zipzapzoi.com/og-image.png"/>
+  <meta property="og:image" content="https://www.zipzapzoi.com/images/default-share.png"/>
   <meta name="robots" content="index, follow"/>
   <link rel="canonical" href="https://zipzapzoi.com/Listing Detail.html"/>
     <title>ZipZapZoi - Listing Details</title>
@@ -451,6 +451,42 @@
       function renderData() {
         const l = currentListing;
         document.title = l.title + ' - ZipZapZoi';
+        // Dynamic SEO & OpenGraph
+        const siteUrl = "https://www.zipzapzoi.com";
+        const metaTitle = document.querySelector('meta[property="og:title"]');
+        const metaDesc = document.querySelector('meta[property="og:description"]');
+        const metaImage = document.querySelector('meta[property="og:image"]');
+        const metaUrl = document.querySelector('meta[property="og:url"]');
+        const canonical = document.querySelector('link[rel="canonical"]');
+        
+        if (metaTitle) metaTitle.content = l.title + ' | ZipZapZoi';
+        if (metaDesc) metaDesc.content = (l.description || '').substring(0, 150) + '...';
+        if (metaImage && l.images && l.images.length > 0) metaImage.content = l.images[0].startsWith('http') ? l.images[0] : siteUrl + '/' + l.images[0];
+        if (metaUrl) metaUrl.content = siteUrl + '/Listing%20Detail.html?id=' + l.id;
+        if (canonical) canonical.href = siteUrl + '/Listing%20Detail.html?id=' + l.id;
+
+        // Structured Data JSON-LD
+        let jsonLdScript = document.getElementById('json-ld');
+        if (!jsonLdScript) {
+            jsonLdScript = document.createElement('script');
+            jsonLdScript.id = 'json-ld';
+            jsonLdScript.type = 'application/ld+json';
+            document.head.appendChild(jsonLdScript);
+        }
+        jsonLdScript.textContent = JSON.stringify({
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            "name": l.title,
+            "image": (l.images && l.images.length > 0) ? l.images : [siteUrl + "/images/default-share.png"],
+            "description": l.description,
+            "offers": {
+                "@type": "Offer",
+                "priceCurrency": "INR",
+                "price": parseFloat(l.price || 0),
+                "itemCondition": "https://schema.org/UsedCondition",
+                "availability": "https://schema.org/InStock"
+            }
+        });
 
         document.getElementById('detailTitle').textContent    = l.title || '';
         document.getElementById('detailCategory').textContent = l.subcategory || l.category || '';
@@ -545,9 +581,9 @@
                 <img src="${img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
               </div>
               <div class="p-4">
-                <h3 class="font-bold text-gray-900 dark:text-white truncate mb-1">${s.title}</h3>
+                <h3 class="font-bold text-gray-900 dark:text-white truncate mb-1">${escapeHtml(s.title)}</h3>
                 <p class="text-primary font-black">\u20b9${parseFloat(s.price||0).toLocaleString('en-IN')}</p>
-                <p class="text-xs text-gray-400 mt-2 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> ${s.location_city}</p>
+                <p class="text-xs text-gray-400 mt-2 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> ${escapeHtml(s.location_city || 'Local')}</p>
               </div>
             </a>`;
           }).join('');
