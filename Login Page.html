@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -316,10 +316,15 @@
 
   // --- OTP Box Input Handling --------------------------------
 
-  function loginSuccess(user) {
+  function loginSuccess(user, token) {
     // Save user info to localStorage for UI display (auth is via session cookie)
     localStorage.setItem('zzz_user', JSON.stringify(user));
-    localStorage.removeItem('zipzapzoi_current_user');
+    localStorage.setItem('zipzapzoi_current_user', JSON.stringify(user));
+    // Save token for mobile APK Bearer auth
+    if (token) {
+      localStorage.setItem('zipzapzoi_token', token);
+      sessionStorage.setItem('zipzapzoi_token', token);
+    }
     _pendingPass = null; // Clear password from memory
     const redirect = new URLSearchParams(window.location.search).get('redirect');
     setTimeout(() => {
@@ -361,9 +366,9 @@
         return;
       }
 
-      // Credentials valid � session created directly (OTP already verified once at registration)
-      showToast(`Welcome back, ${data.data.user.name.split(' ')[0]}! ??`, 'success');
-      loginSuccess(data.data.user);
+      // Credentials valid  session created directly (OTP already verified once at registration)
+      showToast(`Welcome back, ${data.data.user.name.split(' ')[0]}! 🎉`, 'success');
+      loginSuccess(data.data.user, data.data.token);
 
     } catch (err) {
       btn.disabled = false;

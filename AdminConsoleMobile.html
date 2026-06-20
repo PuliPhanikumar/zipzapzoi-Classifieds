@@ -249,16 +249,17 @@ document.querySelectorAll('.modal-overlay').forEach(function(m){m.addEventListen
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 async function loadDashboard(){
   var d=await api('/api/admin/dashboard.php');
-  var s=(d&&d.stats)||d||{};
+  var payload=(d&&d.data)||d||{};
+  var s=payload.stats||{};
   document.getElementById('statUsers').textContent=s.total_users||'--';
   document.getElementById('statListings').textContent=s.active_listings||'--';
   document.getElementById('statTickets').textContent=s.open_tickets||'0';
   document.getElementById('statRev').textContent=s.total_revenue?'Rs.'+Number(s.total_revenue).toLocaleString('en-IN'):'Rs.0';
-  var logs=(d&&d.logs)||[];
+  var logs=payload.logs||[];
   var logEl=document.getElementById('dashLogs');
   if(!logs.length){logEl.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">receipt_long</span><p>No recent activity</p></div>';}
   else{logEl.innerHTML=logs.slice(0,8).map(function(l){return '<div class="log-row"><div class="log-dot"></div><div><div style="font-size:13px;font-weight:600;">'+esc(l.action||'')+'</div><div style="font-size:12px;color:var(--muted)">'+esc(l.detail||'')+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+esc(l.created_at||'')+'</div></div></div>';}).join('');}
-  var pend=(d&&d.pending_listings)||0;
+  var pend=s.pending_listings||payload.pending_listings||0;
   var badge=document.getElementById('pendingBadge');
   badge.textContent=pend;badge.classList.toggle('show',pend>0);
   try{var u=JSON.parse(localStorage.getItem('zipzapzoi_current_user')||'{}');document.getElementById('adminName').textContent=u.name||'Admin';document.getElementById('adminInitial').textContent=(u.name||'A')[0].toUpperCase();}catch(e){}

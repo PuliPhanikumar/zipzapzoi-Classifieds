@@ -66,9 +66,21 @@ function jsonError(string $message, int $code = 400): never {
     exit;
 }
 
-// ── Auth: Get Current User From Session Cookie ────────────────────────
+// ── Auth: Get Current User From Session Cookie OR Bearer Token ────────
 function getCurrentUser(): ?array {
-    $token = $_COOKIE[SESSION_COOKIE] ?? '';
+    // Check Authorization: Bearer <token> header first (mobile app)
+    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    if (empty($authHeader) && function_exists('apache_request_headers')) {
+        $headers = apache_request_headers();
+        $authHeader = $headers['Authorization'] ?? '';
+    }
+    if (!empty($authHeader) && str_starts_with($authHeader, 'Bearer ')) {
+        $token = trim(substr($authHeader, 7));
+    } else {
+        // Fallback to cookie (desktop web)
+        $token = $_COOKIE[SESSION_COOKIE] ?? '';
+    }
+
     if (!$token || strlen($token) < 32) return null;
     try {
         $db  = getDB();
@@ -88,7 +100,7 @@ function getCurrentUser(): ?array {
         $newExpiry = date('Y-m-d H:i:s', strtotime('+' . SESSION_DAYS . ' days'));
         $db->prepare('UPDATE sessions SET last_activity = NOW(), expires_at = ? WHERE token = ?')
            ->execute([$newExpiry, $token]);
-        // Refresh cookie
+        // Refresh cookie (only relevant for web, safe to call for mobile too)
         setcookie(SESSION_COOKIE, $token, [
             'expires'  => time() + SESSION_SECONDS,
             'path'     => '/',
