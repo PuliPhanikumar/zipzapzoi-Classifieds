@@ -38,7 +38,7 @@ if (file_exists($envFile)) {
 define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
 define('DB_NAME', $_ENV['DB_NAME'] ?? 'u572945141_Classifieds_db');
 define('DB_USER', $_ENV['DB_USER'] ?? 'u572945141_Classifieds_db');
-define('DB_PASS', $_ENV['DB_PASS'] ?? '');
+define('DB_PASS', $_ENV['DB_PASS'] ?? 'Dhiyanshi#28');
 define('DB_CHARSET', 'utf8mb4');
 
 // ── Session / Cookie Settings ─────────────────────────────────────────
