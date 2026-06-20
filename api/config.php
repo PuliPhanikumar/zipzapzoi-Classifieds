@@ -55,12 +55,12 @@ function getDB(): PDO {
 }
 
 // ── JSON Response Helpers ─────────────────────────────────────────────
-function jsonOk(mixed $data = null, int $code = 200): never {
+function jsonOk($data = null, int $code = 200): void {
     http_response_code($code);
     echo json_encode(['success' => true, 'data' => $data], JSON_UNESCAPED_UNICODE);
     exit;
 }
-function jsonError(string $message, int $code = 400): never {
+function jsonError(string $message, int $code = 400): void {
     http_response_code($code);
     echo json_encode(['success' => false, 'error' => $message], JSON_UNESCAPED_UNICODE);
     exit;
