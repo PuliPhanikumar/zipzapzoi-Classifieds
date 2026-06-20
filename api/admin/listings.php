@@ -74,7 +74,18 @@ function updateListing(array $admin): void {
     if (!$id) jsonError('Listing id required.');
     if (!in_array($status, $allowed)) jsonError('Invalid status: ' . $status);
 
-    $db->prepare('UPDATE listings SET status=?, updated_at=NOW() WHERE id=?')->execute([$status, $id]);
+    if ($status === 'active') {
+        // Fairness logic: If setting to active (approving), reset the creation clock to right now
+        // so it bumps to the top of the feed and they get their full 30 days from this exact moment.
+        $expiryStmt = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'listing_expiry_days'");
+        $expiryVal = $expiryStmt->fetchColumn();
+        $expiresDays = (is_numeric($expiryVal) && (int)$expiryVal > 0) ? (int)$expiryVal : 30;
+        
+        $db->prepare('UPDATE listings SET status=?, created_at=NOW(), updated_at=NOW(), expires_at=DATE_ADD(NOW(), INTERVAL ? DAY) WHERE id=?')
+           ->execute([$status, $expiresDays, $id]);
+    } else {
+        $db->prepare('UPDATE listings SET status=?, updated_at=NOW() WHERE id=?')->execute([$status, $id]);
+    }
 
     $actionMap = [
         'active'   => 'APPROVE_LISTING',
