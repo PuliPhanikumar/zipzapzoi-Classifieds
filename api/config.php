@@ -16,6 +16,9 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization');
 header('Access-Control-Allow-Credentials: true');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
+// ── Set default timezone for PHP mathematically exact dates ───────
+date_default_timezone_set('Asia/Kolkata');
+
 // ── Database Credentials ──────────────────────────────────────────────
 $envFile = __DIR__ . '/.env';
 if (file_exists($envFile)) {
