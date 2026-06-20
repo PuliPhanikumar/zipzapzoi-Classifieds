@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -582,7 +582,7 @@
                   
                   <div class="flex items-center gap-4 text-xs font-bold text-gray-400 dark:text-gray-500 pt-4 border-t border-gray-100 dark:border-gray-800">
                     <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">location_on</span> ${escapeHtml(l.location_city || l.location || 'Local')}</span>
-                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> ${l.created_at ? new Date(l.created_at).toLocaleDateString() : 'Just now'}</span>
+                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> ${l.created_at ? new Date(l.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : 'Just now'}</span>
                   </div>
                 </div>
 

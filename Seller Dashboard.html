@@ -659,8 +659,8 @@
     }
 
     function formatDate(item) {
-      // API uses updated_at / created_at (snake_case)
-      const raw = item.updated_at || item.created_at || item.updatedAt || item.createdAt;
+      // API uses created_at (snake_case)
+      const raw = item.created_at || item.createdAt || item.updated_at || item.updatedAt;
       if (!raw) return 'Just now';
       const d = new Date(raw);
       return isNaN(d.getTime()) ? 'Just now' : d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
