@@ -9,7 +9,14 @@ $admin  = requireAdmin();
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET')  getSettings();
-elseif ($method === 'POST') saveSettings($admin);
+elseif ($method === 'POST') {
+    $b = getBody();
+    if (isset($b['action']) && $b['action'] === 'change_password') {
+        changePassword($admin, $b);
+    } else {
+        saveSettings($admin);
+    }
+}
 else jsonError('Method not allowed', 405);
 
 function getSettings(): void {
@@ -18,6 +25,18 @@ function getSettings(): void {
     $out  = [];
     foreach ($rows as $r) $out[$r['setting_key']] = $r['setting_value'];
     jsonOk($out);
+}
+
+function changePassword(array $admin, array $b): void {
+    $db = getDB();
+    $pwd = $b['password'] ?? '';
+    if (strlen($pwd) < 8) jsonError('Password must be at least 8 characters.');
+    
+    $hash = password_hash($pwd, PASSWORD_DEFAULT);
+    $db->prepare('UPDATE users SET password_hash = ? WHERE id = ?')->execute([$hash, (int)$admin['id']]);
+    
+    adminLog($admin, 'CHANGE_PASSWORD', 'Admin updated their password.');
+    jsonOk(['message' => 'Password updated.']);
 }
 
 function saveSettings(array $admin): void {
@@ -30,9 +49,9 @@ function saveSettings(array $admin): void {
         'listing_expiry_days', 'max_upload_mb', 'allowed_formats', 'session_timeout_mins',
         'emailjs_service', 'emailjs_public', 'emailjs_otp_template', 'emailjs_reset_template',
         'razorpay_key', 'razorpay_secret', 'razorpay_currency', 'razorpay_env',
-        'plan_config', 'featured_prices',
-        'site_name', 'support_email', 'otp_expiry_mins',
-        'security_2fa', 'ip_allowlist', 'ai_blacklist',
+        'plan_config', 'featured_prices', 'max_images_per_listing',
+        'site_name', 'site_tagline', 'support_email', 'otp_expiry_mins',
+        'security_2fa', 'ip_allowlist', 'ai_blacklist', 'auto_approve_listings',
     ];
 
     $stmt = $db->prepare(
