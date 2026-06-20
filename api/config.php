@@ -46,8 +46,6 @@ define('DB_CHARSET', 'utf8mb4');
 
 // ── Session / Cookie Settings ─────────────────────────────────────────
 define('SESSION_COOKIE', 'zzz_session');
-define('SESSION_DAYS', 30);
-define('SESSION_SECONDS', SESSION_DAYS * 24 * 3600);
 define('UPLOAD_DIR', __DIR__ . '/../uploads/listings/');
 define('UPLOAD_URL', '/uploads/listings/');
 define('MAX_UPLOAD_MB', 10);
@@ -66,6 +64,35 @@ function getDB(): PDO {
     }
     return $pdo;
 }
+
+// ── IP Allowlist & Blacklist Middleware ───────────────────────────
+$clientIp = $_SERVER['REMOTE_ADDR'] ?? '';
+try {
+    $middlewareDb = getDB();
+    $listStmt = $middlewareDb->query("SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN ('ip_allowlist', 'ai_blacklist')");
+    $lists = [];
+    while ($row = $listStmt->fetch()) {
+        $lists[$row['setting_key']] = $row['setting_value'];
+    }
+    
+    $allowlist = trim($lists['ip_allowlist'] ?? '');
+    if ($allowlist) {
+        $allowedIps = array_map('trim', explode(',', $allowlist));
+        if (!in_array($clientIp, $allowedIps)) {
+            http_response_code(403);
+            die(json_encode(['success' => false, 'error' => 'Access denied: IP not in allowlist.']));
+        }
+    }
+    
+    $blacklist = trim($lists['ai_blacklist'] ?? '');
+    if ($blacklist) {
+        $blockedIps = array_map('trim', explode(',', $blacklist));
+        if (in_array($clientIp, $blockedIps)) {
+            http_response_code(403);
+            die(json_encode(['success' => false, 'error' => 'Access denied: IP is blacklisted.']));
+        }
+    }
+} catch (Throwable $e) {}
 
 // ── JSON Response Helpers ─────────────────────────────────────────────
 function jsonOk($data = null, int $code = 200): void {
@@ -110,12 +137,17 @@ function getCurrentUser(): ?array {
         if (!$user) return null;
 
         // Auto-renew session (refresh expiry on activity)
-        $newExpiry = date('Y-m-d H:i:s', strtotime('+' . SESSION_DAYS . ' days'));
+        $timeoutMins = 43200; // default 30 days
+        $timeoutStmt = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'session_timeout_mins'");
+        $val = $timeoutStmt->fetchColumn();
+        if (is_numeric($val) && (int)$val > 0) $timeoutMins = (int)$val;
+        
+        $newExpiry = date('Y-m-d H:i:s', strtotime("+{$timeoutMins} minutes"));
         $db->prepare('UPDATE sessions SET last_activity = NOW(), expires_at = ? WHERE token = ?')
            ->execute([$newExpiry, $token]);
         // Refresh cookie (only relevant for web, safe to call for mobile too)
         setcookie(SESSION_COOKIE, $token, [
-            'expires'  => time() + SESSION_SECONDS,
+            'expires'  => time() + ($timeoutMins * 60),
             'path'     => '/',
             'secure'   => true,
             'httponly' => true,
@@ -161,17 +193,23 @@ function validateEmail(string $email): bool {
 // ── Create Session Token & Cookie ─────────────────────────────────────
 function createSession(int $userId): string {
     $token     = bin2hex(random_bytes(32)); // 64-char secure token
-    $expiresAt = date('Y-m-d H:i:s', strtotime('+' . SESSION_DAYS . ' days'));
+    $db = getDB();
+    $timeoutMins = 43200; // default 30 days
+    $timeoutStmt = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'session_timeout_mins'");
+    $val = $timeoutStmt->fetchColumn();
+    if (is_numeric($val) && (int)$val > 0) $timeoutMins = (int)$val;
+
+    $expiresAt = date('Y-m-d H:i:s', strtotime("+{$timeoutMins} minutes"));
     $ip        = $_SERVER['REMOTE_ADDR'] ?? '';
     $ua        = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255);
 
-    getDB()->prepare(
+    $db->prepare(
         'INSERT INTO sessions (user_id, token, ip_address, user_agent, expires_at)
          VALUES (?, ?, ?, ?, ?)'
     )->execute([$userId, $token, $ip, $ua, $expiresAt]);
 
     setcookie(SESSION_COOKIE, $token, [
-        'expires'  => time() + SESSION_SECONDS,
+        'expires'  => time() + ($timeoutMins * 60),
         'path'     => '/',
         'secure'   => true,
         'httponly' => true,

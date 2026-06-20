@@ -321,7 +321,14 @@ function createListing(): void {
         }
     }
 
-    $expiresDays = $isCharity ? 12 : 30;  // Charity = 12 days (free service), Standard = 30 days
+    $expiresDays = $isCharity ? 12 : 30;  // Default
+    if (!$isCharity) {
+        $expiryStmt = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'listing_expiry_days'");
+        $expiryVal = $expiryStmt->fetchColumn();
+        if (is_numeric($expiryVal) && (int)$expiryVal > 0) {
+            $expiresDays = (int)$expiryVal;
+        }
+    }
     $expires = date('Y-m-d H:i:s', strtotime("+{$expiresDays} days"));
     $db->prepare(
         'INSERT INTO listings
