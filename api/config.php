@@ -106,7 +106,7 @@ function getCurrentUser(): ?array {
             'path'     => '/',
             'secure'   => true,
             'httponly' => true,
-            'samesite' => 'Strict',
+            'samesite' => 'Lax',
         ]);
         return $user;
     } catch (PDOException $e) {
@@ -162,7 +162,7 @@ function createSession(int $userId): string {
         'path'     => '/',
         'secure'   => true,
         'httponly' => true,
-        'samesite' => 'Strict',
+        'samesite' => 'Lax',
     ]);
     return $token;
 }
@@ -178,7 +178,7 @@ function destroySession(): void {
         'path'     => '/',
         'secure'   => true,
         'httponly' => true,
-        'samesite' => 'Strict',
+        'samesite' => 'Lax',
     ]);
 }
 

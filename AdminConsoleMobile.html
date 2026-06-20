@@ -216,9 +216,13 @@ async function api(path,method,body){
   method=method||'GET';
   var h={'Content-Type':'application/json'};
   var t=getToken();if(t)h['Authorization']='Bearer '+t;
-  var o={method:method,headers:h};
-  if(body)o.body=JSON.stringify(body);
-  try{var r=await fetch(BASE+path,o);return await r.json();}catch(e){return {error:'Network error'};}
+  var o={method:method,headers:h,credentials:'include'};
+  if(body!==null&&body!==undefined&&method!=='GET'&&method!=='DELETE')o.body=JSON.stringify(body);
+  try{
+    var r=await fetch(BASE+path,o);
+    if(!r.ok&&r.status===0)return{error:'Network error — cannot reach server'};
+    return await r.json();
+  }catch(e){return{error:'Network error: '+e.message};}
 }
 function toast(msg,type){
   type=type||'success';
