@@ -168,15 +168,15 @@ function handleVerifyOtp(array $b): void {
 function handleLogin(array $b): void {
     checkRateLimit('login', 5, 15);
 
-    $email    = strtolower(trim($b['email']    ?? ''));
+    $loginId  = strtolower(trim($b['login_id'] ?? $b['email'] ?? ''));
     $password = $b['password'] ?? '';
 
-    if (!validateEmail($email)) jsonError('Invalid email address.');
-    if (!$password)             jsonError('Password is required.');
+    if (!$loginId) jsonError('Email or Mobile Number is required.');
+    if (!$password) jsonError('Password is required.');
 
     $db = getDB();
-    $stmt = $db->prepare('SELECT * FROM users WHERE email = ? AND is_active = 1');
-    $stmt->execute([$email]);
+    $stmt = $db->prepare('SELECT * FROM users WHERE (email = ? OR phone = ?) AND is_active = 1');
+    $stmt->execute([$loginId, $loginId]);
     $user = $stmt->fetch();
 
     if (!$user || !password_verify($password, $user['password_hash'])) {

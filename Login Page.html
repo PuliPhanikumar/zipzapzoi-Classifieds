@@ -156,10 +156,10 @@
 
       <form id="loginForm" class="space-y-5" novalidate>
         <div>
-          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="email">Email Address</label>
+          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="login_id">Email or Mobile Number</label>
           <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">mail</span>
-            <input type="email" id="email" class="input-field" placeholder="name@example.com" required autocomplete="email"/>
+            <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">person</span>
+            <input type="text" id="login_id" class="input-field" placeholder="name@example.com or 10-digit number" required autocomplete="username"/>
           </div>
         </div>
 
@@ -337,11 +337,11 @@
   // --- Form Submit (Step 1) - calls real PHP API -----------
   document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    const email    = document.getElementById('email').value.trim().toLowerCase();
+    const loginId  = document.getElementById('login_id').value.trim().toLowerCase();
     const password = document.getElementById('password').value;
     const btn      = document.getElementById('loginBtn');
 
-    if (!email || !password) { showToast('Please fill in all fields.', 'error'); return; }
+    if (!loginId || !password) { showToast('Please fill in all fields.', 'error'); return; }
 
     btn.disabled = true;
     document.getElementById('btnText').textContent = 'Signing in...';
@@ -353,7 +353,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ login_id: loginId, password })
       });
       const data = await res.json();
 
