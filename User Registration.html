@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -455,6 +455,11 @@
     document.getElementById('otpSentTo').textContent = _pendingData.email;
     setProgress(2);
     document.getElementById('otp0').focus();
+    
+    // Explicit popup notification as requested
+    setTimeout(() => {
+      alert("OTP has been sent!\n\nPlease check your email inbox (and Spam/Junk folder) for the 6-digit verification code.");
+    }, 100);
   }
 
   function backToReg() {
