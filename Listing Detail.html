@@ -248,7 +248,12 @@
                   </div>
                   <div>
                     <p id="sellerName" class="font-bold text-gray-900 dark:text-white">Seller Name</p>
+                    <p id="sellerTrustedBadge" class="text-xs font-bold text-yellow-600 dark:text-yellow-400 flex items-center gap-1 hidden"><span class="material-symbols-outlined text-[16px]">local_police</span> ZipZapZoi Trusted Seller</p>
                     <p id="sellerVerifiedBadge" class="text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center gap-1 hidden"><span class="material-symbols-outlined text-[14px] text-blue-500">verified</span> Verified Member</p>
+                    <div id="sellerRatingContainer" class="flex items-center gap-1 mt-1 text-xs font-bold text-gray-500 dark:text-gray-400 hidden">
+                      <span class="material-symbols-outlined text-[14px] text-yellow-400">star</span>
+                      <span id="sellerRatingText">0 (0)</span>
+                    </div>
                   </div>
                 </div>
                 <span class="material-symbols-outlined text-gray-400">chevron_right</span>
@@ -260,6 +265,9 @@
                 </button>
                 <button onclick="makeOffer()" class="w-full py-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 font-bold text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary dark:hover:border-primary dark:hover:text-primary transition-colors">
                   Make Offer
+                </button>
+                <button onclick="openReviewModal()" class="w-full py-3 rounded-xl border border-yellow-400 text-yellow-600 dark:text-yellow-400 font-bold hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors flex items-center justify-center gap-2">
+                  <span class="material-symbols-outlined text-[18px]">star_rate</span> Leave a Review
                 </button>
                 <div class="flex gap-2">
                   <button onclick="shareToWhatsApp()" class="flex-1 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold transition-colors flex items-center justify-center gap-2 text-sm shadow-md">
@@ -324,6 +332,37 @@
             Submit Report
           </button>
           <p class="text-center text-xs text-gray-400 mt-3">False reports may result in account suspension.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── REVIEW MODAL ───────────────────────────────────────────────── -->
+    <div id="reviewModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-white dark:bg-card-dark rounded-3xl shadow-2xl overflow-hidden">
+        <div class="bg-gradient-to-r from-yellow-400 to-orange-400 p-5 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-white text-3xl">star</span>
+            <div>
+              <h3 class="text-lg font-black text-white">Rate Seller</h3>
+              <p class="text-yellow-50 text-xs">Help others by sharing your experience</p>
+            </div>
+          </div>
+          <button onclick="closeReviewModal()" class="text-white/80 hover:text-white">
+            <span class="material-symbols-outlined text-2xl">close</span>
+          </button>
+        </div>
+        <div class="p-5">
+          <div class="flex justify-center gap-2 mb-4" id="starSelection">
+            <span class="material-symbols-outlined text-4xl text-gray-300 cursor-pointer hover:text-yellow-400 transition-colors" data-val="1">star</span>
+            <span class="material-symbols-outlined text-4xl text-gray-300 cursor-pointer hover:text-yellow-400 transition-colors" data-val="2">star</span>
+            <span class="material-symbols-outlined text-4xl text-gray-300 cursor-pointer hover:text-yellow-400 transition-colors" data-val="3">star</span>
+            <span class="material-symbols-outlined text-4xl text-gray-300 cursor-pointer hover:text-yellow-400 transition-colors" data-val="4">star</span>
+            <span class="material-symbols-outlined text-4xl text-gray-300 cursor-pointer hover:text-yellow-400 transition-colors" data-val="5">star</span>
+          </div>
+          <textarea id="reviewComment" class="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white mb-5 focus:ring-2 focus:ring-yellow-400 outline-none resize-none" rows="3" placeholder="Write a short review..."></textarea>
+          <button onclick="submitReview()" id="reviewSubmitBtn" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-black py-3 rounded-2xl transition-all active:scale-[0.98]">
+            Submit Review
+          </button>
         </div>
       </div>
     </div>
@@ -440,6 +479,7 @@
           }
 
           renderData();
+          fetchSellerRating();
 
           // Non-blocking favourite state (only for logged-in users)
           if (viewer) {
@@ -537,6 +577,10 @@
         const vBadge = document.getElementById('sellerVerifiedBadge');
         if (l.seller_is_verified) { vBadge.classList.remove('hidden'); vBadge.classList.add('flex'); }
         else { vBadge.classList.add('hidden'); }
+        
+        const tBadge = document.getElementById('sellerTrustedBadge');
+        if (l.seller_trusted) { tBadge.classList.remove('hidden'); tBadge.classList.add('flex'); }
+        else { tBadge.classList.add('hidden'); }
 
         // Condition badge
         if (l.condition) document.getElementById('conditionBadge').textContent = l.condition.toUpperCase();
@@ -663,7 +707,8 @@
 
       // ─── SHARE ──────────────────────────────────────────────────────────
       function shareListing() {
-        navigator.clipboard.writeText(window.location.href).then(() => showToast('Link copied to clipboard!', 'success'));
+        const shareUrl = window.location.origin + `/Listing%20Detail.html?id=${currentListing.id}`;
+        navigator.clipboard.writeText(shareUrl).then(() => showToast('Link copied to clipboard!', 'success'));
       }
 
       // ─── REPORT LISTING ─────────────────────────────────────────────────
@@ -862,11 +907,127 @@
         .catch(() => showToast('Network error', 'error'));
       }
 
-      function shareToWhatsApp() {
+      // ─── WHATSAPP SHARE CARD ─────────────────────────────────────────
+      async function shareToWhatsApp() {
         if (!currentListing) return;
-        const text = `Check out this listing on ZipZapZoi: ${currentListing.title} for ₹${currentListing.price}\n\n`;
-        const url = window.location.origin + `/share.php?id=${currentListing.id}`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(text + url)}`, '_blank');
+        
+        // Show loading state on button
+        const btn = document.querySelector('button[onclick="shareToWhatsApp()"]');
+        const oldContent = btn.innerHTML;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">hourglass_empty</span> Generating Card...';
+        
+        try {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = 1080;
+          canvas.height = 1080;
+          
+          // 1. Draw Background
+          ctx.fillStyle = '#f8fafc';
+          ctx.fillRect(0, 0, 1080, 1080);
+          
+          // 2. Draw Main Image (with cover)
+          const img = new Image();
+          img.crossOrigin = "Anonymous";
+          const imgSrc = (currentListing.images && currentListing.images.length > 0) ? currentListing.images[0] : 'https://placehold.co/1080x800/e2e8f0/94a3b8?text=ZipZapZoi';
+          await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = imgSrc; });
+          
+          // Calculate cover scale
+          const scale = Math.max(1080 / img.width, 800 / img.height);
+          const x = (1080 / 2) - (img.width / 2) * scale;
+          const y = (800 / 2) - (img.height / 2) * scale;
+          ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+          
+          // 3. Draw Bottom Gradient Overlay
+          const grad = ctx.createLinearGradient(0, 400, 0, 1080);
+          grad.addColorStop(0, 'transparent');
+          grad.addColorStop(0.5, 'rgba(0,0,0,0.8)');
+          grad.addColorStop(1, '#019863'); // Brand color
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, 1080, 1080);
+          
+          // 4. Draw Text
+          ctx.fillStyle = '#ffffff';
+          ctx.textAlign = 'left';
+          
+          // Title
+          ctx.font = 'bold 70px Arial';
+          let title = currentListing.title;
+          if (title.length > 35) title = title.substring(0, 32) + '...';
+          ctx.fillText(title, 60, 850);
+          
+          // Price
+          ctx.font = '900 100px Arial';
+          ctx.fillStyle = '#fde047'; // Yellow
+          ctx.fillText('₹' + Number(currentListing.price || 0).toLocaleString('en-IN'), 60, 970);
+          
+          // Brand Logo/Text
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 40px Arial';
+          ctx.textAlign = 'right';
+          ctx.fillText('ZipZapZoi.com', 1020, 970);
+          
+          // Location
+          const locStr = [currentListing.location_city, currentListing.location_state].filter(Boolean).join(', ') || currentListing.location || 'Not set';
+          ctx.font = '40px Arial';
+          ctx.fillText('📍 ' + locStr, 1020, 850);
+          
+          // Convert to blob
+          canvas.toBlob(async (blob) => {
+            if (!blob) throw new Error("Canvas blob failed");
+            const file = new File([blob], 'ZipZapZoi_Ad.png', { type: 'image/png' });
+            const shareData = {
+              title: currentListing.title,
+              text: `Check out this listing on ZipZapZoi: ${currentListing.title} for ₹${currentListing.price}`,
+              url: window.location.origin + `/Listing%20Detail.html?id=${currentListing.id}`
+            };
+
+            // Attempt Native Share with File (Works on modern mobile browsers)
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+               try {
+                 await navigator.share({ ...shareData, files: [file] });
+               } catch (e) { console.log('Share canceled or failed', e); }
+            } else {
+               // Fallback: Show Modal with Image
+               const urlObj = URL.createObjectURL(blob);
+               const modalHtml = `
+                 <div id="shareCardModal" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 p-4 animate-fade-in">
+                   <h3 class="text-white font-black text-xl mb-4 text-center">Your Share Card is Ready!</h3>
+                   <img src="${urlObj}" class="max-h-[60vh] rounded-2xl shadow-2xl mb-6 border-4 border-primary">
+                   <div class="flex flex-col gap-3 w-full max-w-sm">
+                     <a href="${urlObj}" download="ZipZapZoi_Ad_${currentListing.id}.png" class="btn-primary text-center">
+                       Download Image
+                     </a>
+                     <button onclick="copyShareLink()" class="bg-gray-800 text-white font-bold py-3 rounded-xl">
+                       Copy Link
+                     </button>
+                     <button onclick="document.getElementById('shareCardModal').remove()" class="text-gray-400 font-bold py-2">
+                       Close
+                     </button>
+                   </div>
+                 </div>
+               `;
+               document.body.insertAdjacentHTML('beforeend', modalHtml);
+               
+               // Set global for copy link
+               window._shareLinkUrl = shareData.url;
+            }
+            btn.innerHTML = oldContent;
+          }, 'image/png', 0.9);
+          
+        } catch (e) {
+          console.error("Canvas error:", e);
+          btn.innerHTML = oldContent;
+          // Absolute fallback if canvas fails
+          const fallbackUrl = window.location.origin + `/Listing%20Detail.html?id=${currentListing.id}`;
+          window.open(`https://wa.me/?text=${encodeURIComponent('Check out this listing on ZipZapZoi: ' + currentListing.title + ' ' + fallbackUrl)}`, '_blank');
+        }
+      }
+      
+      function copyShareLink() {
+         navigator.clipboard.writeText(window._shareLinkUrl).then(() => {
+           showToast('Link copied to clipboard!');
+         });
       }
 
       // â”€â”€â”€ SELLER PROFILE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Wanted Board — ZipZapZoi Classifieds</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  <script>
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+  </script>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Wanted Board — ZipZapZoi</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#019863",
+            secondary: "#4D96A9",
+            "background-light": "#f0f4f8",
+            "background-dark": "#0f172a",
+            "card-dark": "#1e293b"
+          },
+          fontFamily: { display: "Spline Sans" }
+        }
+      }
+    };
+  </script>
+  <style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24 }
+  </style>
+  <script src="js/schema.js"></script>
+  <script src="js/utils.js"></script>
+</head>
+<body class="font-display min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
+  
+  <!-- HEADER -->
+  <header class="sticky top-0 z-50 bg-white/80 dark:bg-card-dark/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 shadow-sm transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div class="flex items-center justify-between">
+        
+        <a href="dashboard.html" class="flex items-center gap-2 group cursor-pointer">
+          <span class="material-symbols-outlined text-primary text-3xl group-hover:rotate-12 transition-transform">all_inclusive</span>
+          <h2 class="text-2xl font-black bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent tracking-tight">ZipZapZoi</h2>
+        </a>
+        
+        <div class="flex items-center gap-4" id="headerAuthArea">
+          <a href="classifieds.html" class="hidden sm:flex items-center gap-1 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-[18px]">storefront</span> Browse Ads
+          </a>
+          <button onclick="toggleDarkMode()" aria-label="Toggle Dark Mode" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center text-gray-600 dark:text-gray-400">
+             <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+          </button>
+          <div id="authContainer"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    <div class="bg-gradient-to-r from-blue-600 to-primary rounded-3xl p-8 mb-8 text-white shadow-xl relative overflow-hidden">
+      <div class="relative z-10 max-w-2xl">
+        <h1 class="text-4xl font-black mb-4">The "Wanted" Board</h1>
+        <p class="text-lg opacity-90 mb-6 font-medium">Looking for something specific? Post a request and let sellers come to you.</p>
+        <button onclick="openPostModal()" class="bg-white text-blue-600 font-black py-3 px-6 rounded-xl hover:scale-105 transition-transform shadow-lg flex items-center gap-2">
+          <span class="material-symbols-outlined">post_add</span> Post a Request
+        </button>
+      </div>
+      <span class="material-symbols-outlined absolute -right-10 -bottom-10 text-[200px] opacity-10 rotate-12">manage_search</span>
+    </div>
+
+    <div class="flex flex-col md:flex-row gap-6 mb-8">
+      <input type="text" id="searchCity" onkeyup="renderGrid()" placeholder="Filter by City..." class="flex-1 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm font-bold focus:ring-primary dark:text-white">
+      <select id="searchCat" onchange="renderGrid()" class="flex-1 bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm font-bold focus:ring-primary dark:text-white">
+        <option value="All">All Categories</option>
+        <option value="Mobiles">Mobiles</option>
+        <option value="Vehicles">Vehicles</option>
+        <option value="Electronics">Electronics</option>
+        <option value="Furniture">Furniture</option>
+        <option value="Fashion">Fashion</option>
+        <option value="Properties">Properties</option>
+        <option value="Services">Services</option>
+      </select>
+    </div>
+
+    <div id="wantedGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Injected via JS -->
+    </div>
+  </main>
+
+  <script>
+    let currentUser = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      renderGrid();
+      
+      const ac = document.getElementById('authContainer');
+      if (currentUser) {
+        ac.innerHTML = `<a href="Seller Dashboard.html" class="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-bold text-sm"><span class="material-symbols-outlined text-[18px]">account_circle</span> Dashboard</a>`;
+      } else {
+        ac.innerHTML = `<a href="Login Page.html?redirect=wanted.html" class="font-bold text-sm hover:text-primary transition-colors">Log In</a>`;
+      }
+    });
+
+    async function renderGrid() {
+      const city = document.getElementById('searchCity').value.trim();
+      const cat = document.getElementById('searchCat').value;
+      const grid = document.getElementById('wantedGrid');
+      
+      grid.innerHTML = '<div class="col-span-full text-center py-10"><span class="material-symbols-outlined animate-spin text-4xl text-gray-400">hourglass_empty</span></div>';
+      
+      try {
+        const res = await fetch(`/api/wanted.php?city=${encodeURIComponent(city)}&category=${encodeURIComponent(cat)}`).then(r => r.json());
+        const ads = res.data.wanted_ads || [];
+        
+        if (ads.length === 0) {
+          grid.innerHTML = `<div class="col-span-full text-center py-20 bg-white dark:bg-card-dark rounded-3xl border border-gray-100"><span class="material-symbols-outlined text-6xl text-gray-300 mb-4 block">search_off</span><h3 class="text-xl font-bold">No requests found</h3></div>`;
+          return;
+        }
+
+        grid.innerHTML = ads.map((ad, i) => `
+          <div id="wanted-${ad.id}" class="bg-white dark:bg-card-dark rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col justify-between animate-pop transition-all duration-500" style="animation-delay: ${i*0.05}s">
+            <div>
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-xs font-black text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded uppercase tracking-wider">${escapeHtml(ad.category)}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-gray-400">${new Date(ad.created_at).toLocaleDateString('en-IN')}</span>
+                  <button onclick="shareWanted('${ad.id}')" class="text-gray-400 hover:text-primary transition-colors" title="Share this request">
+                    <span class="material-symbols-outlined text-[16px]">share</span>
+                  </button>
+                </div>
+              </div>
+              <h3 class="text-xl font-black text-gray-900 dark:text-white mb-2">${escapeHtml(ad.title)}</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-3">${escapeHtml(ad.description)}</p>
+            </div>
+            
+            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Budget</p>
+                <p class="text-lg font-black text-green-600">₹${Number(ad.budget_min).toLocaleString()} - ₹${Number(ad.budget_max).toLocaleString()}</p>
+              </div>
+              <div class="flex flex-col items-end text-right">
+                 <p class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-1">${escapeHtml(ad.buyer_name)} ${ad.trusted_seller ? '<span class="material-symbols-outlined text-yellow-500 text-[16px]">local_police</span>' : ''}</p>
+                 <p class="text-xs font-bold text-gray-500 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> ${escapeHtml(ad.location_city)}</p>
+              </div>
+            </div>
+            
+            <button onclick="contactBuyer('${ad.user_id}', '${escapeHtml(ad.buyer_name)}')" class="mt-4 w-full bg-gray-900 dark:bg-gray-800 hover:bg-primary text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-[18px]">chat</span> Contact Buyer
+            </button>
+          </div>
+        `).join('');
+
+        // Handle Deep Linking / Sharing URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetId = urlParams.get('id');
+        if (targetId) {
+          setTimeout(() => {
+            const el = document.getElementById('wanted-' + targetId);
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              el.classList.add('ring-4', 'ring-primary', 'shadow-2xl');
+              setTimeout(() => { el.classList.remove('ring-4', 'ring-primary', 'shadow-2xl'); }, 3000);
+            }
+          }, 500);
+        }
+
+      } catch (e) {
+        grid.innerHTML = `<div class="col-span-full text-center py-10 text-red-500">Error loading data.</div>`;
+      }
+    }
+
+    function contactBuyer(userId, name) {
+      if (!currentUser) {
+        window.location.href = 'Login Page.html?redirect=wanted.html';
+        return;
+      }
+      if (String(currentUser.id) === String(userId)) {
+        alert("This is your own request!");
+        return;
+      }
+      localStorage.setItem('zzz_chat_intent', JSON.stringify({
+        partnerId: userId,
+        partnerName: name,
+        listingId: null,
+        listingTitle: 'Wanted Request'
+      }));
+      window.location.href = 'Inbox.html';
+    }
+
+    function shareWanted(id) {
+      const shareUrl = window.location.origin + '/wanted.html?id=' + id;
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        alert('Link copied! You can paste and share this link on WhatsApp or anywhere else.');
+      });
+    }
+
+    function openPostModal() {
+      if (!currentUser) {
+        window.location.href = 'Login Page.html?redirect=wanted.html';
+        return;
+      }
+      const modal = `
+        <div id="postModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div class="bg-white dark:bg-card-dark rounded-3xl p-6 max-w-lg w-full shadow-2xl relative custom-scroll max-h-[90vh] overflow-y-auto">
+            <button onclick="document.getElementById('postModal').remove()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900"><span class="material-symbols-outlined">close</span></button>
+            <h2 class="text-2xl font-black mb-4 dark:text-white">Post a Request</h2>
+            
+            <div class="space-y-4">
+              <div><label class="block text-xs font-bold text-gray-500 mb-1">What are you looking for?</label><input type="text" id="reqTitle" class="w-full border p-3 rounded-xl dark:bg-gray-800 dark:border-gray-700 dark:text-white font-bold"></div>
+              <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">Category</label>
+                <select id="reqCat" class="w-full border p-3 rounded-xl dark:bg-gray-800 dark:border-gray-700 dark:text-white font-bold cursor-pointer">
+                  <option value="Mobiles">Mobiles</option><option value="Vehicles">Vehicles</option><option value="Electronics">Electronics</option>
+                  <option value="Furniture">Furniture</option><option value="Fashion">Fashion</option><option value="Properties">Properties</option><option value="Services">Services</option>
+                </select>
+              </div>
+              <div class="flex gap-4">
+                <div class="flex-1"><label class="block text-xs font-bold text-gray-500 mb-1">Min Budget (₹)</label><input type="number" id="reqMin" class="w-full border p-3 rounded-xl dark:bg-gray-800 dark:border-gray-700 dark:text-white font-bold" value="0"></div>
+                <div class="flex-1"><label class="block text-xs font-bold text-gray-500 mb-1">Max Budget (₹)</label><input type="number" id="reqMax" class="w-full border p-3 rounded-xl dark:bg-gray-800 dark:border-gray-700 dark:text-white font-bold"></div>
+              </div>
+              <div><label class="block text-xs font-bold text-gray-500 mb-1">City</label><input type="text" id="reqCity" class="w-full border p-3 rounded-xl dark:bg-gray-800 dark:border-gray-700 dark:text-white font-bold"></div>
+              <div><label class="block text-xs font-bold text-gray-500 mb-1">Description</label><textarea id="reqDesc" class="w-full border p-3 rounded-xl dark:bg-gray-800 dark:border-gray-700 dark:text-white font-bold" rows="3"></textarea></div>
+              <button onclick="submitRequest()" class="w-full bg-primary text-white font-black py-4 rounded-xl shadow-lg mt-2 hover:bg-green-700">Post Request</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modal);
+    }
+
+    async function submitRequest() {
+      const payload = {
+        title: document.getElementById('reqTitle').value,
+        category: document.getElementById('reqCat').value,
+        budget_min: document.getElementById('reqMin').value,
+        budget_max: document.getElementById('reqMax').value,
+        location_city: document.getElementById('reqCity').value,
+        description: document.getElementById('reqDesc').value
+      };
+      try {
+        const res = await fetch('/api/wanted.php', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) }).then(r=>r.json());
+        if(res.success) {
+          alert('Request Posted!');
+          document.getElementById('postModal').remove();
+          renderGrid();
+        } else { alert(res.error); }
+      } catch(e) { alert('Network Error'); }
+    }
+    
+    function escapeHtml(unsafe) { return (unsafe || '').replace(/[&<"'>]/g, c => ({'&':'&amp;','<':'&lt;','"':'&quot;',"'":'&#39;','>':'&gt;'}[c])); }
+  </script>
+  
+  <!-- Firebase SDKs for Push Notifications -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+  <script src="js/fcm-client.js"></script>
+</body>
+</html>

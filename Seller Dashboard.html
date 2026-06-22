@@ -280,6 +280,19 @@
         </div>
       </div>
 
+      <!-- ── MY REVIEWS ───────────────────── -->
+      <div class="bg-white dark:bg-card-dark p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-black text-gray-900 dark:text-white flex items-center gap-2">
+            <span class="material-symbols-outlined text-yellow-500">star</span> My Reviews
+          </h3>
+          <span class="text-xs font-bold bg-yellow-100 text-yellow-700 px-2 py-1 rounded-lg" id="dashboardRatingScore">0.0 (0)</span>
+        </div>
+        <div id="sellerReviewsList" class="space-y-3 max-h-[300px] overflow-y-auto custom-scroll pr-2">
+          <p class="text-xs text-gray-500">Loading reviews...</p>
+        </div>
+      </div>
+
       <!-- ── MY LISTINGS ──────────────────── -->
       <div>
         <div class="flex items-center justify-between mb-4">
@@ -614,11 +627,49 @@
 
         filterListings(currentFilter, false);
         initChart();
+        fetchMyReviews(me.id);
 
       } catch (err) {
         showToast('Failed to load dashboard. Check connection.', 'error');
         console.error(err);
       }
+    }
+
+    function fetchMyReviews(userId) {
+      fetch('/api/reviews.php?seller_id=' + userId)
+        .then(res => res.json())
+        .then(d => {
+          if (d.success && d.data) {
+            const rt = parseFloat(d.data.stats.average).toFixed(1);
+            document.getElementById('dashboardRatingScore').textContent = `${rt} (${d.data.stats.total})`;
+            
+            const list = document.getElementById('sellerReviewsList');
+            if (!d.data.reviews || d.data.reviews.length === 0) {
+              list.innerHTML = '<p class="text-xs text-gray-400">No reviews yet.</p>';
+              return;
+            }
+            list.innerHTML = d.data.reviews.map(r => `
+              <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
+                <div class="flex justify-between items-start mb-2">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[16px] text-yellow-400">star</span>
+                    <span class="font-bold text-sm text-gray-900 dark:text-white">${r.rating}/5</span>
+                  </div>
+                  <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">${new Date(r.created_at).toLocaleDateString('en-IN')}</span>
+                </div>
+                <p class="text-xs text-gray-600 dark:text-gray-300 italic mb-2">"${escapeHtml(r.comment)}"</p>
+                <div class="flex items-center gap-2">
+                  <div class="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
+                    ${(r.buyer_name || 'B').charAt(0).toUpperCase()}
+                  </div>
+                  <span class="text-xs font-bold text-gray-500">${escapeHtml(r.buyer_name || 'Buyer')}</span>
+                </div>
+              </div>
+            `).join('');
+          }
+        }).catch(()=>{
+          document.getElementById('sellerReviewsList').innerHTML = '<p class="text-xs text-red-400">Failed to load reviews.</p>';
+        });
     }
 
 
@@ -738,6 +789,9 @@
                 <a href="Listing Detail.html?id=${item.id}" target="_blank" class="flex-1 sm:flex-none px-3 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-xs font-black transition-colors flex items-center justify-center gap-1">
                   <span class="material-symbols-outlined text-[13px]">open_in_new</span> View
                 </a>
+                <button onclick="printPoster('${item.id}', '${escapeHtml(item.title).replace(/'/g, "\\'")}', '${item.price}', '${imgSrc}')" class="flex-1 sm:flex-none px-3 py-2 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 text-blue-700 dark:text-blue-400 rounded-lg text-xs font-black transition-colors flex items-center justify-center gap-1">
+                  <span class="material-symbols-outlined text-[13px]">print</span> Print Flyer
+                </button>
                 <button onclick="openSoldModal('${item.id}')" class="flex-1 sm:flex-none px-3 py-2 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 text-green-700 dark:text-green-400 rounded-lg text-xs font-black transition-colors">
                   💰 Mark Sold
                 </button>
@@ -1474,5 +1528,10 @@
 
 <!-- Razorpay SDK (needed for Dashboard boost flow) -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<!-- Firebase SDKs for Push Notifications -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+<script src="js/fcm-client.js"></script>
 </body>
 </html>

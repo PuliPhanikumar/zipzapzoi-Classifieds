@@ -138,6 +138,9 @@
           </a>
           
           <div class="flex items-center gap-4" id="headerAuthArea">
+            <a href="wanted.html" class="hidden sm:flex items-center gap-1 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+              <span class="material-symbols-outlined text-[18px]">manage_search</span> Wanted Board
+            </a>
             <button onclick="toggleDarkMode()" aria-label="Toggle Dark Mode" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center text-gray-600 dark:text-gray-400">
                <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
             </button>
@@ -248,13 +251,18 @@
             </div>
           </div>
 
-          <div class="flex justify-between items-center mb-6">
+          <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
             <h2 id="gridTitle" class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Fresh Recommendations</h2>
-            <select id="sortFilter" onchange="renderGrid()" class="bg-transparent text-sm font-bold text-gray-600 dark:text-gray-300 border-none focus:ring-0 cursor-pointer">
-              <option value="newest">Newest First</option>
-              <option value="price_low">Price: Low to High</option>
-              <option value="price_high">Price: High to Low</option>
-            </select>
+            <div class="flex items-center gap-4">
+              <button onclick="openAlertModal()" class="text-xs font-black text-white bg-primary hover:bg-green-700 px-3 py-1.5 rounded-lg transition-all shadow-md flex items-center gap-1 active:scale-95">
+                <span class="material-symbols-outlined text-[16px]">notifications_active</span> Set Alert
+              </button>
+              <select id="sortFilter" onchange="renderGrid()" class="bg-transparent text-sm font-bold text-gray-600 dark:text-gray-300 border-none focus:ring-0 cursor-pointer">
+                <option value="newest">Newest First</option>
+                <option value="price_low">Price: Low to High</option>
+                <option value="price_high">Price: High to Low</option>
+              </select>
+            </div>
           </div>
 
           <div id="listingsGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -483,7 +491,15 @@
         if (q) params.append('search', q);
         
         const loc = document.getElementById('searchLoc').value.trim();
-        if (loc) params.append('city', loc);
+        if (loc) {
+            if (loc === 'Near Me' && window.currentLat && window.currentLng) {
+                params.append('lat', window.currentLat);
+                params.append('lng', window.currentLng);
+                params.append('radius', 15); // Search within 15km
+            } else {
+                params.append('city', loc);
+            }
+        }
         
         const minP = document.getElementById('minPrice').value;
         if (!isNaN(parseFloat(minP)) && minP !== "") params.append('min_price', minP);
@@ -575,7 +591,10 @@
 
                 <!-- Details Area -->
                 <div class="p-6">
-                  <h3 class="text-lg font-bold text-gray-900 dark:text-white truncate pr-4">${escapeHtml(l.title)}</h3>
+                  <h3 class="text-lg font-bold text-gray-900 dark:text-white truncate pr-4 flex items-center gap-1">
+                    ${escapeHtml(l.title)}
+                    ${l.seller_trusted ? '<span class="material-symbols-outlined text-yellow-500 text-[18px]" title="ZipZapZoi Trusted Seller">local_police</span>' : ''}
+                  </h3>
                   <div class="text-2xl font-black text-primary my-2 tracking-tight">₹${Number(l.price).toLocaleString()}</div>
                   
                   <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4">${escapeHtml(l.description || '')}</p>
@@ -672,21 +691,36 @@
 
       async function autoDetectLocation(btn) {
         btn.classList.add('animate-spin');
-        try {
-          const res = await fetch('https://ipapi.co/json/');
-          const data = await res.json();
-          if (data && data.city) {
-             document.getElementById('searchLoc').value = data.city;
-             showToast(`Location detected: ${data.city}`);
-             executeSearch();
-          } else {
-             showToast("Could not detect location.", "error");
-          }
-        } catch(e) {
-          showToast("Error detecting location.", "error");
-        } finally {
-          btn.classList.remove('animate-spin');
+        if (!navigator.geolocation) {
+           showToast("Geolocation is not supported by your browser.", "error");
+           btn.classList.remove('animate-spin');
+           return;
         }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                window.currentLat = position.coords.latitude;
+                window.currentLng = position.coords.longitude;
+                document.getElementById('searchLoc').value = 'Near Me';
+                showToast("GPS Location detected!");
+                btn.classList.remove('animate-spin');
+                executeSearch();
+            },
+            (error) => {
+                showToast("Unable to retrieve GPS location. Please allow location access.", "error");
+                btn.classList.remove('animate-spin');
+                // Fallback to IP based city detection if GPS fails
+                fetch('https://ipapi.co/json/')
+                  .then(res => res.json())
+                  .then(data => {
+                     if (data && data.city) {
+                        document.getElementById('searchLoc').value = data.city;
+                        showToast(`Fallback location detected: ${data.city}`);
+                        executeSearch();
+                     }
+                  }).catch(e => console.error("IP fallback failed", e));
+            }
+        );
       }
 
       async function toggleFav(id, btn) {
@@ -723,6 +757,85 @@
     };
     // ─── END QUOTA-AWARE ─────────────────────────
 
+    // ─── ALERTS LOGIC ──────────────────────────────────────────────────
+    function openAlertModal() {
+      if (!currentUser) {
+        window.location.href = 'Login Page.html?redirect=classifieds.html';
+        return;
+      }
+      const searchVal = document.getElementById('searchQuery').value.trim();
+      const catVal = activeCategory;
+      const modalHtml = `
+        <div id="alertModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in px-4">
+          <div class="bg-white dark:bg-card-dark rounded-3xl p-6 max-w-sm w-full shadow-2xl relative">
+            <button onclick="document.getElementById('alertModal').remove()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 dark:text-white">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+            <h3 class="text-xl font-black text-gray-900 dark:text-white mb-2">Neighborhood Alert</h3>
+            <p class="text-sm text-gray-500 mb-4">Get a push notification when a new listing matches your search.</p>
+            
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Keyword (Optional)</label>
+                <input type="text" id="alertKeyword" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none dark:text-white" placeholder="e.g. iPhone" value="${searchVal}">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                <input type="text" id="alertCat" readonly class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white cursor-not-allowed" value="${catVal}">
+              </div>
+              <p class="text-xs text-orange-500 font-bold bg-orange-50 dark:bg-orange-900/20 p-2 rounded border border-orange-100 flex gap-1 items-start"><span class="material-symbols-outlined text-[14px]">info</span> If you searched "Near Me", we'll alert you for items within 15km.</p>
+              
+              <button onclick="saveAlert()" class="w-full bg-primary hover:bg-green-700 text-white font-black py-3 rounded-xl shadow-lg mt-2 flex items-center justify-center gap-2" id="saveAlertBtn">
+                Save Alert
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    async function saveAlert() {
+      const btn = document.getElementById('saveAlertBtn');
+      btn.disabled = true; btn.innerHTML = 'Saving...';
+      
+      const payload = {
+        keyword: document.getElementById('alertKeyword').value.trim(),
+        category: document.getElementById('alertCat').value.trim()
+      };
+      
+      const loc = document.getElementById('searchLoc').value.trim();
+      if (loc === 'Near Me' && window.currentLat && window.currentLng) {
+        payload.lat = window.currentLat;
+        payload.lng = window.currentLng;
+        payload.radius = 15;
+      }
+      
+      try {
+        const res = await (window.ZZZ && window.ZZZ.api ? window.ZZZ.api.post('/api/alerts.php', payload) : fetch('/api/alerts.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).then(r=>r.json()));
+
+        if (res.success) {
+          showToast('Search Alert Created! You will receive push notifications.');
+          document.getElementById('alertModal').remove();
+        } else {
+          showToast(res.error || 'Failed to create alert', 'error');
+          btn.disabled = false; btn.innerHTML = 'Save Alert';
+        }
+      } catch(e) {
+        showToast('Network error', 'error');
+        btn.disabled = false; btn.innerHTML = 'Save Alert';
+      }
+    }
+
   </script>
+
+  <!-- Firebase SDKs for Push Notifications -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+  <script src="js/fcm-client.js"></script>
 </body>
 </html>

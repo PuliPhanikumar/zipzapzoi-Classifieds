@@ -10,6 +10,12 @@ $action = $_GET['action'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'];
 $body   = getBody();
 
+// Auto-migrate schema for trusted_seller
+try {
+    $db = getDB();
+    $db->exec("ALTER TABLE users ADD COLUMN trusted_seller TINYINT(1) DEFAULT 0 AFTER role");
+} catch (Exception $e) { /* Ignore if column already exists */ }
+
 switch ($action) {
     case 'register':             handleRegister($body);          break;
     case 'verify_otp':           handleVerifyOtp($body);         break;

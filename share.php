@@ -42,7 +42,7 @@ if (is_array($images) && count($images) > 0) {
         $imageUrl = $images[0];
     }
 }
-$targetUrl = "/Listing Detail.html?id=" . urlencode($id);
+$targetUrl = "/Listing%20Detail.html?id=" . urlencode($id);
 
 ?>
 <!DOCTYPE html>

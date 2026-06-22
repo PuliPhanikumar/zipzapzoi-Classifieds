@@ -109,6 +109,16 @@ function updateUser(array $admin): void {
             adminLog($admin, 'UNBAN_USER', "User ID: $id");
             jsonOk(['message' => 'User unbanned.']);
 
+        case 'trust':
+            $db->prepare('UPDATE users SET trusted_seller=1 WHERE id=?')->execute([$id]);
+            adminLog($admin, 'TRUST_SELLER', "User ID: $id");
+            jsonOk(['message' => 'User marked as Trusted Seller.']);
+            
+        case 'untrust':
+            $db->prepare('UPDATE users SET trusted_seller=0 WHERE id=?')->execute([$id]);
+            adminLog($admin, 'UNTRUST_SELLER', "User ID: $id");
+            jsonOk(['message' => 'User Trusted Seller status removed.']);
+
         case 'verify':
             $db->prepare('UPDATE users SET is_verified=1 WHERE id=?')->execute([$id]);
             adminLog($admin, 'VERIFY_USER', "User ID: $id");

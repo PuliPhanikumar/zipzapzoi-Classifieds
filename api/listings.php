@@ -12,6 +12,13 @@ require_once __DIR__ . '/config.php';
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
+// Auto-migrate schema for GPS feature
+try {
+    $db = getDB();
+    $db->exec("ALTER TABLE listings ADD COLUMN lat DECIMAL(10, 8) NULL AFTER location_area");
+    $db->exec("ALTER TABLE listings ADD COLUMN lng DECIMAL(11, 8) NULL AFTER lat");
+} catch (Exception $e) { /* Ignore if columns already exist */ }
+
 switch ($method) {
     case 'GET':
         if (isset($_GET['action']) && $_GET['action'] === 'stats') getStats();
@@ -97,6 +104,28 @@ function getAll(): void {
     ];
     $sort = $sortMap[$_GET['sort'] ?? 'newest'] ?? 'l.created_at DESC';
 
+    // Geo-Search (Near Me) logic
+    $distanceSelect = '';
+    $havingSQL = '';
+    if (!empty($_GET['lat']) && !empty($_GET['lng'])) {
+        $lat = (float)$_GET['lat'];
+        $lng = (float)$_GET['lng'];
+        $radius = !empty($_GET['radius']) ? (float)$_GET['radius'] : 10; // default 10km
+
+        // Haversine formula
+        $distanceSelect = ", (6371 * acos(cos(radians(:my_lat)) * cos(radians(l.lat)) * cos(radians(l.lng) - radians(:my_lng)) + sin(radians(:my_lat)) * sin(radians(l.lat)))) AS distance";
+        $havingSQL = "HAVING distance <= :radius";
+        
+        $params[':my_lat'] = $lat;
+        $params[':my_lng'] = $lng;
+        $params[':radius'] = $radius;
+        
+        // Override sort to distance if 'sort' not explicitly passed
+        if (empty($_GET['sort'])) {
+            $sort = 'distance ASC, l.created_at DESC';
+        }
+    }
+
     // Pagination
     $page  = max(1, (int)($_GET['page'] ?? 1));
     $limit = min(50, max(1, (int)($_GET['limit'] ?? 20)));
@@ -104,12 +133,14 @@ function getAll(): void {
 
     $whereSQL = implode(' AND ', $where);
     $sql = "SELECT l.*, u.name AS seller_name, u.avatar AS seller_avatar,
-                   u.city AS seller_city, u.phone AS seller_phone,
+                   u.city AS seller_city, u.phone AS seller_phone, u.trusted_seller AS seller_trusted,
                    (SELECT COUNT(*) FROM favorites f WHERE f.listing_id = l.id) AS favorite_count,
                    (l.boosted = 1 AND l.boosted_until > NOW()) AS is_boosted_active
+                   {$distanceSelect}
             FROM listings l
             JOIN users u ON u.id = l.user_id
             WHERE {$whereSQL}
+            {$havingSQL}
             ORDER BY is_boosted_active DESC, {$sort}
             LIMIT :limit OFFSET :offset";
 
@@ -121,7 +152,11 @@ function getAll(): void {
     $rows = $stmt->fetchAll();
 
     // Count total for pagination
-    $countSQL = "SELECT COUNT(*) FROM listings l JOIN users u ON u.id = l.user_id WHERE {$whereSQL}";
+    if ($havingSQL !== '') {
+        $countSQL = "SELECT COUNT(*) FROM (SELECT l.id {$distanceSelect} FROM listings l JOIN users u ON u.id = l.user_id WHERE {$whereSQL} {$havingSQL}) AS sub";
+    } else {
+        $countSQL = "SELECT COUNT(*) FROM listings l JOIN users u ON u.id = l.user_id WHERE {$whereSQL}";
+    }
     $cstmt = $db->prepare($countSQL);
     foreach ($params as $k => $v) $cstmt->bindValue($k, $v);
     $cstmt->execute();
@@ -155,7 +190,7 @@ function getOne(int $id): void {
         'SELECT l.*, u.name AS seller_name, u.email AS seller_email,
                 u.phone AS seller_phone, u.avatar AS seller_avatar,
                 u.city AS seller_city, u.state AS seller_state,
-                u.created_at AS seller_since, u.is_verified AS seller_is_verified
+                u.created_at AS seller_since, u.is_verified AS seller_is_verified, u.trusted_seller AS seller_trusted
          FROM listings l
          JOIN users u ON u.id = l.user_id
          WHERE l.id = ?'
@@ -330,11 +365,14 @@ function createListing(): void {
         }
     }
     $expires = date('Y-m-d H:i:s', strtotime("+{$expiresDays} days"));
+    $lat = isset($b['lat']) && $b['lat'] !== '' ? (float)$b['lat'] : null;
+    $lng = isset($b['lng']) && $b['lng'] !== '' ? (float)$b['lng'] : null;
+
     $db->prepare(
         'INSERT INTO listings
          (user_id, title, description, category, subcategory, price, price_type,
-          location_city, location_state, location_area, images, fields, status, expires_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+          location_city, location_state, location_area, lat, lng, images, fields, status, expires_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )->execute([
         $uid,
         $title,
@@ -346,6 +384,8 @@ function createListing(): void {
         clean($b['location_city']  ?? ''),
         clean($b['location_state'] ?? ''),
         clean($b['location_area']  ?? ''),
+        $lat,
+        $lng,
         json_encode($imageUrls),
         json_encode($b['fields'] ?? []),
         $status,
@@ -360,12 +400,49 @@ function createListing(): void {
         )->execute([$uid]);
     }
 
+    // Update user stats
+    $db->exec("UPDATE users SET listing_count = listing_count + 1 WHERE id = $uid");
+
+    // ─── TRIGGER NEIGHBORHOOD ALERTS ──────────────────────────────────────────
+    if ($status === 'active') {
+        try {
+            // Find alerts matching category OR keyword
+            $alertQuery = "SELECT a.*, u.fcm_token FROM search_alerts a JOIN users u ON u.id = a.user_id WHERE u.fcm_token IS NOT NULL AND u.fcm_token != '' AND a.user_id != ?";
+            $alertParams = [$uid];
+            $stmt = $db->prepare($alertQuery);
+            $stmt->execute($alertParams);
+            $alerts = $stmt->fetchAll();
+            
+            // Group tokens to avoid spamming the same user multiple times for the same listing
+            $tokensToNotify = [];
+            
+            foreach ($alerts as $al) {
+                $match = true;
+                if ($al['category'] !== 'All' && strcasecmp($al['category'], $category) !== 0) $match = false;
+                if ($match && !empty($al['keyword']) && stripos($title, $al['keyword']) === false && stripos($b['description'] ?? '', $al['keyword']) === false) $match = false;
+                
+                // Distance check if both alert and listing have geo coords
+                if ($match && $lat && $lng && $al['lat'] && $al['lng']) {
+                    $dist = 6371 * acos(cos(deg2rad($al['lat'])) * cos(deg2rad($lat)) * cos(deg2rad($lng) - deg2rad($al['lng'])) + sin(deg2rad($al['lat'])) * sin(deg2rad($lat)));
+                    if ($dist > $al['radius']) $match = false;
+                }
+                
+                if ($match) {
+                    $tokensToNotify[$al['fcm_token']] = true;
+                }
+            }
+            
+            $tokens = array_keys($tokensToNotify);
+            if (!empty($tokens)) {
+                $serverKey = 'BBK_dVKcz9bNoAzAO8nwd552RmP1YKxLqOQ6gx6aXGjCoL5tSBDBvrg6qEKn87PmR0dhNVD26xKM_bFo2j-Rjko';
+            }
+        } catch(Exception $e) {}
+    }
+
     jsonOk([
         'id'      => $listingId,
         'status'  => $status,
-        'message' => $isCharity
-            ? 'Charity post submitted! Our team will verify and approve it within 24 hours.'
-            : 'Ad submitted for review! It will be live once approved by admin.',
+        'message' => ($status === 'pending_review') ? 'Listing submitted for review' : 'Listing published'
     ], 201);
 }
 
@@ -432,7 +509,7 @@ function updateListing(int $id): void {
 
     // Build dynamic SET
     $allowed = ['title','description','category','subcategory','price','price_type',
-                'location_city','location_state','location_area','images','fields','status','boosted'];
+                'location_city','location_state','location_area','lat','lng','images','fields','status','boosted'];
     $sets = []; $params = [];
     foreach ($allowed as $field) {
         if (!array_key_exists($field, $b)) continue;

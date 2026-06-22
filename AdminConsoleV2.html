@@ -345,7 +345,7 @@
         </div>
         <div style="overflow-x:auto;">
           <table class="tbl"><thead><tr>
-            <th>User</th><th>Email</th><th>Phone</th><th>Listings</th><th>Status</th><th>Joined</th>
+            <th>User</th><th>Email</th><th>Phone</th><th>Listings</th><th>Status</th><th>Trusted</th><th>Joined</th>
             <th style="text-align:right;">Actions</th>
           </tr></thead>
           <tbody id="usersTableBody"><tr><td colspan="7"><div class="empty-state">Loading...</div></td></tr></tbody></table>
@@ -1207,6 +1207,7 @@ async function loadUsers() {
           '<td style="font-size:12px;">' + esc(u.phone || '-') + '</td>' +
           '<td><span style="background:#dbeafe;color:#1d4ed8;border-radius:99px;padding:2px 8px;font-size:11px;font-weight:700;">' + (u.active_listings || 0) + ' listings</span></td>' +
           '<td><span class="badge ' + (u.is_active ? 'badge-green' : 'badge-red') + '">' + (u.is_active ? 'Active' : 'Suspended') + '</span></td>' +
+          '<td><label class="switch" style="transform:scale(0.8)"><input type="checkbox" onchange="toggleUserTrusted(' + u.id + ', this.checked)" ' + (u.trusted_seller ? 'checked' : '') + '><span class="slider round"></span></label></td>' +
           '<td style="font-size:11px;color:#94a3b8;">' + fmt(u.created_at) + '</td>' +
           '<td style="text-align:right;white-space:nowrap;">' +
             '<button onclick="openEditUserModal(' + u.id + ',\'' + esc(u.name) + '\',\'' + esc(u.email) + '\',\'' + esc(u.phone || '') + '\',\'' + esc(u.role) + '\')" class="btn btn-ghost btn-sm">Edit</button>' +
@@ -1242,6 +1243,12 @@ async function toggleUserActive(id, active) {
   const r = await apiPut('/api/admin/users.php', {id, action: actionName});
   if (r?.success) { showToast(active?'User reinstated!':'User suspended!','success'); loadUsers(); }
   else showToast(r?.error||'Error','error');
+}
+async function toggleUserTrusted(id, isTrusted) {
+  const actionName = isTrusted ? 'trust' : 'untrust';
+  const r = await apiPut('/api/admin/users.php', {id, action: actionName});
+  if (r?.success) { showToast(isTrusted ? 'Seller marked as Trusted!' : 'Trusted status removed.', 'success'); }
+  else showToast(r?.error || 'Error updating trusted status', 'error');
 }
 // approveVerification / rejectVerification removed — users self-verify via registration OTP.
 function openAddUserModal(defaultRole='user') {
