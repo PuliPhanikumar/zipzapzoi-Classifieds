@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -23,6 +23,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- Swiper.js -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
       tailwind.config = {
         darkMode: "class",
@@ -47,32 +50,33 @@
     <style>
       .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24 }
       
-      /* Modern Image Gallery (Airbnb Style) */
-      .gallery-grid {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        grid-template-rows: repeat(2, 250px);
-        gap: 0.5rem;
+      /* Swiper Gallery */
+      .swiper {
+        width: 100%;
+        height: 500px;
         border-radius: 1.5rem;
-        overflow: hidden;
+        background: #0f172a; /* Dark background for letterboxing */
       }
-      @media (max-width: 768px) {
-        .gallery-grid { grid-template-columns: 1fr; grid-template-rows: 300px; }
-        .gallery-item:not(:first-child) { display: none; }
+      .swiper-slide {
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
-      .gallery-item {
-        width: 100%; height: 100%; object-fit: cover;
-        transition: transform 0.5s ease, filter 0.3s;
+      .swiper-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
         cursor: pointer;
       }
-      .gallery-item:hover {
-        transform: scale(1.05);
-        filter: brightness(1.1);
+      @media (max-width: 768px) {
+        .swiper { height: 350px; }
       }
-      .gallery-grid:hover .gallery-item:not(:hover) {
-        filter: brightness(0.8);
+      .swiper-button-next, .swiper-button-prev {
+        color: white !important;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
       }
-      .main-img { grid-row: span 2; }
+      .swiper-pagination-bullet { background: white !important; opacity: 0.7; }
+      .swiper-pagination-bullet-active { opacity: 1; background: #019863 !important; }
 
       /* Sticky Action Box */
       .sticky-box {
@@ -148,11 +152,17 @@
       
       <!-- IMAGE GALLERY -->
       <section class="mb-10">
-        <div class="gallery-grid" id="imageGallery">
-          <!-- Rendered via JS -->
-          <div class="bg-gray-200 dark:bg-gray-800 w-full h-full animate-pulse rounded-2xl main-img"></div>
-          <div class="bg-gray-200 dark:bg-gray-800 w-full h-full animate-pulse rounded-2xl"></div>
-          <div class="bg-gray-200 dark:bg-gray-800 w-full h-full animate-pulse rounded-2xl"></div>
+        <!-- Swiper -->
+        <div class="swiper shadow-xl" id="listingSwiper">
+          <div class="swiper-wrapper" id="imageGallery">
+            <!-- Rendered via JS -->
+            <div class="swiper-slide"><div class="bg-gray-200 dark:bg-gray-800 w-full h-full animate-pulse"></div></div>
+          </div>
+          <!-- Pagination -->
+          <div class="swiper-pagination"></div>
+          <!-- Navigation -->
+          <div class="swiper-button-next"></div>
+          <div class="swiper-button-prev"></div>
         </div>
       </section>
 
@@ -564,8 +574,22 @@
         const images = Array.isArray(l.images) ? l.images : [];
         const gallery = document.getElementById('imageGallery');
         gallery.innerHTML = images.length > 0
-          ? images.map((img, i) => `<img src="${img}" class="gallery-item ${i===0?'main-img':''}" onclick="openLightbox(${i})" title="Click to enlarge">`).join('')
-          : `<img src="https://placehold.co/800x600/f0f4f8/9ca3af?text=No+Image" class="gallery-item main-img">`;
+          ? images.map((img, i) => `<div class="swiper-slide"><img src="${img}" onclick="openLightbox(${i})" title="Click to enlarge"></div>`).join('')
+          : `<div class="swiper-slide"><img src="https://placehold.co/800x600/0f172a/9ca3af?text=No+Image"></div>`;
+
+        // Initialize Swiper (3D Creative Effect with AutoPlay)
+        new Swiper('.swiper', {
+          effect: 'creative',
+          creativeEffect: {
+            prev: { shadow: true, translate: [0, 0, -400] },
+            next: { translate: ['100%', 0, 0] },
+          },
+          loop: images.length > 1,
+          autoplay: { delay: 3000, disableOnInteraction: false },
+          pagination: { el: '.swiper-pagination', clickable: true },
+          navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+          grabCursor: true,
+        });
 
         // Map
         if (typeof L !== 'undefined') initListingMap(l.lat, l.lng, l.title);
