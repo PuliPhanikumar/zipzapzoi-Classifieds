@@ -49,76 +49,30 @@
     </script>
     <style>
       .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24 }
-
-      /* ===== GALLERY ===== */
-      .gallery-wrapper { position: relative; width: 100%; border-radius: 24px; overflow: hidden; background: #0f172a; box-shadow: 0 25px 60px rgba(0,0,0,0.3); }
-      #mainSwiper { width: 100%; height: 420px; }
-      @media (max-width: 640px) { #mainSwiper { height: 260px; } }
-      #mainSwiper .swiper-slide {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-      }
-      #mainSwiper .swiper-slide .blur-bg {
-        position: absolute;
-        inset: -20px;
-        background-size: cover;
-        background-position: center;
-        filter: blur(30px);
-        opacity: 0.45;
-        transform: scale(1.1);
-      }
-      #mainSwiper .swiper-slide img {
-        position: relative;
-        z-index: 2;
-        max-width: 100%;
-        max-height: 100%;
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        cursor: zoom-in;
-        filter: drop-shadow(0 8px 24px rgba(0,0,0,0.4));
-      }
-      /* Gallery nav buttons always visible, styled */
-      #mainSwiper .swiper-button-next,
-      #mainSwiper .swiper-button-prev {
-        color: #fff !important;
-        background: rgba(0,0,0,0.4);
-        border-radius: 50%;
-        width: 44px;
-        height: 44px;
-        backdrop-filter: blur(4px);
-        transition: background 0.2s;
-      }
-      #mainSwiper .swiper-button-next:hover,
-      #mainSwiper .swiper-button-prev:hover { background: rgba(1,152,99,0.8); }
-      #mainSwiper .swiper-button-next::after,
-      #mainSwiper .swiper-button-prev::after { font-size: 16px; font-weight: 900; }
-      #mainSwiper .swiper-pagination-bullet { background: rgba(255,255,255,0.6) !important; }
-      #mainSwiper .swiper-pagination-bullet-active { background: #019863 !important; }
-
+      /* ===== PREMIUM GALLERY (OLX/Flipkart-style, no Swiper) ===== */
+      .pg-wrap { position:relative; width:100%; border-radius:20px; overflow:hidden; background:#111827; box-shadow:0 20px 60px rgba(0,0,0,0.35); user-select:none; }
+      .pg-main { position:relative; width:100%; height:420px; overflow:hidden; }
+      @media(max-width:640px){ .pg-main{ height:240px; } }
+      .pg-blur { position:absolute; inset:-30px; background-size:cover; background-position:center; filter:blur(28px); opacity:0.5; transform:scale(1.15); transition:background-image 0.3s; }
+      .pg-img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; cursor:zoom-in; transition:opacity 0.35s ease; z-index:2; }
+      .pg-img.fade-in { animation:pgFadeIn 0.35s ease; }
+      @keyframes pgFadeIn { from{opacity:0;transform:scale(1.02)} to{opacity:1;transform:scale(1)} }
+      .pg-btn { position:absolute; top:50%; transform:translateY(-50%); z-index:5; background:rgba(0,0,0,0.5); border:none; color:#fff; border-radius:50%; width:44px; height:44px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; backdrop-filter:blur(6px); transition:all 0.2s; box-shadow:0 4px 12px rgba(0,0,0,0.3); }
+      .pg-btn:hover { background:rgba(1,152,99,0.9); transform:translateY(-50%) scale(1.1); box-shadow:0 6px 20px rgba(1,152,99,0.4); }
+      .pg-prev { left:12px; }
+      .pg-next { right:12px; }
+      .pg-counter { position:absolute; bottom:12px; right:14px; z-index:5; background:rgba(0,0,0,0.6); color:#fff; font-size:12px; font-weight:700; padding:4px 10px; border-radius:20px; backdrop-filter:blur(4px); }
       /* Thumbnail strip */
-      #thumbSwiper { width: 100%; height: 80px; margin-top: 10px; }
-      #thumbSwiper .swiper-slide {
-        height: 100%;
-        border-radius: 10px;
-        overflow: hidden;
-        cursor: pointer;
-        opacity: 0.5;
-        border: 2px solid transparent;
-        transition: all 0.25s ease;
-      }
-      #thumbSwiper .swiper-slide img { width: 100%; height: 100%; object-fit: cover; }
-      #thumbSwiper .swiper-slide-thumb-active {
-        opacity: 1;
-        border-color: #019863;
-        transform: scale(1.05);
-        box-shadow: 0 4px 12px rgba(1,152,99,0.4);
-      }
-
-      /* Sticky Action Box */
+      .pg-thumbs { display:flex; gap:8px; margin-top:10px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
+      .pg-thumbs::-webkit-scrollbar { display:none; }
+      .pg-thumb { flex:0 0 72px; height:60px; border-radius:10px; overflow:hidden; cursor:pointer; border:2.5px solid transparent; opacity:0.55; transition:all 0.22s ease; background:#1e293b; }
+      @media(max-width:640px){ .pg-thumb{ flex:0 0 56px; height:46px; } }
+      .pg-thumb img { width:100%; height:100%; object-fit:cover; }
+      .pg-thumb.active { border-color:#019863; opacity:1; transform:scale(1.06); box-shadow:0 4px 14px rgba(1,152,99,0.45); }
+      .pg-thumb:hover:not(.active) { opacity:0.85; transform:scale(1.03); }
+      /* Single image — no arrows */
+      .pg-wrap.single .pg-btn { display:none; }
+      .pg-wrap.single .pg-counter { display:none; } /* Sticky Action Box */
       .sticky-box {
         position: sticky;
         top: 100px;
@@ -200,24 +154,23 @@
         <!-- Left: Details -->
         <div class="w-full lg:w-2/3 flex flex-col gap-8">
           
-          <!-- IMAGE GALLERY -->
-          <div>
-            <!-- Main Swiper -->
-            <div class="gallery-wrapper">
-              <div id="mainSwiper" class="swiper">
-                <div class="swiper-wrapper" id="imageGallery">
-                  <!-- Loading skeleton -->
-                  <div class="swiper-slide"><div class="w-full h-full bg-gray-800 animate-pulse"></div></div>
-                </div>
-                <div class="swiper-button-next"></div>
-                <div class="swiper-button-prev"></div>
-                <div class="swiper-pagination"></div>
+          <!-- IMAGE GALLERY (Premium Vanilla JS - OLX/Flipkart style) -->
+          <div id="pgContainer">
+            <div class="pg-wrap" id="pgWrap">
+              <div class="pg-main" id="pgMain">
+                <!-- Blurred background -->
+                <div class="pg-blur" id="pgBlur"></div>
+                <!-- Main image -->
+                <img class="pg-img" id="pgMainImg" src="" alt="Listing Image" onclick="openLightbox(pgCurrentIndex)">
+                <!-- Nav buttons -->
+                <button class="pg-btn pg-prev" onclick="pgNav(-1)">&#8249;</button>
+                <button class="pg-btn pg-next" onclick="pgNav(1)">&#8250;</button>
+                <!-- Counter -->
+                <div class="pg-counter" id="pgCounter">1 / 1</div>
               </div>
             </div>
             <!-- Thumbnail strip -->
-            <div id="thumbSwiper" class="swiper" style="display:none;">
-              <div class="swiper-wrapper" id="thumbGallery"></div>
-            </div>
+            <div class="pg-thumbs" id="pgThumbs"></div>
           </div>
 
           <div class="flex justify-between items-start">
@@ -662,54 +615,61 @@
           document.getElementById('attributesSection').style.display = 'block';
         }
 
-        // Gallery
-        const images = Array.isArray(l.images) ? l.images : [];
-        const gallery = document.getElementById('imageGallery');
-        const thumbGallery = document.getElementById('thumbGallery');
-        const thumbSwiper = document.getElementById('thumbSwiper');
-        
-        if (images.length > 0) {
-          // Main slides with cinematic blur backdrop
-          gallery.innerHTML = images.map((img, i) => `
-            <div class="swiper-slide">
-              <div class="blur-bg" style="background-image: url('${img}')"></div>
-              <img src="${img}" onclick="openLightbox(${i})" title="Click to enlarge" loading="lazy">
-            </div>`).join('');
-          
-          // Thumbnails (only if more than 1 image)
-          if (images.length > 1) {
-            thumbSwiper.style.display = 'block';
-            thumbGallery.innerHTML = images.map(img => `
-              <div class="swiper-slide">
-                <img src="${img}" loading="lazy">
-              </div>`).join('');
-          }
-        } else {
-          gallery.innerHTML = `<div class="swiper-slide"><img src="https://placehold.co/800x450/1e293b/6b7280?text=No+Image+Available"></div>`;
+        // ── VANILLA GALLERY ─────────────────────────────────────────────
+        let pgImages = Array.isArray(l.images) ? l.images : [];
+        let pgCurrentIndex = 0;
+
+        function pgSetImage(idx) {
+          if (!pgImages.length) return;
+          pgCurrentIndex = (idx + pgImages.length) % pgImages.length;
+          const src = pgImages[pgCurrentIndex];
+          const mainImg = document.getElementById('pgMainImg');
+          const blur    = document.getElementById('pgBlur');
+          const counter = document.getElementById('pgCounter');
+          // Fade-in effect
+          mainImg.classList.remove('fade-in');
+          void mainImg.offsetWidth; // force reflow
+          mainImg.src = src;
+          mainImg.classList.add('fade-in');
+          blur.style.backgroundImage = `url('${src}')`;
+          if (counter) counter.textContent = `${pgCurrentIndex + 1} / ${pgImages.length}`;
+          // Update thumbnails active state
+          document.querySelectorAll('.pg-thumb').forEach((t, i) => {
+            t.classList.toggle('active', i === pgCurrentIndex);
+          });
+          // Scroll active thumb into view
+          const activeThumb = document.querySelectorAll('.pg-thumb')[pgCurrentIndex];
+          if (activeThumb) activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
 
-        // Always init thumb swiper first
-        const swiperThumbs = new Swiper('#thumbSwiper', {
-          spaceBetween: 10,
-          slidesPerView: 4,
-          freeMode: true,
-          watchSlidesProgress: true,
-          breakpoints: {
-            480: { slidesPerView: 5 },
-            768: { slidesPerView: 6 }
-          }
-        });
+        window.pgNav = function(dir) { pgSetImage(pgCurrentIndex + dir); };
 
-        // Main swiper linked to thumbs
-        new Swiper('#mainSwiper', {
-          spaceBetween: 0,
-          loop: images.length > 1,
-          autoplay: images.length > 1 ? { delay: 5000, disableOnInteraction: false } : false,
-          navigation: { nextEl: '#mainSwiper .swiper-button-next', prevEl: '#mainSwiper .swiper-button-prev' },
-          pagination: { el: '#mainSwiper .swiper-pagination', clickable: true },
-          thumbs: images.length > 1 ? { swiper: swiperThumbs } : undefined,
-          grabCursor: true,
-        });
+        // Swipe gesture support
+        const pgMain = document.getElementById('pgMain');
+        let pgTouchStartX = 0;
+        pgMain.addEventListener('touchstart', e => { pgTouchStartX = e.changedTouches[0].clientX; }, { passive: true });
+        pgMain.addEventListener('touchend', e => {
+          const diff = pgTouchStartX - e.changedTouches[0].clientX;
+          if (Math.abs(diff) > 40) pgNav(diff > 0 ? 1 : -1);
+        }, { passive: true });
+
+        // Render gallery
+        if (pgImages.length > 0) {
+          if (pgImages.length === 1) document.getElementById('pgWrap').classList.add('single');
+          // Build thumbnails
+          const thumbsEl = document.getElementById('pgThumbs');
+          thumbsEl.innerHTML = pgImages.map((src, i) =>
+            `<div class="pg-thumb${i===0?' active':''}" onclick="pgSetImage(${i})"><img src="${src}" loading="lazy" alt="Photo ${i+1}"></div>`
+          ).join('');
+          // Show first image
+          pgSetImage(0);
+          // Auto-advance (every 5s)
+          if (pgImages.length > 1) setInterval(() => pgNav(1), 5000);
+        } else {
+          document.getElementById('pgMainImg').src = 'https://placehold.co/800x450/1e293b/6b7280?text=No+Image+Available';
+          document.getElementById('pgWrap').classList.add('single');
+        }
+
 
         // Map
         if (typeof L !== 'undefined') initListingMap(l.lat, l.lng, l.title);
@@ -738,7 +698,7 @@
         recents = recents.filter(x => String(x.id) !== String(l.id));
         recents.unshift({
           id: l.id, title: l.title, price: l.price,
-          img: images[0] || 'https://placehold.co/400x300/f0f4f8/9ca3af?text=No+Image',
+          img: pgImages[0] || 'https://placehold.co/400x300/f0f4f8/9ca3af?text=No+Image',
           city: l.location_city
         });
         if (recents.length > 6) recents.pop();
@@ -747,6 +707,28 @@
         // Fade in
         document.getElementById('contentArea').style.opacity = '1';
       }
+
+      // Lightbox - works with our vanilla gallery's pgImages
+      let lbCurrent = 0;
+      function openLightbox(idx) {
+        if (!pgImages || !pgImages.length) return;
+        lbCurrent = (idx || 0);
+        document.getElementById('lightboxImg').src = pgImages[lbCurrent];
+        document.getElementById('lbCounter').textContent = (lbCurrent + 1) + ' / ' + pgImages.length;
+        document.getElementById('lightbox').classList.add('open');
+      }
+      function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+      function lbStep(dir) {
+        if (!pgImages || !pgImages.length) return;
+        lbCurrent = (lbCurrent + dir + pgImages.length) % pgImages.length;
+        document.getElementById('lightboxImg').src = pgImages[lbCurrent];
+        document.getElementById('lbCounter').textContent = (lbCurrent + 1) + ' / ' + pgImages.length;
+      }
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') lbStep(-1);
+        if (e.key === 'ArrowRight') lbStep(1);
+      });
 
       // â”€â”€â”€ FAVOURITES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       function updateFavIcon() {
