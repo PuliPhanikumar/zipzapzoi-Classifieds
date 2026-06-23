@@ -70,9 +70,17 @@
       .pg-thumb img { width:100%; height:100%; object-fit:cover; }
       .pg-thumb.active { border-color:#019863; opacity:1; transform:scale(1.06); box-shadow:0 4px 14px rgba(1,152,99,0.45); }
       .pg-thumb:hover:not(.active) { opacity:0.85; transform:scale(1.03); }
-      /* Single image — no arrows */
-      .pg-wrap.single .pg-btn { display:none; }
-      .pg-wrap.single .pg-counter { display:none; } /* Sticky Action Box */
+      /* 3D Bounce slide animation */
+      @keyframes pg3dIn  { from{opacity:0; transform:perspective(800px) rotateY(-18deg) scale(0.92)} to{opacity:1; transform:perspective(800px) rotateY(0deg) scale(1)} }
+      @keyframes pg3dInR { from{opacity:0; transform:perspective(800px) rotateY(18deg) scale(0.92)}  to{opacity:1; transform:perspective(800px) rotateY(0deg) scale(1)} }
+      @keyframes pgBounce { 0%{transform:scale(0.94)} 55%{transform:scale(1.03)} 80%{transform:scale(0.99)} 100%{transform:scale(1)} }
+      .pg-img.anim-left  { animation: pg3dIn  0.45s cubic-bezier(0.22,1.2,0.36,1) forwards; }
+      .pg-img.anim-right { animation: pg3dInR 0.45s cubic-bezier(0.22,1.2,0.36,1) forwards; }
+      .pg-thumb.active   { animation: pgBounce 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+      /* Single image: hide arrows & counter */
+      .pg-wrap.single .pg-btn     { display:none; }
+      .pg-wrap.single .pg-counter { display:none; }
+
       .sticky-box {
         position: sticky;
         top: 100px;
@@ -261,10 +269,8 @@
                 <span class="material-symbols-outlined text-gray-400">chevron_right</span>
               </div>
 
-              <div class="space-y-3" id="actionButtonsContainer">
-                <button onclick="initiateChat()" class="w-full py-4 rounded-xl bg-primary hover:bg-green-700 text-white font-bold shadow-lg shadow-primary/30 transition-transform active:scale-95 flex items-center justify-center gap-2">
               <div id="actionButtonsContainer">
-                <button onclick="initiateChat()" class="w-full mb-3 bg-gray-900 dark:bg-gray-100 hover:bg-primary dark:hover:bg-primary text-white dark:text-gray-900 font-black py-4 rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg flex items-center justify-center gap-2 text-lg">
+                <button onclick="initiateChat()" class="w-full mb-3 bg-gray-900 dark:bg-gray-100 hover:bg-primary dark:hover:bg-primary text-white dark:text-gray-900 font-black py-4 rounded-2xl transition-all duration-300 hover:scale-[1.02] active:scale-95 hover:shadow-xl flex items-center justify-center gap-2 text-lg">
                   <span class="material-symbols-outlined text-[24px]">chat</span> Chat with Seller
                 </button>
                 <button onclick="leaveReview()" class="w-full mb-4 border-2 border-gray-900 dark:border-gray-100 hover:border-primary dark:hover:border-primary text-gray-900 dark:text-gray-100 hover:text-primary dark:hover:text-primary font-black py-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800/50">
@@ -619,18 +625,20 @@
         let pgImages = Array.isArray(l.images) ? l.images : [];
         let pgCurrentIndex = 0;
 
-        function pgSetImage(idx) {
+        function pgSetImage(idx, dir) {
           if (!pgImages.length) return;
           pgCurrentIndex = (idx + pgImages.length) % pgImages.length;
           const src = pgImages[pgCurrentIndex];
           const mainImg = document.getElementById('pgMainImg');
           const blur    = document.getElementById('pgBlur');
           const counter = document.getElementById('pgCounter');
-          // Fade-in effect
-          mainImg.classList.remove('fade-in');
+          // 3D bounce animation based on direction
+          mainImg.classList.remove('anim-left', 'anim-right', 'fade-in');
           void mainImg.offsetWidth; // force reflow
           mainImg.src = src;
-          mainImg.classList.add('fade-in');
+          if (dir === 1)       mainImg.classList.add('anim-right');
+          else if (dir === -1) mainImg.classList.add('anim-left');
+          else                 mainImg.classList.add('fade-in');
           blur.style.backgroundImage = `url('${src}')`;
           if (counter) counter.textContent = `${pgCurrentIndex + 1} / ${pgImages.length}`;
           // Update thumbnails active state
@@ -642,7 +650,7 @@
           if (activeThumb) activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
 
-        window.pgNav = function(dir) { pgSetImage(pgCurrentIndex + dir); };
+        window.pgNav = function(dir) { pgSetImage(pgCurrentIndex + dir, dir); };
 
         // Swipe gesture support
         const pgMain = document.getElementById('pgMain');
