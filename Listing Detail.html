@@ -795,6 +795,26 @@
         } catch { showToast('Network error.', 'error'); }
       }
 
+      // ─── FETCH SELLER RATING ────────────────────────────────────────────
+      async function fetchSellerRating() {
+        if (!currentListing || !currentListing.user_id) return;
+        try {
+          const res = await fetch('/api/reviews.php?seller_id=' + currentListing.user_id);
+          const data = await res.json();
+          if (data.success && data.data && data.data.stats) {
+            const stats = data.data.stats;
+            const container = document.getElementById('sellerRatingContainer');
+            const textEl = document.getElementById('sellerRatingText');
+            if (stats.total > 0 && container && textEl) {
+              textEl.textContent = `${stats.average.toFixed(1)} (${stats.total})`;
+              container.classList.remove('hidden');
+            }
+          }
+        } catch (e) {
+          console.error('[ZZZ] Failed to fetch seller rating:', e);
+        }
+      }
+
       // ─── SHARE ──────────────────────────────────────────────────────────
       function shareListing() {
         const shareUrl = window.location.origin + `/Listing%20Detail.html?id=${currentListing.id}`;
