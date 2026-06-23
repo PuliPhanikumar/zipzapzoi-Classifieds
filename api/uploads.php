@@ -40,6 +40,17 @@ function processFile(array $file, array $allowed, int $maxBytes, finfo $finfo): 
         return null;
     }
 
+    // Helper to merge PNG with opacity without breaking alpha
+    if (!function_exists('imagecopymerge_alpha')) {
+        function imagecopymerge_alpha($dst_im, $src_im, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct) {
+            $cut = imagecreatetruecolor($src_w, $src_h);
+            imagecopy($cut, $dst_im, 0, 0, $dst_x, $dst_y, $src_w, $src_h);
+            imagecopy($cut, $src_im, 0, 0, $src_x, $src_y, $src_w, $src_h);
+            imagecopymerge($dst_im, $cut, $dst_x, $dst_y, 0, 0, $src_w, $src_h, $pct);
+            imagedestroy($cut);
+        }
+    }
+
     // Apply Watermark
     $watermarkPath = __DIR__ . '/../images/watermark.png';
     if (file_exists($watermarkPath) && function_exists('imagecreatefrompng')) {
@@ -58,10 +69,10 @@ function processFile(array $file, array $allowed, int $maxBytes, finfo $finfo): 
                     $wmWidth = imagesx($watermark);
                     $wmHeight = imagesy($watermark);
                     
-                    // Scale watermark to be 30% of image width if it's too large
+                    // Scale watermark to be 15% of image width for a smaller, cleaner look
                     $scale = 1;
-                    if ($wmWidth > ($imgWidth * 0.3)) {
-                        $scale = ($imgWidth * 0.3) / $wmWidth;
+                    if ($wmWidth > ($imgWidth * 0.15)) {
+                        $scale = ($imgWidth * 0.15) / $wmWidth;
                     }
                     $newWmWidth = (int)($wmWidth * $scale);
                     $newWmHeight = (int)($wmHeight * $scale);
@@ -77,8 +88,8 @@ function processFile(array $file, array $allowed, int $maxBytes, finfo $finfo): 
                     $dstX = $imgWidth - $newWmWidth - 10;
                     $dstY = $imgHeight - $newWmHeight - 10;
                     
-                    // Copy watermark with opacity (we use imagecopy for PNG transparency, no opacity control directly but PNG itself can be transparent)
-                    imagecopy($img, $resizedWm, $dstX, $dstY, 0, 0, $newWmWidth, $newWmHeight);
+                    // Copy watermark with 50% opacity using alpha-safe helper
+                    imagecopymerge_alpha($img, $resizedWm, $dstX, $dstY, 0, 0, $newWmWidth, $newWmHeight, 50);
                     
                     // Save back
                     if ($ext === 'jpg') imagejpeg($img, $destPath, 85);
