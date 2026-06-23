@@ -12,13 +12,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta property="og:type" content="website"/>
   <meta property="og:url" content="https://zipzapzoi.com/Seller Dashboard.html"/>
-  <meta property="og:title" content="Seller Dashboard — ZipZapZoi"/>
-  <meta property="og:description" content="Manage your listings, view stats and track messages on ZipZapZoi."/>
+  <meta property="og:title" content="Trading Desk — ZipZapZoi"/>
+  <meta property="og:description" content="Manage your supply and demand."/>
   <meta property="og:image" content="https://www.zipzapzoi.com/images/default-share.png"/>
-  <meta name="robots" content="index, follow"/>
+  <meta name="robots" content="noindex, nofollow"/>
   <link rel="canonical" href="https://zipzapzoi.com/Seller Dashboard.html"/>
-  <title>ZipZapZoi — Seller Dashboard</title>
-  <meta name="description" content="Manage your listings, track views, messages and plan usage on ZipZapZoi Seller Dashboard."/>
+  <title>Trading Desk — ZipZapZoi</title>
+  <meta name="description" content="Manage your listings and wanted requests."/>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -305,6 +305,24 @@
           </div>
         </div>
         <div id="listingsList" class="space-y-3"></div>
+      </div>
+
+      <!-- ── MY WANTED REQUESTS ──────────────────── -->
+      <div class="mt-8">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-black text-purple-900 dark:text-purple-100 text-lg flex items-center gap-2">
+            <span class="material-symbols-outlined text-purple-500">campaign</span> My Wanted Requests
+          </h3>
+          <button onclick="window.location.href='wanted.html?action=post'" class="text-xs px-3 py-1.5 rounded-lg font-bold bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 hover:bg-purple-200 transition-colors flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">add</span> New Request
+          </button>
+        </div>
+        <div id="wantedList" class="space-y-3">
+           <div class="text-center py-10 bg-white dark:bg-card-dark rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+             <span class="material-symbols-outlined text-4xl text-gray-300 dark:text-gray-600 mb-2 block">person_search</span>
+             <p class="text-gray-500 dark:text-gray-400 font-semibold text-sm">Loading requests...</p>
+           </div>
+        </div>
       </div>
 
     </div><!-- end scrollable -->

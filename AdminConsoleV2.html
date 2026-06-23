@@ -201,6 +201,9 @@
     <div><span class="material-symbols-outlined mi">inventory_2</span>Listings</div>
     <span id="pendingListingsBadge" style="display:none; background:#ef4444; color:white; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:12px;">0</span>
   </div>
+  <div class="nav-item flex items-center justify-between" id="nav-wanted" onclick="switchTab('wanted')" style="display:flex; justify-content:space-between; align-items:center;">
+    <div><span class="material-symbols-outlined mi">campaign</span>Wanted Ads</div>
+  </div>
   <div class="nav-item" id="nav-users" onclick="switchTab('users')">
     <span class="material-symbols-outlined mi">group</span>Users
   </div>
@@ -319,6 +322,46 @@
         <div style="overflow-x:auto;">
           <table class="tbl"><thead><tr><th>Title</th><th>Seller</th><th>Category</th><th>Price</th><th>Status</th><th>Created</th><th style="text-align:right;">Actions</th></tr></thead>
           <tbody id="listingsTableBody"><tr><td colspan="7"><div class="empty-state"><span class="material-symbols-outlined mi">hourglass_empty</span>Loading...</div></td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──
+         TAB: WANTED ADS
+    ── -->
+    <div id="tab-wanted" class="tab-panel">
+      <div class="card" style="padding:0;overflow:hidden;">
+        <!-- Header row -->
+        <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:12px;background:#f8fafc;">
+          <span style="font-weight:800;font-size:15px;flex:1;">Wanted Requests Database</span>
+          <input type="text" id="wantedSearch" class="form-input" style="width:200px;padding:7px 12px;" placeholder="Search requests..." oninput="loadWantedAds()">
+          <select id="wantedStatusFilter" class="form-input" style="width:140px;padding:7px 12px;" onchange="loadWantedAds()">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="flagged">Flagged</option>
+            <option value="deleted">Deleted</option>
+          </select>
+          <button class="btn" style="padding:7px 12px;" onclick="loadWantedAds()"><span class="material-symbols-outlined mi" style="font-size:18px;">refresh</span></button>
+        </div>
+        <div class="table-container">
+          <table class="table" style="width:100%;">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Buyer</th>
+                <th>Request Title</th>
+                <th>Category</th>
+                <th>City</th>
+                <th>Budget (₹)</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th style="text-align:right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="wantedTableBody">
+              <tr><td colspan="9" style="text-align:center;padding:20px;color:#94a3b8;">Loading...</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -856,7 +899,7 @@ let _curSchema = { categories:[], subcategories:[], fields:[] };
 let _editablePlans = [];
 let _allQuotaRows = [];
 const TITLES = {
-  dashboard:'Dashboard & Analytics', listings:'Listings Database',
+  dashboard:'Dashboard & Analytics', listings:'Listings Database', wanted: 'Wanted Requests',
   users:'User Management', payments:'Payments & Refunds',
   coupons:'Promo Coupons', pricing:'Pricing & Plans',
   moderation:'Reports & AI Moderation', support:'Tickets & SLA',
@@ -932,6 +975,7 @@ function switchTab(id) {
   const loaders = {
     dashboard:  loadDashboard,
     listings:   loadListings,
+    wanted:     loadWantedAds,
     users:      ()=>{ loadUsers(); loadVerificationReqs(); },
     payments:   ()=>{ loadPayments(); loadPaymentGateway(); },
     coupons:    loadCoupons,
@@ -1118,6 +1162,60 @@ function switchListingTab(status) {
   }
   loadListings();
 }
+// ── WANTED ADS LOGIC ─────────────────────────
+async function loadWantedAds() {
+  const q  = document.getElementById('wantedSearch')?.value || '';
+  const s  = document.getElementById('wantedStatusFilter')?.value || '';
+  const data = await apiGet('/api/admin/wanted.php?search=' + encodeURIComponent(q) + '&status=' + encodeURIComponent(s));
+  const tbody = document.getElementById('wantedTableBody');
+  if (!tbody) return;
+
+  if (!data || !data.success || !data.data?.wanted_ads?.length) {
+    tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><span class="material-symbols-outlined mi">campaign</span>No wanted ads found.</div></td></tr>';
+    return;
+  }
+  function statusBadge(st) { return ({active:'badge-green',flagged:'badge-yellow',deleted:'badge-red'}[st] || 'badge-gray'); }
+
+  tbody.innerHTML = data.data.wanted_ads.map(w => `<tr>
+    <td style="font-family:monospace; color:#64748b;">#${w.id}</td>
+    <td>
+      <div style="font-weight:700;">${escapeHTML(w.buyer_name)}</div>
+      <div style="font-size:12px; color:#64748b;">${escapeHTML(w.buyer_email)}</div>
+    </td>
+    <td style="font-weight:600; color:#0f172a; max-width:200px;" class="truncate">${escapeHTML(w.title)}</td>
+    <td><span class="badge badge-gray">${escapeHTML(w.category)}</span></td>
+    <td>${escapeHTML(w.location_city)}</td>
+    <td style="font-weight:800; color:#10b981;">₹${Number(w.budget_max).toLocaleString()}</td>
+    <td><span class="badge ${statusBadge(w.status)}">${escapeHTML(w.status.toUpperCase())}</span></td>
+    <td style="font-size:12px; color:#64748b;">${new Date(w.created_at).toLocaleDateString()}</td>
+    <td style="text-align:right;">
+      <select class="form-input" style="padding:4px 8px; font-size:12px; width:auto; display:inline-block;" onchange="updateWantedStatus('${w.id}', this.value)">
+        <option value="">Set Status...</option>
+        <option value="active">Active</option>
+        <option value="flagged">Flagged</option>
+        <option value="deleted">Deleted</option>
+      </select>
+      <button class="btn btn-danger" style="padding:4px; margin-left:4px;" onclick="deleteWantedAd('${w.id}')" title="Hard Delete"><span class="material-symbols-outlined mi" style="font-size:16px;">delete</span></button>
+    </td>
+  </tr>`).join('');
+}
+
+async function updateWantedStatus(id, status) {
+  if (!status) return;
+  const r = await apiPut('/api/admin/wanted.php', { id, status });
+  if (r?.success) { showToast('Wanted ad status updated!'); loadWantedAds(); }
+  else showToast(r?.error || 'Error', 'error');
+}
+
+async function deleteWantedAd(id) {
+  confirmAction('Hard Delete Wanted Ad', 'This action cannot be undone. Continue?', async () => {
+    const r = await apiDelete('/api/admin/wanted.php?id=' + id);
+    if (r?.success) { showToast('Wanted ad deleted permanently!'); loadWantedAds(); }
+    else showToast(r?.error || 'Error deleting ad', 'error');
+  });
+}
+
+// ─────────────────────────────────────────────
 
 async function loadListings() {
   const q  = document.getElementById('listingSearch')?.value || '';

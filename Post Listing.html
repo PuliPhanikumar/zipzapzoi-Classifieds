@@ -908,7 +908,7 @@
     setTimeout(() => { t.classList.add('translate-y-4', 'opacity-0'); setTimeout(() => t.remove(), 300); }, 4000);
   }
 
-  function showPostSuccess(isEdit, isCharity, status) {
+  async function showPostSuccess(isEdit, isCharity, status, payload = null) {
     let msg = isEdit ? 'Your listing has been updated.' : 'Your ad has been posted successfully!';
     if (status === 'pending_review' || isCharity) {
       msg = 'Your ad has been posted and sent for moderator approval. It will go live once verified.';
@@ -920,11 +920,16 @@
           <span class="material-symbols-outlined text-6xl ${isCharity ? 'text-amber-500' : 'text-green-500'}">${isCharity ? 'volunteer_activism' : 'check_circle'}</span>
         </div>
         <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-3">
-          ${isEdit ? 'Listing Updated! ✅' : isCharity ? 'Charity Post Submitted! 💛' : 'Ad Posted Successfully! 🎉'}
+          ${isEdit ? 'Listing Updated! 🎉' : isCharity ? 'Charity Post Submitted! 🙏' : 'Ad Posted Successfully! 🚀'}
         </h2>
         <p class="text-gray-500 dark:text-gray-400 max-w-md mb-4 text-base">
           ${msg}
         </p>
+        <div id="algorithmicMatchBox" class="hidden w-full max-w-md bg-purple-50 border border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 rounded-2xl p-4 mb-6 text-left animate-pop">
+           <h4 class="font-black text-purple-700 dark:text-purple-300 flex items-center gap-2 mb-1"><span class="material-symbols-outlined">campaign</span> High Demand Alert</h4>
+           <p class="text-sm text-purple-600 dark:text-purple-400 font-medium mb-3">We found <strong id="algorithmicMatchCount">0</strong> buyers actively looking for items like yours right now! You can instantly send them a proposal to sell this item.</p>
+           <a href="wanted.html" class="inline-block bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors">View Buyers & Send Proposal</a>
+        </div>
         ${isCharity ? '<p class="text-sm font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-5 py-3 rounded-xl mb-6 max-w-sm">⚠️ Charity posts are verified by our moderation team. Fake posts will lead to permanent account suspension.</p>' : ''}
         <div class="flex flex-col sm:flex-row gap-4 mt-2">
           <a href="Seller Dashboard.html" class="bg-primary hover:bg-green-700 text-white font-black px-8 py-3.5 rounded-xl shadow-lg transition-all flex items-center gap-2">
@@ -935,7 +940,21 @@
           </a>
           ${!isEdit && !isCharity ? '<a href="Post Listing.html" class="border-2 border-primary text-primary font-bold px-8 py-3.5 rounded-xl hover:bg-primary hover:text-white transition-all">Post Another Ad</a>' : ''}
         </div>
-      </div>`;
+      </div>
+    `;
+    
+    // Perform algorithmic check if it's a new post (not an edit)
+    if (!isEdit && payload && payload.category) {
+      try {
+         const matchRes = await fetch(`/api/wanted.php?category=${encodeURIComponent(payload.category)}`);
+         const matchData = await matchRes.json();
+         const matches = matchData.data && matchData.data.wanted_ads ? matchData.data.wanted_ads : [];
+         if (matches.length > 0) {
+            document.getElementById('algorithmicMatchCount').textContent = matches.length;
+            document.getElementById('algorithmicMatchBox').classList.remove('hidden');
+         }
+      } catch (e) { console.log('Match check failed silently'); }
+    }
   }
 
   async function handleSubmit() {
@@ -1116,7 +1135,7 @@
       }
 
       hideModal();
-      showPostSuccess(!!editId, isCharity, data.status || 'pending_review');
+      showPostSuccess(!!editId, isCharity, data.status || 'pending_review', payload);
 
     } catch (err) {
       console.error('Post listing error:', err);

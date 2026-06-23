@@ -40,6 +40,10 @@ if ($method === 'GET') {
         $where[] = "w.category = ?";
         $params[] = trim($_GET['category']);
     }
+    if (!empty($_GET['user_id'])) {
+        $where[] = "w.user_id = ?";
+        $params[] = (int)$_GET['user_id'];
+    }
     
     $whereSQL = implode(' AND ', $where);
     $sql = "SELECT w.*, u.name as buyer_name, u.avatar as buyer_avatar, u.phone as buyer_phone, u.trusted_seller 

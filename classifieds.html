@@ -197,6 +197,21 @@
           </div>
         </div>
       </section>
+
+      <!-- ACTIVE BUYER DEMAND MARQUEE -->
+      <section class="bg-purple-50 dark:bg-purple-900/20 border-b border-purple-100 dark:border-purple-800/50 py-3 overflow-hidden">
+        <div class="flex items-center">
+          <div class="px-4 font-black text-purple-600 dark:text-purple-400 whitespace-nowrap flex items-center gap-2 z-10 bg-purple-50 dark:bg-card-dark/50 shadow-[10px_0_10px_-5px_rgba(168,85,247,0.1)] cursor-pointer hover:scale-105 transition-transform" onclick="window.location.href='wanted.html'">
+            <span class="material-symbols-outlined animate-pulse">campaign</span> ACTIVE BUYER DEMAND
+            <span class="text-[10px] bg-purple-600 text-white px-2 py-0.5 rounded-full ml-1">SELLERS: MATCH HERE</span>
+          </div>
+          <div class="flex-1 overflow-hidden relative">
+            <div id="demandMarquee" class="flex gap-8 whitespace-nowrap animate-[marquee_25s_linear_infinite] hover:[animation-play-state:paused]">
+              <span class="text-gray-500 text-sm font-bold">Loading buyer requests...</span>
+            </div>
+          </div>
+        </div>
+      </section>
       <style>
         @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
       </style>
@@ -379,7 +394,7 @@
             <a href="Classifieds Plans.html" class="hidden md:flex items-center gap-2 text-sm font-bold text-primary hover:underline transition-colors mr-1">
               <span class="material-symbols-outlined text-[16px]">upgrade</span> Plans &amp; Pricing
             </a>
-            <a href="#" onclick="quotaAwarePost(); return false;" class="hidden md:flex items-center gap-2 py-2 px-4 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white font-bold text-sm transition-colors">
+            <a href="#" onclick="openPostChoiceModal(); return false;" class="hidden md:flex items-center gap-2 py-2 px-4 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white font-bold text-sm transition-colors">
               <span class="material-symbols-outlined text-lg">add_circle</span> Post Ad
             </a>
             <div class="flex items-center gap-2">
@@ -400,7 +415,7 @@
           authArea.innerHTML = toggleBtn + `
             <a href="Login Page.html?redirect=classifieds.html" class="px-4 py-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Log In</a>
             <a href="User Registration.html" class="px-5 py-2.5 bg-primary hover:bg-green-700 text-white rounded-full text-sm font-bold shadow-md transition-transform active:scale-95">Sign Up</a>
-            <a href="Post Listing.html" class="hidden md:flex items-center gap-1 py-2 px-4 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold text-sm transition-colors ml-1"><span class="material-symbols-outlined text-lg">add_circle</span> Post Free</a>
+            <a href="#" onclick="openPostChoiceModal(); return false;" class="hidden md:flex items-center gap-1 py-2 px-4 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold text-sm transition-colors ml-1"><span class="material-symbols-outlined text-lg">add_circle</span> Post Free</a>
           `;
         }
         
@@ -409,6 +424,51 @@
             const icon = document.getElementById('themeIcon');
             if(icon) icon.textContent = 'light_mode';
         }
+      }
+
+      function openPostChoiceModal() {
+        const modal = `
+          <div id="postChoiceModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+            <div class="bg-white dark:bg-card-dark rounded-3xl p-8 max-w-md w-full shadow-2xl relative transform transition-all scale-100 animate-pop">
+              <button onclick="document.getElementById('postChoiceModal').remove()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 dark:hover:text-white"><span class="material-symbols-outlined">close</span></button>
+              <h2 class="text-3xl font-black mb-2 dark:text-white text-center">What's your goal?</h2>
+              <p class="text-gray-500 dark:text-gray-400 text-center mb-8 font-medium">Choose whether you want to sell an item or request an item you're looking for.</p>
+              
+              <div class="grid gap-4">
+                <button onclick="document.getElementById('postChoiceModal').remove(); ${currentUser ? 'quotaAwarePost()' : 'window.location.href=\'Post Listing.html\''}" class="group relative bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 border-2 border-emerald-200 dark:border-emerald-700/50 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-2xl p-6 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden">
+                  <div class="absolute right-0 top-0 opacity-10 group-hover:opacity-20 transition-opacity duration-300 transform translate-x-4 -translate-y-4">
+                    <span class="material-symbols-outlined text-8xl text-emerald-500">storefront</span>
+                  </div>
+                  <div class="flex items-center gap-4 relative z-10">
+                    <div class="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      <span class="material-symbols-outlined text-2xl">add_circle</span>
+                    </div>
+                    <div>
+                      <h3 class="text-xl font-black text-emerald-900 dark:text-emerald-100 mb-1">Sell an Item</h3>
+                      <p class="text-sm font-bold text-emerald-700/70 dark:text-emerald-300/70">List your product for sale</p>
+                    </div>
+                  </div>
+                </button>
+
+                <button onclick="document.getElementById('postChoiceModal').remove(); window.location.href='wanted.html?action=post'" class="group relative bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-2 border-purple-200 dark:border-purple-700/50 hover:border-purple-500 dark:hover:border-purple-500 rounded-2xl p-6 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden">
+                  <div class="absolute right-0 top-0 opacity-10 group-hover:opacity-20 transition-opacity duration-300 transform translate-x-4 -translate-y-4">
+                    <span class="material-symbols-outlined text-8xl text-purple-500">person_search</span>
+                  </div>
+                  <div class="flex items-center gap-4 relative z-10">
+                    <div class="w-12 h-12 rounded-full bg-purple-500 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      <span class="material-symbols-outlined text-2xl">campaign</span>
+                    </div>
+                    <div>
+                      <h3 class="text-xl font-black text-purple-900 dark:text-purple-100 mb-1">Request an Item</h3>
+                      <p class="text-sm font-bold text-purple-700/70 dark:text-purple-300/70">Broadcast what you need</p>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modal);
       }
 
       // =====================================
@@ -544,6 +604,9 @@
             else { rc.classList.add('hidden'); }
           }
 
+          // Fetch Demand Marquee data for the current category
+          fetchWantedAds();
+
           // Render
           if(filtered.length === 0) {
             grid.innerHTML = `
@@ -629,6 +692,32 @@
             ${escapeHtml(l.title)} - <span class="text-primary tracking-tight">₹${Number(l.price).toLocaleString()}</span>
           </a>
         `).join('<span class="text-emerald-200 dark:text-emerald-800 font-black">•</span>');
+      }
+
+      // Populate Demand Marquee
+      async function fetchWantedAds() {
+        const marquee = document.getElementById('demandMarquee');
+        if (!marquee) return;
+        try {
+          const cat = activeCategory === 'All' ? '' : activeCategory;
+          const res = await fetch(`/api/wanted.php?category=${encodeURIComponent(cat)}`).then(r => r.json());
+          const ads = res.data && res.data.wanted_ads ? res.data.wanted_ads : [];
+          if (ads.length === 0) {
+            marquee.parentElement.parentElement.style.display = 'none';
+            return;
+          }
+          marquee.parentElement.parentElement.style.display = 'flex';
+          marquee.innerHTML = ads.slice(0, 15).map(ad => `
+            <a href="wanted.html?id=${ad.id}" class="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors font-bold text-sm flex items-center gap-2 group">
+              <span class="material-symbols-outlined text-[16px] text-purple-400 group-hover:text-purple-600 transition-colors">person_search</span>
+              Looking for: <span class="text-gray-900 dark:text-white group-hover:underline">${escapeHtml(ad.title)}</span> 
+              <span class="text-purple-600 tracking-tight ml-1">(Up to ₹${Number(ad.budget_max).toLocaleString()})</span>
+              <span class="text-xs text-gray-400 ml-1">in ${escapeHtml(ad.location_city)}</span>
+            </a>
+          `).join('<span class="text-purple-300 dark:text-purple-800 font-black px-2"> • </span>');
+        } catch(e) {
+          marquee.parentElement.parentElement.style.display = 'none';
+        }
       }
 
       // Hover Gallery Logic

@@ -165,6 +165,23 @@
         `).join('');
 
         // Handle Deep Linking / Sharing URL
+        // Apply 3D bouncy hover effect to new cards
+        document.querySelectorAll('.hub-card').forEach(card => {
+          card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const rotateX = ((y - centerY) / centerY) * -5;
+            const rotateY = ((x - centerX) / centerX) * 5;
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-5px)`;
+          });
+          card.addEventListener('mouseleave', () => {
+            card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
+          });
+        });
+
         const urlParams = new URLSearchParams(window.location.search);
         const targetId = urlParams.get('id');
         if (targetId) {
@@ -179,24 +196,112 @@
         }
 
       } catch (e) {
-        grid.innerHTML = `<div class="col-span-full text-center py-10 text-red-500">Error loading data.</div>`;
+        grid.innerHTML = `<div class="col-span-full text-center py-10 text-red-500 font-bold">Error loading marketplace demand.</div>`;
       }
     }
 
-    function contactBuyer(userId, name) {
+    async function openProposalModal(wantedId, buyerId, buyerName, wantedTitle) {
       if (!currentUser) {
         window.location.href = 'Login Page.html?redirect=wanted.html';
         return;
       }
-      if (String(currentUser.id) === String(userId)) {
-        alert("This is your own request!");
+      if (String(currentUser.id) === String(buyerId)) {
+        alert("You cannot submit a proposal to your own request!");
         return;
       }
+
+      // Fetch seller's active listings
+      try {
+        const res = await fetch(`/api/listings.php?user_id=${currentUser.id}`);
+        const data = await res.json();
+        const listings = data.data ? data.data.listings : (data.listings || []);
+        const activeListings = listings.filter(l => l.status === 'active');
+
+        if (activeListings.length === 0) {
+          alert("You don't have any active listings to offer. Please post an ad first.");
+          window.location.href = 'Post Listing.html';
+          return;
+        }
+
+        let options = activeListings.map(l => `<option value="${l.id}" data-title="${escapeHtml(l.title)}" data-price="${l.price}">[₹${l.price}] ${escapeHtml(l.title)}</option>`).join('');
+
+        const modal = `
+          <div id="proposalModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+            <div class="bg-white dark:bg-card-dark rounded-3xl p-6 max-w-lg w-full shadow-2xl relative custom-scroll max-h-[90vh] overflow-y-auto transform transition-all scale-100 animate-pop">
+              <button onclick="document.getElementById('proposalModal').remove()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900"><span class="material-symbols-outlined">close</span></button>
+              
+              <div class="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+                <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 text-purple-600 rounded-2xl flex items-center justify-center">
+                  <span class="material-symbols-outlined text-2xl">assignment_add</span>
+                </div>
+                <div>
+                  <h2 class="text-2xl font-black dark:text-white">Submit Proposal</h2>
+                  <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">To: ${buyerName}</p>
+                </div>
+              </div>
+              
+              <div class="space-y-5">
+                <div class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                  <p class="text-xs text-gray-500 mb-1 font-bold">They are looking for:</p>
+                  <p class="text-sm font-black text-gray-900 dark:text-white">${wantedTitle}</p>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 mb-2">Select Your Item to Offer</label>
+                  <select id="propListing" class="w-full border-2 border-gray-200 p-3 rounded-xl dark:bg-gray-800 dark:border-gray-700 dark:text-white font-bold cursor-pointer hover:border-purple-300 transition-colors">
+                    ${options}
+                  </select>
+                </div>
+                
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 mb-2">Your Final Offer Price (₹)</label>
+                  <input type="number" id="propPrice" class="w-full border-2 border-gray-200 p-3 rounded-xl dark:bg-gray-800 dark:border-gray-700 dark:text-white font-bold hover:border-purple-300 focus:border-purple-500 transition-colors" placeholder="e.g. 5000">
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 mb-2">Message / Pitch</label>
+                  <textarea id="propMsg" class="w-full border-2 border-gray-200 p-3 rounded-xl dark:bg-gray-800 dark:border-gray-700 dark:text-white font-bold hover:border-purple-300 focus:border-purple-500 transition-colors" rows="3" placeholder="Tell them why your item is a perfect match..."></textarea>
+                </div>
+                
+                <button onclick="sendProposal('${buyerId}', '${buyerName}', '${wantedTitle}')" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black py-4 rounded-xl shadow-lg mt-4 hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex justify-center items-center gap-2">
+                  <span class="material-symbols-outlined">send</span> Send Official Proposal
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modal);
+        
+        // Auto-fill price based on first selection
+        const sel = document.getElementById('propListing');
+        document.getElementById('propPrice').value = sel.options[sel.selectedIndex].dataset.price;
+        sel.addEventListener('change', (e) => {
+          document.getElementById('propPrice').value = e.target.options[e.target.selectedIndex].dataset.price;
+        });
+
+      } catch (e) {
+        console.error(e);
+        alert("Failed to load your listings.");
+      }
+    }
+
+    function sendProposal(buyerId, buyerName, wantedTitle) {
+      const sel = document.getElementById('propListing');
+      const listingId = sel.value;
+      const listingTitle = sel.options[sel.selectedIndex].dataset.title;
+      const price = document.getElementById('propPrice').value;
+      const msg = document.getElementById('propMsg').value;
+
+      if (!price) { alert("Please enter an offer price."); return; }
+
+      const formalProposal = `⭐⭐⭐ OFFICIAL PROPOSAL ⭐⭐⭐\n\nI am responding to your request for: "${wantedTitle}"\n\nI am offering my item: "${listingTitle}"\nMy Final Offer Price: ₹${price}\n\nMy Message:\n${msg}\n\nLink to my item: ${window.location.origin}/Listing%20Detail.html?id=${listingId}`;
+
       localStorage.setItem('zzz_chat_intent', JSON.stringify({
-        partnerId: userId,
-        partnerName: name,
-        listingId: null,
-        listingTitle: 'Wanted Request'
+        partnerId: buyerId,
+        partnerName: buyerName,
+        listingId: listingId,
+        listingTitle: listingTitle,
+        initialMessage: formalProposal
       }));
       window.location.href = 'Inbox.html';
     }
@@ -254,9 +359,39 @@
       try {
         const res = await fetch('/api/wanted.php', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) }).then(r=>r.json());
         if(res.success) {
-          alert('Request Posted!');
           document.getElementById('postModal').remove();
-          renderGrid();
+          
+          // Algorithmic Cross-Match Check
+          try {
+            const matchRes = await fetch(`/api/listings.php?category=${encodeURIComponent(payload.category)}&max_price=${encodeURIComponent(payload.budget_max)}&city=${encodeURIComponent(payload.location_city)}`);
+            const matchData = await matchRes.json();
+            const matches = matchData.data ? matchData.data.listings : (matchData.listings || []);
+            
+            if (matches.length > 0) {
+              const checkModal = `
+                <div id="matchModal" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+                  <div class="bg-white dark:bg-card-dark rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center transform transition-all scale-100 animate-pop">
+                    <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                      <span class="material-symbols-outlined text-4xl">check_circle</span>
+                    </div>
+                    <h2 class="text-2xl font-black mb-2 dark:text-white">Request Live!</h2>
+                    <p class="text-gray-500 mb-6 font-medium">We instantly scanned the market and found <strong class="text-purple-600">${matches.length} items</strong> that match your exact request right now.</p>
+                    <div class="flex gap-3">
+                      <button onclick="document.getElementById('matchModal').remove(); renderGrid();" class="flex-1 py-3 font-bold text-gray-500 hover:text-gray-900 bg-gray-100 rounded-xl transition-colors">Close</button>
+                      <button onclick="window.location.href='classifieds.html?category=${encodeURIComponent(payload.category)}&max_price=${encodeURIComponent(payload.budget_max)}'" class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black py-3 rounded-xl shadow-lg hover:shadow-xl transition-all">View Matches</button>
+                    </div>
+                  </div>
+                </div>
+              `;
+              document.body.insertAdjacentHTML('beforeend', checkModal);
+            } else {
+              alert('Request Posted Successfully! We will notify sellers.');
+              renderGrid();
+            }
+          } catch(err) {
+            alert('Request Posted Successfully!');
+            renderGrid();
+          }
         } else { alert(res.error); }
       } catch(e) { alert('Network Error'); }
     }
