@@ -455,6 +455,9 @@
     <script>
       let currentListing = null;
       let isFavorite     = false;
+      // Gallery globals — must be accessible by openLightbox, pgNav, etc.
+      let pgImages       = [];
+      let pgCurrentIndex = 0;
 
       document.addEventListener('DOMContentLoaded', async () => {
         if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
@@ -500,7 +503,9 @@
               }).catch(() => {});
           }
         } catch(e) {
-          showToast('Failed to load listing. Check connection.', 'error');
+          console.error('[ZZZ] Listing load error:', e);
+          alert('Error loading listing: ' + e.message);
+          showToast('Failed to load listing. Please refresh or check your connection.', 'error');
         }
       });
 
@@ -622,8 +627,8 @@
         }
 
         // ── VANILLA GALLERY ─────────────────────────────────────────────
-        let pgImages = Array.isArray(l.images) ? l.images : [];
-        let pgCurrentIndex = 0;
+        pgImages = Array.isArray(l.images) ? l.images : [];
+        pgCurrentIndex = 0;
 
         function pgSetImage(idx, dir) {
           if (!pgImages.length) return;
@@ -680,8 +685,27 @@
 
 
         // Map
-        if (typeof L !== 'undefined') initListingMap(l.lat, l.lng, l.title);
-        else window.addEventListener('load', () => initListingMap(l.lat, l.lng, l.title));
+        if (typeof L !== 'undefined') {
+          if (typeof initListingMap === 'function') {
+            initListingMap(l.lat, l.lng, l.title);
+          } else {
+            // Define it safely inline if it was lost from utils.js
+            const mapEl = document.getElementById('listingMap');
+            if (mapEl && l.lat && l.lng) {
+              mapEl.style.height = '200px';
+              mapEl.style.borderRadius = '12px';
+              const map = L.map('listingMap').setView([l.lat, l.lng], 13);
+              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+              L.marker([l.lat, l.lng]).addTo(map).bindPopup(l.title || 'Location');
+            } else if (mapEl) {
+               mapEl.style.display = 'none';
+               const mapParent = mapEl.closest('div.bg-white');
+               if (mapParent && mapParent.querySelector('h2') && mapParent.querySelector('h2').textContent.includes('Location')) {
+                   mapParent.style.display = 'none';
+               }
+            }
+          }
+        }
 
         // Similar Ads
         if (l.similar && l.similar.length > 0) {
