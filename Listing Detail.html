@@ -276,7 +276,7 @@
                 <button onclick="leaveReview()" class="w-full mb-4 border-2 border-gray-900 dark:border-gray-100 hover:border-primary dark:hover:border-primary text-gray-900 dark:text-gray-100 hover:text-primary dark:hover:text-primary font-black py-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <span class="material-symbols-outlined text-[20px]">star_rate</span> Leave a Review
                 </button>
-                <div class="flex gap-3">
+                <div class="flex gap-3 mb-3">
                   <button onclick="shareToWhatsApp()" class="flex-1 py-3.5 rounded-xl bg-[#25D366] hover:bg-[#1ebd5a] text-white font-bold transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-2 text-sm">
                     <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
                     WhatsApp
@@ -285,6 +285,9 @@
                     <span class="material-symbols-outlined text-[18px]">content_copy</span> Copy Link
                   </button>
                 </div>
+                <button onclick="generateSharePoster()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-2 text-sm">
+                  <span class="material-symbols-outlined text-[18px]">wallpaper</span> Download Share Poster
+                </button>
               </div>
 
               <div class="mt-6 flex items-center justify-center gap-2 text-xs font-bold text-gray-400 dark:text-gray-500">
@@ -1025,6 +1028,120 @@
         const text = `Check out ${title} ${price} on ZipZapZoi!\n\n`;
         const url = window.location.origin + `/Listing%20Detail.html?id=${currentListing.id}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text + url)}`, '_blank');
+      }
+      
+      // ─── DOWNLOAD SHARE POSTER ───────────────────────────────────────
+      async function generateSharePoster() {
+        if (!currentListing) return;
+        
+        const btn = document.querySelector('button[onclick="generateSharePoster()"]');
+        const oldContent = btn.innerHTML;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">hourglass_empty</span> Generating Poster...';
+        
+        try {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = 1080;
+          canvas.height = 1080;
+          
+          // 1. Dark Premium Background
+          ctx.fillStyle = '#0f172a'; // Tailwind slate-900
+          ctx.fillRect(0, 0, 1080, 1080);
+          
+          // 2. Draw Main Image (Top 75%)
+          const img = new Image();
+          img.crossOrigin = "Anonymous";
+          const imgSrc = (currentListing.images && currentListing.images.length > 0) ? currentListing.images[0] : 'https://placehold.co/1080x810/334155/94a3b8?text=ZipZapZoi';
+          await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = imgSrc; });
+          
+          // Cover crop exactly into 1080x810 area
+          const targetW = 1080;
+          const targetH = 810;
+          const scale = Math.max(targetW / img.width, targetH / img.height);
+          const drawW = img.width * scale;
+          const drawH = img.height * scale;
+          const drawX = (targetW - drawW) / 2;
+          const drawY = (targetH - drawH) / 2;
+          
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(0, 0, targetW, targetH);
+          ctx.clip();
+          ctx.drawImage(img, drawX, drawY, drawW, drawH);
+          ctx.restore();
+          
+          // 3. Smooth Gradient Blend from Image to Background
+          const grad = ctx.createLinearGradient(0, 600, 0, 810);
+          grad.addColorStop(0, 'rgba(15, 23, 42, 0)');
+          grad.addColorStop(1, 'rgba(15, 23, 42, 1)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 500, 1080, 310);
+          
+          // 4. Draw Typography (Perfectly Aligned)
+          
+          // TITLE (Left aligned)
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 50px Arial';
+          ctx.textAlign = 'left';
+          let title = currentListing.title || 'Product';
+          if (title.length > 40) title = title.substring(0, 37) + '...';
+          ctx.fillText(title, 60, 880);
+          
+          // PRICE (Left aligned, big & yellow)
+          ctx.fillStyle = '#fde047'; // Yellow
+          ctx.font = '900 80px Arial';
+          ctx.fillText('₹' + Number(currentListing.price || 0).toLocaleString('en-IN'), 60, 980);
+          
+          // LOCATION (Right aligned)
+          const locStr = [currentListing.location_city, currentListing.location_state].filter(Boolean).join(', ') || currentListing.location || 'Local';
+          ctx.fillStyle = '#94a3b8'; // Slate-400
+          ctx.font = 'bold 36px Arial';
+          ctx.textAlign = 'right';
+          ctx.fillText('📍 ' + locStr, 1020, 880);
+          
+          // ZIPZAPZOI BRANDING (Right aligned)
+          ctx.fillStyle = '#10b981'; // Primary Emerald Green
+          ctx.font = '900 50px Arial';
+          ctx.fillText('ZipZapZoi.com', 1020, 980);
+          
+          // Convert to blob and share/download
+          canvas.toBlob(async (blob) => {
+            if (!blob) throw new Error("Blob failed");
+            const file = new File([blob], `ZipZapZoi_${currentListing.id}.png`, { type: 'image/png' });
+            
+            // Try Native Mobile Share
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+               try {
+                 await navigator.share({
+                   title: currentListing.title,
+                   text: `Check out this listing on ZipZapZoi!`,
+                   url: window.location.origin + `/Listing%20Detail.html?id=${currentListing.id}`,
+                   files: [file]
+                 });
+               } catch (e) { console.log('Share canceled', e); }
+            } else {
+               // Fallback: Trigger Download automatically on Desktop
+               const urlObj = URL.createObjectURL(blob);
+               const a = document.createElement('a');
+               a.href = urlObj;
+               a.download = `ZipZapZoi_Poster_${currentListing.id}.png`;
+               document.body.appendChild(a);
+               a.click();
+               document.body.removeChild(a);
+               
+               // Copy link to clipboard for convenience
+               const link = window.location.origin + `/Listing%20Detail.html?id=${currentListing.id}`;
+               navigator.clipboard.writeText(`Check out ${title} on ZipZapZoi: ` + link).catch(()=>{});
+               showToast('Poster downloading! Link copied to clipboard.', 'success');
+            }
+            btn.innerHTML = oldContent;
+          }, 'image/png', 0.9);
+          
+        } catch (e) {
+          console.error("Poster error:", e);
+          btn.innerHTML = oldContent;
+          showToast('Failed to generate poster.', 'error');
+        }
       }
       
       function copyShareLink() {
