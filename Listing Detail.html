@@ -1017,121 +1017,14 @@
         .catch(() => showToast('Network error', 'error'));
       }
 
-      // ─── WHATSAPP SHARE CARD ─────────────────────────────────────────
-      async function shareToWhatsApp() {
+      // ─── WHATSAPP SHARE ──────────────────────────────────────────────
+      function shareToWhatsApp() {
         if (!currentListing) return;
-        
-        // Show loading state on button
-        const btn = document.querySelector('button[onclick="shareToWhatsApp()"]');
-        const oldContent = btn.innerHTML;
-        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">hourglass_empty</span> Generating Card...';
-        
-        try {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          canvas.width = 1080;
-          canvas.height = 1080;
-          
-          // 1. Draw Background
-          ctx.fillStyle = '#f8fafc';
-          ctx.fillRect(0, 0, 1080, 1080);
-          
-          // 2. Draw Main Image (with cover)
-          const img = new Image();
-          img.crossOrigin = "Anonymous";
-          const imgSrc = (currentListing.images && currentListing.images.length > 0) ? currentListing.images[0] : 'https://placehold.co/1080x800/e2e8f0/94a3b8?text=ZipZapZoi';
-          await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = imgSrc; });
-          
-          // Calculate cover scale
-          const scale = Math.max(1080 / img.width, 800 / img.height);
-          const x = (1080 / 2) - (img.width / 2) * scale;
-          const y = (800 / 2) - (img.height / 2) * scale;
-          ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-          
-          // 3. Draw Bottom Gradient Overlay
-          const grad = ctx.createLinearGradient(0, 400, 0, 1080);
-          grad.addColorStop(0, 'transparent');
-          grad.addColorStop(0.5, 'rgba(0,0,0,0.8)');
-          grad.addColorStop(1, '#019863'); // Brand color
-          ctx.fillStyle = grad;
-          ctx.fillRect(0, 0, 1080, 1080);
-          
-          // 4. Draw Text
-          ctx.fillStyle = '#ffffff';
-          ctx.textAlign = 'left';
-          
-          // Title
-          ctx.font = 'bold 70px Arial';
-          let title = currentListing.title;
-          if (title.length > 35) title = title.substring(0, 32) + '...';
-          ctx.fillText(title, 60, 850);
-          
-          // Price
-          ctx.font = '900 100px Arial';
-          ctx.fillStyle = '#fde047'; // Yellow
-          ctx.fillText('₹' + Number(currentListing.price || 0).toLocaleString('en-IN'), 60, 970);
-          
-          // Brand Logo/Text
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 40px Arial';
-          ctx.textAlign = 'right';
-          ctx.fillText('ZipZapZoi.com', 1020, 970);
-          
-          // Location
-          const locStr = [currentListing.location_city, currentListing.location_state].filter(Boolean).join(', ') || currentListing.location || 'Not set';
-          ctx.font = '40px Arial';
-          ctx.fillText('📍 ' + locStr, 1020, 850);
-          
-          // Convert to blob
-          canvas.toBlob(async (blob) => {
-            if (!blob) throw new Error("Canvas blob failed");
-            const file = new File([blob], 'ZipZapZoi_Ad.png', { type: 'image/png' });
-            const shareData = {
-              title: currentListing.title,
-              text: `Check out this listing on ZipZapZoi: ${currentListing.title} for ₹${currentListing.price}`,
-              url: window.location.origin + `/Listing%20Detail.html?id=${currentListing.id}`
-            };
-
-            // Attempt Native Share with File (Works on modern mobile browsers)
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-               try {
-                 await navigator.share({ ...shareData, files: [file] });
-               } catch (e) { console.log('Share canceled or failed', e); }
-            } else {
-               // Fallback: Show Modal with Image
-               const urlObj = URL.createObjectURL(blob);
-               const modalHtml = `
-                 <div id="shareCardModal" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 p-4 animate-fade-in">
-                   <h3 class="text-white font-black text-xl mb-4 text-center">Your Share Card is Ready!</h3>
-                   <img src="${urlObj}" class="max-h-[60vh] rounded-2xl shadow-2xl mb-6 border-4 border-primary">
-                   <div class="flex flex-col gap-3 w-full max-w-sm">
-                     <a href="${urlObj}" download="ZipZapZoi_Ad_${currentListing.id}.png" class="btn-primary text-center">
-                       Download Image
-                     </a>
-                     <button onclick="copyShareLink()" class="bg-gray-800 text-white font-bold py-3 rounded-xl">
-                       Copy Link
-                     </button>
-                     <button onclick="document.getElementById('shareCardModal').remove()" class="text-gray-400 font-bold py-2">
-                       Close
-                     </button>
-                   </div>
-                 </div>
-               `;
-               document.body.insertAdjacentHTML('beforeend', modalHtml);
-               
-               // Set global for copy link
-               window._shareLinkUrl = shareData.url;
-            }
-            btn.innerHTML = oldContent;
-          }, 'image/png', 0.9);
-          
-        } catch (e) {
-          console.error("Canvas error:", e);
-          btn.innerHTML = oldContent;
-          // Absolute fallback if canvas fails
-          const fallbackUrl = window.location.origin + `/Listing%20Detail.html?id=${currentListing.id}`;
-          window.open(`https://wa.me/?text=${encodeURIComponent('Check out this listing on ZipZapZoi: ' + currentListing.title + ' ' + fallbackUrl)}`, '_blank');
-        }
+        const title = currentListing.title || 'this listing';
+        const price = currentListing.price ? `for ₹${Number(currentListing.price).toLocaleString('en-IN')}` : '';
+        const text = `Check out ${title} ${price} on ZipZapZoi!\n\n`;
+        const url = window.location.origin + `/Listing%20Detail.html?id=${currentListing.id}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text + url)}`, '_blank');
       }
       
       function copyShareLink() {
