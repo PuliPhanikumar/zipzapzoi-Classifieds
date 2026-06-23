@@ -111,6 +111,10 @@
       #lbPrev  { left:12px; top:50%; transform:translateY(-50%); }
       #lbNext  { right:12px; top:50%; transform:translateY(-50%); }
       #lbCounter { position:absolute; bottom:16px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,0.7); font-size:13px; font-weight:700; letter-spacing:.05em; }
+
+      /* Thumbnail Slider Customization */
+      .thumbSwiper .swiper-slide { opacity: 0.5; transition: all 0.3s ease; border: 2px solid transparent; box-sizing: border-box; }
+      .thumbSwiper .swiper-slide-thumb-active { opacity: 1; border-color: #10b981; /* Matches secondary/primary vibe */ transform: scale(0.95); }
   </style>
 
     <!-- Google Analytics -->
@@ -157,18 +161,25 @@
         <div class="w-full lg:w-2/3 flex flex-col gap-8">
           
           <!-- IMAGE GALLERY (Moved Inside Left Column) -->
-          <div class="relative w-full aspect-[4/3] sm:aspect-[16/9] bg-gray-100 dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border border-gray-200/50 dark:border-gray-700/50 group">
-            <!-- Swiper -->
-            <div class="swiper w-full h-full" id="listingSwiper">
-              <div class="swiper-wrapper" id="imageGallery">
-                <!-- Rendered via JS -->
-                <div class="swiper-slide"><div class="bg-gray-200 dark:bg-gray-800 w-full h-full animate-pulse"></div></div>
+          <div>
+            <div class="relative w-full aspect-[4/3] sm:aspect-[16/9] bg-gray-100 dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border border-gray-200/50 dark:border-gray-700/50 group mb-4">
+              <!-- Main Swiper -->
+              <div class="swiper w-full h-full" id="mainSwiper">
+                <div class="swiper-wrapper" id="imageGallery">
+                  <!-- Rendered via JS -->
+                  <div class="swiper-slide"><div class="bg-gray-200 dark:bg-gray-800 w-full h-full animate-pulse"></div></div>
+                </div>
+                <!-- Navigation -->
+                <div class="swiper-button-next !text-white !drop-shadow-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="swiper-button-prev !text-white !drop-shadow-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </div>
-              <!-- Pagination -->
-              <div class="swiper-pagination"></div>
-              <!-- Navigation -->
-              <div class="swiper-button-next !text-white !drop-shadow-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <div class="swiper-button-prev !text-white !drop-shadow-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            </div>
+
+            <!-- Thumbnail Swiper -->
+            <div class="swiper thumbSwiper w-full h-20 sm:h-24 hidden" id="thumbSwiperContainer">
+              <div class="swiper-wrapper" id="thumbGallery">
+                 <!-- Rendered via JS -->
+              </div>
             </div>
           </div>
 
@@ -617,23 +628,44 @@
         // Gallery
         const images = Array.isArray(l.images) ? l.images : [];
         const gallery = document.getElementById('imageGallery');
-        gallery.innerHTML = images.length > 0
-          ? images.map((img, i) => `
+        const thumbGallery = document.getElementById('thumbGallery');
+        
+        if (images.length > 0) {
+          gallery.innerHTML = images.map((img, i) => `
               <div class="swiper-slide relative overflow-hidden flex items-center justify-center rounded-2xl bg-black/5 dark:bg-black/20">
-                <!-- Blurred Backdrop -->
                 <div class="absolute inset-0 bg-cover bg-center blur-3xl opacity-40 scale-110" style="background-image: url('${img}')"></div>
-                <!-- Actual Image -->
                 <img src="${img}" onclick="openLightbox(${i})" title="Click to enlarge" class="relative z-10 w-full h-full object-contain cursor-zoom-in drop-shadow-2xl">
-              </div>`).join('')
-          : `<div class="swiper-slide flex items-center justify-center bg-gray-100 dark:bg-gray-800"><img src="https://placehold.co/800x600/0f172a/9ca3af?text=No+Image" class="w-full h-full object-cover"></div>`;
+              </div>`).join('');
+              
+          if (images.length > 1) {
+            document.getElementById('thumbSwiperContainer').classList.remove('hidden');
+            thumbGallery.innerHTML = images.map((img, i) => `
+                <div class="swiper-slide cursor-pointer rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 shadow-sm">
+                  <img src="${img}" class="w-full h-full object-cover">
+                </div>`).join('');
+          }
+        } else {
+          gallery.innerHTML = `<div class="swiper-slide flex items-center justify-center bg-gray-100 dark:bg-gray-800"><img src="https://placehold.co/800x600/0f172a/9ca3af?text=No+Image" class="w-full h-full object-cover"></div>`;
+        }
 
-        // Initialize Swiper (3D Creative Effect with AutoPlay)
-        new Swiper('.swiper', {
+        // Initialize Thumb Swiper
+        const swiperThumbs = new Swiper('.thumbSwiper', {
+          spaceBetween: 10,
+          slidesPerView: 4,
+          freeMode: true,
+          watchSlidesProgress: true,
+          breakpoints: {
+            640: { slidesPerView: 5 },
+            1024: { slidesPerView: 6 }
+          }
+        });
+
+        // Initialize Main Swiper
+        new Swiper('#mainSwiper', {
           spaceBetween: 20,
-          loop: images.length > 1,
-          autoplay: { delay: 4000, disableOnInteraction: false },
-          pagination: { el: '.swiper-pagination', clickable: true, dynamicBullets: true },
+          autoplay: { delay: 5000, disableOnInteraction: false },
           navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+          thumbs: { swiper: swiperThumbs },
           grabCursor: true,
         });
 
