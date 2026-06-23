@@ -49,14 +49,74 @@
     </script>
     <style>
       .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24 }
-      
 
-      .swiper-button-next, .swiper-button-prev {
-        color: white !important;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      /* ===== GALLERY ===== */
+      .gallery-wrapper { position: relative; width: 100%; border-radius: 24px; overflow: hidden; background: #0f172a; box-shadow: 0 25px 60px rgba(0,0,0,0.3); }
+      #mainSwiper { width: 100%; height: 420px; }
+      @media (max-width: 640px) { #mainSwiper { height: 260px; } }
+      #mainSwiper .swiper-slide {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
       }
-      .swiper-pagination-bullet { background: white !important; opacity: 0.7; }
-      .swiper-pagination-bullet-active { opacity: 1; background: #019863 !important; }
+      #mainSwiper .swiper-slide .blur-bg {
+        position: absolute;
+        inset: -20px;
+        background-size: cover;
+        background-position: center;
+        filter: blur(30px);
+        opacity: 0.45;
+        transform: scale(1.1);
+      }
+      #mainSwiper .swiper-slide img {
+        position: relative;
+        z-index: 2;
+        max-width: 100%;
+        max-height: 100%;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        cursor: zoom-in;
+        filter: drop-shadow(0 8px 24px rgba(0,0,0,0.4));
+      }
+      /* Gallery nav buttons always visible, styled */
+      #mainSwiper .swiper-button-next,
+      #mainSwiper .swiper-button-prev {
+        color: #fff !important;
+        background: rgba(0,0,0,0.4);
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        backdrop-filter: blur(4px);
+        transition: background 0.2s;
+      }
+      #mainSwiper .swiper-button-next:hover,
+      #mainSwiper .swiper-button-prev:hover { background: rgba(1,152,99,0.8); }
+      #mainSwiper .swiper-button-next::after,
+      #mainSwiper .swiper-button-prev::after { font-size: 16px; font-weight: 900; }
+      #mainSwiper .swiper-pagination-bullet { background: rgba(255,255,255,0.6) !important; }
+      #mainSwiper .swiper-pagination-bullet-active { background: #019863 !important; }
+
+      /* Thumbnail strip */
+      #thumbSwiper { width: 100%; height: 80px; margin-top: 10px; }
+      #thumbSwiper .swiper-slide {
+        height: 100%;
+        border-radius: 10px;
+        overflow: hidden;
+        cursor: pointer;
+        opacity: 0.5;
+        border: 2px solid transparent;
+        transition: all 0.25s ease;
+      }
+      #thumbSwiper .swiper-slide img { width: 100%; height: 100%; object-fit: cover; }
+      #thumbSwiper .swiper-slide-thumb-active {
+        opacity: 1;
+        border-color: #019863;
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(1,152,99,0.4);
+      }
 
       /* Sticky Action Box */
       .sticky-box {
@@ -140,26 +200,23 @@
         <!-- Left: Details -->
         <div class="w-full lg:w-2/3 flex flex-col gap-8">
           
-          <!-- IMAGE GALLERY (Moved Inside Left Column) -->
+          <!-- IMAGE GALLERY -->
           <div>
-            <div class="relative w-full aspect-[4/3] sm:aspect-[16/9] bg-gray-100 dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border border-gray-200/50 dark:border-gray-700/50 group mb-4">
-              <!-- Main Swiper -->
-              <div class="swiper w-full h-full" id="mainSwiper">
+            <!-- Main Swiper -->
+            <div class="gallery-wrapper">
+              <div id="mainSwiper" class="swiper">
                 <div class="swiper-wrapper" id="imageGallery">
-                  <!-- Rendered via JS -->
-                  <div class="swiper-slide"><div class="bg-gray-200 dark:bg-gray-800 w-full h-full animate-pulse"></div></div>
+                  <!-- Loading skeleton -->
+                  <div class="swiper-slide"><div class="w-full h-full bg-gray-800 animate-pulse"></div></div>
                 </div>
-                <!-- Navigation -->
-                <div class="swiper-button-next !text-white !drop-shadow-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="swiper-button-prev !text-white !drop-shadow-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+                <div class="swiper-pagination"></div>
               </div>
             </div>
-
-            <!-- Thumbnail Swiper -->
-            <div class="swiper thumbSwiper w-full h-20 sm:h-24 hidden" id="thumbSwiperContainer">
-              <div class="swiper-wrapper" id="thumbGallery">
-                 <!-- Rendered via JS -->
-              </div>
+            <!-- Thumbnail strip -->
+            <div id="thumbSwiper" class="swiper" style="display:none;">
+              <div class="swiper-wrapper" id="thumbGallery"></div>
             </div>
           </div>
 
@@ -609,43 +666,48 @@
         const images = Array.isArray(l.images) ? l.images : [];
         const gallery = document.getElementById('imageGallery');
         const thumbGallery = document.getElementById('thumbGallery');
+        const thumbSwiper = document.getElementById('thumbSwiper');
         
         if (images.length > 0) {
+          // Main slides with cinematic blur backdrop
           gallery.innerHTML = images.map((img, i) => `
-              <div class="swiper-slide relative overflow-hidden flex items-center justify-center rounded-2xl bg-black/5 dark:bg-black/20">
-                <div class="absolute inset-0 bg-cover bg-center blur-3xl opacity-40 scale-110" style="background-image: url('${img}')"></div>
-                <img src="${img}" onclick="openLightbox(${i})" title="Click to enlarge" class="relative z-10 w-full h-full object-contain cursor-zoom-in drop-shadow-2xl">
-              </div>`).join('');
-              
+            <div class="swiper-slide">
+              <div class="blur-bg" style="background-image: url('${img}')"></div>
+              <img src="${img}" onclick="openLightbox(${i})" title="Click to enlarge" loading="lazy">
+            </div>`).join('');
+          
+          // Thumbnails (only if more than 1 image)
           if (images.length > 1) {
-            document.getElementById('thumbSwiperContainer').classList.remove('hidden');
-            thumbGallery.innerHTML = images.map((img, i) => `
-                <div class="swiper-slide cursor-pointer rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 shadow-sm">
-                  <img src="${img}" class="w-full h-full object-cover">
-                </div>`).join('');
+            thumbSwiper.style.display = 'block';
+            thumbGallery.innerHTML = images.map(img => `
+              <div class="swiper-slide">
+                <img src="${img}" loading="lazy">
+              </div>`).join('');
           }
         } else {
-          gallery.innerHTML = `<div class="swiper-slide flex items-center justify-center bg-gray-100 dark:bg-gray-800"><img src="https://placehold.co/800x600/0f172a/9ca3af?text=No+Image" class="w-full h-full object-cover"></div>`;
+          gallery.innerHTML = `<div class="swiper-slide"><img src="https://placehold.co/800x450/1e293b/6b7280?text=No+Image+Available"></div>`;
         }
 
-        // Initialize Thumb Swiper
-        const swiperThumbs = new Swiper('.thumbSwiper', {
+        // Always init thumb swiper first
+        const swiperThumbs = new Swiper('#thumbSwiper', {
           spaceBetween: 10,
           slidesPerView: 4,
           freeMode: true,
           watchSlidesProgress: true,
           breakpoints: {
-            640: { slidesPerView: 5 },
-            1024: { slidesPerView: 6 }
+            480: { slidesPerView: 5 },
+            768: { slidesPerView: 6 }
           }
         });
 
-        // Initialize Main Swiper
+        // Main swiper linked to thumbs
         new Swiper('#mainSwiper', {
-          spaceBetween: 20,
-          autoplay: { delay: 5000, disableOnInteraction: false },
-          navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
-          thumbs: { swiper: swiperThumbs },
+          spaceBetween: 0,
+          loop: images.length > 1,
+          autoplay: images.length > 1 ? { delay: 5000, disableOnInteraction: false } : false,
+          navigation: { nextEl: '#mainSwiper .swiper-button-next', prevEl: '#mainSwiper .swiper-button-prev' },
+          pagination: { el: '#mainSwiper .swiper-pagination', clickable: true },
+          thumbs: images.length > 1 ? { swiper: swiperThumbs } : undefined,
           grabCursor: true,
         });
 
