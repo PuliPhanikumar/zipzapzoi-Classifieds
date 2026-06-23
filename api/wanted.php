@@ -11,8 +11,8 @@ require_once __DIR__ . '/config.php';
 try {
     $db = getDB();
     $db->exec("CREATE TABLE IF NOT EXISTS wanted_ads (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
+        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        user_id INT UNSIGNED NOT NULL,
         title VARCHAR(255) NOT NULL,
         category VARCHAR(100) DEFAULT 'General',
         description TEXT,
