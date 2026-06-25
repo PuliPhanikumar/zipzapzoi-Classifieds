@@ -281,6 +281,10 @@
 
         navArea.innerHTML = `
           <div class="flex items-center gap-4">
+            <button onclick="toggleNotifications()" class="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors">
+              <span class="material-symbols-outlined">notifications</span>
+              <span id="notifCountBadge" class="hidden absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-900"></span>
+            </button>
             <div class="flex items-center gap-3">
               <div class="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-sm">
                 ${initial}
@@ -308,6 +312,68 @@
       try { await fetch('/api/auth.php?action=logout', { method: 'POST', credentials: 'include' }); } catch(e) {}
       localStorage.removeItem('zzz_user');
       window.location.reload();
+    }
+
+    // Notifications Logic
+    let notifsLoaded = false;
+    async function toggleNotifications() {
+      const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      if(!user) return;
+      let modal = document.getElementById('notifModal');
+      if (modal) { modal.remove(); return; }
+      
+      modal = document.createElement('div');
+      modal.id = 'notifModal';
+      modal.className = 'fixed right-4 top-20 w-80 bg-white dark:bg-card-dark rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 z-50 overflow-hidden animate-in';
+      modal.innerHTML = `
+        <div class="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+          <h3 class="font-black text-gray-900 dark:text-white">Notifications</h3>
+          <button onclick="markAllRead()" class="text-xs font-bold text-primary hover:underline">Mark all read</button>
+        </div>
+        <div id="notifList" class="max-h-96 overflow-y-auto">
+          <div class="p-8 text-center text-gray-400 font-bold text-sm">Loading...</div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      try {
+        const res = await fetch('/api/notifications.php', {credentials: 'include'});
+        const data = await res.json();
+        const list = document.getElementById('notifList');
+        if (data.data && data.data.notifications.length > 0) {
+           list.innerHTML = data.data.notifications.map(n => `
+             <a href="${n.link || '#'}" class="block p-4 border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${n.is_read == 0 ? 'bg-primary/5 dark:bg-primary/5' : ''}">
+                <p class="text-sm font-bold text-gray-900 dark:text-white mb-1">${n.title}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">${n.message}</p>
+             </a>
+           `).join('');
+        } else {
+           list.innerHTML = `<div class="p-8 text-center text-gray-400 font-bold text-sm">No new notifications</div>`;
+        }
+      } catch(e) {
+        document.getElementById('notifList').innerHTML = `<div class="p-8 text-center text-red-400 font-bold text-sm">Failed to load</div>`;
+      }
+    }
+
+    async function markAllRead() {
+      try {
+        await fetch('/api/notifications.php?action=read', {method: 'POST', credentials: 'include'});
+        const badge = document.getElementById('notifCountBadge');
+        if (badge) badge.classList.add('hidden');
+        if(document.getElementById('notifModal')) toggleNotifications();
+      } catch(e){}
+    }
+
+    // Fetch initial count
+    if (localStorage.getItem('zzz_user')) {
+       fetch('/api/notifications.php', {credentials: 'include'})
+         .then(r => r.json())
+         .then(data => {
+            if (data.data && data.data.unread_count > 0) {
+               const badge = document.getElementById('notifCountBadge');
+               if (badge) badge.classList.remove('hidden');
+            }
+         }).catch(e=>console.log(e));
     }
 
     // Smart Classifieds card — goes to Seller Dashboard if logged in

@@ -530,6 +530,46 @@ function updateListing(int $id): void {
     if (empty($sets)) jsonError('Nothing to update.');
     $params[] = $id;
     $db->prepare('UPDATE listings SET ' . implode(', ', $sets) . ' WHERE id = ?')->execute($params);
+    
+    // --- PRICE DROP ALERT LOGIC ---
+    if (isset($b['price'])) {
+        $old_price = (float)($listing['price'] ?? 0);
+        $new_price = (float)$b['price'];
+        if ($old_price > 0 && $new_price < $old_price) {
+            // Price dropped! Find users who favorited this
+            $favStmt = $db->prepare("SELECT user_id FROM favorites WHERE listing_id = ?");
+            $favStmt->execute([$id]);
+            $favoriters = $favStmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            if (!empty($favoriters)) {
+                // Ensure table exists
+                try {
+                    $db->exec("
+                        CREATE TABLE IF NOT EXISTS user_notifications (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            user_id INT NOT NULL,
+                            type VARCHAR(50) NOT NULL,
+                            title VARCHAR(255) NOT NULL,
+                            message TEXT NOT NULL,
+                            link VARCHAR(255),
+                            is_read TINYINT(1) DEFAULT 0,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        )
+                    ");
+                } catch (Exception $e) {}
+
+                $title = $listing['title'] ?? 'A saved item';
+                $msg = "Price Drop Alert: The price of {$title} dropped from Rs. " . number_format($old_price) . " to Rs. " . number_format($new_price) . "!";
+                $notifStmt = $db->prepare("INSERT INTO user_notifications (user_id, type, title, message, link) VALUES (?, 'price_drop', 'Price Drop!', ?, ?)");
+                foreach ($favoriters as $uid_fav) {
+                    try {
+                        $notifStmt->execute([$uid_fav, $msg, "Listing Detail.html?id={$id}"]);
+                    } catch (Exception $e) {}
+                }
+            }
+        }
+    }
+    
     jsonOk(['message' => 'Listing updated.']);
 }
 

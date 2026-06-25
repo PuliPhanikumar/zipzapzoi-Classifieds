@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -421,7 +421,7 @@
         const user = window.ZZZ ? window.ZZZ.getCurrentUser()
                                 : JSON.parse(localStorage.getItem('zzz_user') || 'null');
         if (!user) {
-          window.location.href = `Login Page.html?redirect=SearchResult.html?q=${encodeURIComponent(currentQuery)}`;
+          window.location.href = `Login Page.html?redirect=${encodeURIComponent('SearchResult.html?q=' + currentQuery)}`;
           return;
         }
         try {
@@ -500,7 +500,7 @@
           const pinIcon = L.divIcon({
             html: `<div style="position:relative">
               <div style="background:#019863;color:white;font-size:11px;font-weight:700;padding:4px 8px;border-radius:20px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid white">
-                ₹${Number(l.price||0).toLocaleString('en-IN',{maximumFractionDigits:0})}
+                &#8377;${Number(l.price||0).toLocaleString('en-IN',{maximumFractionDigits:0})}
               </div>
               <div style="width:8px;height:8px;background:#019863;transform:rotate(45deg);margin:-4px auto 0;border-right:2px solid white;border-bottom:2px solid white"></div>
             </div>`,

@@ -94,6 +94,12 @@
         Messages
         <span id="sideBadge" class="ml-auto bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full hidden">0</span>
       </a>
+      <button onclick="toggleNotifications()" class="sidebar-link w-full text-left relative flex items-center justify-between">
+        <div class="flex items-center gap-2">
+           <span class="material-symbols-outlined text-[20px]">notifications</span> Notifications
+        </div>
+        <span id="notifCountBadge" class="hidden w-2.5 h-2.5 bg-red-500 rounded-full mr-2"></span>
+      </button>
       <a href="#" onclick="quotaAwarePost(); return false;" class="sidebar-link">
         <span class="material-symbols-outlined text-[20px]">add_circle</span> Post New Ad
       </a>
@@ -140,6 +146,10 @@
       <div class="flex items-center gap-2">
         <button onclick="toggleDarkMode()" class="p-2 text-gray-500">
           <span class="material-symbols-outlined text-[22px]" id="themeIconMobile">dark_mode</span>
+        </button>
+        <button onclick="toggleNotifications()" class="relative p-2 text-gray-500">
+          <span class="material-symbols-outlined text-[22px]">notifications</span>
+          <span id="notifCountBadgeMobile" class="hidden absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border border-white dark:border-card-dark"></span>
         </button>
         <button onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="p-2 text-gray-600 dark:text-gray-300">
           <span class="material-symbols-outlined text-3xl">menu</span>
@@ -195,6 +205,36 @@
           <a href="Classifieds Plans.html" class="text-[11px] text-yellow-300 font-black hover:underline">Get More Ads →</a>
         </div>
       </div>
+
+      <!-- 🌟 PROFILE COMPLETENESS WIDGET 🌟 -->
+      <div id="profileCompletenessWidget" class="bg-white dark:bg-card-dark rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-black text-gray-900 dark:text-white flex items-center gap-2"><span class="material-symbols-outlined text-yellow-500">military_tech</span> Trust Profile</h3>
+          <span id="profilePctText" class="font-black text-primary">0%</span>
+        </div>
+        <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 mb-4">
+          <div id="profilePctBar" class="bg-primary h-2.5 rounded-full transition-all duration-1000 shadow-lg shadow-primary/30" style="width: 0%"></div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+          <div id="badgePhone" class="flex flex-col items-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-400 transition-colors">
+            <span class="material-symbols-outlined mb-1">smartphone</span>
+            <span class="text-xs font-bold text-center">Phone</span>
+          </div>
+          <div id="badgeBio" class="flex flex-col items-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-400 transition-colors">
+            <span class="material-symbols-outlined mb-1">description</span>
+            <span class="text-xs font-bold text-center">Bio</span>
+          </div>
+          <div id="badgeAvatar" class="flex flex-col items-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-400 transition-colors">
+            <span class="material-symbols-outlined mb-1">account_circle</span>
+            <span class="text-xs font-bold text-center">Avatar</span>
+          </div>
+          <div id="badgeListings" class="flex flex-col items-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-400 transition-colors">
+            <span class="material-symbols-outlined mb-1">post_add</span>
+            <span class="text-xs font-bold text-center">First Ad</span>
+          </div>
+        </div>
+      </div>
+
 
       <!-- ── LISTING STATUS NOTIFICATIONS ── -->
       <div id="listingNotifBanner" class="hidden space-y-2"></div>
@@ -524,6 +564,72 @@
       window.location.href = 'Login Page.html';
     }
 
+    // Notifications Logic
+    let notifsLoaded = false;
+    async function toggleNotifications() {
+      const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      if(!user) return;
+      let modal = document.getElementById('notifModal');
+      if (modal) { modal.remove(); return; }
+      
+      modal = document.createElement('div');
+      modal.id = 'notifModal';
+      modal.className = 'fixed right-4 top-16 w-80 bg-white dark:bg-card-dark rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 z-50 overflow-hidden animate-in';
+      modal.innerHTML = `
+        <div class="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+          <h3 class="font-black text-gray-900 dark:text-white">Notifications</h3>
+          <button onclick="markAllRead()" class="text-xs font-bold text-primary hover:underline">Mark all read</button>
+        </div>
+        <div id="notifList" class="max-h-96 overflow-y-auto">
+          <div class="p-8 text-center text-gray-400 font-bold text-sm">Loading...</div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      try {
+        const res = await fetch('/api/notifications.php', {credentials: 'include'});
+        const data = await res.json();
+        const list = document.getElementById('notifList');
+        if (data.data && data.data.notifications.length > 0) {
+           list.innerHTML = data.data.notifications.map(n => `
+             <a href="${n.link || '#'}" class="block p-4 border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${n.is_read == 0 ? 'bg-primary/5 dark:bg-primary/5' : ''}">
+                <p class="text-sm font-bold text-gray-900 dark:text-white mb-1">${n.title}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">${n.message}</p>
+             </a>
+           `).join('');
+        } else {
+           list.innerHTML = `<div class="p-8 text-center text-gray-400 font-bold text-sm">No new notifications</div>`;
+        }
+      } catch(e) {
+        document.getElementById('notifList').innerHTML = `<div class="p-8 text-center text-red-400 font-bold text-sm">Failed to load</div>`;
+      }
+    }
+
+    async function markAllRead() {
+      try {
+        await fetch('/api/notifications.php?action=read', {method: 'POST', credentials: 'include'});
+        const badge1 = document.getElementById('notifCountBadge');
+        const badge2 = document.getElementById('notifCountBadgeMobile');
+        if(badge1) badge1.classList.add('hidden');
+        if(badge2) badge2.classList.add('hidden');
+        if(document.getElementById('notifModal')) toggleNotifications();
+      } catch(e){}
+    }
+
+    // Fetch initial count
+    if (localStorage.getItem('zzz_user')) {
+       fetch('/api/notifications.php', {credentials: 'include'})
+         .then(r => r.json())
+         .then(data => {
+            if (data.data && data.data.unread_count > 0) {
+               const badge1 = document.getElementById('notifCountBadge');
+               const badge2 = document.getElementById('notifCountBadgeMobile');
+               if(badge1) badge1.classList.remove('hidden');
+               if(badge2) badge2.classList.remove('hidden');
+            }
+         }).catch(e=>console.log(e));
+    }
+
 
     // ═══════════════════════════════════════════
     //  4. PLAN WIDGET
@@ -576,6 +682,23 @@
 
         const me = meData.data.user;
         localStorage.setItem('zzz_user', JSON.stringify(me));
+
+        // Evaluate Profile Completeness
+        let pct = 0;
+        if(me.phone) pct += 25;
+        if(me.bio) pct += 25;
+        if(me.avatar_url && !me.avatar_url.includes('ui-avatars')) pct += 25;
+        if(meData.data.stats && meData.data.stats.total > 0) pct += 25;
+
+        document.getElementById('profilePctText').textContent = pct + '%';
+        setTimeout(() => { document.getElementById('profilePctBar').style.width = pct + '%'; }, 300);
+
+        const activeClass = 'bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary';
+        if(me.phone) document.getElementById('badgePhone').className = `flex flex-col items-center p-3 rounded-xl ${activeClass}`;
+        if(me.bio) document.getElementById('badgeBio').className = `flex flex-col items-center p-3 rounded-xl ${activeClass}`;
+        if(me.avatar_url && !me.avatar_url.includes('ui-avatars')) document.getElementById('badgeAvatar').className = `flex flex-col items-center p-3 rounded-xl ${activeClass}`;
+        if(meData.data.stats && meData.data.stats.total > 0) document.getElementById('badgeListings').className = `flex flex-col items-center p-3 rounded-xl ${activeClass}`;
+
 
         // Update greeting
         document.getElementById('userName').textContent = (me.name || 'User').split(' ')[0];
@@ -646,6 +769,7 @@
         filterListings(currentFilter, false);
         initChart();
         fetchMyReviews(me.id);
+        fetchMyWanted(me.id);
 
       } catch (err) {
         showToast('Failed to load dashboard. Check connection.', 'error');
@@ -905,6 +1029,55 @@
         }
       } catch { showToast('Network error.', 'error'); }
       closeDeleteModal();
+    }
+    
+    // Wanted Logic
+    async function fetchMyWanted(userId) {
+        try {
+            const res = await fetch('/api/wanted.php?user_id=' + userId).then(r=>r.json());
+            const list = document.getElementById('wantedList');
+            const ads = res.data && res.data.wanted_ads ? res.data.wanted_ads : [];
+            if (ads.length === 0) {
+                list.innerHTML = `
+                   <div class="text-center py-10 bg-white dark:bg-card-dark rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                     <span class="material-symbols-outlined text-4xl text-gray-300 dark:text-gray-600 mb-2 block">person_search</span>
+                     <p class="text-gray-500 dark:text-gray-400 font-semibold text-sm">No wanted requests yet.</p>
+                   </div>`;
+                return;
+            }
+            list.innerHTML = ads.map(ad => `
+                <div class="bg-white dark:bg-card-dark p-4 rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center justify-between group shadow-sm hover:shadow-md transition-shadow">
+                    <div>
+                        <div class="text-[10px] font-black text-blue-500 uppercase tracking-wider mb-1">WANTED • ${escapeHtml(ad.category)}</div>
+                        <h4 class="font-bold text-gray-900 dark:text-white mb-1"><a href="Wanted Detail.html?id=${ad.id}" class="hover:underline">${escapeHtml(ad.title)}</a></h4>
+                        <div class="text-xs text-gray-500">Budget: ₹${Number(ad.budget_min).toLocaleString()} - ₹${Number(ad.budget_max).toLocaleString()}</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="deleteWanted(${ad.id})" class="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        } catch(e) {
+            document.getElementById('wantedList').innerHTML = '<p class="text-red-500">Error loading wanted ads</p>';
+        }
+    }
+    
+    async function deleteWanted(id) {
+        if (!confirm('Are you sure you want to delete this wanted request?')) return;
+        try {
+            const res = await fetch('/api/wanted.php?id=' + id, { method: 'DELETE', credentials: 'include' }).then(r=>r.json());
+            if (res.success) {
+                showToast('Wanted request deleted', 'success');
+                const user = JSON.parse(localStorage.getItem('zzz_user'));
+                if (user) fetchMyWanted(user.id);
+            } else {
+                showToast(res.error || 'Failed to delete', 'error');
+            }
+        } catch(e) {
+            showToast('Network error', 'error');
+        }
     }
     // Keep old window.deleteItem for compatibility
     window.deleteItem = (id) => openDeleteModal(id);

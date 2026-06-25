@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Wanted Ad Detail — ZipZapZoi</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#019863",
+            secondary: "#4D96A9",
+            "background-light": "#f0f4f8",
+            "background-dark": "#0f172a",
+            "card-dark": "#1e293b"
+          },
+          fontFamily: { display: "Spline Sans" }
+        }
+      }
+    };
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    }
+  </script>
+  <style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24 }
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .dark .glass-panel {
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .mesh-bg {
+        background-color: #f0f4f8;
+        background-image: radial-gradient(at 40% 20%, hsla(210,100%,74%,1) 0px, transparent 50%),
+        radial-gradient(at 80% 0%, hsla(189,100%,56%,1) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, hsla(230,100%,93%,1) 0px, transparent 50%);
+    }
+    .dark .mesh-bg {
+        background-color: #0f172a;
+        background-image: radial-gradient(at 40% 20%, hsla(210,50%,20%,1) 0px, transparent 50%),
+        radial-gradient(at 80% 0%, hsla(189,50%,20%,1) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, hsla(230,20%,10%,1) 0px, transparent 50%);
+    }
+  </style>
+  <script src="js/schema.js"></script>
+  <script src="js/utils.js"></script>
+</head>
+<body class="font-display min-h-screen flex flex-col text-gray-800 dark:text-gray-100 mesh-bg transition-colors duration-500">
+  
+  <header class="sticky top-0 z-50 glass-panel shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div class="flex items-center justify-between">
+        <a href="classifieds.html" class="flex items-center gap-2 group cursor-pointer text-gray-500 hover:text-blue-500 transition-colors">
+          <span class="material-symbols-outlined text-2xl">arrow_back</span>
+          <span class="font-bold hidden sm:block">Back to Marketplace</span>
+        </a>
+        <div class="flex items-center gap-4" id="headerAuthArea">
+          <button onclick="toggleDarkMode()" aria-label="Toggle Dark Mode" class="p-2 rounded-full hover:bg-white/50 dark:hover:bg-black/20 transition-colors">
+             <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+          </button>
+          <div id="authContainer"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-4xl mx-auto px-4 sm:px-6 py-12 w-full flex flex-col items-center">
+    
+    <!-- MAIN FORM CONTAINER -->
+    <div class="glass-panel w-full rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden border-2 border-blue-200 dark:border-blue-900" id="adContainer" style="display:none;">
+        
+        <div class="flex items-start justify-between mb-6">
+            <div>
+                <div class="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1 shadow-sm mb-3">
+                    <span class="material-symbols-outlined text-[16px]">campaign</span> WANTED
+                </div>
+                <div class="text-sm font-bold text-gray-500 dark:text-gray-400 bg-white/50 dark:bg-black/20 px-3 py-1 rounded-full inline-block ml-2" id="detailCategory">
+                    Category
+                </div>
+            </div>
+            
+            <div class="text-right">
+                <div class="text-sm font-bold text-gray-500 dark:text-gray-400">Budget Range</div>
+                <div class="text-2xl md:text-3xl font-black text-blue-600 dark:text-blue-400" id="detailBudget">₹0</div>
+            </div>
+        </div>
+
+        <h1 id="detailTitle" class="text-3xl md:text-5xl font-black mb-6 bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">Loading Title...</h1>
+
+        <div class="flex flex-wrap items-center gap-4 text-sm font-bold text-gray-500 dark:text-gray-400 bg-white/40 dark:bg-black/20 px-4 py-3 rounded-xl inline-flex border border-white/20 mb-8">
+            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px] text-blue-500">location_on</span> <span id="detailLocation">Location</span></span>
+            <span class="text-gray-300 dark:text-gray-600">|</span>
+            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">schedule</span> <span id="detailTime">Time</span></span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="md:col-span-2 space-y-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-blue-500">description</span> Description</h3>
+                    <p id="detailDesc" class="text-gray-700 dark:text-gray-300 leading-relaxed font-medium whitespace-pre-line"></p>
+                </div>
+                
+                <div id="dynamicSpecsArea" class="hidden">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-blue-500">list_alt</span> Requirements</h3>
+                    <div id="dynamicSpecsGrid" class="grid grid-cols-2 gap-4"></div>
+                </div>
+            </div>
+
+            <!-- Seller / Buyer Card -->
+            <div>
+                <div class="bg-white/60 dark:bg-black/30 rounded-2xl p-6 border border-white/40 dark:border-gray-700 shadow-lg text-center">
+                    <div class="w-20 h-20 mx-auto bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center overflow-hidden mb-4 border-4 border-white dark:border-gray-800 shadow-md">
+                        <span class="material-symbols-outlined text-3xl text-gray-400" id="buyerAvatarIcon">person</span>
+                        <img id="buyerAvatar" class="w-full h-full object-cover hidden">
+                    </div>
+                    <h4 class="font-bold text-lg" id="buyerName">Buyer Name</h4>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider mb-6">Looking to buy</p>
+                    
+                    <button onclick="contactBuyer()" id="contactBtn" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black py-3 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined">handshake</span> I Have This!
+                    </button>
+                    
+                    <div id="contactInfo" class="hidden mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <a href="#" id="buyerPhoneLink" class="flex items-center justify-center gap-2 text-gray-800 dark:text-white font-bold bg-gray-100 dark:bg-gray-800 py-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                            <span class="material-symbols-outlined text-green-500">call</span>
+                            <span id="buyerPhoneText">Phone Number</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+  </main>
+
+  <script>
+    let currentAd = null;
+    let currentUser = null;
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      currentUser = getCurrentUser();
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+      
+      if (!id) {
+          showToast('Ad not found', 'error');
+          setTimeout(() => window.location.href = 'classifieds.html', 1500);
+          return;
+      }
+
+      try {
+          const res = await fetch('/api/wanted.php?id=' + id, { credentials: 'include' }).then(r=>r.json());
+          if (!res.success || !res.data || !res.data.wanted_ads || res.data.wanted_ads.length === 0) {
+              showToast('Ad not found', 'error');
+              setTimeout(() => window.location.href = 'classifieds.html', 1500);
+              return;
+          }
+          currentAd = res.data.wanted_ads[0];
+          renderAd();
+      } catch(e) {
+          showToast('Failed to load ad', 'error');
+      }
+    });
+
+    function renderAd() {
+        document.getElementById('adContainer').style.display = 'block';
+        
+        document.getElementById('detailTitle').textContent = currentAd.title;
+        document.getElementById('detailCategory').textContent = currentAd.category + (currentAd.subcategory ? ` > ${currentAd.subcategory}` : '');
+        
+        const min = Number(currentAd.budget_min).toLocaleString();
+        const max = Number(currentAd.budget_max).toLocaleString();
+        document.getElementById('detailBudget').textContent = (currentAd.budget_max > 0) ? `₹${min} - ₹${max}` : `₹${min}`;
+        
+        document.getElementById('detailLocation').textContent = currentAd.location_city ? `${currentAd.location_city}, ${currentAd.location_state}` : (currentAd.location_state || 'Any Location');
+        document.getElementById('detailTime').textContent = new Date(currentAd.created_at).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'});
+        
+        document.getElementById('detailDesc').textContent = currentAd.description || 'No description provided.';
+        
+        document.getElementById('buyerName').textContent = currentAd.buyer_name || 'Anonymous';
+        if (currentAd.buyer_avatar) {
+            document.getElementById('buyerAvatarIcon').classList.add('hidden');
+            document.getElementById('buyerAvatar').src = currentAd.buyer_avatar;
+            document.getElementById('buyerAvatar').classList.remove('hidden');
+        }
+
+        // Render Dynamic Specs
+        if (currentAd.dynamic_data) {
+            let parsed = null;
+            try { parsed = typeof currentAd.dynamic_data === 'string' ? JSON.parse(currentAd.dynamic_data) : currentAd.dynamic_data; } catch(e){}
+            if (parsed && Object.keys(parsed).length > 0) {
+                document.getElementById('dynamicSpecsArea').classList.remove('hidden');
+                const grid = document.getElementById('dynamicSpecsGrid');
+                grid.innerHTML = '';
+                Object.entries(parsed).forEach(([key, val]) => {
+                    grid.innerHTML += `<div class="bg-white/50 dark:bg-black/20 p-3 rounded-xl border border-white/30 dark:border-gray-700">
+                        <div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">${key}</div>
+                        <div class="font-bold text-gray-900 dark:text-white truncate">${val}</div>
+                    </div>`;
+                });
+            }
+        }
+    }
+
+    function contactBuyer() {
+        if (!currentUser) {
+            window.location.href = `Login Page.html?redirect=${encodeURIComponent('Wanted Detail.html?id=' + currentAd.id)}`;
+            return;
+        }
+        document.getElementById('contactBtn').classList.add('hidden');
+        document.getElementById('contactInfo').classList.remove('hidden');
+        const p = currentAd.buyer_phone || 'Not provided';
+        document.getElementById('buyerPhoneText').textContent = p;
+        if(p !== 'Not provided') {
+            document.getElementById('buyerPhoneLink').href = `tel:${p}`;
+        }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "ZipZapZoi Classifieds",
+  "short_name": "ZipZapZoi",
+  "description": "Buy, sell, and discover amazing local deals.",
+  "start_url": "/classifieds.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#019863",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192/019863/ffffff?text=Z",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/019863/ffffff?text=Z",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -514,7 +514,7 @@ function shareProfile() {
 function openReportModal() {
     if(!currentUser) {
         showToast("Please login to report users", "error");
-        setTimeout(() => window.location.href = `Login Page.html?redirect=profile.html?sellerId=${sellerId}`, 1500);
+        setTimeout(() => window.location.href = `Login Page.html?redirect=${encodeURIComponent('profile.html?sellerId=' + sellerId)}`, 1500);
         return;
     }
     document.getElementById('reportModal').classList.remove('hidden');

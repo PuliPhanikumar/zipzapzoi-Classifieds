@@ -124,6 +124,14 @@
       gtag('config', 'G-HVTZDKTMJ9');
     </script>
   <link rel="canonical" href="https://www.zipzapzoi.com/classifieds.html" />
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW failed:', err));
+      });
+    }
+  </script>
 </head>
 <body class="font-display min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
     
@@ -294,8 +302,13 @@
             </div>
           </div>
 
-          <div id="listingsGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div id="listingsGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 min-h-[400px]">
             <!-- 3D Cards rendered here via JS -->
+          </div>
+          <div id="loadMoreContainer" class="hidden flex justify-center mt-8">
+             <button onclick="loadMore()" class="bg-white border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold py-3 px-8 rounded-full transition-colors flex items-center gap-2">
+                 Load More
+             </button>
           </div>
         </div>
 
@@ -367,6 +380,7 @@
       const categories = [{ id: 'All', icon: 'explore', label: 'Explore' }, ...classifiedsSchema.categories];
 
       let activeCategory = 'All';
+      let currentPage = 1;
       let allListings = [];
       const currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
 
@@ -539,9 +553,10 @@
       // =====================================
       // 5. 3D GRID RENDER (API WIRED)
       // =====================================
-      async function renderGrid() {
+      async function renderGrid(append = false) {
         const grid = document.getElementById('listingsGrid');
 
+        if (!append) { currentPage = 1; }
         // Show Skeletons
         let skeletons = '';
         for(let i=0; i<6; i++) {
@@ -558,6 +573,8 @@
         // Build API query parameters
         const params = new URLSearchParams();
         params.append('status', 'active');
+        params.append('page', currentPage);
+        params.append('limit', 20);
         
         if (activeCategory !== 'All') params.append('category', activeCategory);
         
@@ -636,7 +653,7 @@
 
           const favs = window.ZZZ ? window.ZZZ.getFavoriteIds() : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
 
-          grid.innerHTML = filtered.map((l, index) => {
+          const htmlCards = filtered.map((l, index) => {
             const isFav = favs.includes(l.id);
             const timeDelay = index * 0.05; // Cascade animation
 
@@ -685,6 +702,22 @@
               </div>
             `;
           }).join('');
+          
+          if (append) {
+              grid.insertAdjacentHTML('beforeend', htmlCards);
+          } else {
+              grid.innerHTML = htmlCards;
+          }
+          
+          const lmc = document.getElementById('loadMoreContainer');
+          if (lmc) {
+              if (filtered.length >= 20) {
+                  lmc.classList.remove('hidden');
+              } else {
+                  lmc.classList.add('hidden');
+              }
+          }
+          
         } catch(e) {
           console.error('Error fetching listings:', e);
           grid.innerHTML = '<div class="col-span-full text-center text-red-500 py-10">Error loading listings. Please try again later.</div>';
@@ -942,3 +975,4 @@
   <script src="js/fcm-client.js"></script>
 </body>
 </html>
+

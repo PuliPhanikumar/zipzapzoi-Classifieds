@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en"><head>
   <script>
     if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -252,6 +252,14 @@
       gtag('js', new Date());
       gtag('config', 'G-HVTZDKTMJ9');
     </script>
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW failed:', err));
+      });
+    }
+  </script>
 </head>
 <body class="font-display overflow-hidden bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
 <div class="relative flex h-dvh w-full flex-col items-center justify-center bg-gradient-to-r from-sky-blue via-hot-pink to-sunny-yellow bg-[length:400%_400%] animate-gradient-bg group/design-root overflow-hidden perspective">
@@ -316,3 +324,4 @@ document.addEventListener("DOMContentLoaded", () => {
 <script src="scripts/boot.js"></script>
   <script src="js/utils.js"></script>
 </body></html>
+
