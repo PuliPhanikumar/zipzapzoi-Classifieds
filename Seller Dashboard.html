@@ -48,9 +48,9 @@
     .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24; }
     .sidebar-link { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:12px; font-weight:600; font-size:14px; color:#6b7280; transition:all 0.2s; cursor:pointer; text-decoration:none; }
     .sidebar-link:hover { background:#f0fdf4; color:#019863; }
-    .dark .sidebar-link:hover { background:rgba(1,152,99,0.1); color:#34d399; }
+    .dark .sidebar-link:hover { background:rgba(1&#8377;52,99,0.1); color:#34d399; }
     .sidebar-link.active { background:#f0fdf4; color:#019863; font-weight:800; }
-    .dark .sidebar-link.active { background:rgba(1,152,99,0.15); color:#34d399; }
+    .dark .sidebar-link.active { background:rgba(1&#8377;52,99,0.15); color:#34d399; }
     .stat-card { transition:all 0.25s; }
     .stat-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px rgba(0,0,0,0.08); }
     .listing-card { transition:all 0.2s; }
@@ -1357,7 +1357,7 @@
             label: 'Profile Views',
             data,
             borderColor: '#019863',
-            backgroundColor: isDarkNow ? 'rgba(1,152,99,0.08)' : 'rgba(1,152,99,0.06)',
+            backgroundColor: isDarkNow ? 'rgba(1&#8377;52,99,0.08)' : 'rgba(1&#8377;52,99,0.06)',
             tension: 0.4, fill: true, borderWidth: 2.5,
             pointRadius: 4, pointHoverRadius: 7,
             pointBackgroundColor: '#019863', pointBorderColor: '#fff', pointBorderWidth: 2
@@ -1723,6 +1723,19 @@
 <!-- Firebase SDKs for Push Notifications -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
-<script src="js/fcm-client.js"></script>
+<script src="js/fcm-client.js">
+    function escapeHtml(str) {
+        if (!str) return "";
+        return str.toString().replace(/[&<>"']/g, function(m) {
+            return {
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                "\"": "&quot;",
+                "\'": "&#39;"
+            }[m];
+        });
+    }
+</script>
 </body>
 </html>

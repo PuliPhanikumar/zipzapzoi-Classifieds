@@ -1063,7 +1063,7 @@
           // 2. Draw Main Image (Top 75%)
           const img = new Image();
           img.crossOrigin = "Anonymous";
-          const imgSrc = (currentListing.images && currentListing.images.length > 0) ? currentListing.images[0] : 'https://placehold.co/1080x810/334155/94a3b8?text=ZipZapZoi';
+          const imgSrc = (currentListing.images && currentListing.images.length > 0) ? currentListing.images[0] : 'https://via.placeholder.com/1080x810.png?text=ZipZapZoi';
           await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = imgSrc; });
           
           // Cover crop exactly into 1080x810 area
