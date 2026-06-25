@@ -69,12 +69,13 @@ if ($method === 'GET') {
             JOIN users u ON u.id = w.user_id 
             WHERE {$whereSQL} 
             ORDER BY w.created_at DESC 
-            LIMIT :limit OFFSET :offset";
+            LIMIT ? OFFSET ?";
             
     $stmt = $db->prepare($sql);
-    foreach ($params as $k => $v) $stmt->bindValue($k + 1, $v);
-    $stmt->bindValue(':limit',  $limit,  PDO::PARAM_INT);
-    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $idx = 1;
+    foreach ($params as $v) { $stmt->bindValue($idx++, $v); }
+    $stmt->bindValue($idx++,  $limit,  PDO::PARAM_INT);
+    $stmt->bindValue($idx++, $offset, PDO::PARAM_INT);
     $stmt->execute();
     $rows = $stmt->fetchAll();
     

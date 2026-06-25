@@ -6,6 +6,20 @@
  */
 require_once __DIR__ . '/config.php';
 
+try {
+    $db = getDB();
+    $db->exec("CREATE TABLE IF NOT EXISTS reviews (
+        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        seller_id INT UNSIGNED NOT NULL,
+        buyer_id INT UNSIGNED NOT NULL,
+        rating TINYINT UNSIGNED NOT NULL CHECK(rating BETWEEN 1 AND 5),
+        comment TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (buyer_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+} catch (Exception $e) { /* Ignore */ }
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
