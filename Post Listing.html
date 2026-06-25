@@ -499,6 +499,7 @@
   let currentCategoryKey = null;
   let uploadedImages = []; // Array to store image data URLs
   let selectedFilesArray = []; // Array to natively store selected File objects
+    let existingUrlsArray = []; // Existing images from server
 
   // --- 4. INITIALIZATION ---
   
@@ -652,9 +653,30 @@
   });
 
   // --- 5.1 PHOTO RENDERER ---
-  function renderPhotos() {
+  window.removeExistingPhoto = function(index) {
+        existingUrlsArray.splice(index, 1);
+        renderPhotos();
+    };
+
+    function renderPhotos() {
     photoPreview.innerHTML = '';
     uploadedImages = [];
+    const WARN_BYTES = 2 * 1024 * 1024;
+    const MAX_BYTES  = 5 * 1024 * 1024;
+
+    // Render existing images first
+    existingUrlsArray.forEach((url, index) => {
+        const div = document.createElement('div');
+        div.className = 'aspect-square rounded-lg bg-cover bg-center border border-gray-300 relative group overflow-hidden shadow-sm';
+        div.style.backgroundImage = `url(${url})`;
+        
+        let hoverControls = `<div class="absolute inset-0 bg-black/50 hidden group-hover:flex flex-col items-center justify-center text-white gap-2 transition-all">`;
+        hoverControls += `<button type="button" onclick="window.removeExistingPhoto(${index})" class="text-[10px] font-bold bg-red-500/80 hover:bg-red-500 px-2 py-1 rounded-full flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">delete</span> Delete</button>`;
+        hoverControls += `</div>`;
+        
+        div.innerHTML = `${hoverControls}<div class="absolute top-0 right-0 bg-purple-500 text-white text-[9px] px-1 font-bold">Existing</div>`;
+        photoPreview.appendChild(div);
+    });
     const max = (currentCategory && currentCategory.photoLimit) ? currentCategory.photoLimit : 8;
     const MAX_BYTES  = 5 * 1024 * 1024;
     const WARN_BYTES = 2 * 1024 * 1024;
@@ -740,7 +762,7 @@
     
     // Add new files until we hit the max limit
     for(let file of newFiles) {
-        if(selectedFilesArray.length < max) {
+        if((selectedFilesArray.length + existingUrlsArray.length) < max) {
             selectedFilesArray.push(file);
         } else {
             showToast('Maximum ' + max + ' photos allowed.', 'error');
@@ -868,7 +890,14 @@
         if(key) {
             selectCategory(key);
             setTimeout(() => {
-                document.getElementById('postTitle').value = item.title || '';
+                if(item.images && item.images.length > 0) {
+                      existingUrlsArray = item.images;
+                  } else if (item.thumbnail) {
+                      existingUrlsArray = [item.thumbnail];
+                  }
+                  renderPhotos();
+                  
+                  document.getElementById('postTitle').value = item.title || '';
                 document.getElementById('postPrice').value = item.price || '';
                 document.getElementById('postDescription').value = item.description || '';
                 document.getElementById('stateSelect').value = item.location_state || item.state || '';
@@ -1022,7 +1051,7 @@
 
     try {
       // ── Step 1: Compress + Upload images ─────────────────────────────
-      let imageUrls = [];
+      let imageUrls = [...existingUrlsArray];
       const files = selectedFilesArray;
 
       if (files.length > 0) {
@@ -1076,7 +1105,7 @@
             upData = null;
           }
           if (upData && upData.success && Array.isArray(upData.data.urls)) {
-            imageUrls = upData.data.urls;
+            imageUrls = imageUrls.concat(upData.data.urls);
           } else if (upData && !upData.success) {
             showToast('Image upload failed: ' + (upData.error || 'Unknown error') + '. Listing posted without photos.', 'error');
           }
