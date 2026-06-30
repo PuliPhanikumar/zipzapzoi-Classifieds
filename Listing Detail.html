@@ -1093,13 +1093,29 @@
           ctx.fillRect(0, 0, 1080, 1080);
           
           // 2. Draw Main Image (Top 75%)
-          const img = new Image();
-          img.crossOrigin = "Anonymous";
-          const imgSrc = (currentListing.images && currentListing.images.length > 0) ? currentListing.images[0] : 'https://via.placeholder.com/1080x810.png?text=ZipZapZoi';
-          await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = imgSrc; });
+          const imgSrc = (currentListing.images && currentListing.images.length > 0) ? currentListing.images[0] : 'https://placehold.co/1080x810/1e293b/ffffff.png?text=ZipZapZoi';
+            
+            const loadCanvasImage = async (url) => {
+              return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = "Anonymous";
+                img.onload = () => resolve(img);
+                img.onerror = () => {
+                  console.warn("CORS failed for main image, trying local fallback");
+                  const fallback = new Image();
+                  fallback.onload = () => resolve(fallback);
+                  fallback.onerror = () => resolve(null);
+                  fallback.src = 'images/infinity-only.png';
+                };
+                img.src = url;
+              });
+            };
+            
+            const img = await loadCanvasImage(imgSrc);
           
           // Cover crop exactly into 1080x810 area
-          const targetW = 1080;
+          if (img) {
+              const targetW = 1080;
           const targetH = 810;
           const scale = Math.max(targetW / img.width, targetH / img.height);
           const drawW = img.width * scale;
@@ -1113,6 +1129,7 @@
           ctx.clip();
           ctx.drawImage(img, drawX, drawY, drawW, drawH);
           ctx.restore();
+            }
           
           // 3. Smooth Gradient Blend from Image to Background
           const grad = ctx.createLinearGradient(0, 600, 0, 810);
@@ -1149,8 +1166,10 @@
           ctx.fillText('ZipZapZoi.com', 1020, 980);
           
           // Convert to blob and share/download
-          canvas.toBlob(async (blob) => {
-            if (!blob) throw new Error("Blob failed");
+          // Convert to blob and share/download
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 0.9));
+            if (!blob) throw new Error("Canvas is tainted or blob creation failed");
+            
             const file = new File([blob], `ZipZapZoi_${currentListing.id}.png`, { type: 'image/png' });
             
             // Try Native Mobile Share
@@ -1174,12 +1193,12 @@
                document.body.removeChild(a);
                
                // Copy link to clipboard for convenience
+               let titleForCopy = currentListing.title || 'Product';
                const link = window.location.origin + `/Listing%20Detail.html?id=${currentListing.id}`;
-               navigator.clipboard.writeText(`Check out ${title} on ZipZapZoi: ` + link).catch(()=>{});
+               navigator.clipboard.writeText(`Check out ${titleForCopy} on ZipZapZoi: ` + link).catch(()=>{});
                showToast('Poster downloading! Link copied to clipboard.', 'success');
             }
             btn.innerHTML = oldContent;
-          }, 'image/png', 0.9);
           
         } catch (e) {
           console.error("Poster error:", e);
