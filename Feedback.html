@@ -130,28 +130,28 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet"/>
 
 
+
 <style id="zzz-logo-styles">
-  @keyframes blink3d {
-    0%, 100% { opacity: 1; transform: scale(1) translateY(0); filter: brightness(1); }
-    50% { opacity: 0.8; transform: scale(1.05) translateY(-2px); filter: brightness(1.2); }
-  }
   @keyframes bounce-gentle {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-4px); }
   }
-  @keyframes shine {
-    0% { filter: drop-shadow(0 0 2px rgba(0, 200, 255, 0.4)); }
-    50% { filter: drop-shadow(0 0 10px rgba(255, 0, 255, 0.7)) brightness(1.1); }
-    100% { filter: drop-shadow(0 0 2px rgba(0, 200, 255, 0.4)); }
+  @keyframes bounce-in-letter {
+    0% { opacity: 0; transform: translateY(-15px) scale(0.9); }
+    50% { opacity: 1; transform: translateY(3px) scale(1.05); }
+    75% { transform: translateY(-1px) scale(0.98); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
   }
-  .animate-blinking-3d {
-    animation: blink3d 1.5s infinite alternate ease-in-out;
+  .animate-bounce-in {
+    opacity: 0;
     display: inline-block;
+    animation: bounce-in-letter 0.5s cubic-bezier(0.28, 0.84, 0.42, 1) forwards;
   }
-  .animate-logo-bouncy-shiny {
-    animation: bounce-gentle 2s infinite ease-in-out, shine 3s infinite alternate ease-in-out;
+  .animate-logo-bouncy {
+    animation: bounce-gentle 3s infinite ease-in-out;
   }
 </style>
+
 
 
 <link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet"/>
@@ -168,10 +168,14 @@
       <div class="flex items-center justify-between">
         
         <a href="index.html" class="flex items-center gap-2 group cursor-pointer">
-              <img src="images/classifieds-logo.png" alt="ZipZapZoi Logo" class="h-10 md:h-12 object-contain animate-logo-bouncy-shiny">
+              <img src="images/classifieds-logo.png" alt="ZipZapZoi Logo" class="h-10 md:h-12 object-contain animate-logo-bouncy">
               <h2 class="tracking-tight flex items-baseline gap-1">
-                <span class="text-2xl md:text-3xl font-black bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent" style="font-family: 'Fredoka One', cursive;">ZipZapZoi</span>
-                <span class="text-xl md:text-2xl text-black animate-blinking-3d" style="font-family: 'Righteous', cursive; text-shadow: 1px 1px 0 #999, 2px 2px 0 #555, 3px 3px 4px rgba(0,0,0,0.5);">Classifieds</span>
+                <span class="text-2xl md:text-3xl font-black" style="font-family: 'Fredoka One', cursive;">
+                  <span style="color: #0066ff;">ZipZap</span><span style="color: #ff007f;">Zoi</span>
+                </span>
+                <span class="text-xl md:text-2xl text-black flex items-baseline" style="font-family: 'Righteous', cursive; text-shadow: 1px 1px 0 #999, 2px 2px 0 #555, 3px 3px 4px rgba(0,0,0,0.5);">
+                  <span class="animate-bounce-in" style="animation-delay: 0.1s">C</span><span class="animate-bounce-in" style="animation-delay: 0.15s">l</span><span class="animate-bounce-in" style="animation-delay: 0.2s">a</span><span class="animate-bounce-in" style="animation-delay: 0.25s">s</span><span class="animate-bounce-in" style="animation-delay: 0.3s">s</span><span class="animate-bounce-in" style="animation-delay: 0.35s">i</span><span class="animate-bounce-in" style="animation-delay: 0.4s">f</span><span class="animate-bounce-in" style="animation-delay: 0.45s">i</span><span class="animate-bounce-in" style="animation-delay: 0.5s">e</span><span class="animate-bounce-in" style="animation-delay: 0.55s">d</span><span class="animate-bounce-in" style="animation-delay: 0.6s">s</span>
+                </span>
               </h2>
             </a>
         

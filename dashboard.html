@@ -86,28 +86,28 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet"/>
 
 
+
 <style id="zzz-logo-styles">
-  @keyframes blink3d {
-    0%, 100% { opacity: 1; transform: scale(1) translateY(0); filter: brightness(1); }
-    50% { opacity: 0.8; transform: scale(1.05) translateY(-2px); filter: brightness(1.2); }
-  }
   @keyframes bounce-gentle {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-4px); }
   }
-  @keyframes shine {
-    0% { filter: drop-shadow(0 0 2px rgba(0, 200, 255, 0.4)); }
-    50% { filter: drop-shadow(0 0 10px rgba(255, 0, 255, 0.7)) brightness(1.1); }
-    100% { filter: drop-shadow(0 0 2px rgba(0, 200, 255, 0.4)); }
+  @keyframes bounce-in-letter {
+    0% { opacity: 0; transform: translateY(-15px) scale(0.9); }
+    50% { opacity: 1; transform: translateY(3px) scale(1.05); }
+    75% { transform: translateY(-1px) scale(0.98); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
   }
-  .animate-blinking-3d {
-    animation: blink3d 1.5s infinite alternate ease-in-out;
+  .animate-bounce-in {
+    opacity: 0;
     display: inline-block;
+    animation: bounce-in-letter 0.5s cubic-bezier(0.28, 0.84, 0.42, 1) forwards;
   }
-  .animate-logo-bouncy-shiny {
-    animation: bounce-gentle 2s infinite ease-in-out, shine 3s infinite alternate ease-in-out;
+  .animate-logo-bouncy {
+    animation: bounce-gentle 3s infinite ease-in-out;
   }
 </style>
+
 
 
 <link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet"/>
