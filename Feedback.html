@@ -127,6 +127,19 @@
       gtag('js', new Date());
       gtag('config', 'G-HVTZDKTMJ9');
     </script>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet"/>
+
+<style>
+  @keyframes blink3d {
+    0%, 100% { opacity: 1; transform: scale(1) translateY(0); filter: brightness(1); }
+    50% { opacity: 0.8; transform: scale(1.05) translateY(-2px); filter: brightness(1.2); }
+  }
+  .animate-blinking-3d {
+    animation: blink3d 1.5s infinite alternate ease-in-out;
+    display: inline-block;
+  }
+</style>
+
 </head>
 <body class="text-gray-800 dark:text-gray-100 min-h-screen flex flex-col relative overflow-x-hidden">
 
@@ -139,10 +152,13 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
       <div class="flex items-center justify-between">
         
-        <a href="dashboard.html" class="flex items-center gap-2 group cursor-pointer">
-          <span class="material-symbols-outlined text-primary text-3xl group-hover:rotate-12 transition-transform">all_inclusive</span>
-          <h2 class="text-2xl font-black bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent tracking-tight">ZipZapZoi</h2>
-        </a>
+        <a href="index.html" class="flex items-center gap-2 group cursor-pointer">
+              <img src="Assets/zipzapzoi-logo.png" alt="ZipZapZoi" class="h-10 md:h-12 object-contain group-hover:scale-105 transition-transform">
+              <h2 class="tracking-tight flex items-baseline gap-1" style="font-family: 'Fredoka One', cursive;">
+                <span class="text-2xl md:text-3xl bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent">ZipZapZoi</span>
+                <span class="text-xl md:text-2xl text-primary animate-blinking-3d" style="text-shadow: 1px 1px 0 #005f3e, 2px 2px 0 #003a25, 3px 3px 4px rgba(0,0,0,0.4);">Classifieds</span>
+              </h2>
+            </a>
         
         <div class="flex items-center gap-4" id="headerAuthArea">
           <!-- Injected via JS -->
