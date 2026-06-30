@@ -715,9 +715,13 @@
           document.querySelectorAll('.pg-thumb').forEach((t, i) => {
             t.classList.toggle('active', i === pgCurrentIndex);
           });
-          // Scroll active thumb into view
-          const activeThumb = document.querySelectorAll('.pg-thumb')[pgCurrentIndex];
-          if (activeThumb) activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            // Scroll active thumb safely without scrolling the whole page
+            const activeThumb = document.querySelectorAll('.pg-thumb')[pgCurrentIndex];
+            const pgThumbs = document.getElementById('pgThumbs');
+            if (activeThumb && pgThumbs) {
+              const scrollLeft = activeThumb.offsetLeft - (pgThumbs.clientWidth / 2) + (activeThumb.clientWidth / 2);
+              pgThumbs.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+            }
         }
 
         window.pgNav = function(dir) { pgSetImage(pgCurrentIndex + dir, dir); };
