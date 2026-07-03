@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ZipZapZoi Classifieds — Shared Utilities
  * Include this file in every page: <script src="js/utils.js"></script>
  */
@@ -74,11 +74,11 @@ window.ZZZ.write = function writeStorage(key, value) {
 
 window.ZZZ.ensureClassifiedsSchema = function ensureClassifiedsSchema() {
     const existing = window.ZZZ.read('zzz_classifieds_schema', null);
-    if (existing && Array.isArray(existing.categories) && Array.isArray(existing.subcategories) && Array.isArray(existing.fields)) {
+    if (existing && Array.isArray(existing.categories) && existing.categories.length > 0 && Array.isArray(existing.subcategories) && Array.isArray(existing.fields)) {
         return existing;
     }
 
-    const source = window.ZZZ_SCHEMA || { categories: [], subcategories: [], fields: [] };
+    const source = typeof ZZZ_SCHEMA !== 'undefined' ? ZZZ_SCHEMA : { categories: [], subcategories: [], fields: [] };
     const schema = JSON.parse(JSON.stringify(source));
     window.ZZZ.write('zzz_classifieds_schema', schema);
     return schema;
