@@ -66,7 +66,7 @@ function updateProfile(): void {
     $b    = getBody();
     $db   = getDB();
 
-    $allowed = ['name','phone','city','state','avatar'];
+    $allowed = ['name','phone','city','state','avatar','fcm_token'];
     $sets = []; $params = [];
     foreach ($allowed as $f) {
         if (!array_key_exists($f, $b)) continue;

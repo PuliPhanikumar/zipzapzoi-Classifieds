@@ -20,6 +20,9 @@ CREATE TABLE IF NOT EXISTS `users` (
   `state`                VARCHAR(100)  DEFAULT NULL,
   `is_verified`          TINYINT(1)    NOT NULL DEFAULT 1,
   `is_active`            TINYINT(1)    NOT NULL DEFAULT 1,
+  `fcm_token`            VARCHAR(500)  DEFAULT NULL,
+  `trust_score`          INT           NOT NULL DEFAULT 100,
+  `is_banned`            TINYINT(1)    NOT NULL DEFAULT 0,
   `created_at`           DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`           DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `referral_code`        VARCHAR(20)   UNIQUE DEFAULT NULL,
@@ -87,6 +90,10 @@ CREATE TABLE IF NOT EXISTS `listings` (
   `location_city`  VARCHAR(100)  DEFAULT NULL,
   `location_state` VARCHAR(100)  DEFAULT NULL,
   `location_area`  VARCHAR(150)  DEFAULT NULL,
+  `latitude`       DECIMAL(10,8) DEFAULT NULL,
+  `longitude`      DECIMAL(11,8) DEFAULT NULL,
+  `is_story`       TINYINT(1)    NOT NULL DEFAULT 0,
+  `video_url`      VARCHAR(255)  DEFAULT NULL,
   `status`         ENUM('active','pending_review','sold','expired','rejected','draft') NOT NULL DEFAULT 'active',
   `images`         JSON          DEFAULT NULL,
   `fields`         JSON          DEFAULT NULL,
@@ -185,3 +192,17 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     last_attempt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (ip_address, action)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ── 11. REPORTS ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS `reports` (
+  `id`             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `reporter_id`    INT UNSIGNED NOT NULL,
+  `reported_user`  INT UNSIGNED DEFAULT NULL,
+  `listing_id`     INT UNSIGNED DEFAULT NULL,
+  `reason`         VARCHAR(255) NOT NULL,
+  `status`         ENUM('pending','resolved','dismissed') NOT NULL DEFAULT 'pending',
+  `created_at`     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`reporter_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`reported_user`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`listing_id`) REFERENCES `listings`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

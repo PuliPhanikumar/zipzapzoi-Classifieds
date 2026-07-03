@@ -12,12 +12,7 @@ require_once __DIR__ . '/config.php';
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
-// Auto-migrate schema for GPS feature
-try {
-    $db = getDB();
-    $db->exec("ALTER TABLE listings ADD COLUMN lat DECIMAL(10, 8) NULL AFTER location_area");
-    $db->exec("ALTER TABLE listings ADD COLUMN lng DECIMAL(11, 8) NULL AFTER lat");
-} catch (Exception $e) { /* Ignore if columns already exist */ }
+
 
 switch ($method) {
     case 'GET':
@@ -92,6 +87,10 @@ function getAll(): void {
     if (!empty($_GET['user_id'])) {
         $where[] = 'l.user_id = :uid';
         $params[':uid'] = (int)$_GET['user_id'];
+    }
+    if (isset($_GET['is_story'])) {
+        $where[] = 'l.is_story = :is_story';
+        $params[':is_story'] = (int)$_GET['is_story'];
     }
 
     // Sorting
@@ -356,6 +355,15 @@ function createListing(): void {
         }
     }
 
+    // --- FRAUD DETECTION HEURISTIC ---
+    // If a car or electronics is listed for suspiciously low (under $10), flag for review
+    $price = max(0, (float)($b['price'] ?? 0));
+    $lcCategory = strtolower($category);
+    if (($lcCategory === 'cars' || str_contains($lcCategory, 'electronic')) && $price < 10.00 && $priceType !== 'free') {
+        $status = 'pending_review'; // Force review
+    }
+
+
     $expiresDays = $isCharity ? 12 : 30;  // Default
     if (!$isCharity) {
         $expiryStmt = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'listing_expiry_days'");
@@ -368,11 +376,14 @@ function createListing(): void {
     $lat = isset($b['lat']) && $b['lat'] !== '' ? (float)$b['lat'] : null;
     $lng = isset($b['lng']) && $b['lng'] !== '' ? (float)$b['lng'] : null;
 
+    $isStory = !empty($b['is_story']) ? 1 : 0;
+    $videoUrl = clean($b['video_url'] ?? '');
+
     $db->prepare(
         'INSERT INTO listings
          (user_id, title, description, category, subcategory, price, price_type,
-          location_city, location_state, location_area, lat, lng, images, fields, status, expires_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+          location_city, location_state, location_area, lat, lng, is_story, video_url, images, fields, status, expires_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )->execute([
         $uid,
         $title,
@@ -386,6 +397,8 @@ function createListing(): void {
         clean($b['location_area']  ?? ''),
         $lat,
         $lng,
+        $isStory,
+        $videoUrl,
         json_encode($imageUrls),
         json_encode($b['fields'] ?? []),
         $status,
@@ -509,7 +522,8 @@ function updateListing(int $id): void {
 
     // Build dynamic SET
     $allowed = ['title','description','category','subcategory','price','price_type',
-                'location_city','location_state','location_area','lat','lng','images','fields','status','boosted'];
+                'location_city','location_state','location_area','lat','lng','images','fields','status','boosted',
+                'is_story','video_url'];
     $sets = []; $params = [];
     foreach ($allowed as $field) {
         if (!array_key_exists($field, $b)) continue;
@@ -628,3 +642,4 @@ function getStats(): void {
         'total_users'    => $totalUsers,
     ]);
 }
+

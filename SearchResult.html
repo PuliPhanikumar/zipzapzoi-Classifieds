@@ -180,6 +180,31 @@
                   <!-- Rendered via JS -->
                 </select>
               </div>
+
+              <!-- Price Filter -->
+              <div>
+                <label class="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Price Range</label>
+                <div class="flex items-center gap-2">
+                  <input type="number" id="minPrice" placeholder="Min" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold focus:ring-primary dark:text-white" onchange="renderResults()">
+                  <span class="text-gray-400 font-bold">-</span>
+                  <input type="number" id="maxPrice" placeholder="Max" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold focus:ring-primary dark:text-white" onchange="renderResults()">
+                </div>
+              </div>
+
+              <!-- Distance Filter (Requires GPS) -->
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <label class="block text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Distance</label>
+                  <span id="radiusLabel" class="text-xs font-bold text-primary">Any</span>
+                </div>
+                <input type="range" id="radiusFilter" min="0" max="100" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-primary" onchange="updateRadiusLabel(); renderResults()">
+                <div class="flex justify-between text-xs text-gray-400 mt-1 font-bold">
+                  <span>0km</span>
+                  <span>100km</span>
+                </div>
+                <p id="geoError" class="text-xs text-red-500 mt-1 hidden">Location access needed.</p>
+              </div>
+
               <div>
                 <label class="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Sort By</label>
                 <select id="sortFilter" onchange="renderResults()" class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold focus:ring-primary dark:text-white cursor-pointer">
@@ -289,25 +314,55 @@
         const urlCat = params.get('cat');
         if (urlCat) { catSelect.value = urlCat; updateSubcategories(); }
 
-        // Fetch listings from API instead of localStorage
+        // Initial fetch
+        await fetchListings();
+      });
+
+      function updateRadiusLabel() {
+        const val = document.getElementById('radiusFilter').value;
+        document.getElementById('radiusLabel').textContent = val == 0 ? 'Any' : val + ' km';
+      }
+
+      async function fetchListings() {
         try {
           const q = [];
           if (currentQuery) q.push('search=' + encodeURIComponent(currentQuery));
-          if (currentLoc)   q.push('location=' + encodeURIComponent(currentLoc));
+          
+          const cat = document.getElementById('catFilter').value;
+          if (cat !== 'all') q.push('category=' + encodeURIComponent(cat));
+          
+          const subcat = document.getElementById('subcatFilter') ? document.getElementById('subcatFilter').value : 'all';
+          if (subcat !== 'all') q.push('subcategory=' + encodeURIComponent(subcat));
+
+          const sort = document.getElementById('sortFilter').value;
+          q.push('sort=' + encodeURIComponent(sort));
+
+          const minP = document.getElementById('minPrice').value;
+          if (minP) q.push('min_price=' + encodeURIComponent(minP));
+          
+          const maxP = document.getElementById('maxPrice').value;
+          if (maxP) q.push('max_price=' + encodeURIComponent(maxP));
+
+          const radius = document.getElementById('radiusFilter').value;
+          if (radius > 0 && window.userLat && window.userLng) {
+            q.push('lat=' + window.userLat);
+            q.push('lng=' + window.userLng);
+            q.push('radius=' + radius);
+          }
+
           q.push('status=active', 'limit=200');
           const res  = await fetch('/api/listings.php?' + q.join('&'));
           const data = await res.json();
           if (data.success && data.data && data.data.listings) {
             allListings = data.data.listings;
+          } else {
+            allListings = [];
           }
         } catch(e) {
           console.error('Failed to fetch listings:', e);
         }
-
-        renderResults();
-      });
-
-      // Storage sync removed — data now comes from PHP API
+        renderResultsLocal();
+      }
 
       function updateSearch() {
         currentQuery = document.getElementById('searchQuery').value.trim();
@@ -315,7 +370,7 @@
         if (currentQuery) params.set('q', currentQuery);
         if (currentLoc)   params.set('loc', currentLoc);
         window.history.pushState({}, '', window.location.pathname + (params.toString() ? '?' + params.toString() : ''));
-        renderResults();
+        fetchListings();
       }
 
       function clearSearch() {
@@ -344,69 +399,59 @@
         }
       }
 
-      function renderResults(updateUrl = true) {
-        const schema = getSchema();
+      async function renderResults(updateUrl = true) {
+        // If radius > 0 and we don't have location, ask for it then fetch
+        const radius = document.getElementById('radiusFilter').value;
+        const geoErr = document.getElementById('geoError');
+        if (radius > 0 && !window.userLat) {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              pos => {
+                window.userLat = pos.coords.latitude;
+                window.userLng = pos.coords.longitude;
+                geoErr.classList.add('hidden');
+                fetchListings();
+              },
+              err => {
+                geoErr.classList.remove('hidden');
+                geoErr.textContent = "Location access denied. Radius ignored.";
+                document.getElementById('radiusFilter').value = 0;
+                updateRadiusLabel();
+                fetchListings();
+              }
+            );
+            return; // Wait for GPS
+          } else {
+            geoErr.classList.remove('hidden');
+            geoErr.textContent = "Geolocation not supported.";
+            document.getElementById('radiusFilter').value = 0;
+            updateRadiusLabel();
+          }
+        }
+        
+        if (updateUrl) { const params = new URLSearchParams(); if (currentQuery) params.set('q', currentQuery); if (currentLoc) params.set('loc', currentLoc); const c = document.getElementById('catFilter').value; if (c !== 'all') params.set('category', c); const sc = document.getElementById('subcatFilter').value; if (sc && sc !== 'all') params.set('subcategory', sc); const s = document.getElementById('sortFilter').value; if (s !== 'newest') params.set('sort', s); const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : ''); if (window.location.search !== '?' + params.toString()) window.history.pushState({}, '', newUrl); }
+        
+        fetchListings(); // Fetch new data based on filters
+      }
+
+      function renderResultsLocal() {
         const grid  = document.getElementById('resultsGrid');
         const empty = document.getElementById('emptyState');
         const count = document.getElementById('resultCount');
 
-        if (updateUrl) { const params = new URLSearchParams(); if (currentQuery) params.set('q', currentQuery); if (currentLoc) params.set('loc', currentLoc); const c = document.getElementById('catFilter').value; if (c !== 'all') params.set('category', c); const sc = document.getElementById('subcatFilter').value; if (sc && sc !== 'all') params.set('subcategory', sc); const s = document.getElementById('sortFilter').value; if (s !== 'newest') params.set('sort', s); const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : ''); if (window.location.search !== '?' + params.toString()) window.history.pushState({}, '', newUrl); }
         grid.classList.remove('hidden');
         empty.classList.add('hidden'); empty.classList.remove('flex');
 
-        grid.innerHTML = Array(6).fill(`
-          <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 p-4 animate-pulse">
-            <div class="h-48 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl mb-4"></div>
-            <div class="h-4 w-3/4 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
-            <div class="h-6 w-1/2 bg-gray-200 dark:bg-gray-800 rounded mb-4"></div>
-            <div class="h-3 w-1/3 bg-gray-200 dark:bg-gray-800 rounded"></div>
-          </div>`).join('');
-        count.textContent = 'Searching...';
+        let filtered = allListings;
+        let label = '"' + (currentQuery || 'All') + '"';
+        if (currentLoc) label += ' in ' + currentLoc;
+        count.textContent = `${filtered.length} result${filtered.length !== 1 ? 's' : ''} for ${label}`;
 
-        
-          const q      = currentQuery.trim().toLowerCase();
-          const loc    = currentLoc.trim().toLowerCase();
-          const cat    = document.getElementById('catFilter').value;
-          const subcat = document.getElementById('subcatContainer').classList.contains('hidden')
-                         ? 'all' : document.getElementById('subcatFilter').value;
-          const sort   = document.getElementById('sortFilter').value;
-
-          let filtered = allListings.filter(l => (l.status || 'active') === 'active');
-
-          if (q) filtered = filtered.filter(l =>
-            (l.title       || '').toLowerCase().includes(q) ||
-            (l.description || '').toLowerCase().includes(q) ||
-            (l.category    || '').toLowerCase().includes(q)
-          );
-
-          if (loc) filtered = filtered.filter(l =>
-            (l.location || '').toLowerCase().includes(loc) ||
-            (l.city     || '').toLowerCase().includes(loc)
-          );
-
-          if (cat !== 'all') {
-            filtered = filtered.filter(l => {
-              let catId = l.category;
-              const co = schema.categories.find(c => c.label === l.category);
-              if (co) catId = co.id;
-              return catId === cat || l.category === cat;
-            });
-          }
-          if (subcat !== 'all') filtered = filtered.filter(l => l.subcategory === subcat);
-
-          if (sort === 'price_low')  filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
-          if (sort === 'price_high') filtered.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
-          if (sort === 'newest')     filtered.sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
-
-          let label = '"' + (currentQuery || 'All') + '"';
-          if (currentLoc) label += ' in ' + currentLoc;
-          count.textContent = `${filtered.length} result${filtered.length !== 1 ? 's' : ''} for ${label}`;
-
-          if (filtered.length === 0) {
-            grid.classList.add('hidden');
-            empty.classList.remove('hidden'); empty.classList.add('flex');
-            return;
-          }
+        if (filtered.length === 0) {
+          grid.classList.add('hidden');
+          empty.classList.remove('hidden'); empty.classList.add('flex');
+          return;
+        }
 
           const favs = window.ZZZ ? window.ZZZ.getFavoriteIds()
                                   : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');

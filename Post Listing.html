@@ -292,8 +292,22 @@
         </div>
       </div>
       <div class="bg-card-light dark:bg-card-dark rounded-2xl shadow-bouncy p-6 border border-border-light dark:border-border-dark" id="photoSection">
-        <h3 class="text-xl font-bold mb-2">Upload Photos</h3>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4" id="photoLimitText">Add up to 8 photos. First photo is your cover image.</p>
+        <div class="flex justify-between items-center mb-4">
+           <h3 class="text-xl font-bold">Media Upload</h3>
+           <label class="flex items-center gap-2 cursor-pointer bg-gradient-to-r from-pink-500/10 to-purple-500/10 px-3 py-1.5 rounded-full border border-pink-200 dark:border-pink-800">
+             <input type="checkbox" id="postIsStory" class="rounded text-pink-500 focus:ring-pink-500 w-4 h-4 accent-pink-500" onchange="toggleStoryMode()">
+             <span class="text-sm font-black bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">auto_awesome</span> Post as Story</span>
+           </label>
+        </div>
+        
+        <div id="videoUrlContainer" class="hidden mb-6 bg-pink-50 dark:bg-pink-900/10 p-4 rounded-xl border border-pink-100 dark:border-pink-800/50">
+           <label class="block text-sm font-bold text-pink-700 dark:text-pink-400 mb-2">Video URL (TikTok, Instagram Reel, YouTube Shorts, or raw .mp4) *</label>
+           <input type="url" id="postVideoUrl" class="w-full rounded-xl border-pink-200 dark:border-pink-700 bg-white dark:bg-gray-800 py-3 px-4 focus:ring-pink-500 focus:border-pink-500" placeholder="https://example.com/video.mp4">
+           <p class="text-xs text-pink-600 dark:text-pink-500 mt-2">Required for Premium Stories. Your listing will be featured at the top of the feed.</p>
+        </div>
+        
+        <div id="photoUploadContainer">
+           <p class="text-sm text-gray-500 dark:text-gray-400 mb-4" id="photoLimitText">Add up to 8 photos. First photo is your cover image.</p>
         
         <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-800 transition-colors cursor-pointer relative">
           <input type="file" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" id="fileInput">
@@ -302,6 +316,7 @@
           <p class="text-xs text-gray-400 mt-1">JPG, PNG up to 5MB each</p>
         </div>
         <div id="photoPreview" class="grid grid-cols-4 sm:grid-cols-6 gap-2 mt-4"></div>
+        </div>
       </div>
 
       <div class="flex items-center gap-3 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800">
@@ -1143,6 +1158,9 @@
       }
 
       // ── Step 2: POST listing JSON ──
+      const isStory = !!(document.getElementById('postIsStory') && document.getElementById('postIsStory').checked);
+      const videoUrl = document.getElementById('postVideoUrl') ? document.getElementById('postVideoUrl').value.trim() : null;
+
       const payload = {
         title:          document.getElementById('postTitle').value.trim(),
         description:    document.getElementById('postDescription').value.trim(),
@@ -1157,6 +1175,8 @@
         lng:            document.getElementById('pickedLng').value || null,
         images:         imageUrls,
         fields,
+        is_story:       isStory ? 1 : 0,
+        video_url:      isStory ? videoUrl : null
       };
 
       const url    = editId ? `/api/listings.php?id=${editId}` : '/api/listings.php';
@@ -1381,5 +1401,24 @@
 })();
   </script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/abKU=" crossorigin=""></script>
+  
+  <script>
+    function toggleStoryMode() {
+        const isStory = document.getElementById('postIsStory').checked;
+        const videoContainer = document.getElementById('videoUrlContainer');
+        const photoContainer = document.getElementById('photoUploadContainer');
+        const videoInput = document.getElementById('postVideoUrl');
+        
+        if (isStory) {
+            videoContainer.classList.remove('hidden');
+            photoContainer.classList.add('hidden');
+            videoInput.setAttribute('required', 'required');
+        } else {
+            videoContainer.classList.add('hidden');
+            photoContainer.classList.remove('hidden');
+            videoInput.removeAttribute('required');
+        }
+    }
+  </script>
 </body>
 </html>

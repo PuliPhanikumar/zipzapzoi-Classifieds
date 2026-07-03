@@ -248,6 +248,9 @@
   </div>
 
   <div class="nav-section-label">Moderation</div>
+  <div class="nav-item" id="nav-broadcast" onclick="switchTab('broadcast')">
+    <span class="material-symbols-outlined mi">campaign</span>Push Broadcast
+  </div>
   <div class="nav-item" id="nav-moderation" onclick="switchTab('moderation')">
     <span class="material-symbols-outlined mi">gavel</span>Reports & AI Mod
   </div>
@@ -547,6 +550,28 @@
         <div style="overflow-x:auto;">
           <table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Plan</th><th>Used</th><th>Remaining</th><th>Expires</th><th style="text-align:right;">Action</th></tr></thead>
           <tbody id="quotaTableBody"><tr><td colspan="7"><div class="empty-state">Loading...</div></td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         TAB: PUSH BROADCAST
+    ══════════════════════════════════════════ -->
+    <div id="tab-broadcast" class="tab-panel">
+      <div class="card" style="max-width: 600px; margin: 0 auto;">
+        <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;background:#f8fafc;font-weight:800;color:#0ea5e9;">📣 Send Global Push Notification</div>
+        <div style="padding:20px;">
+          <div class="form-group">
+            <label>Title</label>
+            <input type="text" id="pushTitle" class="form-control" placeholder="Flash Sale!">
+          </div>
+          <div class="form-group" style="margin-top:16px;">
+            <label>Message Body</label>
+            <textarea id="pushBody" class="form-control" rows="4" placeholder="Get 50% off all listings today..."></textarea>
+          </div>
+          <div style="margin-top:20px; display:flex; justify-content:flex-end;">
+            <button class="btn btn-primary" onclick="sendGlobalPush()">Send Broadcast</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1276,7 +1301,7 @@ async function loadListings() {
         ? '<span style="background:#fee2e2;color:#dc2626;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:700;">✗ Rejected</span><button onclick="approveListing(' + l.id + ')" class="btn btn-primary btn-sm" style="font-size:10px;padding:2px 8px;">Re-Approve</button>'
       : '<span style="color:#94a3b8;font-size:11px;">' + esc(l.status||'') + '</span>';
     return '<tr>' +
-      '<td><div style="font-weight:600;font-size:13px;">' + esc(l.title) + '</div><div style="font-size:11px;color:#94a3b8;">#' + l.id + '</div></td>' +
+        '<td><div style="font-weight:600;font-size:13px;display:flex;align-items:center;">' + esc(l.title) + (l.is_story == 1 ? ' <span class="badge badge-purple" style="font-size:9px;padding:2px 4px;margin-left:4px;">Story</span>' : '') + '</div><div style="font-size:11px;color:#94a3b8;">#' + l.id + '</div></td>' +
       '<td style="font-size:12px;">' + esc(l.seller_name || l.user_name || '') + '</td>' +
       '<td style="font-size:12px;">' + esc(l.category || '') + '</td>' +
       '<td style="font-weight:700;">' + (l.price ? fmtMoney(l.price) : 'Free') + '</td>' +
@@ -1776,6 +1801,7 @@ function renderAbuseTable(abuse) {
     </td>
     <td style="text-align:right;">
       <button onclick="viewSellerListings(${u.seller_id})" class="btn btn-ghost btn-sm">View Ads</button>
+      <button onclick="deductTrust(${u.seller_id})" class="btn btn-ghost btn-sm" style="color: #f59e0b;">-20 Trust</button>
       <button onclick="banUser(${u.seller_id})" class="btn btn-danger btn-sm">Ban Seller</button>
     </td>
   </tr>`).join('');
@@ -1787,9 +1813,17 @@ function viewSellerListings(sellerId) {
 
 async function banUser(uid) {
   confirmAction('Ban User', 'This will permanently suspend this user and hide their listings. Continue?', async () => {
-    const r = await apiPut('/api/admin/users.php', {id: uid, action: 'ban'});
+    const r = await apiPut('/api/admin/reports.php', {target_user_id: uid, action: 'ban_user'});
     if (r?.success) { showToast('User banned!', 'error'); logAction('BAN_USER', 'User ID: '+uid); loadAbuseTracking(); }
     else showToast(r?.error || 'Error banning user', 'error');
+  });
+}
+
+async function deductTrust(uid) {
+  confirmAction('Deduct Trust', 'This will deduct 20 trust score points from this user. Continue?', async () => {
+    const r = await apiPut('/api/admin/reports.php', {target_user_id: uid, action: 'deduct_trust', amount: 20});
+    if (r?.success) { showToast('Trust deducted!'); logAction('DEDUCT_TRUST', 'User ID: '+uid); loadAbuseTracking(); }
+    else showToast(r?.error || 'Error deducting trust', 'error');
   });
 }
 async function saveAIRules() {
@@ -2171,6 +2205,28 @@ async function sendTestEmail() {
   const r = await apiPost('/api/admin/settings.php',{action:'test_email',email});
   if (r?.success) showToast('Test email sent to '+email);
   else showToast('Error sending test email — check EmailJS config','error');
+}
+
+// ─────────────────────────────────────────────────────────
+//  PUSH BROADCAST
+// ─────────────────────────────────────────────────────────
+async function sendGlobalPush() {
+  const title = document.getElementById('pushTitle').value.trim();
+  const body = document.getElementById('pushBody').value.trim();
+  if (!title || !body) {
+    showToast('Title and Body are required', 'error');
+    return;
+  }
+  if (!confirm('Are you sure you want to broadcast this to ALL users?')) return;
+  
+  const r = await apiPost('/api/admin/broadcast.php', { title, body });
+  if (r?.success) {
+    showToast('Broadcast sent successfully!');
+    document.getElementById('pushTitle').value = '';
+    document.getElementById('pushBody').value = '';
+  } else {
+    showToast(r?.error || 'Failed to send broadcast', 'error');
+  }
 }
 
 // ─────────────────────────────────────────────────────────

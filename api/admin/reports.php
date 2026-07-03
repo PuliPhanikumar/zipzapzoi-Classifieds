@@ -59,6 +59,26 @@ function updateReport(array $admin): void {
     $allowed = ['pending','reviewed','dismissed'];
 
     if (!$id) jsonError('Report id required.');
+
+    if ($status === 'ban_user') {
+        $userId = (int)($b['user_id'] ?? 0);
+        if (!$userId) jsonError('User ID required to ban.');
+        $db->prepare('UPDATE users SET is_banned = 1, is_active = 0 WHERE id=?')->execute([$userId]);
+        $db->prepare('UPDATE reports SET status="reviewed" WHERE id=?')->execute([$id]);
+        adminLog($admin, 'BAN_USER', "Banned User ID: $userId");
+        jsonOk(['message' => "User banned successfully."]);
+    }
+
+    if ($status === 'deduct_trust') {
+        $userId = (int)($b['user_id'] ?? 0);
+        $amount = (int)($b['amount'] ?? 20);
+        if (!$userId) jsonError('User ID required.');
+        $db->prepare('UPDATE users SET trust_score = GREATEST(0, trust_score - ?) WHERE id=?')->execute([$amount, $userId]);
+        $db->prepare('UPDATE reports SET status="reviewed" WHERE id=?')->execute([$id]);
+        adminLog($admin, 'DEDUCT_TRUST', "Deducted $amount trust from User ID: $userId");
+        jsonOk(['message' => "Trust score deducted successfully."]);
+    }
+
     if (!in_array($status, $allowed)) jsonError('Invalid status.');
 
     $db->prepare('UPDATE reports SET status=? WHERE id=?')->execute([$status, $id]);

@@ -177,6 +177,9 @@
             <button onclick="toggleFav()" id="favBtnHeader" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400" title="Save">
                <span class="material-symbols-outlined">favorite</span>
             </button>
+            <button onclick="openReportModal()" class="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900 transition-colors text-red-500" title="Report Listing">
+               <span class="material-symbols-outlined">report</span>
+            </button>
           </div>
         </div>
       </div>
@@ -198,6 +201,7 @@
                 <div class="pg-blur" id="pgBlur"></div>
                 <!-- Main image -->
                 <img class="pg-img" id="pgMainImg" src="" alt="Listing Image" onclick="openLightbox(pgCurrentIndex)">
+                <video class="pg-img" id="pgMainVideo" style="display:none;" controls autoplay loop muted></video>
                 <!-- Nav buttons -->
                 <button class="pg-btn pg-prev" onclick="pgNav(-1)">&#8249;</button>
                 <button class="pg-btn pg-next" onclick="pgNav(1)">&#8250;</button>
@@ -736,7 +740,21 @@
         }, { passive: true });
 
         // Render gallery
-        if (pgImages.length > 0) {
+        if (l.is_story == 1 && l.video_url) {
+            document.getElementById('pgMainImg').style.display = 'none';
+            document.getElementById('pgThumbs').style.display = 'none';
+            document.querySelector('.pg-prev').style.display = 'none';
+            document.querySelector('.pg-next').style.display = 'none';
+            document.getElementById('pgCounter').style.display = 'none';
+            
+            const videoEl = document.getElementById('pgMainVideo');
+            videoEl.style.display = 'block';
+            videoEl.src = escapeHtml(l.video_url);
+            
+            // Adjust container for portrait video typical of stories
+            document.getElementById('pgWrap').style.aspectRatio = '9/16';
+            document.getElementById('pgWrap').style.maxHeight = '80vh';
+        } else if (pgImages.length > 0) {
           if (pgImages.length === 1) document.getElementById('pgWrap').classList.add('single');
           // Build thumbnails
           const thumbsEl = document.getElementById('pgThumbs');
@@ -1244,7 +1262,60 @@
         requestAnimationFrame(() => t.classList.remove('translate-y-4','opacity-0'));
         setTimeout(() => { t.classList.add('translate-y-4','opacity-0'); setTimeout(() => t.remove(), 300); }, 4000);
       }
+
+      // ─── REPORTING ───────────────────────────────────────────────────
+      function openReportModal() {
+          document.getElementById('reportModal').style.display = 'flex';
+      }
+      function closeReportModal() {
+          document.getElementById('reportModal').style.display = 'none';
+          document.getElementById('reportReason').value = '';
+      }
+      async function submitReport() {
+          if (!currentListing) return;
+          const reason = document.getElementById('reportReason').value.trim();
+          if (!reason) {
+              showToast('Please enter a reason for reporting.', 'error');
+              return;
+          }
+          const t = localStorage.getItem('token');
+          if (!t) {
+              showToast('You must be logged in to report.', 'error');
+              setTimeout(() => { window.location.href = 'Login Page.html'; }, 1500);
+              return;
+          }
+          
+          try {
+              const r = await fetch('/api/report.php', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t },
+                  body: JSON.stringify({ listing_id: currentListing.id, reported_user: currentListing.user_id, reason })
+              });
+              const data = await r.json();
+              if (data.success) {
+                  showToast(data.message);
+                  closeReportModal();
+              } else {
+                  showToast(data.error || 'Failed to submit report', 'error');
+              }
+          } catch (e) {
+              showToast('Network error', 'error');
+          }
+      }
     </script>
+    
+    <!-- Report Modal -->
+    <div id="reportModal" class="fixed inset-0 z-[999] bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+      <div class="bg-white dark:bg-card-dark rounded-3xl w-full max-w-md p-6 shadow-2xl relative">
+        <h3 class="text-2xl font-black text-gray-900 dark:text-white mb-2">Report Listing</h3>
+        <p class="text-sm text-gray-500 mb-4">Please let us know why you are reporting this listing or seller. We will investigate immediately.</p>
+        <textarea id="reportReason" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-gray-900 dark:text-white mb-4 focus:ring-2 focus:ring-primary outline-none" rows="4" placeholder="e.g. It's a scam, inappropriate content, fake price..."></textarea>
+        <div class="flex justify-end gap-3">
+            <button onclick="closeReportModal()" class="px-5 py-2 font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">Cancel</button>
+            <button onclick="submitReport()" class="px-5 py-2 font-bold bg-red-500 hover:bg-red-600 text-white rounded-xl shadow-lg transition-colors">Submit Report</button>
+        </div>
+      </div>
+    </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/abKU=" crossorigin=""></script>
   </body>
   </html>
