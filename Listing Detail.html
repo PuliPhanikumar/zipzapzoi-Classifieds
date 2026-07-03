@@ -686,10 +686,11 @@
         const fieldKeys = Object.keys(fields).filter(k => fields[k]);
         if (fieldKeys.length > 0) {
           document.getElementById('attributesGrid').innerHTML = fieldKeys.map(key => {
-            const label = key.replace(/_/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
+            const label = escapeHtml(key.replace(/_/g,' ').replace(/\\b\\w/g, c=>c.toUpperCase()));
+            const val = escapeHtml(String(fields[key]));
             return `<div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
               <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">${label}</p>
-              <p class="font-bold text-gray-900 dark:text-white text-sm truncate" title="${fields[key]}">${fields[key]}</p>
+              <p class="font-bold text-gray-900 dark:text-white text-sm truncate" title="${val}">${val}</p>
             </div>`;
           }).join('');
           document.getElementById('attributesSection').style.display = 'block';
@@ -781,9 +782,12 @@
             if (mapEl && l.lat && l.lng) {
               mapEl.style.height = '200px';
               mapEl.style.borderRadius = '12px';
-              const map = L.map('listingMap').setView([l.lat, l.lng], 13);
-              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
-              L.marker([l.lat, l.lng]).addTo(map).bindPopup(l.title || 'Location');
+              // Check if map already initialized
+              if (!mapEl._leaflet_id) {
+                const map = L.map('listingMap').setView([l.lat, l.lng], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+                L.marker([l.lat, l.lng]).addTo(map).bindPopup(escapeHtml(l.title || 'Location'));
+              }
             } else if (mapEl) {
                mapEl.style.display = 'none';
                const mapParent = mapEl.closest('div.bg-white');

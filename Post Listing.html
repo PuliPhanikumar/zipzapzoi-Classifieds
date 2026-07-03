@@ -99,7 +99,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet"/>
 </head>
-<body class="font-display text-text-light dark:text-text-dark antialiased bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
+<body class="font-display text-text-light dark:text-text-dark antialiased bg-slate-50 dark:bg-slate-950 text-gray-800 dark:text-gray-100 transition-colors duration-300 bg-[url(\'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjxwYXRoIGQ9Ik0wIDBoNDB2NDBIMHoiIGZpbGw9Im5vbmUiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMSIgZmlsbD0icmdiYSgwLDAsMCwwLjA1KSIvPgo8L3N2Zz4=\')] dark:bg-[url(\'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjxwYXRoIGQ9Ik0wIDBoNDB2NDBIMHoiIGZpbGw9Im5vbmUiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPgo8L3N2Zz4=\')]">
 
 <header class="sticky top-0 z-50 bg-card-light/90 dark:bg-card-dark/90 backdrop-blur-md border-b border-border-light dark:border-border-dark">
   <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -163,7 +163,7 @@
 
   <form id="listingForm" class="flex flex-col gap-6" onsubmit="event.preventDefault();">
     
-    <div class="bg-card-light dark:bg-card-dark rounded-2xl shadow-bouncy p-6 border border-border-light dark:border-border-dark" id="catSection">
+    <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl p-8 border border-white/20 dark:border-white/5 relative overflow-hidden" id="catSection">
       <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
         <span class="bg-secondary/10 text-secondary p-1 rounded-md material-symbols-outlined">category</span>
         Choose a Category
@@ -192,7 +192,7 @@
         </div>
       </div>
       
-      <div class="bg-card-light dark:bg-card-dark rounded-2xl shadow-bouncy p-6 border border-border-light dark:border-border-dark">
+      <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl p-8 border border-white/20 dark:border-white/5 relative overflow-hidden">
         <div class="flex justify-between items-center mb-6">
           <h3 class="text-xl font-bold flex items-center gap-2">
             <span class="bg-primary/10 text-primary p-1 rounded-md material-symbols-outlined">fact_check</span>
@@ -213,7 +213,7 @@
         </div>
       </div>
 
-      <div class="bg-card-light dark:bg-card-dark rounded-2xl shadow-bouncy p-6 border border-border-light dark:border-border-dark">
+      <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl p-8 border border-white/20 dark:border-white/5 relative overflow-hidden">
         <h3 class="text-xl font-bold mb-6">Listing Information</h3>
         
         <div class="space-y-6">
@@ -246,7 +246,7 @@
         </div>
       </div>
 
-      <div class="bg-card-light dark:bg-card-dark rounded-2xl shadow-bouncy p-6 border border-border-light dark:border-border-dark">
+      <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl p-8 border border-white/20 dark:border-white/5 relative overflow-hidden">
         <h3 class="text-xl font-bold mb-6">Confirm Location</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -291,7 +291,7 @@
           </div>
         </div>
       </div>
-      <div class="bg-card-light dark:bg-card-dark rounded-2xl shadow-bouncy p-6 border border-border-light dark:border-border-dark" id="photoSection">
+      <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl p-8 border border-white/20 dark:border-white/5 relative overflow-hidden" id="photoSection">
         <div class="flex justify-between items-center mb-4">
            <h3 class="text-xl font-bold">Media Upload</h3>
            <label class="flex items-center gap-2 cursor-pointer bg-gradient-to-r from-pink-500/10 to-purple-500/10 px-3 py-1.5 rounded-full border border-pink-200 dark:border-pink-800">
@@ -414,9 +414,9 @@
     // Step 1: Use schema.js immediately (synchronous, always works, 14 categories)
     let brain = window.ZZZ && window.ZZZ.getClassifiedsSchema
       ? window.ZZZ.getClassifiedsSchema()
-      : (window.ZZZ_SCHEMA || { categories: [], subcategories: [], fields: [] });
+      : (typeof ZZZ_SCHEMA !== 'undefined' ? ZZZ_SCHEMA : { categories: [], subcategories: [], fields: [] });
     if (!brain || !brain.categories || brain.categories.length === 0) {
-      brain = window.ZZZ_SCHEMA || { categories: [], subcategories: [], fields: [] };
+      brain = (typeof ZZZ_SCHEMA !== 'undefined' ? ZZZ_SCHEMA : { categories: [], subcategories: [], fields: [] });
     }
     brain.categories.forEach(cat => {
       // 1. Create Category Object
@@ -474,7 +474,7 @@
           Object.keys(schema).forEach(function(key) {
             var cat = schema[key];
             var div = document.createElement('div');
-            div.className = 'cursor-pointer flex flex-col items-center justify-center p-4 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-gray-800 hover:border-secondary hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 transition-all gap-2 group';
+            div.className = 'cursor-pointer flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-transparent bg-gray-50/50 dark:bg-gray-800/50 hover:border-secondary hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 gap-3 group';
             div.innerHTML = '<span class="material-symbols-outlined text-4xl ' + cat.color + ' group-hover:scale-110 transition-transform">' + (cat.icon || 'category') + '</span><span class="text-sm font-bold text-center">' + cat.label + '</span>';
             div.onclick = (function(k){ return function(){ selectCategory(k); }; })(key);
             grid.appendChild(div);
@@ -554,7 +554,7 @@
   Object.keys(schema).forEach(key => {
     const cat = schema[key];
     const div = document.createElement('div');
-    div.className = `cursor-pointer flex flex-col items-center justify-center p-4 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-gray-800 hover:border-secondary hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 transition-all gap-2 group`;
+    div.className = `cursor-pointer flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-transparent bg-gray-50/50 dark:bg-gray-800/50 hover:border-secondary hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 gap-3 group`;
     div.innerHTML = `
       <span class="material-symbols-outlined text-4xl ${cat.color} group-hover:scale-110 transition-transform">${cat.icon}</span>
       <span class="text-sm font-bold text-center">${cat.label}</span>

@@ -239,6 +239,18 @@ function createListing(): void {
     $db = getDB();
     $uid = (int)$user['id'];
 
+    // --- SCHEMA VALIDATION ---
+    $schemaStmt = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'classifieds_schema'");
+    $schemaJson = $schemaStmt->fetchColumn();
+    $schema = json_decode($schemaJson, true);
+    if ($schema && isset($schema['categories'])) {
+        $validCats = array_column($schema['categories'], 'label');
+        if (!in_array($category, $validCats)) {
+             jsonError("Invalid category selected: " . htmlspecialchars($category));
+        }
+    }
+
+
     // ── Duplicate Detection ──────────────────────────────────────────
     if (!empty($user['phone'])) {
         $dupStmt = $db->prepare("
@@ -333,8 +345,9 @@ function createListing(): void {
                     }
                 }
             } elseif (str_starts_with($img, '/') || str_starts_with($img, 'http')) {
-                // Already a URL
-                $imageUrls[] = $img;
+                if (filter_var($img, FILTER_VALIDATE_URL) || preg_match('/^\/uploads\/lst_[0-9a-zA-Z_]+\.(jpg|jpeg|png|webp|gif)$/', $img)) {
+                    $imageUrls[] = $img;
+                }
             }
         }
     }
@@ -468,7 +481,7 @@ function updateListing(int $id): void {
     $db   = getDB();
 
     // Check ownership (or admin)
-    $stmt = $db->prepare('SELECT user_id, status, expires_at FROM listings WHERE id = ?');
+    $stmt = $db->prepare('SELECT user_id, status, expires_at, images FROM listings WHERE id = ?');
     $stmt->execute([$id]);
     $listing = $stmt->fetch();
     if (!$listing) jsonError('Listing not found.', 404);
@@ -514,8 +527,22 @@ function updateListing(int $id): void {
                     }
                 }
             } elseif (str_starts_with($img, '/') || str_starts_with($img, 'http')) {
-                // Already a stored URL — keep it as-is
-                $processedImages[] = $img;
+                // Ensure it's a valid URL, not a path traversal payload
+                if (filter_var($img, FILTER_VALIDATE_URL) || preg_match('/^\/uploads\/lst_[0-9a-zA-Z_]+\.(jpg|jpeg|png|webp|gif)$/', $img)) {
+                    $processedImages[] = $img;
+                }
+            }
+        }
+        
+        // Storage Bloat: Active delete old images when replacing them
+        $oldImages = json_decode($listing['images'], true) ?: [];
+        $removedImages = array_diff($oldImages, $processedImages);
+        foreach ($removedImages as $oldImg) {
+            $filename = basename($oldImg);
+            $filepath = UPLOAD_DIR . $filename;
+            // Additional check to prevent any accidental path traversal deletion
+            if (file_exists($filepath) && strpos(realpath($filepath), realpath(UPLOAD_DIR)) === 0) {
+                @unlink($filepath);
             }
         }
     }
@@ -545,6 +572,13 @@ function updateListing(int $id): void {
     $params[] = $id;
     $db->prepare('UPDATE listings SET ' . implode(', ', $sets) . ' WHERE id = ?')->execute($params);
     
+    // --- FRAUD DETECTION HEURISTIC ---
+    $price = max(0, (float)($b['price'] ?? 0));
+    $lcCategory = strtolower($b['category'] ?? $listing['category'] ?? '');
+    if (($lcCategory === 'cars' || str_contains($lcCategory, 'electronic')) && $price < 10.00 && ($b['price_type'] ?? '') !== 'free') {
+        $db->prepare("UPDATE listings SET status = 'pending_review' WHERE id = ?")->execute([$id]);
+    }
+
     // --- PRICE DROP ALERT LOGIC ---
     if (isset($b['price'])) {
         $old_price = (float)($listing['price'] ?? 0);

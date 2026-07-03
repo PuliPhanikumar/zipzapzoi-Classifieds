@@ -203,7 +203,8 @@ input:checked + .toggle-slider:before{transform:translateX(20px);}
   <div class="settings-section">
     <div class="s-hdr"><span class="material-symbols-outlined mi">tune</span>Platform</div>
     <div class="settings-row" onclick="openModal('siteModal')"><div class="s-icon"><span class="material-symbols-outlined mi">language</span></div><div class="s-body"><div class="s-title">Site Identity</div><div class="s-sub">Name, tagline, contact</div></div><span class="material-symbols-outlined" style="color:var(--muted);font-size:18px">chevron_right</span></div>
-    <div class="settings-row" onclick="openModal('listingModal')"><div class="s-icon"><span class="material-symbols-outlined mi">inventory_2</span></div><div class="s-body"><div class="s-title">Listing Config</div><div class="s-sub">Expiry, upload limits</div></div><span class="material-symbols-outlined" style="color:var(--muted);font-size:18px">chevron_right</span></div>
+          <div class="settings-row" onclick="openModal('listingModal')"><div class="s-icon"><span class="material-symbols-outlined mi">inventory_2</span></div><div class="s-body"><div class="s-title">Listing Config</div><div class="s-sub">Expiry, upload limits</div></div><span class="material-symbols-outlined" style="color:var(--muted);font-size:18px">chevron_right</span></div>
+      <div class="settings-row" onclick="openModal('schemaModal')"><div class="s-icon" style="background:rgba(168,85,247,.15)"><span class="material-symbols-outlined mi" style="color:#a855f7">category</span></div><div class="s-body"><div class="s-title">Manage Categories</div><div class="s-sub">Add/Remove schema categories</div></div><span class="material-symbols-outlined" style="color:var(--muted);font-size:18px">chevron_right</span></div>
     <div class="settings-row"><div class="s-icon"><span class="material-symbols-outlined mi">auto_awesome</span></div><div class="s-body"><div class="s-title">Auto-Approve Listings</div><div class="s-sub">Skip manual review</div></div><label class="toggle"><input type="checkbox" id="autoApproveToggle" onchange="saveAutoApprove(this.checked)"><span class="toggle-slider"></span></label></div>
   </div>
   <div class="settings-section">
@@ -227,7 +228,31 @@ input:checked + .toggle-slider:before{transform:translateX(20px);}
 </div>
 </div>
 
-<div id="toastBox"></div>
+
+  <!-- Schema Modal -->
+  <div class="modal-overlay" id="schemaModal">
+    <div class="modal">
+      <div class="modal-hdr">
+        <h3>Manage Categories</h3>
+        <button class="icon-btn" onclick="closeModal('schemaModal')"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div class="modal-body" style="background:#f8fafc;">
+        
+        <div style="background:#fff;padding:12px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:16px;">
+          <h4 style="font-size:13px;font-weight:700;margin-bottom:8px;color:#334155;">Add New Category</h4>
+          <input type="text" id="newCatId" placeholder="Category ID (e.g. books)" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;margin-bottom:8px;">
+          <input type="text" id="newCatLabel" placeholder="Display Label (e.g. Books & Mags)" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;margin-bottom:8px;">
+          <input type="text" id="newCatIcon" placeholder="Google Material Icon name (e.g. menu_book)" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;margin-bottom:12px;">
+          <button onclick="addMobileCategory()" style="width:100%;background:var(--primary);color:#fff;border:none;padding:12px;border-radius:8px;font-weight:700;font-size:14px;">+ Add Category</button>
+        </div>
+
+        <h4 style="font-size:13px;font-weight:700;margin-bottom:8px;color:#334155;">Existing Categories</h4>
+        <div id="mobileCatList" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastBox"></div>
 
 <div class="modal-overlay" id="pwdModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Change Password</div><div class="form-group"><label class="form-label">New Password</label><input class="form-input" type="password" id="newPwd" placeholder="Min 8 characters"></div><div class="form-group"><label class="form-label">Confirm Password</label><input class="form-input" type="password" id="confPwd" placeholder="Re-enter password"></div><div style="display:flex;gap:10px;margin-top:6px;"><button class="btn btn-ghost" onclick="closeModal('pwdModal')" style="flex:1">Cancel</button><button class="btn btn-primary" onclick="doChangePwd()" style="flex:1">Update</button></div></div></div>
 <div class="modal-overlay" id="siteModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Site Identity</div><div class="form-group"><label class="form-label">Site Name</label><input class="form-input" id="cfgSiteName" placeholder="ZipZapZoi Classifieds"></div><div class="form-group"><label class="form-label">Tagline</label><input class="form-input" id="cfgTagline" placeholder="Buy and Sell Everything"></div><div class="form-group"><label class="form-label">Support Email</label><input class="form-input" type="email" id="cfgSupportEmail" placeholder="support@zipzapzoi.com"></div><div style="display:flex;gap:10px;margin-top:6px;"><button class="btn btn-ghost" onclick="closeModal('siteModal')" style="flex:1">Cancel</button><button class="btn btn-primary" onclick="saveSiteIdentity()" style="flex:1">Save</button></div></div></div>
