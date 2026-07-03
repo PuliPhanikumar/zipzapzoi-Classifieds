@@ -410,14 +410,36 @@
 
   let schema = {};
 
+  // DEFENSIVE: Force clear any potentially corrupted empty schema from localStorage
+  try {
+    const cachedStr = localStorage.getItem('zzz_classifieds_schema');
+    if (cachedStr) {
+        const cached = JSON.parse(cachedStr);
+        if (!cached.categories || cached.categories.length === 0) {
+            localStorage.removeItem('zzz_classifieds_schema');
+        }
+    }
+  } catch(e) {}
+
   function loadSchemaFromBrain() {
     // Step 1: Use schema.js immediately (synchronous, always works, 14 categories)
-    let brain = window.ZZZ && window.ZZZ.getClassifiedsSchema
-      ? window.ZZZ.getClassifiedsSchema()
-      : (typeof ZZZ_SCHEMA !== 'undefined' ? ZZZ_SCHEMA : { categories: [], subcategories: [], fields: [] });
+    let brain = null;
+    try {
+        if (window.ZZZ && typeof window.ZZZ.getClassifiedsSchema === 'function') {
+            brain = window.ZZZ.getClassifiedsSchema();
+        }
+    } catch(e) {}
+    
     if (!brain || !brain.categories || brain.categories.length === 0) {
       brain = (typeof ZZZ_SCHEMA !== 'undefined' ? ZZZ_SCHEMA : { categories: [], subcategories: [], fields: [] });
     }
+    
+    // FINAL DEFENSIVE FALLBACK
+    if (!brain.categories || brain.categories.length === 0) {
+        console.error("CRITICAL: Schema categories are totally empty!");
+        return;
+    }
+    
     brain.categories.forEach(cat => {
       // 1. Create Category Object
       schema[cat.id] = {
