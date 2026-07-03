@@ -1000,6 +1000,150 @@
     // ═══════════════════════════════════════════
     //  8. LISTING ACTIONS
     // ═══════════════════════════════════════════
+    function printPoster(id, title, price, imgSrc) {
+      const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent('https://zipzapzoi.com/Listing Detail.html?id=' + id);
+      const formattedPrice = isNaN(price) ? price : Number(price).toLocaleString('en-IN');
+      
+      const printWindow = window.open('', '_blank', 'width=800,height=900');
+      if(!printWindow) {
+        alert("Please allow popups to print flyers.");
+        return;
+      }
+      
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Print Flyer - ${title}</title>
+            <style>
+              @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;900&display=swap');
+              body {
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                margin: 0;
+                padding: 0;
+                background: #fff;
+                color: #111827;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .flyer-container {
+                max-width: 100%;
+                margin: 0;
+                padding: 40px;
+                border: 12px solid #019863;
+                box-sizing: border-box;
+                text-align: center;
+                height: 98vh;
+                display: flex;
+                flex-direction: column;
+              }
+              .header {
+                background: #019863;
+                color: white;
+                padding: 25px;
+                font-size: 56px;
+                font-weight: 900;
+                text-transform: uppercase;
+                letter-spacing: 3px;
+                margin: -40px -40px 40px -40px;
+              }
+              .main-image {
+                width: 100%;
+                max-height: 450px;
+                object-fit: contain;
+                border-radius: 16px;
+                margin-bottom: 30px;
+              }
+              .title {
+                font-size: 42px;
+                font-weight: 900;
+                margin-bottom: 15px;
+                color: #111827;
+                line-height: 1.2;
+              }
+              .price {
+                font-size: 54px;
+                font-weight: 900;
+                color: #019863;
+                margin-bottom: 40px;
+              }
+              .footer {
+                margin-top: auto;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                border-top: 4px dashed #e5e7eb;
+                padding-top: 30px;
+              }
+              .contact-info {
+                text-align: left;
+              }
+              .contact-info h3 {
+                font-size: 28px;
+                margin: 0 0 10px 0;
+                color: #374151;
+              }
+              .contact-info p {
+                font-size: 20px;
+                margin: 5px 0;
+                color: #6b7280;
+                font-weight: 700;
+              }
+              .qr-code {
+                text-align: center;
+              }
+              .qr-code img {
+                width: 140px;
+                height: 140px;
+                border: 2px solid #e5e7eb;
+                border-radius: 8px;
+                padding: 5px;
+              }
+              .qr-code p {
+                font-size: 16px;
+                font-weight: 900;
+                color: #019863;
+                margin-top: 10px;
+                letter-spacing: 1px;
+              }
+              @media print {
+                @page { margin: 0; size: auto; }
+                body { padding: 10mm; }
+                .flyer-container { height: auto; min-height: 90vh; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="flyer-container">
+              <div class="header">For Sale</div>
+              <img src="${imgSrc}" class="main-image" onerror="this.src='https://placehold.co/800x400/f0f4f8/9ca3af?text=No+Image'"/>
+              <div class="title">${title}</div>
+              <div class="price">₹${formattedPrice}</div>
+              <div class="footer">
+                <div class="contact-info">
+                  <h3>Contact Seller on ZipZapZoi</h3>
+                  <p>Scan the QR code to view full details</p>
+                  <p>and connect with the seller instantly.</p>
+                </div>
+                <div class="qr-code">
+                  <img src="${qrUrl}" alt="Scan to view"/>
+                  <p>SCAN TO VIEW</p>
+                </div>
+              </div>
+            </div>
+            <script>
+              window.onload = function() {
+                setTimeout(function() {
+                  window.print();
+                  window.close();
+                }, 750);
+              }
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+
     let pendingSoldId = null;
     let pendingDeleteId = null;
 
