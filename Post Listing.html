@@ -451,6 +451,10 @@
       var brain = d.data;
       if (!Array.isArray(brain.categories) || brain.categories.length === 0) return;
       localStorage.setItem('zzz_classifieds_schema', JSON.stringify(brain));
+      
+      // Clear the local schema so it exactly matches the DB schema (admin settings)
+      schema = {};
+      
       brain.categories.forEach(function(cat) {
         var mySubs = (brain.subcategories||[]).filter(function(s){ return s.categoryId === cat.id; });
         schema[cat.id] = {
@@ -471,13 +475,13 @@
             var cat = schema[key];
             var div = document.createElement('div');
             div.className = 'cursor-pointer flex flex-col items-center justify-center p-4 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-gray-800 hover:border-secondary hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 transition-all gap-2 group';
-            div.innerHTML = '<span class="material-symbols-outlined text-4xl ' + cat.color + ' group-hover:scale-110 transition-transform">' + cat.icon + '</span><span class="text-sm font-bold text-center">' + cat.label + '</span>';
+            div.innerHTML = '<span class="material-symbols-outlined text-4xl ' + cat.color + ' group-hover:scale-110 transition-transform">' + (cat.icon || 'category') + '</span><span class="text-sm font-bold text-center">' + cat.label + '</span>';
             div.onclick = (function(k){ return function(){ selectCategory(k); }; })(key);
             grid.appendChild(div);
           });
         }
       }
-    }).catch(function(){});
+    }).catch(function(err){ console.error('Schema fetch error:', err); });
   }, 0);
 
   // --- 2. INDIA LOCATIONS DATA ---
