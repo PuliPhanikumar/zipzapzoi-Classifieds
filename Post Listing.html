@@ -455,7 +455,7 @@
       };
 
       // 2. Find Subcategories
-      const mySubs = brain.subcategories.filter(s => s.categoryId === cat.id);
+      const mySubs = (brain.subcategories || []).filter(s => s.categoryId === cat.id);
       schema[cat.id].subs = mySubs.map(s => s.label);
       
       // 3. Store ID mapping for field retrieval later
@@ -680,7 +680,7 @@
 
         if (subObj) {
             // Find fields specifically for this subcategory ID
-            const specificFields = brain.fields.filter(f => f.subcategoryId === subObj.id);
+            const specificFields = (brain.fields || []).filter(f => f.subcategoryId === subObj.id);
             
             specificFields.forEach(field => {
                 const wrapper = document.createElement('div');
@@ -955,7 +955,10 @@
       .then(data => {
         const item = data.success && data.data ? data.data : null;
         if(!item) return;
-        const key = Object.keys(schema).find(k => schema[k].label === item.category);
+        const key = Object.keys(schema).find(k => 
+            schema[k].label.toLowerCase() === item.category.toLowerCase() || 
+            k.toLowerCase() === item.category.toLowerCase()
+        );
         if(key) {
             selectCategory(key);
             setTimeout(() => {
@@ -1103,7 +1106,7 @@
     if (!brain || !brain.fields || brain.fields.length === 0) brain = window.ZZZ_SCHEMA || { fields: [] };
     const subObj = currentCategory.subIds ? currentCategory.subIds.find(s => s.label === subCategorySelect.value) : null;
     if (subObj) {
-      brain.fields.filter(f => f.subcategoryId === subObj.id).forEach(f => {
+      (brain.fields || []).filter(f => f.subcategoryId === subObj.id).forEach(f => {
         const el = document.getElementById('dyn_' + f.id);
         if (el) fields[f.id] = el.value;
       });
