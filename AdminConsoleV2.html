@@ -1310,7 +1310,7 @@ async function loadListings() {
         ? '<span style="background:#fee2e2;color:#dc2626;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:700;">✗ Rejected</span><button onclick="approveListing(' + l.id + ')" class="btn btn-primary btn-sm" style="font-size:10px;padding:2px 8px;">Re-Approve</button>'
       : '<span style="color:#94a3b8;font-size:11px;">' + esc(l.status||'') + '</span>';
     return '<tr>' +
-        '<td><div style="font-weight:600;font-size:13px;display:flex;align-items:center;">' + esc(l.title) + (l.is_story == 1 ? ' <span class="badge badge-purple" style="font-size:9px;padding:2px 4px;margin-left:4px;">Story</span>' : '') + '</div><div style="font-size:11px;color:#94a3b8;">#' + l.id + '</div></td>' +
+        '<td><div style="font-weight:600;font-size:13px;display:flex;align-items:center;flex-wrap:wrap;">' + esc(l.title) + (l.is_story == 1 ? ' <span class="badge badge-purple" style="font-size:9px;padding:2px 4px;margin-left:4px;">Story</span>' : '') + (l.is_highlight == 1 ? ' <span class="badge" style="background:#fef08a;color:#854d0e;font-size:9px;padding:2px 4px;margin-left:4px;">Highlight</span>' : '') + (l.is_top == 1 ? ' <span class="badge" style="background:#bfdbfe;color:#1e40af;font-size:9px;padding:2px 4px;margin-left:4px;">Top Ad</span>' : '') + '</div><div style="font-size:11px;color:#94a3b8;">#' + l.id + '</div></td>' +
       '<td style="font-size:12px;">' + esc(l.seller_name || l.user_name || '') + '</td>' +
       '<td style="font-size:12px;">' + esc(l.category || '') + '</td>' +
       '<td style="font-weight:700;">' + (l.price ? fmtMoney(l.price) : 'Free') + '</td>' +

@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+  </script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="description" content="Post a free classified ad on ZipZapZoi. Sell mobiles, bikes, cars, property, electronics and more to local buyers in minutes."/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://zipzapzoi.com/Post Listing.html"/>
+  <meta property="og:title" content="Post a Free Ad — ZipZapZoi Classifieds"/>
+  <meta property="og:description" content="Sell your items fast. Post a free classified ad on ZipZapZoi and reach local buyers across India."/>
+  <meta property="og:image" content="https://www.zipzapzoi.com/images/default-share.png"/>
+  <meta name="robots" content="index, follow"/>
+  <link rel="canonical" href="https://zipzapzoi.com/Post Listing.html"/>
+  <title>ZipZapZoi - Post Your Ad</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300..700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#019863",
+            "secondary": "#4D96A9",
+            "background-light": "#F8F9FA",
+            "background-dark": "#0f172a",
+            "card-light": "#FFFFFF",
+            "card-dark": "#1e293b",
+            "text-light": "#333333",
+            "text-dark": "#E9ECEF",
+            "border-light": "#E9ECEF",
+            "border-dark": "#444444"
+          },
+          fontFamily: { "display": ["Spline Sans", "sans-serif"] },
+          boxShadow: {
+            'bouncy': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
+          }
+        },
+      },
+    }
+  </script>
+  <style>
+    /* Smooth transition for showing/hiding fields */
+    .fade-enter { opacity: 0; transform: translateY(-10px); }
+    .fade-enter-active { opacity: 1; transform: translateY(0); transition: opacity 300ms, transform 300ms; }
+    
+    /* Custom Scrollbar for dropdowns */
+    select::-webkit-scrollbar { width: 8px; }
+    select::-webkit-scrollbar-track { background: transparent; }
+    select::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+      #pickMap { height: 260px; border-radius: 12px; z-index: 1; }
+    #pickMap .leaflet-container { border-radius: 12px; }
+    #mapPickerSection { display: none; }
+  </style>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HVTZDKTMJ9"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-HVTZDKTMJ9');
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet"/>
+
+
+
+<style id="zzz-logo-styles">
+  @keyframes bounce-gentle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  @keyframes bounce-in-letter {
+    0% { opacity: 0; transform: translateY(-15px) scale(0.9); }
+    50% { opacity: 1; transform: translateY(3px) scale(1.05); }
+    75% { transform: translateY(-1px) scale(0.98); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .animate-bounce-in {
+    opacity: 0;
+    display: inline-block;
+    animation: bounce-in-letter 0.5s cubic-bezier(0.28, 0.84, 0.42, 1) forwards;
+  }
+  .animate-logo-bouncy {
+    animation: bounce-gentle 3s infinite ease-in-out;
+  }
+</style>
+
+
+
+<link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet"/>
+</head>
+<body class="font-display text-text-light dark:text-text-dark antialiased bg-slate-50 dark:bg-slate-950 text-gray-800 dark:text-gray-100 transition-colors duration-300 bg-[url(\'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjxwYXRoIGQ9Ik0wIDBoNDB2NDBIMHoiIGZpbGw9Im5vbmUiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMSIgZmlsbD0icmdiYSgwLDAsMCwwLjA1KSIvPgo8L3N2Zz4=\')] dark:bg-[url(\'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjxwYXRoIGQ9Ik0wIDBoNDB2NDBIMHoiIGZpbGw9Im5vbmUiLz4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPgo8L3N2Zz4=\')]">
+
+<header class="sticky top-0 z-50 bg-card-light/90 dark:bg-card-dark/90 backdrop-blur-md border-b border-border-light dark:border-border-dark">
+  <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-secondary text-3xl">all_inclusive</span>
+      <h2 class="text-xl font-bold">ZipZapZoi</h2>
+    </div>
+    <div class="flex items-center gap-4">
+          <button onclick="if(typeof toggleDarkMode === 'function') toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400">
+             <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+          </button>
+<a href="Seller Dashboard.html" class="text-sm font-semibold hover:text-secondary transition-colors">Cancel & Exit</a></div>
+  </div>
+</header>
+
+
+  <!-- ─── QUOTA GATE OVERLAY ─── -->
+  <div id="zzz-quota-gate" class="hidden fixed inset-0 bg-white dark:bg-slate-900 z-50 flex flex-col items-center justify-center p-6 text-center">
+    <span class="material-symbols-outlined text-7xl text-orange-400 mb-4">inventory</span>
+    <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-2">You've Used All Your Ads</h2>
+    <p class="text-gray-500 dark:text-gray-400 max-w-md mb-2">You have <strong>0 ads remaining</strong> in your current plan. Upgrade to continue posting.</p>
+    <p id="quotaGateExpiry" class="text-xs text-gray-400 mb-8"></p>
+    <div class="flex flex-col sm:flex-row gap-4">
+      <a href="Classifieds Plans.html" class="bg-primary hover:bg-green-700 text-white font-black py-4 px-8 rounded-2xl shadow-lg transition-all text-lg">
+        🚀 Upgrade Plan
+      </a>
+      <a href="Seller Dashboard.html" class="border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold py-4 px-8 rounded-2xl hover:border-primary hover:text-primary transition-all text-lg">
+        Back to Dashboard
+      </a>
+    </div>
+    <div class="mt-8 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800 max-w-sm">
+      <p class="text-sm font-bold text-green-700 dark:text-green-400">💡 Extra Ad for just ₹19 • Renewal ₹16 • Starter Pack ₹149 for 10 ads</p>
+    </div>
+  </div>
+
+  <!-- ─── ADS REMAINING BADGE ─── -->
+  <div id="zzz-ads-banner" class="hidden w-full bg-primary/10 dark:bg-primary/20 border-b border-primary/20">
+    <div class="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between">
+      <div class="flex items-center gap-2 text-primary text-sm font-bold">
+        <span class="material-symbols-outlined text-[18px]">inventory_2</span>
+        <span id="adsBannerText">Loading...</span>
+      </div>
+      <a href="Classifieds Plans.html" class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+        <span class="material-symbols-outlined text-[14px]">upgrade</span> Get More Ads
+      </a>
+    </div>
+  </div>
+
+  <main class="max-w-5xl mx-auto px-4 py-8 pb-24">
+  
+  <div class="mb-8">
+    <div class="flex justify-between text-sm font-medium mb-2">
+      <span class="text-secondary font-bold" id="step1Indicator">Step 1: Category</span>
+      <span class="text-gray-400" id="step2Indicator">Step 2: Details</span>
+      <span class="text-gray-400" id="step3Indicator">Step 3: Media & Location</span>
+      <span class="text-gray-400" id="step4Indicator">Step 4: Review</span>
+    </div>
+    <div class="h-2 bg-gray-200 dark:bg-gray-800 dark:bg-gray-700 rounded-full overflow-hidden">
+      <div id="progressBar" class="h-full bg-secondary w-1/3 transition-all duration-500"></div>
+    </div>
+  </div>
+
+  <form id="listingForm" class="flex flex-col gap-6" onsubmit="event.preventDefault();">
+    
+    <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl p-8 border border-white/20 dark:border-white/5 relative overflow-hidden" id="catSection">
+      <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <span class="bg-secondary/10 text-secondary p-1 rounded-md material-symbols-outlined">category</span>
+        Choose a Category
+      </h3>
+      
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3" id="categoryGrid">
+        </div>
+    </div>
+
+    <div id="detailsSection" style="display:none" class="flex-col gap-6 w-full">
+
+      <div id="step2Wrapper" class="flex flex-col gap-6 w-full">
+      <!-- ── CHARITY DECLARATION BANNER ── -->
+      <div id="charityBanner" class="hidden bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-2xl p-5">
+        <div class="flex items-start gap-3">
+          <span class="material-symbols-outlined text-amber-500 text-3xl flex-shrink-0">volunteer_activism</span>
+          <div class="flex-1">
+            <h4 class="font-black text-amber-800 dark:text-amber-300 mb-1">🆓 Charity / Donation — FREE Post (No Quota Deducted)</h4>
+            <p class="text-sm text-amber-700 dark:text-amber-400 mb-3">Charity listings are completely FREE and stay active for <strong>12 days</strong>. However, misuse is strictly monitored. <strong>Fake charity posts will result in immediate account suspension.</strong></p>
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" id="charityDeclaration" class="mt-1 w-5 h-5 flex-shrink-0 accent-amber-500"/>
+              <span class="text-sm font-bold text-amber-800 dark:text-amber-300">
+                I solemnly declare that this is a <u>genuine</u> charity / donation / NGO post. I understand that false information may result in permanent ban and legal action.
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl p-8 border border-white/20 dark:border-white/5 relative overflow-hidden">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-bold flex items-center gap-2">
+            <span class="bg-primary/10 text-primary p-1 rounded-md material-symbols-outlined">fact_check</span>
+            <span id="categoryTitle">Details</span>
+          </h3>
+          <button type="button" id="changeCatBtn" class="text-sm text-red-500 hover:underline">Change Category</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="col-span-1 md:col-span-2">
+            <label class="block text-sm font-bold mb-2">Subcategory *</label>
+            <select id="subCategorySelect" class="w-full rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4 focus:ring-secondary focus:border-secondary transition-all" required>
+              <option value="">Select Subcategory...</option>
+            </select>
+          </div>
+
+          <div id="dynamicFieldsArea" class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        </div>
+      </div>
+
+      <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl p-8 border border-white/20 dark:border-white/5 relative overflow-hidden">
+        <h3 class="text-xl font-bold mb-6">Listing Information</h3>
+        
+        <div class="space-y-6">
+          <div>
+            <label class="block text-sm font-bold mb-2">Ad Title *</label>
+            <input type="text" id="postTitle" class="w-full rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4" placeholder="e.g. iPhone 14 Pro Max 256GB - Brand New" required>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Mention key features like Brand, Model, Type</p>
+          </div>
+
+          <div id="priceRow" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label id="priceLabel" class="block text-sm font-bold mb-2">Price (₹) *</label>
+              <div class="relative">
+                <span class="absolute left-4 top-3.5 text-gray-500 dark:text-gray-400">₹</span>
+                <input type="number" id="postPrice" class="w-full pl-8 rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4" placeholder="0">
+              </div>
+            </div>
+            <div class="flex items-center gap-4 mt-8">
+               <label class="flex items-center gap-2 cursor-pointer">
+                 <input type="checkbox" id="postNegotiable" class="rounded text-secondary focus:ring-secondary w-5 h-5">
+                 <span class="text-sm font-medium">Price Negotiable</span>
+               </label>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold mb-2">Description *</label>
+            <textarea id="postDescription" rows="5" class="w-full rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4" placeholder="Describe your item/service in detail. Include condition, features, and reason for selling." required></textarea>
+          </div>
+        </div>
+      </div>
+
+        <div class="flex justify-end gap-4 mt-2">
+          <button type="button" onclick="goToStep3()" class="bg-secondary text-white px-8 py-3 rounded-xl font-bold hover:bg-secondary-dark transition-all flex items-center gap-2">Next: Media & Location <span class="material-symbols-outlined">arrow_forward</span></button>
+        </div>
+      </div>
+      
+      <div id="step3Wrapper" class="hidden flex-col gap-6 w-full">
+      <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl p-8 border border-white/20 dark:border-white/5 relative overflow-hidden">
+        <h3 class="text-xl font-bold mb-6">Confirm Location</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-bold mb-2">State *</label>
+            <select id="stateSelect" class="w-full rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4" required>
+              <option value="">Select State</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-bold mb-2">City *</label>
+            <select id="citySelect" class="w-full rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4" disabled required>
+              <option value="">Select State First</option>
+            </select>
+          </div>
+          <div class="col-span-1 md:col-span-2">
+            <label class="block text-sm font-bold mb-2">Specific Area / Location</label>
+            <div class="relative flex items-center mb-3">
+              <span class="material-symbols-outlined absolute left-3 text-gray-400">location_on</span>
+              <input type="text" id="specificLocation" class="w-full pl-10 pr-32 rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4" placeholder="e.g. Indiranagar, Bengaluru" oninput="geocodeInput(this.value)">
+              <button type="button" onclick="detectLocation()" class="absolute right-2 bg-secondary/10 hover:bg-secondary/20 text-secondary text-xs font-bold py-1.5 px-3 rounded-lg transition-colors flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">my_location</span>
+                Auto-Detect
+              </button>
+            </div>
+            <p id="locationStatus" class="text-xs text-gray-500 dark:text-gray-400 mt-2 ml-1 hidden"></p>
+            <!-- Map Picker -->
+            <div class="mt-2">
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[14px] text-primary">map</span> Drop pin on map for exact location
+                </p>
+                <button type="button" onclick="toggleMapPicker()" id="mapToggleBtn" class="text-xs text-secondary font-bold hover:underline">Show Map</button>
+              </div>
+              <div id="mapPickerSection">
+                <div id="pickMap" class="border border-gray-200 dark:border-gray-700 shadow-inner"></div>
+                <p class="text-[10px] text-gray-400 mt-1 text-center">Click anywhere on the map to drop a pin and set your exact location.</p>
+              </div>
+            </div>
+            <!-- Hidden lat/lng -->
+            <input type="hidden" id="pickedLat" name="lat">
+            <input type="hidden" id="pickedLng" name="lng">
+          </div>
+        </div>
+      </div>
+      <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl p-8 border border-white/20 dark:border-white/5 relative overflow-hidden" id="photoSection">
+        <div class="flex justify-between items-center mb-4">
+           <h3 class="text-xl font-bold">Media Upload</h3>
+           <label class="flex items-center gap-2 cursor-pointer bg-gradient-to-r from-pink-500/10 to-purple-500/10 px-3 py-1.5 rounded-full border border-pink-200 dark:border-pink-800">
+             <input type="checkbox" id="postIsStory" class="rounded text-pink-500 focus:ring-pink-500 w-4 h-4 accent-pink-500" onchange="toggleStoryMode()">
+             <span class="text-sm font-black bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">auto_awesome</span> Post as Story</span>
+           </label>
+        </div>
+        
+        <div id="videoUrlContainer" class="hidden mb-6 bg-pink-50 dark:bg-pink-900/10 p-4 rounded-xl border border-pink-100 dark:border-pink-800/50">
+           <label class="block text-sm font-bold text-pink-700 dark:text-pink-400 mb-2">Video URL (TikTok, Instagram Reel, YouTube Shorts, or raw .mp4) *</label>
+           <input type="url" id="postVideoUrl" class="w-full rounded-xl border-pink-200 dark:border-pink-700 bg-white dark:bg-gray-800 py-3 px-4 focus:ring-pink-500 focus:border-pink-500" placeholder="https://example.com/video.mp4">
+           <p class="text-xs text-pink-600 dark:text-pink-500 mt-2">Required for Premium Stories. Your listing will be featured at the top of the feed.</p>
+        </div>
+        
+        <div id="photoUploadContainer">
+           <p class="text-sm text-gray-500 dark:text-gray-400 mb-4" id="photoLimitText">Add up to 8 photos. First photo is your cover image.</p>
+        
+        <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-800 transition-colors cursor-pointer relative">
+          <input type="file" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" id="fileInput">
+          <span class="material-symbols-outlined text-4xl text-gray-400 mb-2">add_a_photo</span>
+          <p class="font-medium text-secondary">Click to upload or drag & drop</p>
+          <p class="text-xs text-gray-400 mt-1">JPG, PNG up to 5MB each</p>
+        </div>
+        <div id="photoPreview" class="grid grid-cols-4 sm:grid-cols-6 gap-2 mt-4"></div>
+        </div>
+      </div>
+
+      <!-- ── PROMOTIONS & VISIBILITY ── -->
+      <div class="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-6 rounded-[2rem] border border-indigo-100 dark:border-indigo-800/50 relative overflow-hidden">
+        <h3 class="text-lg font-black text-indigo-900 dark:text-indigo-300 flex items-center gap-2 mb-4">
+          <span class="material-symbols-outlined">rocket_launch</span> Boost Your Ad (Optional)
+        </h3>
+        
+        <div class="space-y-4">
+          <label class="flex items-start gap-3 cursor-pointer bg-white/60 dark:bg-slate-800/60 p-4 rounded-xl border border-indigo-100 dark:border-indigo-700/50 hover:border-indigo-300 transition-colors">
+            <input type="checkbox" id="postIsHighlight" class="mt-1 rounded text-indigo-600 focus:ring-indigo-500 w-5 h-5 accent-indigo-600">
+            <div class="flex-1">
+              <p class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                Highlight Ad <span class="bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide">Popular</span>
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Make your ad stand out with a distinct highlighted background in search results.</p>
+            </div>
+          </label>
+          
+          <label class="flex items-start gap-3 cursor-pointer bg-white/60 dark:bg-slate-800/60 p-4 rounded-xl border border-indigo-100 dark:border-indigo-700/50 hover:border-indigo-300 transition-colors">
+            <input type="checkbox" id="postIsTop" class="mt-1 rounded text-indigo-600 focus:ring-indigo-500 w-5 h-5 accent-indigo-600">
+            <div class="flex-1">
+              <p class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                Top Ad
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Pin your ad to the top of its category for 7 days.</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- ── CONTACT PRIVACY ── -->
+      <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl p-8 border border-white/20 dark:border-white/5 relative overflow-hidden">
+        <h3 class="text-lg font-black flex items-center gap-2 mb-6">
+          <span class="material-symbols-outlined text-secondary">contact_phone</span> Contact & Privacy
+        </h3>
+
+        <div class="space-y-6">
+          <div>
+            <label class="block text-sm font-bold mb-2">Contact Phone Number</label>
+            <input type="tel" id="contactPhone" class="w-full rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4" placeholder="e.g. 9876543210">
+            <p class="text-xs text-gray-500 mt-1">Leave empty to use your account's phone number.</p>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer">
+              <input type="checkbox" id="hidePhone" class="rounded text-secondary w-5 h-5 accent-secondary">
+              <div>
+                <p class="font-bold text-sm text-text-light dark:text-text-dark">Hide Phone Number</p>
+                <p class="text-xs text-gray-500">Only allow ZipZapZoi Chat.</p>
+              </div>
+            </label>
+            
+            <label class="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800 cursor-pointer">
+              <input type="checkbox" id="allowWhatsapp" class="rounded text-green-600 focus:ring-green-500 w-5 h-5 accent-green-600">
+              <div>
+                <p class="font-bold text-sm text-green-800 dark:text-green-300 flex items-center gap-1">Allow WhatsApp <span class="material-symbols-outlined text-[14px]">chat</span></p>
+                <p class="text-xs text-green-600 dark:text-green-500">Buyers can message you directly.</p>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quota Status Bar (non-charity only) -->
+      <div id="quotaStatusBar" class="hidden p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-green-600 text-[22px]">inventory_2</span>
+          <div class="flex-1">
+            <p class="text-sm font-bold text-green-800 dark:text-green-300" id="quotaStatusText">Loading...</p>
+            <p class="text-xs text-green-600 dark:text-green-500">After posting, 1 ad credit will be deducted from your balance.</p>
+          </div>
+          <a href="Classifieds Plans.html" class="text-xs font-black text-green-700 dark:text-green-400 hover:underline whitespace-nowrap">Get More →</a>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4 pt-4">
+        <button type="button" id="previewBtn" class="flex-1 py-4 bg-gray-200 dark:bg-gray-800 dark:bg-gray-700 hover:bg-gray-300 dark:bg-gray-700 text-text-light dark:text-text-dark font-bold rounded-xl transition-all">
+          Preview Listing
+        </button>
+        <button type="submit" id="finalSubmitBtn" class="flex-[2] py-4 bg-secondary hover:bg-primary text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-1 flex justify-center items-center gap-2">
+          <span>Post Now</span>
+          <span class="material-symbols-outlined">send</span>
+        </button>
+      </div>
+
+    </div>
+  </form>
+</main>
+
+<div id="previewModal" class="fixed inset-0 z-[100] bg-black/70 hidden items-center justify-center p-4 backdrop-blur-sm">
+  <div class="bg-card-light dark:bg-card-dark w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl">
+    <div class="p-6 border-b border-border-light dark:border-border-dark flex justify-between items-center bg-secondary text-white">
+      <h3 class="text-xl font-bold">Ad Preview</h3>
+      <button id="closePreview" class="material-symbols-outlined hover:text-red-200">close</button>
+    </div>
+    <div class="p-6 space-y-4" id="previewContent">
+      </div>
+    <div class="p-6 border-t border-border-light dark:border-border-dark flex justify-end gap-3">
+      <button id="closePreviewBtn" class="px-6 py-2 rounded-lg border border-gray-300 dark:border-gray-600 font-bold">Edit</button>
+      <button id="confirmPostBtn" class="px-6 py-2 rounded-lg bg-primary text-white font-bold shadow-md">Confirm & Post</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── AUTH GATE MODAL (shown to non-logged-in users at submit) ── -->
+<div id="authGateModal" class="hidden fixed inset-0 z-[200] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm">
+  <div class="bg-white dark:bg-card-dark w-full max-w-sm rounded-3xl shadow-2xl p-8 text-center">
+    <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-5">
+      <span class="material-symbols-outlined text-primary text-4xl">lock_person</span>
+    </div>
+    <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-2">Almost There! 🎉</h2>
+    <p class="text-gray-500 dark:text-gray-400 text-sm mb-2">Create a free account or log in to post your listing.</p>
+    <p class="text-green-600 dark:text-green-400 text-xs font-bold mb-6">✅ Your ad details are saved — you won't lose them!</p>
+    <div class="flex flex-col gap-3">
+      <a id="authGateRegister" href="User Registration.html" class="w-full py-3.5 bg-primary text-white font-black rounded-xl shadow-lg text-center flex items-center justify-center gap-2 hover:bg-green-700 transition-all">
+        <span class="material-symbols-outlined text-[20px]">person_add</span> Create Free Account (6 Ads Free!)
+      </a>
+      <a id="authGateLogin" href="Login Page.html" class="w-full py-3.5 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-xl text-center flex items-center justify-center gap-2 hover:border-primary hover:text-primary transition-all">
+        <span class="material-symbols-outlined text-[20px]">login</span> Log In
+      </a>
+      <button onclick="document.getElementById('authGateModal').classList.add('hidden')" class="text-sm text-gray-400 hover:text-gray-600 mt-1">
+        ← Continue editing
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="js/schema.js?v=2"></script>
+<script src="js/utils.js?v=2"></script>
+<script>
+(function() {
+  // Auth check — non-blocking. Unauthenticated users can fill the form;
+  // the auth gate modal shows only when they try to submit.
+  const currentUserAuth = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+  // Verify session silently if logged in
+  if (currentUserAuth) {
+    fetch('/api/auth.php?action=me', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        if (!d.success) { localStorage.removeItem('zzz_user'); }
+        else localStorage.setItem('zzz_user', JSON.stringify(d.data.user));
+      }).catch(() => {});
+  }
+
+  let schema = {};
+
+  // DEFENSIVE: Force clear any potentially corrupted empty schema from localStorage
+  try {
+    const cachedStr = localStorage.getItem('zzz_classifieds_schema');
+    if (cachedStr) {
+        const cached = JSON.parse(cachedStr);
+        if (!cached.categories || cached.categories.length === 0) {
+            localStorage.removeItem('zzz_classifieds_schema');
+        }
+    }
+  } catch(e) {}
+
+  function loadSchemaFromBrain() {
+    // Step 1: Use schema.js immediately (synchronous, always works, 14 categories)
+    let brain = null;
+    try {
+        if (window.ZZZ && typeof window.ZZZ.getClassifiedsSchema === 'function') {
+            brain = window.ZZZ.getClassifiedsSchema();
+        }
+    } catch(e) {}
+    
+    if (!brain || !brain.categories || brain.categories.length === 0) {
+      brain = (typeof ZZZ_SCHEMA !== 'undefined' ? ZZZ_SCHEMA : { categories: [], subcategories: [], fields: [] });
+    }
+    
+    // FINAL DEFENSIVE FALLBACK
+    if (!brain.categories || brain.categories.length === 0) {
+        console.error("CRITICAL: Schema categories are totally empty!");
+        return;
+    }
+    
+    brain.categories.forEach(cat => {
+      // 1. Create Category Object
+      schema[cat.id] = {
+        label: cat.label,
+        icon: cat.icon,
+        color: cat.color || 'text-gray-500 dark:text-gray-400',
+        priceLabel: cat.priceLabel, // Custom Price Label
+        hidePrice: cat.hidePrice,   // Charity logic
+        photoLimit: cat.photoLimit, // Photo limits
+        note: cat.note,             // Notes
+        subs: [],
+        fields: [] 
+      };
+
+      // 2. Find Subcategories
+      const mySubs = (brain.subcategories || []).filter(s => s.categoryId === cat.id);
+      schema[cat.id].subs = mySubs.map(s => s.label);
+      
+      // 3. Store ID mapping for field retrieval later
+      schema[cat.id].subIds = mySubs; // Store objects {id, label}
+    });
+  }
+
+  // Load the brain immediately (uses schema.js — instant, works offline)
+  loadSchemaFromBrain();
+
+  // Background: refresh from DB so admin-configured categories reach ALL users
+  setTimeout(function() {
+    fetch('/api/schema.php').then(function(r){ return r.json(); }).then(function(d) {
+      if (!d.success || !d.data || d.data.source === 'default') return;
+      var brain = d.data;
+      if (!Array.isArray(brain.categories) || brain.categories.length === 0) return;
+      localStorage.setItem('zzz_classifieds_schema', JSON.stringify(brain));
+      
+      // Clear the local schema so it exactly matches the DB schema (admin settings)
+      schema = {};
+      
+      brain.categories.forEach(function(cat) {
+        var mySubs = (brain.subcategories||[]).filter(function(s){ return s.categoryId === cat.id; });
+        schema[cat.id] = {
+          label: cat.label, icon: cat.icon,
+          color: cat.color || 'text-gray-500 dark:text-gray-400',
+          priceLabel: cat.priceLabel, hidePrice: cat.hidePrice,
+          photoLimit: cat.photoLimit, note: cat.note,
+          subs: mySubs.map(function(s){ return s.label; }),
+          subIds: mySubs, fields: []
+        };
+      });
+      // Re-render category grid if user hasn't selected a category yet
+      if (!currentCategoryKey) {
+        var grid = document.getElementById('categoryGrid');
+        if (grid) {
+          grid.innerHTML = '';
+          Object.keys(schema).forEach(function(key) {
+            var cat = schema[key];
+            var div = document.createElement('div');
+            div.className = 'cursor-pointer flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-transparent bg-gray-50/50 dark:bg-gray-800/50 hover:border-secondary hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 gap-3 group';
+            div.innerHTML = '<span class="material-symbols-outlined text-4xl ' + cat.color + ' group-hover:scale-110 transition-transform">' + (cat.icon || 'category') + '</span><span class="text-sm font-bold text-center">' + cat.label + '</span>';
+            div.onclick = (function(k){ return function(){ selectCategory(k); }; })(key);
+            grid.appendChild(div);
+          });
+        }
+      }
+    }).catch(function(err){ console.error('Schema fetch error:', err); });
+  }, 0);
+
+  // --- 2. INDIA LOCATIONS DATA ---
+  const indiaData = {
+    "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Tirupati", "Kurnool", "Rajahmundry"],
+    "Arunachal Pradesh": ["Itanagar", "Naharlagun", "Pasighat"],
+    "Assam": ["Guwahati", "Silchar", "Dibrugarh", "Jorhat", "Nagaon"],
+    "Bihar": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Darbhanga"],
+    "Chhattisgarh": ["Raipur", "Bhilai", "Bilaspur", "Korba", "Durg"],
+    "Delhi": ["New Delhi", "North Delhi", "South Delhi", "East Delhi", "West Delhi", "Central Delhi"],
+    "Goa": ["Panaji", "Margao", "Vasco da Gama", "Mapusa", "Ponda"],
+    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar", "Gandhinagar"],
+    "Haryana": ["Gurugram", "Faridabad", "Panipat", "Ambala", "Hisar", "Rohtak"],
+    "Himachal Pradesh": ["Shimla", "Manali", "Dharamsala", "Solan", "Mandi"],
+    "Jharkhand": ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Deoghar"],
+    "Karnataka": ["Bengaluru", "Mysuru", "Mangaluru", "Hubballi", "Belagavi", "Kalaburagi", "Davangere"],
+    "Kerala": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur", "Kollam", "Alappuzha"],
+    "Madhya Pradesh": ["Bhopal", "Indore", "Jabalpur", "Gwalior", "Ujjain", "Sagar"],
+    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad", "Thane", "Navi Mumbai", "Solapur"],
+    "Manipur": ["Imphal", "Thoubal", "Bishnupur"],
+    "Meghalaya": ["Shillong", "Tura", "Jowai"],
+    "Mizoram": ["Aizawl", "Lunglei", "Champhai"],
+    "Nagaland": ["Kohima", "Dimapur", "Mokokchung"],
+    "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Berhampur", "Sambalpur"],
+    "Punjab": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda", "Mohali"],
+    "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Ajmer", "Bikaner", "Alwar"],
+    "Sikkim": ["Gangtok", "Namchi", "Mangan"],
+    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Erode", "Tiruppur", "Vellore"],
+    "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam", "Secunderabad"],
+    "Tripura": ["Agartala", "Dharmanagar", "Udaipur"],
+    "Uttar Pradesh": ["Lucknow", "Kanpur", "Ghaziabad", "Agra", "Varanasi", "Meerut", "Allahabad", "Noida", "Bareilly"],
+    "Uttarakhand": ["Dehradun", "Haridwar", "Roorkee", "Haldwani", "Rishikesh"],
+    "West Bengal": ["Kolkata", "Howrah", "Durgapur", "Asansol", "Siliguri", "Malda"],
+    "Andaman & Nicobar": ["Port Blair"],
+    "Chandigarh": ["Chandigarh"],
+    "Jammu & Kashmir": ["Srinagar", "Jammu", "Anantnag", "Baramulla"],
+    "Ladakh": ["Leh", "Kargil"],
+    "Lakshadweep": ["Kavaratti"],
+    "Puducherry": ["Puducherry", "Karaikal", "Mahe"]
+  };
+
+  // --- 3. DOM ELEMENTS ---
+  const categoryGrid = document.getElementById('categoryGrid');
+  const detailsSection = document.getElementById('detailsSection');
+  const dynamicFieldsArea = document.getElementById('dynamicFieldsArea');
+  const subCategorySelect = document.getElementById('subCategorySelect');
+  const categoryTitle = document.getElementById('categoryTitle');
+  const changeCatBtn = document.getElementById('changeCatBtn');
+  const progressBar = document.getElementById('progressBar');
+  const stateSelect = document.getElementById('stateSelect');
+  const citySelect = document.getElementById('citySelect');
+  const priceRow = document.getElementById('priceRow');
+  const priceLabel = document.getElementById('priceLabel');
+  const photoSection = document.getElementById('photoSection');
+  const photoLimitText = document.getElementById('photoLimitText');
+  const finalSubmitBtn = document.getElementById('finalSubmitBtn');
+  const confirmPostBtn = document.getElementById('confirmPostBtn');
+  const photoPreview = document.getElementById('photoPreview');
+  const fileInput = document.getElementById('fileInput');
+
+  let currentCategory = null;
+  let currentCategoryKey = null;
+  let uploadedImages = []; // Array to store image data URLs
+  let selectedFilesArray = []; // Array to natively store selected File objects
+    let existingUrlsArray = []; // Existing images from server
+
+  // --- 4. INITIALIZATION ---
+  
+  // Render Categories
+  Object.keys(schema).forEach(key => {
+    const cat = schema[key];
+    const div = document.createElement('div');
+    div.className = `cursor-pointer flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-transparent bg-gray-50/50 dark:bg-gray-800/50 hover:border-secondary hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 gap-3 group`;
+    div.innerHTML = `
+      <span class="material-symbols-outlined text-4xl ${cat.color} group-hover:scale-110 transition-transform">${cat.icon}</span>
+      <span class="text-sm font-bold text-center">${cat.label}</span>
+    `;
+    div.onclick = () => selectCategory(key);
+    categoryGrid.appendChild(div);
+  });
+
+  // Populate States
+  Object.keys(indiaData).forEach(state => {
+    const opt = document.createElement('option');
+    opt.value = state;
+    opt.textContent = state;
+    stateSelect.appendChild(opt);
+  });
+
+  stateSelect.addEventListener('change', (e) => {
+    const state = e.target.value;
+    citySelect.innerHTML = '<option value="">Select City</option>';
+    if (state && indiaData[state]) {
+      indiaData[state].forEach(city => {
+        const opt = document.createElement('option');
+        opt.value = city;
+        opt.textContent = city;
+        citySelect.appendChild(opt);
+      });
+      citySelect.disabled = false;
+    } else {
+      citySelect.disabled = true;
+    }
+  });
+
+  function selectCategory(key) {
+    currentCategoryKey = key;
+    currentCategory = schema[key];
+    
+    // UI Updates
+    categoryTitle.textContent = `${currentCategory.label} Details`;
+    goToStep2();
+    
+    // Reset & Populate Subcategories
+    subCategorySelect.innerHTML = '<option value="">Select Subcategory...</option>';
+    currentCategory.subs.forEach(sub => {
+      const opt = document.createElement('option');
+      opt.value = sub;
+      opt.textContent = sub;
+      subCategorySelect.appendChild(opt);
+    });
+
+    const limit = currentCategory.photoLimit || 8;
+    photoLimitText.textContent = `Add up to ${limit} photos. First photo is cover.`;
+
+    // Charity vs normal
+    const isCharityCategory = !!(currentCategory.hidePrice || key === 'charity');
+    const charityBanner = document.getElementById('charityBanner');
+    const quotaBar = document.getElementById('quotaStatusBar');
+
+    if (isCharityCategory) {
+      priceRow.classList.add('hidden');
+      if (charityBanner) charityBanner.classList.remove('hidden');
+      if (quotaBar) quotaBar.classList.add('hidden');
+      dynamicFieldsArea.innerHTML = '';
+      if(currentCategory.note) {
+         const note = document.createElement('p');
+         note.className = "col-span-1 md:col-span-2 text-green-600 font-bold text-sm bg-green-100 p-2 rounded-lg";
+         note.textContent = currentCategory.note;
+         dynamicFieldsArea.appendChild(note);
+      }
+    } else {
+      priceRow.classList.remove('hidden');
+      priceLabel.textContent = currentCategory.priceLabel ? `${currentCategory.priceLabel} (₹) *` : 'Price (₹) *';
+      if (charityBanner) charityBanner.classList.add('hidden');
+      dynamicFieldsArea.innerHTML = '';
+      // Show quota bar
+      if (quotaBar) {
+        const cUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        if (cUser && cUser.quota) {
+          quotaBar.classList.remove('hidden');
+          document.getElementById('quotaStatusText').textContent =
+            `You have ${cUser.quota.ads_remaining || 0} ad${(cUser.quota.ads_remaining || 0) !== 1 ? 's' : ''} remaining (${cUser.quota.plan_name || 'Free Plan'})`;
+        }
+      }
+    }
+
+    // Setup Listener for Subcategory Change -> Populate Fields
+    subCategorySelect.onchange = (e) => {
+        const selectedSubLabel = e.target.value;
+        let brain = window.ZZZ && window.ZZZ.getClassifiedsSchema ? window.ZZZ.getClassifiedsSchema() : null;
+        if (!brain || !brain.fields || brain.fields.length === 0) brain = window.ZZZ_SCHEMA || { fields: [] };
+        
+        // Find subcategory ID using the label
+        const subObj = currentCategory.subIds.find(s => s.label === selectedSubLabel);
+        
+        // Keep the note if present (for charity)
+        const existingNote = dynamicFieldsArea.querySelector('.bg-green-100');
+        dynamicFieldsArea.innerHTML = '';
+        if(existingNote) dynamicFieldsArea.appendChild(existingNote);
+
+        if (subObj) {
+            // Find fields specifically for this subcategory ID
+            const specificFields = (brain.fields || []).filter(f => f.subcategoryId === subObj.id);
+            
+            specificFields.forEach(field => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'w-full fade-enter fade-enter-active';
+                
+                let inputHtml = '';
+                // Handle Options (comma separated string -> array)
+                let opts = [];
+                if(field.options && typeof field.options === 'string') {
+                    opts = field.options.split(',').map(s => s.trim());
+                } else if (Array.isArray(field.options)) {
+                    opts = field.options;
+                }
+
+                if (field.type === 'select') {
+                    const optionTags = opts.map(o => `<option value="${o}">${o}</option>`).join('');
+                    inputHtml = `<select id="dyn_${field.id}" class="w-full rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4 focus:ring-secondary"><option value="">Select...</option>${optionTags}</select>`;
+                } else {
+                    inputHtml = `<input type="${field.type}" id="dyn_${field.id}" class="w-full rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4 focus:ring-secondary" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}>`;
+                }
+
+                wrapper.innerHTML = `
+                  <label class="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">${field.label}</label>
+                  ${inputHtml}
+                `;
+                dynamicFieldsArea.appendChild(wrapper);
+            });
+        }
+    };
+    
+    window.scrollTo(0, 0);
+  }
+
+  // Change Category Handler
+  changeCatBtn.addEventListener('click', () => {
+    detailsSection.style.display = 'none';
+    step2.classList.add('hidden');
+    step2.classList.remove('flex');
+    step1.classList.remove('hidden');
+    updateProgressBar(1);
+  });
+
+  // --- 5.1 PHOTO RENDERER ---
+  window.removeExistingPhoto = function(index) {
+        existingUrlsArray.splice(index, 1);
+        renderPhotos();
+    };
+
+    function renderPhotos() {
+    photoPreview.innerHTML = '';
+    uploadedImages = [];
+    const WARN_BYTES = 2 * 1024 * 1024;
+    const MAX_BYTES  = 5 * 1024 * 1024;
+
+    // Render existing images first
+    existingUrlsArray.forEach((url, index) => {
+        const div = document.createElement('div');
+        div.className = 'aspect-square rounded-lg bg-cover bg-center border border-gray-300 relative group overflow-hidden shadow-sm';
+        div.style.backgroundImage = `url(${url})`;
+        
+        let hoverControls = `<div class="absolute inset-0 bg-black/50 hidden group-hover:flex flex-col items-center justify-center text-white gap-2 transition-all">`;
+        hoverControls += `<button type="button" onclick="window.removeExistingPhoto(${index})" class="text-[10px] font-bold bg-red-500/80 hover:bg-red-500 px-2 py-1 rounded-full flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">delete</span> Delete</button>`;
+        hoverControls += `</div>`;
+        
+        div.innerHTML = `${hoverControls}<div class="absolute top-0 right-0 bg-purple-500 text-white text-[9px] px-1 font-bold">Existing</div>`;
+        photoPreview.appendChild(div);
+    });
+    const max = (currentCategory && currentCategory.photoLimit) ? currentCategory.photoLimit : 8;
+
+    const oldBanner = document.getElementById('imgSizeWarnBanner');
+    if (oldBanner) oldBanner.remove();
+
+    let oversized = 0, warned = 0;
+
+    selectedFilesArray.forEach((file, index) => {
+      if (file.size > MAX_BYTES) {
+        oversized++;
+        const div = document.createElement('div');
+        div.className = 'aspect-square rounded-lg border-2 border-red-400 bg-red-50 dark:bg-red-900/20 flex flex-col items-center justify-center text-center p-1 relative';
+        div.innerHTML = `<span class="material-symbols-outlined text-red-500 text-2xl">broken_image</span>
+          <p class="text-red-600 font-black text-[9px] mt-1">${(file.size/1024/1024).toFixed(1)}MB</p>
+          <p class="text-red-400 text-[9px]">Too large!</p>
+          <button type="button" onclick="window.removePhoto(${index})" class="absolute top-1 right-1 bg-white/80 dark:bg-black/50 rounded-full p-1 shadow-sm hover:text-red-500 transition-colors"><span class="material-symbols-outlined text-[14px]">delete</span></button>`;
+        photoPreview.appendChild(div);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        uploadedImages[index] = e.target.result;
+        const div = document.createElement('div');
+        div.className = 'aspect-square rounded-lg bg-cover bg-center border border-gray-300 relative group overflow-hidden shadow-sm';
+        div.style.backgroundImage = `url(${e.target.result})`;
+        const badge = file.size > WARN_BYTES
+          ? `<div class="absolute bottom-0 inset-x-0 bg-orange-500/90 text-white text-[8px] font-black text-center py-0.5">⚠️ ${(file.size/1024/1024).toFixed(1)}MB</div>`
+          : '';
+          
+        let hoverControls = `<div class="absolute inset-0 bg-black/50 hidden group-hover:flex flex-col items-center justify-center text-white gap-2 transition-all">`;
+        if(index > 0) {
+            hoverControls += `<button type="button" onclick="window.makeCoverPhoto(${index})" class="text-[10px] font-bold bg-secondary/80 hover:bg-secondary px-2 py-1 rounded-full flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">star</span> Make Cover</button>`;
+        } else {
+            hoverControls += `<span class="text-[10px] font-bold bg-primary/80 px-2 py-1 rounded-full flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">check_circle</span> Cover</span>`;
+        }
+        hoverControls += `<button type="button" onclick="window.removePhoto(${index})" class="text-[10px] font-bold bg-red-500/80 hover:bg-red-500 px-2 py-1 rounded-full flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">delete</span> Delete</button>`;
+        hoverControls += `</div>`;
+          
+        div.innerHTML = `${hoverControls}${badge}`;
+        photoPreview.appendChild(div);
+        if (file.size > WARN_BYTES) warned++;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    setTimeout(() => {
+      if (oversized > 0 || warned > 0) {
+        const banner = document.createElement('div');
+        banner.id = 'imgSizeWarnBanner';
+        if (oversized > 0) {
+          banner.className = 'mt-2 bg-red-50 dark:bg-red-900/20 border border-red-300 rounded-xl p-3 flex items-start gap-2 text-sm';
+          banner.innerHTML = `<span class="material-symbols-outlined text-red-500 text-xl flex-shrink-0">error</span>
+            <div><p class="text-red-700 dark:text-red-400 font-black">${oversized} photo${oversized>1?'s':''} skipped — over 5MB limit</p>
+            <p class="text-red-500 text-xs mt-0.5">Compress free at <a href="https://squoosh.app" target="_blank" class="underline font-bold">squoosh.app</a> then re-upload.</p></div>`;
+        } else {
+          banner.className = 'mt-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-300 rounded-xl p-3 flex items-start gap-2 text-sm';
+          banner.innerHTML = `<span class="material-symbols-outlined text-orange-500 text-xl flex-shrink-0">warning</span>
+            <div><p class="text-orange-700 dark:text-orange-400 font-black">${warned} large photo${warned>1?'s':''} — may be slow on mobile</p>
+            <p class="text-orange-500 text-xs mt-0.5">Tip: Compress at <a href="https://squoosh.app" target="_blank" class="underline font-bold">squoosh.app</a> for faster uploads.</p></div>`;
+        }
+        photoPreview.after(banner);
+      }
+    }, 300);
+  }
+
+  // Global functions so onclick can reach them
+  window.removePhoto = function(index) {
+      selectedFilesArray.splice(index, 1);
+      renderPhotos();
+  };
+  
+  window.makeCoverPhoto = function(index) {
+      const file = selectedFilesArray.splice(index, 1)[0];
+      selectedFilesArray.unshift(file);
+      renderPhotos();
+  };
+
+  fileInput.addEventListener('change', function() {
+    const newFiles = Array.from(this.files);
+    const max = (currentCategory && currentCategory.photoLimit) ? currentCategory.photoLimit : 8;
+    
+    // Add new files until we hit the max limit
+    for(let file of newFiles) {
+        if((selectedFilesArray.length + existingUrlsArray.length) < max) {
+            selectedFilesArray.push(file);
+        } else {
+            showToast('Maximum ' + max + ' photos allowed.', 'error');
+            break;
+        }
+    }
+    
+    // Clear input so selecting same file again triggers change event
+    fileInput.value = '';
+    renderPhotos();
+  });
+
+
+  
+  // --- WIZARD NAVIGATION ---
+  const step1 = document.getElementById('catSection');
+  const step2 = document.getElementById('step2Wrapper');
+  const step3 = document.getElementById('step3Wrapper');
+  const step4 = document.getElementById('step4Wrapper');
+  const stepIndicators = [
+      document.getElementById('step1Indicator'),
+      document.getElementById('step2Indicator'),
+      document.getElementById('step3Indicator'),
+      document.getElementById('step4Indicator')
+  ];
+  
+  function updateProgressBar(step) {
+      progressBar.style.width = (step * 25) + '%';
+      stepIndicators.forEach((ind, idx) => {
+          if (idx < step) {
+              ind.className = "text-secondary font-bold";
+          } else {
+              ind.className = "text-gray-400";
+          }
+      });
+  }
+
+  function goToStep2() {
+      // Validate Step 1
+      if (!currentCategoryKey) { showToast('Please select a category', 'error'); return; }
+      step1.classList.add('hidden');
+      step2.classList.remove('hidden');
+      step2.classList.add('flex');
+      step3.classList.add('hidden');
+      step3.classList.remove('flex');
+      step4.classList.add('hidden');
+      step4.classList.remove('flex');
+      detailsSection.style.display = 'flex';
+      updateProgressBar(2);
+      window.scrollTo(0, 0);
+  }
+
+  function goToStep3() {
+      // Validate Step 2
+      const form = document.getElementById('listingForm');
+      if (!document.getElementById('subCategorySelect').value) { showToast('Please select a subcategory', 'error'); return; }
+      if (!document.getElementById('postTitle').value.trim()) { showToast('Please enter an ad title', 'error'); return; }
+      if (!document.getElementById('postDescription').value.trim()) { showToast('Please enter a description', 'error'); return; }
+      
+      step1.classList.add('hidden');
+      step2.classList.add('hidden');
+      step2.classList.remove('flex');
+      step3.classList.remove('hidden');
+      step3.classList.add('flex');
+      step4.classList.add('hidden');
+      step4.classList.remove('flex');
+      updateProgressBar(3);
+      window.scrollTo(0, 0);
+  }
+
+  function goToStep4() {
+      // Validate Step 3
+      if (!document.getElementById('stateSelect').value) { showToast('Please select a state', 'error'); return; }
+      if (!document.getElementById('citySelect').value) { showToast('Please select a city', 'error'); return; }
+      
+      step1.classList.add('hidden');
+      step2.classList.add('hidden');
+      step2.classList.remove('flex');
+      step3.classList.add('hidden');
+      step3.classList.remove('flex');
+      step4.classList.remove('hidden');
+      step4.classList.add('flex');
+      updateProgressBar(4);
+      generatePreviewInline();
+      window.scrollTo(0, 0);
+  }
+  
+  function generatePreviewInline() {
+      generatePreview(); // Uses existing preview logic
+      const contentHtml = document.getElementById('previewContent').innerHTML;
+      document.getElementById('inlinePreviewArea').innerHTML = contentHtml;
+  }
+
+  // --- 6. PREVIEW & SUBMIT LOGIC ---
+  const previewBtn = document.getElementById('previewBtn');
+  const previewModal = document.getElementById('previewModal');
+  const previewContent = document.getElementById('previewContent');
+  const closePreview = document.getElementById('closePreview');
+  const closePreviewBtn = document.getElementById('closePreviewBtn');
+
+  // --- RESTRUCTURED PREVIEW FUNCTION ---
+  function generatePreview() {
+    const title = document.getElementById('postTitle').value;
+    const price = document.getElementById('postPrice').value;
+    const desc = document.getElementById('postDescription').value;
+    const state = document.getElementById('stateSelect').value;
+    const city = document.getElementById('citySelect').value;
+    const sub = subCategorySelect.value;
+    const loc = (city && state) ? `${city}, ${state}` : "Location not selected";
+    
+    // 1. Get the Cover Image
+    const coverImage = uploadedImages.length > 0 ? uploadedImages[0] : 'https://via.placeholder.com/600x400?text=No+Photo+Uploaded';
+
+    // 2. Gather Dynamic Fields (The "Specific Details")
+    // We loop through the inputs we created dynamically to show them in the preview
+    let detailsHtml = '';
+    const dynamicInputs = document.querySelectorAll('[id^="dyn_"]');
+    
+    if(dynamicInputs.length > 0) {
+        detailsHtml += `<div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-4 border border-gray-100 dark:border-gray-800 dark:border-gray-700">`;
+        detailsHtml += `<h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Key Details</h4>`;
+        detailsHtml += `<div class="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">`;
+        
+        dynamicInputs.forEach(input => {
+            // Find the label for this input (it's the previous sibling element)
+            const label = input.previousElementSibling ? input.previousElementSibling.textContent : 'Detail';
+            const value = input.value;
+            
+            if(value) {
+                detailsHtml += `
+                  <div class="flex flex-col">
+                    <span class="text-xs text-gray-400">${label}</span>
+                    <span class="font-bold text-gray-800 dark:text-white dark:text-gray-200">${value}</span>
+                  </div>`;
+            }
+        });
+        
+        detailsHtml += `</div></div>`;
+    }
+
+    // 3. Build the Structured HTML
+    let html = `
+      <div class="flex flex-col gap-5">
+        
+        <div class="w-full h-48 sm:h-64 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden relative border border-gray-200 dark:border-gray-700">
+           <img src="${coverImage}" class="w-full h-full object-cover">
+           <span class="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">
+             ${currentCategory ? currentCategory.label : 'Category'}
+           </span>
+        </div>
+
+        <div class="flex justify-between items-start gap-4">
+          <div class="flex-1">
+            <h2 class="text-2xl font-black text-gray-800 dark:text-white leading-tight">${title || 'Untitled Ad'}</h2>
+            <div class="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
+               <span class="material-symbols-outlined text-sm">location_on</span>
+               <span>${loc}</span>
+               <span class="text-gray-300">|</span>
+               <span>${sub || 'General'}</span>
+            </div>
+          </div>
+          <div class="text-right shrink-0">
+             <span class="text-2xl font-black text-primary block">
+               ${currentCategory && currentCategory.hidePrice ? 'Free' : '₹ ' + (price || '0')}
+             </span>
+             ${document.querySelector('#priceRow input[type="checkbox"]').checked ? '<span class="text-[10px] font-bold text-secondary bg-secondary/10 px-1.5 py-0.5 rounded">Negotiable</span>' : ''}
+          </div>
+        </div>
+
+        ${detailsHtml}
+
+        <div>
+          <h4 class="font-bold text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 mb-3">Description</h4>
+          <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">${desc || 'No description provided.'}</p>
+        </div>
+
+        <div class="flex items-center gap-3 mt-2 pt-4 border-t border-gray-100 dark:border-gray-800 dark:border-gray-700">
+           <div class="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-primary text-white flex items-center justify-center font-bold">
+             ${JSON.parse(localStorage.getItem('zzz_user') || '{"name":"User"}').name.charAt(0)}
+           </div>
+           <div>
+             <p class="text-xs text-gray-400 font-bold">Posted By</p>
+             <p class="text-sm font-bold text-gray-800 dark:text-white dark:text-gray-200">${JSON.parse(localStorage.getItem('zzz_user') || '{"name":"You"}').name}</p>
+           </div>
+        </div>
+
+      </div>
+    `;
+
+    previewContent.innerHTML = html;
+    // Modal is skipped in new wizard flow
+    // previewModal.classList.remove('hidden');
+    // previewModal.classList.add('flex');
+  }
+  // --- 7. EDIT MODE LOGIC ---
+  const urlParams = new URLSearchParams(window.location.search);
+  const editId = urlParams.get('id');
+
+  if(editId) {
+    fetch(`/api/listings.php?id=${editId}`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        const item = data.success && data.data ? data.data : null;
+        if(!item) return;
+        const key = Object.keys(schema).find(k => 
+            schema[k].label.toLowerCase() === item.category.toLowerCase() || 
+            k.toLowerCase() === item.category.toLowerCase()
+        );
+        if(key) {
+            selectCategory(key);
+            setTimeout(() => {
+                if(item.images && item.images.length > 0) {
+                      existingUrlsArray = item.images;
+                  } else if (item.thumbnail) {
+                      existingUrlsArray = [item.thumbnail];
+                  }
+                  renderPhotos();
+                  
+                  document.getElementById('postTitle').value = item.title || '';
+                document.getElementById('postPrice').value = item.price || '';
+                document.getElementById('postDescription').value = item.description || '';
+                document.getElementById('stateSelect').value = item.location_state || item.state || '';
+                stateSelect.dispatchEvent(new Event('change'));
+                document.getElementById('citySelect').value = item.location_city || item.city || '';
+                document.getElementById('subCategorySelect').value = item.subcategory || '';
+                subCategorySelect.dispatchEvent(new Event('change'));
+                document.getElementById('specificLocation').value = item.location_area || item.specificLocation || '';
+                if(document.getElementById('postNegotiable')) document.getElementById('postNegotiable').checked = item.price_type === 'negotiable';
+                if(document.getElementById('hidePhone')) document.getElementById('hidePhone').checked = !!item.hide_phone;
+                if(document.getElementById('postIsHighlight')) document.getElementById('postIsHighlight').checked = !!item.is_highlight;
+                if(document.getElementById('postIsTop')) document.getElementById('postIsTop').checked = !!item.is_top;
+                if(document.getElementById('allowWhatsapp')) document.getElementById('allowWhatsapp').checked = !!item.allow_whatsapp;
+                if(document.getElementById('contactPhone')) document.getElementById('contactPhone').value = item.contact_phone || '';
+                if(item.fields || item.dynamicData) {
+                    setTimeout(() => {
+                        const d = item.fields || item.dynamicData || {};
+                        Object.keys(d).forEach(fieldId => {
+                            const el = document.getElementById('dyn_' + fieldId);
+                            if(el) el.value = d[fieldId];
+                        });
+                    }, 200);
+                }
+                finalSubmitBtn.innerHTML = '<span>Update Listing</span><span class="material-symbols-outlined">save</span>';
+                confirmPostBtn.textContent = "Update Listing";
+            }, 500);
+        }
+      })
+      .catch(e => console.error('Failed to load listing for edit:', e));
+  }
+
+  // --- 8. SUBMIT HANDLER ---
+  function showToast(msg, type) {
+    let c = document.getElementById('toastCont');
+    if (!c) { c = document.createElement('div'); c.id = 'toastCont'; c.className = 'fixed bottom-6 right-6 z-[200] flex flex-col gap-2'; document.body.appendChild(c); }
+    const t = document.createElement('div');
+    t.className = `flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl translate-y-4 opacity-0 transition-all duration-300 text-white font-bold text-sm ${type === 'error' ? 'bg-red-500' : 'bg-primary'}`;
+    t.innerHTML = `<span class="material-symbols-outlined text-[18px]">${type === 'error' ? 'error' : 'check_circle'}</span>${msg}`;
+    c.appendChild(t);
+    requestAnimationFrame(() => t.classList.remove('translate-y-4', 'opacity-0'));
+    setTimeout(() => { t.classList.add('translate-y-4', 'opacity-0'); setTimeout(() => t.remove(), 300); }, 4000);
+  }
+
+  async function showPostSuccess(isEdit, isCharity, status, payload = null) {
+    let msg = isEdit ? 'Your listing has been updated.' : 'Your ad has been posted successfully!';
+    if (status === 'pending_review' || isCharity) {
+      msg = 'Your ad has been posted and sent for moderator approval. It will go live once verified.';
+    }
+
+    document.querySelector('main').innerHTML = `
+      <div class="min-h-[60vh] flex flex-col items-center justify-center text-center px-4 py-16">
+        <div class="w-24 h-24 rounded-full ${isCharity ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-green-100 dark:bg-green-900/30'} flex items-center justify-center mx-auto mb-6">
+          <span class="material-symbols-outlined text-6xl ${isCharity ? 'text-amber-500' : 'text-green-500'}">${isCharity ? 'volunteer_activism' : 'check_circle'}</span>
+        </div>
+        <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-3">
+          ${isEdit ? 'Listing Updated! 🎉' : isCharity ? 'Charity Post Submitted! 🙏' : 'Ad Posted Successfully! 🚀'}
+        </h2>
+        <p class="text-gray-500 dark:text-gray-400 max-w-md mb-4 text-base">
+          ${msg}
+        </p>
+        <div id="algorithmicMatchBox" class="hidden w-full max-w-md bg-purple-50 border border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 rounded-2xl p-4 mb-6 text-left animate-pop">
+           <h4 class="font-black text-purple-700 dark:text-purple-300 flex items-center gap-2 mb-1"><span class="material-symbols-outlined">campaign</span> High Demand Alert</h4>
+           <p class="text-sm text-purple-600 dark:text-purple-400 font-medium mb-3">We found <strong id="algorithmicMatchCount">0</strong> buyers actively looking for items like yours right now! You can instantly send them a proposal to sell this item.</p>
+           <a href="wanted.html" class="inline-block bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors">View Buyers & Send Proposal</a>
+        </div>
+        ${isCharity ? '<p class="text-sm font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-5 py-3 rounded-xl mb-6 max-w-sm">⚠️ Charity posts are verified by our moderation team. Fake posts will lead to permanent account suspension.</p>' : ''}
+        <div class="flex flex-col sm:flex-row gap-4 mt-2">
+          <a href="Seller Dashboard.html" class="bg-primary hover:bg-green-700 text-white font-black px-8 py-3.5 rounded-xl shadow-lg transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined">dashboard</span> Go to Dashboard
+          </a>
+          <a href="classifieds.html" class="border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold px-8 py-3.5 rounded-xl hover:border-primary hover:text-primary transition-all">
+            Browse Listings
+          </a>
+          ${!isEdit && !isCharity ? '<a href="Post Listing.html" class="border-2 border-primary text-primary font-bold px-8 py-3.5 rounded-xl hover:bg-primary hover:text-white transition-all">Post Another Ad</a>' : ''}
+        </div>
+      </div>
+    `;
+    
+    // Perform algorithmic check if it's a new post (not an edit)
+    if (!isEdit && payload && payload.category) {
+      try {
+         const matchRes = await fetch(`/api/wanted.php?category=${encodeURIComponent(payload.category)}`);
+         const matchData = await matchRes.json();
+         const matches = matchData.data && matchData.data.wanted_ads ? matchData.data.wanted_ads : [];
+         if (matches.length > 0) {
+            document.getElementById('algorithmicMatchCount').textContent = matches.length;
+            document.getElementById('algorithmicMatchBox').classList.remove('hidden');
+         }
+      } catch (e) { console.log('Match check failed silently'); }
+    }
+  }
+
+  async function handleSubmit() {
+    // Auth gate — show modal if not logged in
+    const activeUser = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+    if (!activeUser) {
+      const partial = {
+        title:       document.getElementById('postTitle')?.value || '',
+        description: document.getElementById('postDescription')?.value || '',
+        price:       document.getElementById('postPrice')?.value || '',
+        category:    currentCategoryKey || '',
+        subcategory: document.getElementById('subCategorySelect')?.value || '',
+        state:       document.getElementById('stateSelect')?.value || '',
+        city:        document.getElementById('citySelect')?.value || '',
+        is_highlight: !!document.getElementById('postIsHighlight')?.checked,
+        is_top:       !!document.getElementById('postIsTop')?.checked,
+        hide_phone:   !!document.getElementById('hidePhone')?.checked,
+        allow_whatsapp: !!document.getElementById('allowWhatsapp')?.checked,
+        contact_phone: document.getElementById('contactPhone')?.value || ''
+      };
+      sessionStorage.setItem('zzz_post_draft', JSON.stringify(partial));
+      const redirectUrl = encodeURIComponent('Post Listing.html');
+      document.getElementById('authGateRegister').href = 'User Registration.html?redirect=' + redirectUrl;
+      document.getElementById('authGateLogin').href    = 'Login Page.html?redirect=' + redirectUrl;
+      document.getElementById('authGateModal').classList.remove('hidden');
+      return;
+    }
+    if (!currentCategory || !currentCategoryKey) { showToast('Please choose a category.', 'error'); return; }
+    if (!subCategorySelect.value) { showToast('Please choose a subcategory.', 'error'); return; }
+    if (!document.getElementById('postTitle').value.trim()) { showToast('Please enter an ad title.', 'error'); return; }
+    if (!document.getElementById('postDescription').value.trim()) { showToast('Please enter a description.', 'error'); return; }
+    if (!document.getElementById('stateSelect').value) { showToast('Please select your state.', 'error'); return; }
+    if (!document.getElementById('citySelect').value) { showToast('Please select your city.', 'error'); return; }
+
+    const isCharity = !!(currentCategory.hidePrice || currentCategoryKey === 'charity');
+
+    if (isCharity) {
+      const decl = document.getElementById('charityDeclaration');
+      if (!decl || !decl.checked) {
+        showToast('Please tick the charity declaration checkbox first.', 'error');
+        document.getElementById('charityBanner').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+    }
+
+    if (!isCharity && !document.getElementById('postPrice').value) {
+      showToast('Please enter a price for your listing.', 'error'); return;
+    }
+
+    // Gather dynamic fields
+    const fields = {};
+    let brain = window.ZZZ && window.ZZZ.getClassifiedsSchema ? window.ZZZ.getClassifiedsSchema() : null;
+    if (!brain || !brain.fields || brain.fields.length === 0) brain = window.ZZZ_SCHEMA || { fields: [] };
+    const subObj = currentCategory.subIds ? currentCategory.subIds.find(s => s.label === subCategorySelect.value) : null;
+    if (subObj) {
+      (brain.fields || []).filter(f => f.subcategoryId === subObj.id).forEach(f => {
+        const el = document.getElementById('dyn_' + f.id);
+        if (el) fields[f.id] = el.value;
+      });
+    }
+
+    const negotiable = !!(document.getElementById('postNegotiable') && document.getElementById('postNegotiable').checked);
+    const price      = isCharity ? 0 : (parseFloat(document.getElementById('postPrice').value) || 0);
+
+    // Disable buttons while posting
+    finalSubmitBtn.disabled = true;
+    finalSubmitBtn.innerHTML = '<span>Posting...</span><span class="material-symbols-outlined animate-spin">refresh</span>';
+    confirmPostBtn.disabled  = true;
+    confirmPostBtn.textContent = 'Posting...';
+
+    try {
+      // ── Step 1: Compress + Upload images ─────────────────────────────
+      let imageUrls = [...existingUrlsArray];
+      const files = selectedFilesArray;
+
+      if (files.length > 0) {
+        // Client-side image compression (resize to max 1600px, 85% quality)
+        // This handles large mobile camera photos (3-8MB) before they hit the server
+        async function compressImage(file) {
+          return new Promise((resolve) => {
+            const MAX_PX = 1600;
+            const QUALITY = 0.85;
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = () => {
+              URL.revokeObjectURL(url);
+              let { width, height } = img;
+              if (width > MAX_PX || height > MAX_PX) {
+                if (width > height) { height = Math.round(height * MAX_PX / width); width = MAX_PX; }
+                else                { width  = Math.round(width  * MAX_PX / height); height = MAX_PX; }
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = width; canvas.height = height;
+              canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+              canvas.toBlob(blob => resolve(blob || file), 'image/jpeg', QUALITY);
+            };
+            img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+            img.src = url;
+          });
+        }
+
+        const max = (currentCategory && currentCategory.photoLimit) ? currentCategory.photoLimit : 8;
+        const toUpload = files.slice(0, max);
+
+        // Compress all images in parallel
+        const compressed = await Promise.all(toUpload.map(f => compressImage(f)));
+
+        const formData = new FormData();
+        compressed.forEach((blob, i) => {
+          formData.append('images[]', blob, toUpload[i].name.replace(/\.[^.]+$/, '.jpg'));
+        });
+
+        try {
+          const upRes  = await fetch('/api/uploads.php', {
+            method: 'POST',
+            credentials: 'include',
+            body: formData,
+          });
+          const upText = await upRes.text();
+          let upData;
+          try { upData = JSON.parse(upText); } catch(e) {
+            // Non-JSON response — server error
+            showToast('Image upload failed (server error). Listing will be posted without photos.', 'error');
+            upData = null;
+          }
+          if (upData && upData.success && Array.isArray(upData.data.urls)) {
+            imageUrls = imageUrls.concat(upData.data.urls);
+          } else if (upData && !upData.success) {
+            showToast('Image upload failed: ' + (upData.error || 'Unknown error') + '. Listing posted without photos.', 'error');
+          }
+        } catch(e) {
+          showToast('Network error uploading images. Listing will be posted without photos.', 'error');
+        }
+      }
+
+      // ── Step 2: POST listing JSON ──
+      const isStory = !!(document.getElementById('postIsStory') && document.getElementById('postIsStory').checked);
+      const videoUrl = document.getElementById('postVideoUrl') ? document.getElementById('postVideoUrl').value.trim() : null;
+
+      const payload = {
+        title:          document.getElementById('postTitle').value.trim(),
+        description:    document.getElementById('postDescription').value.trim(),
+        category:       schema[currentCategoryKey].label,
+        subcategory:    subCategorySelect.value,
+        price,
+        price_type:     isCharity ? 'free' : (negotiable ? 'negotiable' : 'fixed'),
+        location_city:  document.getElementById('citySelect').value,
+        location_state: document.getElementById('stateSelect').value,
+        location_area:  document.getElementById('specificLocation').value,
+        lat:            document.getElementById('pickedLat').value || null,
+        lng:            document.getElementById('pickedLng').value || null,
+        images:         imageUrls,
+        fields,
+        is_story:       isStory ? 1 : 0,
+        video_url:      isStory ? videoUrl : null,
+        is_highlight:   !!(document.getElementById('postIsHighlight') && document.getElementById('postIsHighlight').checked) ? 1 : 0,
+        is_top:         !!(document.getElementById('postIsTop') && document.getElementById('postIsTop').checked) ? 1 : 0,
+        hide_phone:     !!(document.getElementById('hidePhone') && document.getElementById('hidePhone').checked) ? 1 : 0,
+        allow_whatsapp: !!(document.getElementById('allowWhatsapp') && document.getElementById('allowWhatsapp').checked) ? 1 : 0,
+        contact_phone:  document.getElementById('contactPhone') ? document.getElementById('contactPhone').value.trim() : null
+      };
+
+      const url    = editId ? `/api/listings.php?id=${editId}` : '/api/listings.php';
+      const method = editId ? 'PUT' : 'POST';
+      const res    = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); }
+      catch(e) {
+        console.error('Server response (non-JSON):', text);
+        showToast('Server error — please try again or contact support.', 'error');
+        finalSubmitBtn.disabled = false;
+        finalSubmitBtn.innerHTML = '<span>Post Now</span><span class="material-symbols-outlined">send</span>';
+        confirmPostBtn.disabled  = false;
+        confirmPostBtn.textContent = editId ? 'Update Listing' : 'Confirm & Post';
+        return;
+      }
+
+      if (!data.success) {
+        showToast(data.error || 'Failed to post. Please try again.', 'error');
+        finalSubmitBtn.disabled = false;
+        finalSubmitBtn.innerHTML = '<span>Post Now</span><span class="material-symbols-outlined">send</span>';
+        confirmPostBtn.disabled  = false;
+        confirmPostBtn.textContent = editId ? 'Update Listing' : 'Confirm & Post';
+        previewModal.classList.add('hidden'); previewModal.classList.remove('flex');
+        return;
+      }
+
+      hideModal();
+      showPostSuccess(!!editId, isCharity, data.status || 'pending_review', payload);
+
+    } catch (err) {
+      console.error('Post listing error:', err);
+      showToast('Network error. Please check your connection and try again.', 'error');
+      finalSubmitBtn.disabled = false;
+      finalSubmitBtn.innerHTML = '<span>Post Now</span><span class="material-symbols-outlined">send</span>';
+      confirmPostBtn.disabled  = false;
+      confirmPostBtn.textContent = editId ? 'Update Listing' : 'Confirm & Post';
+    }
+  }
+
+  // BIND EVENTS
+  previewBtn.addEventListener('click', generatePreview);
+  finalSubmitBtn.addEventListener('click', handleSubmit);
+  confirmPostBtn.addEventListener('click', handleSubmit);
+  
+  const hideModal = () => {
+    previewModal.classList.add('hidden');
+    previewModal.classList.remove('flex');
+  };
+
+  closePreview.onclick = hideModal;
+  closePreviewBtn.onclick = hideModal;
+
+  // --- MAP PICKER LOGIC (Leaflet.js) ---
+  let mapInstance = null;
+  let mapMarker = null;
+
+  window.toggleMapPicker = function() {
+    const section = document.getElementById('mapPickerSection');
+    const btn = document.getElementById('mapToggleBtn');
+    
+    if (section.style.display === 'block') {
+      section.style.display = 'none';
+      btn.textContent = 'Show Map';
+      return;
+    }
+    
+    section.style.display = 'block';
+    btn.textContent = 'Hide Map';
+
+    if (!mapInstance) {
+      // Default center: India
+      mapInstance = L.map('pickMap').setView([20.5937, 78.9629], 5);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(mapInstance);
+
+      mapMarker = L.marker([20.5937, 78.9629], {draggable: true}).addTo(mapInstance);
+
+      const updateInputs = (lat, lng) => {
+        document.getElementById('pickedLat').value = lat;
+        document.getElementById('pickedLng').value = lng;
+        
+        // Reverse geocode to get area name
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.address) {
+              const addr = data.address;
+              const shortAddress = [
+                  addr.road || '', 
+                  addr.suburb || addr.neighbourhood || '', 
+                  addr.city || addr.town || addr.county || ''
+              ].filter(Boolean).join(', ');
+              document.getElementById('specificLocation').value = shortAddress || data.display_name;
+              
+              if(addr.state) {
+                 const stateOptions = Array.from(document.getElementById('stateSelect').options);
+                 const match = stateOptions.find(opt => opt.value.toLowerCase() === addr.state.toLowerCase());
+                 if(match) {
+                     document.getElementById('stateSelect').value = match.value;
+                     document.getElementById('stateSelect').dispatchEvent(new Event('change'));
+                 }
+              }
+            }
+          }).catch(err => console.error("Geocoding failed:", err));
+      };
+
+      mapMarker.on('dragend', function(e) {
+        const pos = mapMarker.getLatLng();
+        updateInputs(pos.lat, pos.lng);
+      });
+
+      mapInstance.on('click', function(e) {
+        mapMarker.setLatLng(e.latlng);
+        updateInputs(e.latlng.lat, e.latlng.lng);
+      });
+    }
+    
+    // Fix leaflet sizing issue when rendering inside a previously hidden div
+    setTimeout(() => mapInstance.invalidateSize(), 100);
+  };
+
+// --- LOCATION AUTO-DETECT LOGIC ---
+  window.detectLocation = function() {
+    const statusEl = document.getElementById('locationStatus');
+    const inputEl = document.getElementById('specificLocation');
+    
+    // 1. Show "Detecting..." status
+    statusEl.textContent = "📍 Detecting your location...";
+    statusEl.className = "text-xs text-secondary mt-2 ml-1 block font-bold";
+    statusEl.classList.remove('hidden');
+
+    if (!navigator.geolocation) {
+      statusEl.textContent = "❌ Geolocation is not supported by your browser.";
+      statusEl.className = "text-xs text-red-500 mt-2 ml-1 block";
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      // Success Callback
+      (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        
+        // 2. Use FREE OpenStreetMap API to convert Lat/Lon to Text
+        // (Note: For a real production app with millions of users, you might want a paid Google Maps API key, but this is free and great for now)
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+
+        fetch(url)
+          .then(response => response.json())
+          .then(data => {
+            if (data && data.display_name) {
+              // 3. Fill the input field
+              // We grab the "suburb" or "city" parts to keep it clean, or use display_name for full address
+              const addr = data.address;
+              const shortAddress = [
+                  addr.road || '', 
+                  addr.suburb || addr.neighbourhood || '', 
+                  addr.city || addr.town || addr.county || ''
+              ].filter(Boolean).join(', '); // Join parts that exist
+
+              inputEl.value = shortAddress || data.display_name;
+              
+              statusEl.textContent = "✅ Location detected!";
+              statusEl.className = "text-xs text-green-600 mt-2 ml-1 block font-bold";
+              
+              // Optional: Try to auto-select State/City if they match your dropdowns
+              // (This is basic string matching)
+              if(addr.state) {
+                 const stateOptions = Array.from(document.getElementById('stateSelect').options);
+                 const match = stateOptions.find(opt => opt.value.toLowerCase() === addr.state.toLowerCase());
+                 if(match) {
+                     document.getElementById('stateSelect').value = match.value;
+                     document.getElementById('stateSelect').dispatchEvent(new Event('change')); // Trigger city load
+                 }
+              }
+            } else {
+              throw new Error("Address not found");
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            statusEl.textContent = "⚠️ Found GPS, but couldn't find address name. Type manually.";
+            statusEl.className = "text-xs text-orange-500 mt-2 ml-1 block";
+            inputEl.value = `${lat.toFixed(5)}, ${lon.toFixed(5)}`; // Fallback to coords
+          });
+      },
+      // Error Callback
+      () => {
+        statusEl.textContent = "❌ Unable to retrieve location. Please allow location access.";
+        statusEl.className = "text-xs text-red-500 mt-2 ml-1 block";
+      }
+    );
+  };
+  // ── Restore draft if user just came back from registration/login ──────
+  // We wait a moment for the form fields to be rendered before restoring
+  setTimeout(() => {
+    const draft = sessionStorage.getItem('zzz_post_draft');
+    if (!draft) return;
+    try {
+      const d = JSON.parse(draft);
+      if (d.title       && document.getElementById('postTitle'))       document.getElementById('postTitle').value = d.title;
+      if (d.description && document.getElementById('postDescription')) document.getElementById('postDescription').value = d.description;
+      if (d.price       && document.getElementById('postPrice'))       document.getElementById('postPrice').value = d.price;
+      if (document.getElementById('postIsHighlight')) document.getElementById('postIsHighlight').checked = !!d.is_highlight;
+      if (document.getElementById('postIsTop')) document.getElementById('postIsTop').checked = !!d.is_top;
+      if (document.getElementById('hidePhone')) document.getElementById('hidePhone').checked = !!d.hide_phone;
+      if (document.getElementById('allowWhatsapp')) document.getElementById('allowWhatsapp').checked = !!d.allow_whatsapp;
+      if (d.contact_phone && document.getElementById('contactPhone')) document.getElementById('contactPhone').value = d.contact_phone;
+      // Show a friendly toast
+      if (d.title || d.description) {
+        showToast('🔄 Your draft has been restored! Continue where you left off.', 'success');
+      }
+      sessionStorage.removeItem('zzz_post_draft'); // clear after restore
+    } catch(e) {}
+  }, 800);
+
+})();
+  </script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/abKU=" crossorigin=""></script>
+  
+  <script>
+    function toggleStoryMode() {
+        const isStory = document.getElementById('postIsStory').checked;
+        const videoContainer = document.getElementById('videoUrlContainer');
+        const photoContainer = document.getElementById('photoUploadContainer');
+        const videoInput = document.getElementById('postVideoUrl');
+        
+        if (isStory) {
+            videoContainer.classList.remove('hidden');
+            photoContainer.classList.add('hidden');
+            videoInput.setAttribute('required', 'required');
+        } else {
+            videoContainer.classList.add('hidden');
+            photoContainer.classList.remove('hidden');
+            videoInput.removeAttribute('required');
+        }
+    }
+  </script>
+</body>
+</html>

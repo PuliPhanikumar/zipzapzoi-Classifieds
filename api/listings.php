@@ -169,6 +169,10 @@ function getAll(): void {
         $row['views']  = (int)$row['views'];
         $row['id']     = (int)$row['id'];
         $row['user_id']= (int)$row['user_id'];
+        $row['is_highlight']   = !empty($row['is_highlight']);
+        $row['is_top']         = !empty($row['is_top']);
+        $row['hide_phone']     = !empty($row['hide_phone']);
+        $row['allow_whatsapp'] = !empty($row['allow_whatsapp']);
     }
 
     jsonOk([
@@ -206,6 +210,10 @@ function getOne(int $id): void {
     $row['fields'] = json_decode($row['fields'] ?? '{}', true) ?: [];
     $row['price']  = (float)$row['price'];
     $row['id']     = (int)$row['id'];
+    $row['is_highlight']   = !empty($row['is_highlight']);
+    $row['is_top']         = !empty($row['is_top']);
+    $row['hide_phone']     = !empty($row['hide_phone']);
+    $row['allow_whatsapp'] = !empty($row['allow_whatsapp']);
 
     // Similar listings
     $sim = $db->prepare(
@@ -391,12 +399,17 @@ function createListing(): void {
 
     $isStory = !empty($b['is_story']) ? 1 : 0;
     $videoUrl = clean($b['video_url'] ?? '');
+    $isHighlight   = !empty($b['is_highlight']) ? 1 : 0;
+    $isTop         = !empty($b['is_top']) ? 1 : 0;
+    $hidePhone     = !empty($b['hide_phone']) ? 1 : 0;
+    $allowWhatsapp = !empty($b['allow_whatsapp']) ? 1 : 0;
+    $contactPhone  = clean($b['contact_phone'] ?? '');
 
     $db->prepare(
         'INSERT INTO listings
          (user_id, title, description, category, subcategory, price, price_type,
-          location_city, location_state, location_area, lat, lng, is_story, video_url, images, fields, status, expires_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+          location_city, location_state, location_area, lat, lng, is_story, video_url, is_highlight, is_top, hide_phone, allow_whatsapp, contact_phone, images, fields, status, expires_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )->execute([
         $uid,
         $title,
@@ -412,6 +425,11 @@ function createListing(): void {
         $lng,
         $isStory,
         $videoUrl,
+        $isHighlight,
+        $isTop,
+        $hidePhone,
+        $allowWhatsapp,
+        $contactPhone,
         json_encode($imageUrls),
         json_encode($b['fields'] ?? []),
         $status,
@@ -550,7 +568,7 @@ function updateListing(int $id): void {
     // Build dynamic SET
     $allowed = ['title','description','category','subcategory','price','price_type',
                 'location_city','location_state','location_area','lat','lng','images','fields','status','boosted',
-                'is_story','video_url'];
+                'is_story','video_url','is_highlight','is_top','hide_phone','allow_whatsapp','contact_phone'];
     $sets = []; $params = [];
     foreach ($allowed as $field) {
         if (!array_key_exists($field, $b)) continue;
