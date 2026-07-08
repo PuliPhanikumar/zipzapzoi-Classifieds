@@ -364,6 +364,82 @@ async function saveSiteIdentity(){var r=await api('/api/admin/settings.php','POS
 async function saveListingConfig(){var r=await api('/api/admin/settings.php','POST',{settings:{listing_expiry_days:document.getElementById('cfgExpiry').value,max_upload_mb:document.getElementById('cfgUploadSize').value,max_images_per_listing:document.getElementById('cfgMaxImages').value}});if(r&&r.success){toast('Saved!');closeModal('listingModal');}else toast((r&&r.error)||'Error','error');}
 async function saveAutoApprove(val){await api('/api/admin/settings.php','POST',{settings:{auto_approve_listings:val?'1':'0'}});toast(val?'Auto-approve enabled':'Auto-approve disabled');}
 function handleLogout(){if(!confirm('Sign out of admin?'))return;localStorage.removeItem('zipzapzoi_token');sessionStorage.removeItem('zipzapzoi_token');localStorage.removeItem('zipzapzoi_current_user');localStorage.removeItem('zzz_user');window.location.href=BASE+'/Login%20Page.html';}
+  let mobileSchemaBrain = {categories:[], subcategories:[], fields:[]};
+  
+  async function loadMobileSchema() {
+    try {
+      const d = await api('/api/schema.php', 'GET');
+      if(d && d.success === undefined) {
+         // if just returning schema directly, although schema.php uses jsonOk
+         mobileSchemaBrain = d.data || d;
+      } else if (d && d.success && d.data) {
+         mobileSchemaBrain = d.data;
+      }
+    } catch(e) {}
+  }
+
+  window.renderMobileCategories = function() {
+    const lst = document.getElementById('mobileCatList');
+    if(!lst) return;
+    if(!mobileSchemaBrain.categories) mobileSchemaBrain.categories = [];
+    lst.innerHTML = mobileSchemaBrain.categories.map(c => `
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;padding:12px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+           <span class="material-symbols-outlined" style="color:#64748b;">${c.icon||'category'}</span>
+           <div>
+             <div style="font-weight:700;font-size:14px;color:#0f172a;">${c.label}</div>
+             <div style="font-size:11px;color:#64748b;">ID: ${c.id}</div>
+           </div>
+        </div>
+        <button onclick="deleteMobileCategory('${c.id}')" style="background:rgba(239,68,68,.1);color:#ef4444;border:none;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
+      </div>
+    `).join('');
+  }
+
+  async function saveMobileSchema() {
+    try {
+      const res = await api('/api/schema.php', 'POST', { schema: mobileSchemaBrain });
+      if(res && res.success) toast('Schema updated successfully');
+      else toast((res && res.error) || 'Error saving schema', 'error');
+    } catch(e) { toast('Network error', 'error'); }
+  }
+
+  window.addMobileCategory = function() {
+    const id = document.getElementById('newCatId').value.trim();
+    const lbl = document.getElementById('newCatLabel').value.trim();
+    const ico = document.getElementById('newCatIcon').value.trim();
+    if(!id || !lbl) return toast('ID and Label required', 'error');
+    if(!mobileSchemaBrain.categories) mobileSchemaBrain.categories = [];
+    if(mobileSchemaBrain.categories.find(c => c.id === id)) return toast('ID already exists', 'error');
+    
+    mobileSchemaBrain.categories.push({
+      id: id, label: lbl, icon: ico || 'category', color: 'text-gray-500 dark:text-gray-400'
+    });
+    
+    document.getElementById('newCatId').value = '';
+    document.getElementById('newCatLabel').value = '';
+    document.getElementById('newCatIcon').value = '';
+    window.renderMobileCategories();
+    saveMobileSchema();
+  };
+
+  window.deleteMobileCategory = function(id) {
+    if(!confirm('Delete this category?')) return;
+    if(!mobileSchemaBrain.categories) mobileSchemaBrain.categories = [];
+    mobileSchemaBrain.categories = mobileSchemaBrain.categories.filter(c => c.id !== id);
+    window.renderMobileCategories();
+    saveMobileSchema();
+  };
+
+  const origOpenModal = window.openModal;
+  window.openModal = async function(id) {
+    if(id === 'schemaModal') {
+      await loadMobileSchema();
+      window.renderMobileCategories();
+    }
+    origOpenModal(id);
+  };
+
 document.addEventListener('DOMContentLoaded',function(){if(!getToken()){window.location.href=BASE+'/Login%20Page.html?redirect=AdminConsoleMobile.html';return;}loadDashboard();loadSettings();});
 </script>
 </body>
