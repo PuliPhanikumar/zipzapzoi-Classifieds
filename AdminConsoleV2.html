@@ -947,6 +947,7 @@
 <!-- ═══════════════════════════════════════════════════
      JAVASCRIPT
 ════════════════════════════════════════════════════════ -->
+<script src="js/schema.js"></script>
 <script>
 'use strict';
 
@@ -1912,39 +1913,10 @@ async function bulkApproveCharity() {
 // ─────────────────────────────────────────────────────────
 //  SCHEMA BUILDER
 // ─────────────────────────────────────────────────────────
-const DEFAULT_SCHEMA = {
-  categories:[
-    {id:'c1',label:'Vehicles',icon:'directions_car'},
-    {id:'c2',label:'Electronics',icon:'devices'},
-    {id:'c3',label:'Real Estate',icon:'home'},
-    {id:'c4',label:'Jobs and Services',icon:'work'},
-    {id:'c5',label:'Furniture and Home',icon:'chair'},
-    {id:'c6',label:'Fashion and Clothing',icon:'checkroom'},
-    {id:'c7',label:'Books and Education',icon:'menu_book'},
-    {id:'c8',label:'Sports and Outdoors',icon:'sports_soccer'}
-  ],
-  subcategories:[
-    {id:'s1',categoryId:'c1',label:'Cars'},{id:'s2',categoryId:'c1',label:'Bikes'},{id:'s3',categoryId:'c1',label:'Auto Parts'},
-    {id:'s4',categoryId:'c2',label:'Mobile Phones'},{id:'s5',categoryId:'c2',label:'Laptops'},{id:'s6',categoryId:'c2',label:'Cameras'},{id:'s7',categoryId:'c2',label:'TVs and Audio'},
-    {id:'s8',categoryId:'c3',label:'Apartments for Rent'},{id:'s9',categoryId:'c3',label:'Houses for Sale'},{id:'s10',categoryId:'c3',label:'Plots and Land'},
-    {id:'s11',categoryId:'c4',label:'IT and Software'},{id:'s12',categoryId:'c4',label:'Education and Tutoring'},{id:'s13',categoryId:'c4',label:'Home Services'},
-    {id:'s14',categoryId:'c5',label:'Sofas and Chairs'},{id:'s15',categoryId:'c5',label:'Beds and Wardrobes'},
-    {id:'s16',categoryId:'c6',label:'Mens Clothing'},{id:'s17',categoryId:'c6',label:'Womens Clothing'},{id:'s18',categoryId:'c6',label:'Footwear'},
-    {id:'s19',categoryId:'c7',label:'School Books'},{id:'s20',categoryId:'c7',label:'Coaching Materials'},
-    {id:'s21',categoryId:'c8',label:'Cricket'},{id:'s22',categoryId:'c8',label:'Cycling'}
-  ],
-  fields:[
-    {id:'f1',subcategoryId:'s1',label:'Mileage km',type:'number',options:''},
-    {id:'f2',subcategoryId:'s1',label:'Year of Manufacture',type:'number',options:''},
-    {id:'f3',subcategoryId:'s1',label:'Fuel Type',type:'select',options:'Petrol,Diesel,CNG,Electric,Hybrid'},
-    {id:'f4',subcategoryId:'s1',label:'Transmission',type:'select',options:'Manual,Automatic'},
-    {id:'f5',subcategoryId:'s4',label:'Storage',type:'select',options:'64GB,128GB,256GB,512GB'},
-    {id:'f6',subcategoryId:'s4',label:'RAM',type:'select',options:'4GB,6GB,8GB,12GB,16GB'},
-    {id:'f7',subcategoryId:'s5',label:'Processor',type:'select',options:'Intel i3,Intel i5,Intel i7,AMD Ryzen 5,AMD Ryzen 7,Apple M1,Apple M2'},
-    {id:'f8',subcategoryId:'s8',label:'BHK',type:'select',options:'1 BHK,2 BHK,3 BHK,4 BHK+'},
-    {id:'f9',subcategoryId:'s8',label:'Furnished',type:'select',options:'Furnished,Semi-Furnished,Unfurnished'},
-    {id:'f10',subcategoryId:'s8',label:'Bathroom Count',type:'number',options:''}
-  ]
+const DEFAULT_SCHEMA = (typeof ZZZ_SCHEMA !== 'undefined') ? JSON.parse(JSON.stringify(ZZZ_SCHEMA)) : {
+  categories: [],
+  subcategories: [],
+  fields: []
 };
 
 let _schemaLoaded = false;
