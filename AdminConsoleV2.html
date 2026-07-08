@@ -871,6 +871,14 @@
     <p class="modal-title" id="schemaModalTitle">Add Category</p>
     <input type="hidden" id="schemaItemType">
     <input type="hidden" id="schemaItemId">
+    <div id="schemaExplicitCatBlock" style="display:none;margin-bottom:16px;">
+      <label class="form-label">Choose Category</label>
+      <select id="schemaCategorySelect" class="form-select" onchange="schemaExplicitCatChanged()"></select>
+    </div>
+    <div id="schemaExplicitSubBlock" style="display:none;margin-bottom:16px;">
+      <label class="form-label">Choose Subcategory</label>
+      <select id="schemaSubcategorySelect" class="form-select"></select>
+    </div>
     <div style="margin-bottom:16px;">
       <label class="form-label">Label / Name</label>
       <input type="text" id="schemaLabel" class="form-input" placeholder="e.g. Vehicles">
@@ -2034,11 +2042,35 @@ function openSchemaModal(type, id=null) {
   document.getElementById('schemaFieldBlock').style.display = type==='field'    ? 'block' : 'none';
   document.getElementById('schemaDeleteBtn').style.display  = id               ? 'inline-flex' : 'none';
 
+  const catBlock = document.getElementById('schemaExplicitCatBlock');
+  const subBlock = document.getElementById('schemaExplicitSubBlock');
+  const catSel = document.getElementById('schemaCategorySelect');
+  const subSel = document.getElementById('schemaSubcategorySelect');
+  
+  catBlock.style.display = (type === 'subcategory' || type === 'field') ? 'block' : 'none';
+  subBlock.style.display = type === 'field' ? 'block' : 'none';
+
+  catSel.innerHTML = (_curSchema.categories||[]).map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  if (_activeCat) catSel.value = _activeCat;
+  
+  window.schemaExplicitCatChanged = () => {
+      subSel.innerHTML = (_curSchema.subcategories||[]).filter(s=>s.categoryId===catSel.value).map(s=>`<option value="${s.id}">${s.label}</option>`).join('');
+  };
+  schemaExplicitCatChanged();
+  if (_activeSub) subSel.value = _activeSub;
+
   let form = {label:'',icon:'',type:'text',options:''};
   if (id) {
     const arr = type==='category'?_curSchema.categories:type==='subcategory'?_curSchema.subcategories:_curSchema.fields;
     const item = arr.find(x=>x.id===id);
-    if (item) Object.assign(form, item);
+    if (item) {
+        Object.assign(form, item);
+        if (type === 'subcategory') { catSel.value = item.categoryId; schemaExplicitCatChanged(); }
+        if (type === 'field') {
+            const parentSub = (_curSchema.subcategories||[]).find(s=>s.id===item.subcategoryId);
+            if (parentSub) { catSel.value = parentSub.categoryId; schemaExplicitCatChanged(); subSel.value = parentSub.id; }
+        }
+    }
   }
   document.getElementById('schemaLabel').value   = form.label;
   document.getElementById('schemaIcon').value    = form.icon||'';
@@ -2058,19 +2090,26 @@ function saveSchemaItem() {
   if (!label) { showToast('Label is required','error'); return; }
 
   const arr = type==='category'?_curSchema.categories:type==='subcategory'?_curSchema.subcategories:_curSchema.fields;
+  const explicitCat = document.getElementById('schemaCategorySelect').value;
+  const explicitSub = document.getElementById('schemaSubcategorySelect').value;
+  
+  if (type === 'subcategory' && !explicitCat) { showToast('Please select a category', 'error'); return; }
+  if (type === 'field' && !explicitSub) { showToast('Please select a subcategory', 'error'); return; }
+
   if (id) {
     const idx = arr.findIndex(x=>x.id===id);
     if (idx>-1) {
       arr[idx].label=label;
       if (type==='category') arr[idx].icon=document.getElementById('schemaIcon').value;
-      if (type==='field')    { arr[idx].type=document.getElementById('schemaType').value; arr[idx].options=document.getElementById('schemaOptions').value; }
+      if (type==='subcategory') arr[idx].categoryId=explicitCat;
+      if (type==='field')    { arr[idx].subcategoryId=explicitSub; arr[idx].type=document.getElementById('schemaType').value; arr[idx].options=document.getElementById('schemaOptions').value; }
     }
   } else {
     const newId = type.charAt(0)+Date.now();
     const obj = {id:newId, label};
     if (type==='category')    obj.icon=document.getElementById('schemaIcon').value;
-    if (type==='subcategory') obj.categoryId=_activeCat;
-    if (type==='field')       { obj.subcategoryId=_activeSub; obj.type=document.getElementById('schemaType').value; obj.options=document.getElementById('schemaOptions').value; }
+    if (type==='subcategory') obj.categoryId=explicitCat;
+    if (type==='field')       { obj.subcategoryId=explicitSub; obj.type=document.getElementById('schemaType').value; obj.options=document.getElementById('schemaOptions').value; }
     arr.push(obj);
   }
   saveSchemaToDB();

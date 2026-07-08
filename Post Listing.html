@@ -747,8 +747,6 @@
         photoPreview.appendChild(div);
     });
     const max = (currentCategory && currentCategory.photoLimit) ? currentCategory.photoLimit : 8;
-    const MAX_BYTES  = 5 * 1024 * 1024;
-    const WARN_BYTES = 2 * 1024 * 1024;
 
     const oldBanner = document.getElementById('imgSizeWarnBanner');
     if (oldBanner) oldBanner.remove();
