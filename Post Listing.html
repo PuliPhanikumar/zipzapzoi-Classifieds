@@ -152,9 +152,10 @@
   
   <div class="mb-8">
     <div class="flex justify-between text-sm font-medium mb-2">
-      <span class="text-secondary">Step 1: Category</span>
-      <span class="text-gray-400" id="stepIndicator">Step 2: Details</span>
-      <span class="text-gray-400">Step 3: Review</span>
+      <span class="text-secondary font-bold" id="step1Indicator">Step 1: Category</span>
+      <span class="text-gray-400" id="step2Indicator">Step 2: Details</span>
+      <span class="text-gray-400" id="step3Indicator">Step 3: Media & Location</span>
+      <span class="text-gray-400" id="step4Indicator">Step 4: Review</span>
     </div>
     <div class="h-2 bg-gray-200 dark:bg-gray-800 dark:bg-gray-700 rounded-full overflow-hidden">
       <div id="progressBar" class="h-full bg-secondary w-1/3 transition-all duration-500"></div>
@@ -173,8 +174,9 @@
         </div>
     </div>
 
-    <div id="detailsSection" style="display:none" class="flex flex-col gap-6">
+    <div id="detailsSection" style="display:none" class="flex-col gap-6 w-full">
 
+      <div id="step2Wrapper" class="flex flex-col gap-6 w-full">
       <!-- ── CHARITY DECLARATION BANNER ── -->
       <div id="charityBanner" class="hidden bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-2xl p-5">
         <div class="flex items-start gap-3">
@@ -246,6 +248,12 @@
         </div>
       </div>
 
+        <div class="flex justify-end gap-4 mt-2">
+          <button type="button" onclick="goToStep3()" class="bg-secondary text-white px-8 py-3 rounded-xl font-bold hover:bg-secondary-dark transition-all flex items-center gap-2">Next: Media & Location <span class="material-symbols-outlined">arrow_forward</span></button>
+        </div>
+      </div>
+      
+      <div id="step3Wrapper" class="hidden flex-col gap-6 w-full">
       <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl p-8 border border-white/20 dark:border-white/5 relative overflow-hidden">
         <h3 class="text-xl font-bold mb-6">Confirm Location</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -437,6 +445,7 @@
     // FINAL DEFENSIVE FALLBACK
     if (!brain.categories || brain.categories.length === 0) {
         console.error("CRITICAL: Schema categories are totally empty!");
+        document.getElementById('catSection').innerHTML = <div class="bg-red-50 dark:bg-red-900/20 p-8 rounded-[2rem] border border-red-200 dark:border-red-800 text-center shadow-xl"><span class="material-symbols-outlined text-red-500 text-5xl mb-4">error</span><h3 class="text-red-700 dark:text-red-400 font-bold text-xl">Service Unavailable</h3><p class="text-red-600 dark:text-red-300 mt-2">Could not load the category system. Please refresh the page or try again later.</p></div>;
         return;
     }
     
@@ -614,11 +623,8 @@
     currentCategory = schema[key];
     
     // UI Updates
-    document.getElementById('catSection').classList.add('hidden'); // Hide category grid
-    detailsSection.style.display = 'flex';
-    progressBar.style.width = '66%';
-    document.getElementById('stepIndicator').className = "text-secondary font-bold";
     categoryTitle.textContent = `${currentCategory.label} Details`;
+    goToStep2();
     
     // Reset & Populate Subcategories
     subCategorySelect.innerHTML = '<option value="">Select Subcategory...</option>';
@@ -717,8 +723,10 @@
   // Change Category Handler
   changeCatBtn.addEventListener('click', () => {
     detailsSection.style.display = 'none';
-    document.getElementById('catSection').classList.remove('hidden');
-    progressBar.style.width = '33%';
+    step2.classList.add('hidden');
+    step2.classList.remove('flex');
+    step1.classList.remove('hidden');
+    updateProgressBar(1);
   });
 
   // --- 5.1 PHOTO RENDERER ---
@@ -843,6 +851,86 @@
   });
 
 
+  
+  // --- WIZARD NAVIGATION ---
+  const step1 = document.getElementById('catSection');
+  const step2 = document.getElementById('step2Wrapper');
+  const step3 = document.getElementById('step3Wrapper');
+  const step4 = document.getElementById('step4Wrapper');
+  const stepIndicators = [
+      document.getElementById('step1Indicator'),
+      document.getElementById('step2Indicator'),
+      document.getElementById('step3Indicator'),
+      document.getElementById('step4Indicator')
+  ];
+  
+  function updateProgressBar(step) {
+      progressBar.style.width = (step * 25) + '%';
+      stepIndicators.forEach((ind, idx) => {
+          if (idx < step) {
+              ind.className = "text-secondary font-bold";
+          } else {
+              ind.className = "text-gray-400";
+          }
+      });
+  }
+
+  function goToStep2() {
+      // Validate Step 1
+      if (!currentCategoryKey) { showToast('Please select a category', 'error'); return; }
+      step1.classList.add('hidden');
+      step2.classList.remove('hidden');
+      step2.classList.add('flex');
+      step3.classList.add('hidden');
+      step3.classList.remove('flex');
+      step4.classList.add('hidden');
+      step4.classList.remove('flex');
+      detailsSection.style.display = 'flex';
+      updateProgressBar(2);
+      window.scrollTo(0, 0);
+  }
+
+  function goToStep3() {
+      // Validate Step 2
+      const form = document.getElementById('listingForm');
+      if (!document.getElementById('subCategorySelect').value) { showToast('Please select a subcategory', 'error'); return; }
+      if (!document.getElementById('postTitle').value.trim()) { showToast('Please enter an ad title', 'error'); return; }
+      if (!document.getElementById('postDescription').value.trim()) { showToast('Please enter a description', 'error'); return; }
+      
+      step1.classList.add('hidden');
+      step2.classList.add('hidden');
+      step2.classList.remove('flex');
+      step3.classList.remove('hidden');
+      step3.classList.add('flex');
+      step4.classList.add('hidden');
+      step4.classList.remove('flex');
+      updateProgressBar(3);
+      window.scrollTo(0, 0);
+  }
+
+  function goToStep4() {
+      // Validate Step 3
+      if (!document.getElementById('stateSelect').value) { showToast('Please select a state', 'error'); return; }
+      if (!document.getElementById('citySelect').value) { showToast('Please select a city', 'error'); return; }
+      
+      step1.classList.add('hidden');
+      step2.classList.add('hidden');
+      step2.classList.remove('flex');
+      step3.classList.add('hidden');
+      step3.classList.remove('flex');
+      step4.classList.remove('hidden');
+      step4.classList.add('flex');
+      updateProgressBar(4);
+      generatePreviewInline();
+      window.scrollTo(0, 0);
+  }
+  
+  function generatePreviewInline() {
+      generatePreview(); // Uses existing preview logic
+      const contentHtml = document.getElementById('previewContent').innerHTML;
+      document.getElementById('inlinePreviewArea').innerHTML = contentHtml;
+  }
+
   // --- 6. PREVIEW & SUBMIT LOGIC ---
   const previewBtn = document.getElementById('previewBtn');
   const previewModal = document.getElementById('previewModal');
@@ -940,8 +1028,9 @@
     `;
 
     previewContent.innerHTML = html;
-    previewModal.classList.remove('hidden');
-    previewModal.classList.add('flex');
+    // Modal is skipped in new wizard flow
+    // previewModal.classList.remove('hidden');
+    // previewModal.classList.add('flex');
   }
   // --- 7. EDIT MODE LOGIC ---
   const urlParams = new URLSearchParams(window.location.search);
