@@ -347,14 +347,27 @@
         </div>
       </div>
 
-      <div class="flex flex-col sm:flex-row gap-4 pt-4">
-        <button type="button" id="previewBtn" class="flex-1 py-4 bg-gray-200 dark:bg-gray-800 dark:bg-gray-700 hover:bg-gray-300 dark:bg-gray-700 text-text-light dark:text-text-dark font-bold rounded-xl transition-all">
-          Preview Listing
-        </button>
-        <button type="submit" id="finalSubmitBtn" class="flex-[2] py-4 bg-secondary hover:bg-primary text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-1 flex justify-center items-center gap-2">
-          <span>Post Now</span>
-          <span class="material-symbols-outlined">send</span>
-        </button>
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+        <button type="button" onclick="goToStep2()" class="text-gray-600 dark:text-gray-300 font-bold px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all w-full sm:w-auto">Back: Details</button>
+        <button type="button" onclick="goToStep4()" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-10 rounded-xl shadow-md transition-all w-full sm:w-auto flex items-center justify-center gap-2">Next: Review Ad <span class="material-symbols-outlined">arrow_forward</span></button>
+      </div>
+    </div> <!-- End of step3Wrapper -->
+
+    <div id="step4Wrapper" class="hidden flex-col gap-6 w-full">
+      <!-- Modern Review Ad Box -->
+      <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl p-8 border border-white/20 dark:border-white/5 relative overflow-hidden">
+        <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+          <span class="bg-secondary/10 text-secondary p-1 rounded-md material-symbols-outlined">visibility</span>
+          Review Your Ad
+        </h3>
+        <div id="inlinePreviewArea" class="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+           <!-- Preview inserted here -->
+        </div>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+          <button type="button" onclick="goToStep3()" class="text-gray-600 dark:text-gray-300 font-bold px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all w-full sm:w-auto">Back: Media</button>
+          <button type="button" id="finalSubmitBtn" class="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-bold py-3 px-10 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all w-full sm:w-auto">Publish Ad Now ✨</button>
       </div>
 
     </div>
@@ -875,7 +888,7 @@
       });
   }
 
-  function goToStep2() {
+  window.goToStep2 = function() {
       // Validate Step 1
       if (!currentCategoryKey) { showToast('Please select a category', 'error'); return; }
       step1.classList.add('hidden');
@@ -890,7 +903,7 @@
       window.scrollTo(0, 0);
   }
 
-  function goToStep3() {
+  window.goToStep3 = function() {
       // Validate Step 2
       const form = document.getElementById('listingForm');
       if (!document.getElementById('subCategorySelect').value) { showToast('Please select a subcategory', 'error'); return; }
@@ -908,7 +921,7 @@
       window.scrollTo(0, 0);
   }
 
-  function goToStep4() {
+  window.goToStep4 = function() {
       // Validate Step 3
       if (!document.getElementById('stateSelect').value) { showToast('Please select a state', 'error'); return; }
       if (!document.getElementById('citySelect').value) { showToast('Please select a city', 'error'); return; }
@@ -932,7 +945,6 @@
   }
 
   // --- 6. PREVIEW & SUBMIT LOGIC ---
-  const previewBtn = document.getElementById('previewBtn');
   const previewModal = document.getElementById('previewModal');
   const previewContent = document.getElementById('previewContent');
   const closePreview = document.getElementById('closePreview');
@@ -1341,7 +1353,6 @@
   }
 
   // BIND EVENTS
-  previewBtn.addEventListener('click', generatePreview);
   finalSubmitBtn.addEventListener('click', handleSubmit);
   confirmPostBtn.addEventListener('click', handleSubmit);
   
