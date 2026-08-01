@@ -698,7 +698,7 @@
       if (!selectedPlan) { showToast('Please select a plan first', 'error'); return; }
 
       const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-      if (!user) { window.location.href = 'Login Page.html?redirect=Classifieds Plans.html'; return; }
+      if (!user) { window.location.href = 'Login Page.html?redirect=' + encodeURIComponent('Classifieds Plans.html'); return; }
 
       // Free plan — activate immediately
       if (selectedPlan.price === 0) {
@@ -737,23 +737,54 @@
       const originalPrice = selectedPlan.price;
       const discountAmount = Math.round(originalPrice * discount / 100);
       const finalAmount = originalPrice - discountAmount;
-      const amountInPaise = finalAmount * 100; // Razorpay needs paise (₹1 = 100 paise)
+      const amountInPaise = Math.round(finalAmount * 100); // Razorpay needs paise (₹1 = 100 paise)
 
       // ── Load key dynamically from admin config ──────────────────────────
       function getRazorpayCfg() {
         const saved = JSON.parse(localStorage.getItem('zzz_api_config') || '{}');
         return {
-          key:      saved.razorpayKey      || '',
+          key:      saved.razorpayKey      || 'rzp_live_SugQ3leLrB2iW6',
           currency: saved.razorpayCurrency || 'INR'
         };
       }
       const _rzpCfg = getRazorpayCfg();
+
+      const btn = document.getElementById('payBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">autorenew</span> Processing...';
+      }
+
+      // Fetch Order ID from backend
+      let rzpOrderId = '';
+      try {
+        const orderRes = await fetch('/api/create_order.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ amount: amountInPaise, currency: _rzpCfg.currency })
+        });
+        const orderData = await orderRes.json();
+        if (orderData.success && orderData.data && orderData.data.order_id) {
+          rzpOrderId = orderData.data.order_id;
+        } else {
+          throw new Error(orderData.error || 'Failed to generate order ID');
+        }
+      } catch (err) {
+        showToast('Payment initialization failed: ' + err.message, 'error');
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = 'Pay Securely';
+        }
+        return;
+      }
 
       // ── RAZORPAY STANDARD CHECKOUT ──────────────────────────────────────
       const options = {
         key: _rzpCfg.key,
         amount: amountInPaise,
         currency: _rzpCfg.currency,
+        order_id: rzpOrderId,
         name: 'ZipZapZoi Classifieds',
         description: `${selectedPlan.name} Plan — ${finalAmount === originalPrice ? '' : discount + '% OFF · '}₹${finalAmount}`,
         prefill: {
@@ -788,6 +819,11 @@
         modal: {
           ondismiss: function() {
             showToast('Payment cancelled. Your plan was not activated.', 'error');
+            const btn = document.getElementById('payBtn');
+            if(btn) {
+              btn.disabled = false;
+              btn.innerHTML = 'Pay Securely';
+            }
           },
           escape: true,
           animation: true
@@ -803,12 +839,26 @@
         return;
       }
 
-      const rzp = new Razorpay(options);
-      rzp.on('payment.failed', function(response) {
-        showToast('Payment failed: ' + (response.error.description || 'Unknown error'), 'error');
-        console.error('Razorpay Error:', response.error);
-      });
-      rzp.open();
+      try {
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', function(response) {
+          showToast('Payment failed: ' + (response.error.description || 'Unknown error'), 'error');
+          console.error('Razorpay Error:', response.error);
+          const btn = document.getElementById('payBtn');
+          if(btn) {
+            btn.disabled = false;
+            btn.innerHTML = 'Pay Securely';
+          }
+        });
+        rzp.open();
+      } catch(err) {
+        showToast('Payment gateway failed to initialize. Check config.', 'error');
+        const btn = document.getElementById('payBtn');
+        if(btn) {
+          btn.disabled = false;
+          btn.innerHTML = 'Pay Securely';
+        }
+      }
     }
 
     // Called after Razorpay confirms payment

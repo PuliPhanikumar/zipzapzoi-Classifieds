@@ -40,6 +40,11 @@ function getProfile(string $id): void {
     $lStmt = $db->prepare("SELECT COUNT(*) FROM listings WHERE user_id = ? AND status = 'active'");
     $lStmt->execute([$userId]);
     $profile['active_listings'] = (int)$lStmt->fetchColumn();
+    
+    // Total listings count
+    $tStmt = $db->prepare("SELECT COUNT(*) FROM listings WHERE user_id = ?");
+    $tStmt->execute([$userId]);
+    $profile['total_listings'] = (int)$tStmt->fetchColumn();
 
     // Quota info (only for self)
     if ($id === 'me' && $user) {

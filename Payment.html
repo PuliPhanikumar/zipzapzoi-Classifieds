@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -470,6 +470,8 @@
   <!-- Scripts -->
   <script src="js/schema.js"></script>
   <script src="js/utils.js"></script>
+  <!-- Razorpay Payment Gateway SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>
     // ═══════════════════════════════════════════
     //  INIT — Read plan from URL / sessionStorage
@@ -653,7 +655,7 @@
         return;
       }
 
-      const amountInPaise = totalAmt * 100; // ₹1 = 100 paise
+      const amountInPaise = Math.round(totalAmt * 100); // ₹1 = 100 paise
 
       // Method ordering based on user tab selection
       const methodSeq = activeTab.includes('upi')     ? ['block.upi', 'block.card', 'block.netbanking', 'block.wallet']
@@ -672,7 +674,7 @@
 
       if (!rzpKey) {
         const _rzpTestCfg = JSON.parse(localStorage.getItem('zzz_api_config') || '{}');
-        rzpKey = _rzpTestCfg.razorpayKey || '';
+        rzpKey = _rzpTestCfg.razorpayKey || 'rzp_live_SugQ3leLrB2iW6';
       }
 
       if (!rzpKey) {
@@ -680,13 +682,33 @@
         return;
       }
 
+      // Fetch Order ID from backend
+      let rzpOrderId = '';
+      try {
+        const orderRes = await fetch('/api/create_order.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ amount: amountInPaise, currency: 'INR' })
+        });
+        const orderData = await orderRes.json();
+        if (orderData.success && orderData.data && orderData.data.order_id) {
+          rzpOrderId = orderData.data.order_id;
+        } else {
+          throw new Error(orderData.error || 'Failed to generate order ID');
+        }
+      } catch (err) {
+        showToast('Payment initialization failed: ' + err.message, 'error');
+        return;
+      }
+
       const options = {
         key: rzpKey,
         amount: amountInPaise,
         currency: 'INR',
+        order_id: rzpOrderId,
         name: 'ZipZapZoi Classifieds',
         description: `${selectedPlan.name} Plan — ₹${totalAmt}`,
-        // order_id: 'order_XXXX', // Generate server-side for production
         prefill: {
           name:    currentUser.name    || '',
           email:   currentUser.email   || '',
@@ -727,12 +749,17 @@
         }
       };
 
-      const rzp = new Razorpay(options);
-      rzp.on('payment.failed', function(response) {
-        showToast('Payment failed: ' + (response.error.description || 'Please try again.'), 'error');
-        console.error('[Razorpay] Payment failed:', response.error);
-      });
-      rzp.open();
+      try {
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', function(response) {
+          showToast('Payment failed: ' + (response.error.description || 'Please try again.'), 'error');
+          console.error('[Razorpay] Payment failed:', response.error);
+        });
+        rzp.open();
+      } catch (err) {
+        showToast('Payment gateway failed to initialize. Check configuration.', 'error');
+        console.error(err);
+      }
     }
 
     async function completePayment(razorpayResponse) {

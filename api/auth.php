@@ -480,6 +480,11 @@ function getUserById(int $id): ?array {
 }
 
 function sanitizeUser(array $u): array {
+    $db = getDB();
+    $stmt = $db->prepare('SELECT COUNT(*) FROM listings WHERE user_id = ?');
+    $stmt->execute([(int)$u['id']]);
+    $totalListings = (int)$stmt->fetchColumn();
+
     return [
         'id'            => (int)$u['id'],
         'name'          => $u['name'],
@@ -492,6 +497,7 @@ function sanitizeUser(array $u): array {
         'is_verified'   => (bool)$u['is_verified'],
         'created_at'    => $u['created_at'],
         'referral_code' => $u['referral_code'] ?? null,
+        'total_listings'=> $totalListings,
     ];
 }
 
