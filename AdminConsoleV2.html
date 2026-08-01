@@ -1521,15 +1521,15 @@ async function loadPaymentGateway() {
   if (!data?.success) return;
   const cfg = data.data;
   const set = (id,v) => { const el=document.getElementById(id); if(el&&v) el.value=v; };
-  set('rzpKey',      cfg.razorpay_key_id);
-  set('rzpSecret',   cfg.razorpay_key_secret);
+  set('rzpKey',      cfg.razorpay_key);
+  set('rzpSecret',   cfg.razorpay_secret);
   set('rzpCurrency', cfg.razorpay_currency||'INR');
   set('rzpEnv',      cfg.razorpay_env||'live');
 }
 async function savePaymentGateway() {
   const r = await apiPost('/api/admin/settings.php', {settings:{
-    razorpay_key_id:     document.getElementById('rzpKey')?.value||'',
-    razorpay_key_secret: document.getElementById('rzpSecret')?.value||'',
+    razorpay_key:        document.getElementById('rzpKey')?.value||'',
+    razorpay_secret:     document.getElementById('rzpSecret')?.value||'',
     razorpay_currency:   document.getElementById('rzpCurrency')?.value||'INR',
     razorpay_env:        document.getElementById('rzpEnv')?.value||'live'
   }});
@@ -2157,8 +2157,8 @@ async function loadSettingsUI() {
   set('cfgSupportEmail',  cfg.support_email);
   set('cfgWhatsapp',      cfg.whatsapp_number);
   // Razorpay
-  set('cfgRzpKey',    cfg.razorpay_key_id);
-  set('cfgRzpSecret', cfg.razorpay_key_secret);
+  set('cfgRzpKey',    cfg.razorpay_key);
+  set('cfgRzpSecret', cfg.razorpay_secret);
   // Security
   set('cfgTimeout', cfg.session_timeout_mins||60);
   set('cfgIPs',     cfg.ip_allowlist||'');
@@ -2204,8 +2204,8 @@ async function saveSiteIdentity() {
 }
 async function saveRazorpaySettings() {
   const r = await apiPost('/api/admin/settings.php', {settings:{
-    razorpay_key_id:     document.getElementById('cfgRzpKey')?.value||'',
-    razorpay_key_secret: document.getElementById('cfgRzpSecret')?.value||''
+    razorpay_key:        document.getElementById('cfgRzpKey')?.value||'',
+    razorpay_secret:     document.getElementById('cfgRzpSecret')?.value||''
   }});
   if (r?.success) { showToast('Razorpay keys saved!'); logAction('RZP_UPDATE','Razorpay keys updated'); }
   else showToast(r?.error||'Error','error');
