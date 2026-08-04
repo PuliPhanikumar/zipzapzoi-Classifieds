@@ -721,8 +721,11 @@
           user_id:  currentUser.id,
           discount: discountPct + '%'
         },
-        callback_url: window.location.origin + `/api/razorpay_callback.php?action=plan&plan_id=${planId}&plan_name=${encodeURIComponent(selectedPlan.name)}&amount=${totalAmt}&ads=${selectedPlan.ads}&days=${selectedPlan.days}`,
         theme: { color: '#019863' },
+        handler: function(response) {
+          // Payment confirmed by Razorpay — process server-side
+          completePayment(response);
+        },
         modal: {
           ondismiss: function() {
             showToast('Payment cancelled. Your plan was not activated.', 'error');

@@ -1498,7 +1498,6 @@
         description: `Renew: ${_renewListingTitle.substring(0, 50)}`,
         prefill:     { name: user.name || '', email: user.email || '', contact: user.phone || '' },
         notes:       { listing_id: _renewListingId, type: 'renewal' },
-        callback_url: window.location.origin + `/api/razorpay_callback.php?action=renewal&listing_id=${_renewListingId}&amount=${RENEWAL_AMT}`,
         theme:       { color: '#ef4444' },
         handler: async function(response) {
           try {
