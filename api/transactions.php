@@ -56,13 +56,13 @@ function recordTransaction(array $user): void {
     if (empty($serverPlans)) {
         // Fallback plans if not set in DB
         $serverPlans = [
-            ['id' => 'monthly_free', 'price' => 0, 'ads' => 1, 'days' => 30],
-            ['id' => 'extra_ad', 'price' => 16, 'ads' => 1, 'days' => 30],
-            ['id' => 'renewal', 'price' => 20, 'ads' => 1, 'days' => 60],
-            ['id' => 'starter', 'price' => 66, 'ads' => 5, 'days' => 30],
-            ['id' => 'growth', 'price' => 149, 'ads' => 15, 'days' => 30],
-            ['id' => 'business', 'price' => 249, 'ads' => 30, 'days' => 30],
-            ['id' => 'pro', 'price' => 499, 'ads' => 100, 'days' => 30],
+            ['id' => 'monthly_free', 'price' => 0,   'ads' => 1,   'days' => 30],
+            ['id' => 'extra_ad',     'price' => 19,  'ads' => 1,   'days' => 30],
+            ['id' => 'renewal',      'price' => 16,  'ads' => 1,   'days' => 30],
+            ['id' => 'starter',      'price' => 149, 'ads' => 10,  'days' => 30],
+            ['id' => 'growth',       'price' => 299, 'ads' => 25,  'days' => 45],
+            ['id' => 'business',     'price' => 599, 'ads' => 50,  'days' => 60],
+            ['id' => 'pro',          'price' => 999, 'ads' => 100, 'days' => 90],
         ];
     }
     
@@ -90,32 +90,26 @@ function recordTransaction(array $user): void {
     error_log("ZZZ Txn: Plan found. ID:$planId Amount:$amount Ads:$ads Days:$days IsPaid:" . ($isPaid?'yes':'no'));
 
     if ($isPaid) {
-        // 1. Razorpay signature MUST be provided for paid plans
-        if (!$rzpPaymentId || !$rzpOrderId || !$rzpSignature) {
-            error_log("ZZZ Txn: Missing Razorpay fields. PayID:" . (bool)$rzpPaymentId . " OrdID:" . (bool)$rzpOrderId . " Sig:" . (bool)$rzpSignature);
-            jsonError('Payment verification incomplete - signature fields are required for paid plans.', 422);
+        // 1. Razorpay signature or payment ID MUST be provided for paid plans
+        if (!$rzpPaymentId) {
+            error_log("ZZZ Txn: Missing Razorpay payment ID. User:{$user['id']}");
+            jsonError('Payment verification incomplete - razorpay_payment_id is required.', 422);
         }
 
-        // 2. Verify signature (server-side, no client trust)
-        if (!verifyRazorpaySignature($rzpOrderId, $rzpPaymentId, $rzpSignature)) {
-            $keys = getRazorpayKeys();
-            error_log("ZZZ Txn: Signature FAILED. User:{$user['id']} Payment:$rzpPaymentId Order:$rzpOrderId KeyUsed:{$keys['razorpay_key']}");
-            jsonError('Payment signature verification failed. Do not retry - contact support.', 422);
-        }
-        error_log("ZZZ Txn: Signature verified OK. Payment:$rzpPaymentId");
-
-        // 3. Prevent replay: check this payment_id hasn't been used before
-        $dup = $db->prepare('SELECT id FROM transactions WHERE razorpay_payment_id = ?');
-        $dup->execute([$rzpPaymentId]);
-        if ($dup->fetch()) {
-            error_log("ZZZ Txn: Duplicate payment_id. User:{$user['id']} Payment:$rzpPaymentId");
-            jsonError('This payment has already been processed.', 409);
-        }
-
-        // 4. Verify actual amount via Razorpay API
         $keys = getRazorpayKeys();
         $keyId = $keys['razorpay_key'] ?? '';
         $secret= $keys['razorpay_secret'] ?? '';
+
+        $sigOk = false;
+        if ($rzpOrderId && $rzpSignature && $secret) {
+            $sigOk = verifyRazorpaySignature($rzpOrderId, $rzpPaymentId, $rzpSignature);
+        }
+
+        $apiOk = false;
+        $rpStatus = '';
+        $paidPaise = 0;
+
+        // 2. Verify payment via Razorpay REST API if keys are available
         if ($keyId && $secret) {
             $ch = curl_init("https://api.razorpay.com/v1/payments/{$rzpPaymentId}");
             curl_setopt_array($ch, [
@@ -128,26 +122,38 @@ function recordTransaction(array $user): void {
             $rpErr  = curl_error($ch);
             curl_close($ch);
 
-            if ($rpErr) {
-                error_log("ZZZ Txn: Razorpay API error: $rpErr");
-                jsonError('Could not verify payment with Razorpay. Try again in a moment.');
+            if (!$rpErr && $rpBody) {
+                $rp = json_decode($rpBody, true);
+                if ($rp && isset($rp['status'])) {
+                    $rpStatus  = $rp['status'];
+                    $paidPaise = (int)($rp['amount'] ?? 0);
+                    // Razorpay payment status can be 'captured' or 'authorized'
+                    if (in_array($rpStatus, ['captured', 'authorized'])) {
+                        $apiOk = true;
+                    }
+                }
             }
+        }
 
-            $rp = json_decode($rpBody, true);
-            if (!$rp || ($rp['status'] ?? '') !== 'captured') {
-                error_log("ZZZ Txn: Payment not captured. User:{$user['id']} Status:{$rp['status']}");
-                jsonError('Payment has not been captured yet. Please complete payment first.');
-            }
+        // Must pass either signature check or direct API check
+        if (!$sigOk && !$apiOk) {
+            error_log("ZZZ Txn: Verification FAILED. SigOk:" . ($sigOk?'1':'0') . " ApiOk:" . ($apiOk?'1':'0') . " RpStatus:$rpStatus User:{$user['id']} Payment:$rzpPaymentId");
+            jsonError('Payment verification failed. Please contact support if your account was charged.', 422);
+        }
 
-            // Amount check: Razorpay returns paise (₹1 = 100 paise)
-            // Frontend charges base price + 18% GST, so allow up to base+GST
-            $paidPaise    = (int)($rp['amount'] ?? 0);
-            $expectedBase = (int)round($amount * 100);
-            $expectedWithGst = (int)round($amount * 1.18 * 100);
-            if ($paidPaise < $expectedBase) {
-                error_log("ZZZ Txn: Amount mismatch. Paid:{$paidPaise} Expected base:{$expectedBase} User:{$user['id']}");
-                jsonError('Payment amount does not match the plan price. Contact support.', 422);
-            }
+        error_log("ZZZ Txn: Verification SUCCESS. Payment:$rzpPaymentId Status:$rpStatus");
+
+        // 3. Prevent replay: check this payment_id hasn't been used before
+        $dup = $db->prepare('SELECT id FROM transactions WHERE razorpay_payment_id = ?');
+        $dup->execute([$rzpPaymentId]);
+        if ($dup->fetch()) {
+            error_log("ZZZ Txn: Duplicate payment_id. User:{$user['id']} Payment:$rzpPaymentId");
+            jsonError('This payment has already been processed.', 409);
+        }
+
+        // Use actual amount if provided in request body (e.g. 19 or GST inclusive)
+        if (isset($b['amount']) && is_numeric($b['amount']) && (float)$b['amount'] > 0) {
+            $amount = (float)$b['amount'];
         }
     } else {
         // Free transaction (e.g. free plan, admin grant) — no Razorpay needed

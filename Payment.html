@@ -802,7 +802,7 @@
       try {
         const res  = await fetch('/api/transactions.php', { credentials: 'include' });
         const data = await res.json();
-        const orders = (data.success && data.data && data.data.transactions) ? data.data.transactions : [];
+        const orders = (data.success && Array.isArray(data.data)) ? data.data : (data.success && data.data && data.data.transactions ? data.data.transactions : []);
 
         if (orders.length === 0) {
           list.innerHTML = `
@@ -871,7 +871,7 @@
         fetch('/api/transactions.php', { credentials: 'include' })
           .then(r => r.json())
           .then(data => {
-            const orders = (data.success && data.data && data.data.transactions) ? data.data.transactions : [];
+            const orders = (data.success && Array.isArray(data.data)) ? data.data : (data.success && data.data && data.data.transactions ? data.data.transactions : []);
             const listEl = document.getElementById('fullOrderList');
             if (!listEl) return;
 
