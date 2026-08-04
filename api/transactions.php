@@ -43,6 +43,8 @@ function recordTransaction(array $user): void {
     $rzpOrderId   = clean($b['razorpay_order_id']   ?? '');
     $rzpSignature = clean($b['razorpay_signature']  ?? '');
 
+    error_log("ZZZ Txn: POST received. User:{$user['id']} Plan:$planId PayID:$rzpPaymentId OrderID:$rzpOrderId SigLen:" . strlen($rzpSignature));
+
     if (!$planId) jsonError('plan_id is required.');
 
     $db = getDB();
@@ -72,7 +74,10 @@ function recordTransaction(array $user): void {
         }
     }
     
-    if (!$planDef) jsonError('Invalid plan selected.');
+    if (!$planDef) {
+        error_log("ZZZ Txn: Invalid plan '$planId'. Available: " . implode(',', array_column($serverPlans, 'id')));
+        jsonError('Invalid plan selected. Plan ID: ' . $planId);
+    }
     
     $amount = (float)$planDef['price'];
     $ads    = (int)$planDef['ads'];
@@ -82,19 +87,22 @@ function recordTransaction(array $user): void {
 
     // ── Determine if this is a PAID transaction ───────────────────
     $isPaid = ($amount > 0);
+    error_log("ZZZ Txn: Plan found. ID:$planId Amount:$amount Ads:$ads Days:$days IsPaid:" . ($isPaid?'yes':'no'));
 
     if ($isPaid) {
         // 1. Razorpay signature MUST be provided for paid plans
         if (!$rzpPaymentId || !$rzpOrderId || !$rzpSignature) {
-            error_log("ZZZ Txn: Missing Razorpay fields for paid plan. User:{$user['id']} Plan:$planId");
-            jsonError('Payment verification incomplete — signature fields are required for paid plans.', 422);
+            error_log("ZZZ Txn: Missing Razorpay fields. PayID:" . (bool)$rzpPaymentId . " OrdID:" . (bool)$rzpOrderId . " Sig:" . (bool)$rzpSignature);
+            jsonError('Payment verification incomplete - signature fields are required for paid plans.', 422);
         }
 
         // 2. Verify signature (server-side, no client trust)
         if (!verifyRazorpaySignature($rzpOrderId, $rzpPaymentId, $rzpSignature)) {
-            error_log("ZZZ Txn: Signature mismatch. User:{$user['id']} Payment:$rzpPaymentId");
-            jsonError('Payment signature verification failed. Do not retry — contact support.', 422);
+            $keys = getRazorpayKeys();
+            error_log("ZZZ Txn: Signature FAILED. User:{$user['id']} Payment:$rzpPaymentId Order:$rzpOrderId KeyUsed:{$keys['razorpay_key']}");
+            jsonError('Payment signature verification failed. Do not retry - contact support.', 422);
         }
+        error_log("ZZZ Txn: Signature verified OK. Payment:$rzpPaymentId");
 
         // 3. Prevent replay: check this payment_id hasn't been used before
         $dup = $db->prepare('SELECT id FROM transactions WHERE razorpay_payment_id = ?');

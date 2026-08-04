@@ -859,7 +859,7 @@
       // ALWAYS redirect to success — payment is confirmed by Razorpay
       // Record transaction in background, don't block redirect on failure
       try {
-        await fetch('/api/transactions.php', {
+        const txnRes = await fetch('/api/transactions.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -874,8 +874,14 @@
             razorpay_signature:  response.razorpay_signature   || ''
           })
         });
+        const txnData = await txnRes.json();
+        if (!txnData.success) {
+          console.error('[ZZZ] Transaction record FAILED:', txnData.error, '| PayID:', response.razorpay_payment_id, '| Plan:', selectedPlan.id);
+        } else {
+          console.log('[ZZZ] Transaction recorded OK:', txnData.data);
+        }
       } catch (e) {
-        console.error('Transaction record error (payment still succeeded):', e);
+        console.error('[ZZZ] Transaction record network error:', e);
       }
 
       if (pendingListing) {
