@@ -26,9 +26,13 @@ $signature  = $_POST['razorpay_signature']  ?? $_GET['razorpay_signature'] ?? ''
 $action = $_GET['action'] ?? '';
 $error  = $_POST['error'] ?? $_GET['error'] ?? '';
 
-// If payment failed or user cancelled, redirect back to dashboard
+// If payment failed or user cancelled, redirect back to the correct page
 if ($error || !$payment_id) {
-    jsRedirect("/Seller Dashboard.html?error=payment_failed");
+    if ($action === 'plan') {
+        jsRedirect("/Payment.html?error=payment_failed");
+    } else {
+        jsRedirect("/Seller Dashboard.html?error=payment_failed");
+    }
 }
 
 if ($action === 'plan') {
