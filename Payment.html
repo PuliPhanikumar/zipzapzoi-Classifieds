@@ -722,26 +722,7 @@
           discount: discountPct + '%'
         },
         callback_url: window.location.origin + `/api/razorpay_callback.php?action=plan&plan_id=${planId}&plan_name=${encodeURIComponent(selectedPlan.name)}&amount=${totalAmt}&ads=${selectedPlan.ads}&days=${selectedPlan.days}`,
-        redirect: true,
         theme: { color: '#019863' },
-        config: {
-          display: {
-            preferences: { show_default_blocks: true },
-            sequence: methodSeq,
-            blocks: {
-              upi:        { name: 'UPI (GPay / PhonePe / Paytm)', instruments: [{ method: 'upi' }] },
-              card:       { name: 'Debit / Credit Card',          instruments: [{ method: 'card' }] },
-              netbanking: { name: 'Net Banking',                   instruments: [{ method: 'netbanking' }] },
-              wallet:     { name: 'Wallets',                       instruments: [{ method: 'wallet' }] }
-            }
-          }
-        },
-        handler: function(response) {
-          // ✅ Razorpay payment confirmed
-          // response.razorpay_payment_id is always available
-          // response.razorpay_order_id & razorpay_signature available only if order_id was passed
-          completePayment(response);
-        },
         modal: {
           ondismiss: function() {
             showToast('Payment cancelled. Your plan was not activated.', 'error');

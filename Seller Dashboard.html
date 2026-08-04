@@ -1372,8 +1372,6 @@
         description: `${_boostDays}-Day Featured Boost · ₹${basePrice}`,
         prefill: { name: user.name || '', email: user.email || '', contact: user.phone || '' },
         notes: { listing_id: _boostListingId, boost_days: _boostDays },
-        callback_url: window.location.origin + `/api/razorpay_callback.php?action=boost&listing_id=${_boostListingId}&amount=${totalAmount}&days=${_boostDays}`,
-        redirect: true,
         theme: { color: '#019863' },
         handler: async function(response) {
           // Payment succeeded — call boost API
@@ -1501,7 +1499,6 @@
         prefill:     { name: user.name || '', email: user.email || '', contact: user.phone || '' },
         notes:       { listing_id: _renewListingId, type: 'renewal' },
         callback_url: window.location.origin + `/api/razorpay_callback.php?action=renewal&listing_id=${_renewListingId}&amount=${RENEWAL_AMT}`,
-        redirect: true,
         theme:       { color: '#ef4444' },
         handler: async function(response) {
           try {
