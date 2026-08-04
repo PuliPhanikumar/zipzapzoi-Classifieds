@@ -752,7 +752,7 @@
       const btn = document.getElementById('payBtn');
       if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">autorenew</span> Processing...';
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">autorenew</span> Creating Order...';
       }
 
       // Fetch Order ID from backend
@@ -777,6 +777,10 @@
           btn.innerHTML = 'Pay Securely';
         }
         return;
+      }
+      
+      if (btn) {
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">autorenew</span> Opening Razorpay...';
       }
 
       // ── RAZORPAY STANDARD CHECKOUT ──────────────────────────────────────
@@ -853,8 +857,12 @@
           }
         });
         rzp.open();
+        if (btn) {
+          btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">autorenew</span> Awaiting Payment...';
+        }
       } catch(err) {
         showToast('Payment gateway failed to initialize. Check config.', 'error');
+        console.error('Razorpay Init Error:', err);
         const btn = document.getElementById('payBtn');
         if(btn) {
           btn.disabled = false;
