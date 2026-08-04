@@ -739,15 +739,11 @@
       const finalAmount = originalPrice - discountAmount;
       const amountInPaise = Math.round(finalAmount * 100); // Razorpay needs paise (₹1 = 100 paise)
 
-      // ── Load key dynamically from admin config ──────────────────────────
-      function getRazorpayCfg() {
+      // ── Load currency from admin config ─────────────────────────────────
+      const _rzpCurrency = (() => {
         const saved = JSON.parse(localStorage.getItem('zzz_api_config') || '{}');
-        return {
-          key:      saved.razorpayKey      || 'rzp_live_SugQ3leLrB2iW6',
-          currency: saved.razorpayCurrency || 'INR'
-        };
-      }
-      const _rzpCfg = getRazorpayCfg();
+        return saved.razorpayCurrency || 'INR';
+      })();
 
       const btn = document.getElementById('payBtn');
       if (btn) {
@@ -755,18 +751,20 @@
         btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">autorenew</span> Creating Order...';
       }
 
-      // Fetch Order ID from backend
+      // Fetch Order ID AND the exact key used by server from backend
       let rzpOrderId = '';
+      let rzpKey = '';
       try {
         const orderRes = await fetch('/api/create_order.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ amount: amountInPaise, currency: _rzpCfg.currency })
+          body: JSON.stringify({ amount: amountInPaise, currency: _rzpCurrency })
         });
         const orderData = await orderRes.json();
         if (orderData.success && orderData.data && orderData.data.order_id) {
           rzpOrderId = orderData.data.order_id;
+          rzpKey     = orderData.data.razorpay_key; // always same key used to create order
         } else {
           throw new Error(orderData.error || 'Failed to generate order ID');
         }
@@ -785,9 +783,9 @@
 
       // ── RAZORPAY STANDARD CHECKOUT ──────────────────────────────────────
       const options = {
-        key: _rzpCfg.key,
+        key: rzpKey,
         amount: amountInPaise,
-        currency: _rzpCfg.currency,
+        currency: _rzpCurrency,
         order_id: rzpOrderId,
         name: 'ZipZapZoi Classifieds',
         description: `${selectedPlan.name} Plan — ${finalAmount === originalPrice ? '' : discount + '% OFF · '}₹${finalAmount}`,

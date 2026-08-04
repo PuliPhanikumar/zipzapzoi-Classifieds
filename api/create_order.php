@@ -47,4 +47,4 @@ if ($httpCode !== 200 || !isset($data['id'])) {
     jsonError('Failed to create Razorpay order: ' . ($data['error']['description'] ?? 'Unknown error'), 500);
 }
 
-jsonOk(['order_id' => $data['id']]);
+jsonOk(['order_id' => $data['id'], 'razorpay_key' => $key]);

@@ -1334,15 +1334,13 @@
         return;
       }
 
-      const rzpCfg = JSON.parse(localStorage.getItem('zzz_api_config') || '{}');
-      const rzpKey = rzpCfg.razorpayKey || 'rzp_live_SugQ3leLrB2iW6';
-
       const btn = document.getElementById('boostPayBtn');
       btn.disabled = true;
       btn.textContent = 'Opening Payment…';
 
-      // Fetch Order ID from backend
+      // Fetch Order ID AND exact key from backend in one call
       let rzpOrderId = '';
+      let rzpKey = '';
       try {
         const orderRes = await fetch('/api/create_order.php', {
           method: 'POST',
@@ -1353,6 +1351,7 @@
         const orderData = await orderRes.json();
         if (orderData.success && orderData.data && orderData.data.order_id) {
           rzpOrderId = orderData.data.order_id;
+          rzpKey     = orderData.data.razorpay_key;
         } else {
           throw new Error(orderData.error || 'Failed to generate order ID');
         }
@@ -1460,15 +1459,13 @@
         return;
       }
 
-      const rzpCfg = JSON.parse(localStorage.getItem('zzz_api_config') || '{}');
-      const rzpKey = rzpCfg.razorpayKey || 'rzp_live_SugQ3leLrB2iW6';
-
       const btn = document.getElementById('renewPayBtn');
       btn.disabled = true;
       btn.textContent = 'Opening Payment…';
 
-      // Fetch Order ID from backend
+      // Fetch Order ID AND exact key from backend in one call
       let rzpOrderId = '';
+      let rzpKey = '';
       try {
         const orderRes = await fetch('/api/create_order.php', {
           method: 'POST',
@@ -1479,6 +1476,7 @@
         const orderData = await orderRes.json();
         if (orderData.success && orderData.data && orderData.data.order_id) {
           rzpOrderId = orderData.data.order_id;
+          rzpKey     = orderData.data.razorpay_key;
         } else {
           throw new Error(orderData.error || 'Failed to generate order ID');
         }
