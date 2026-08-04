@@ -480,7 +480,12 @@
         <button onclick="savePaymentGateway()" class="btn btn-primary"><span class="material-symbols-outlined" style="font-size:16px;">save</span>Save Gateway Settings</button>
       </div>
       <div class="card" style="padding:0;overflow:hidden;">
-        <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;background:#f8fafc;font-weight:800;">Transaction Ledger</div>
+        <div style="padding:14px 20px;border-bottom:1px solid #f1f5f9;background:#f8fafc;font-weight:800;display:flex;align-items:center;justify-content:space-between;">
+          <span>Transaction Ledger</span>
+          <button onclick="syncRazorpayPayments()" class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:4px;font-size:12px;">
+            <span class="material-symbols-outlined" style="font-size:16px;">sync</span>Sync Razorpay Payments
+          </button>
+        </div>
         <div style="overflow-x:auto;">
           <table class="tbl"><thead><tr><th>Txn ID</th><th>User</th><th>Plan</th><th>Amount</th><th>Status</th><th>Date</th><th style="text-align:right;">Action</th></tr></thead>
           <tbody id="paymentsTableBody"><tr><td colspan="7"><div class="empty-state">Loading...</div></td></tr></tbody></table>
@@ -1559,6 +1564,17 @@ async function refundPayment(id) {
     if (r?.success) { showToast('Refund initiated!'); loadPayments(); }
     else showToast(r?.error||'Error processing refund','error');
   });
+}
+async function syncRazorpayPayments() {
+  showToast('Syncing live payments from Razorpay...', 'info');
+  const r = await apiPost('/api/admin/payments.php', {action:'sync'});
+  if (r?.success) {
+    showToast(r.message || 'Live payments synced!');
+    loadPayments();
+    if (typeof loadStats === 'function') loadStats();
+  } else {
+    showToast(r?.error || 'Error syncing payments', 'error');
+  }
 }
 
 // ─────────────────────────────────────────────────────────
