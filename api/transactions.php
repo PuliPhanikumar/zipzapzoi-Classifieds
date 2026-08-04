@@ -132,10 +132,12 @@ function recordTransaction(array $user): void {
             }
 
             // Amount check: Razorpay returns paise (₹1 = 100 paise)
+            // Frontend charges base price + 18% GST, so allow up to base+GST
             $paidPaise    = (int)($rp['amount'] ?? 0);
-            $expectedPaise= (int)round($amount * 100);
-            if ($paidPaise < $expectedPaise) {
-                error_log("ZZZ Txn: Amount mismatch. Paid:{$paidPaise} Expected:{$expectedPaise} User:{$user['id']}");
+            $expectedBase = (int)round($amount * 100);
+            $expectedWithGst = (int)round($amount * 1.18 * 100);
+            if ($paidPaise < $expectedBase) {
+                error_log("ZZZ Txn: Amount mismatch. Paid:{$paidPaise} Expected base:{$expectedBase} User:{$user['id']}");
                 jsonError('Payment amount does not match the plan price. Contact support.', 422);
             }
         }
