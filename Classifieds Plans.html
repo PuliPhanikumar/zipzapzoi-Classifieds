@@ -797,7 +797,7 @@
           user_id:  user.id,
           discount: discount + '%'
         },
-        callback_url: `/api/razorpay_callback.php?action=plan&plan_id=${selectedPlan.id}&plan_name=${encodeURIComponent(selectedPlan.name)}&amount=${finalAmount}&ads=${selectedPlan.ads}&days=${selectedPlan.days}`,
+        callback_url: window.location.origin + `/api/razorpay_callback.php?action=plan&plan_id=${selectedPlan.id}&plan_name=${encodeURIComponent(selectedPlan.name)}&amount=${finalAmount}&ads=${selectedPlan.ads}&days=${selectedPlan.days}`,
         redirect: true,
         theme: { color: '#019863' },
         config: {

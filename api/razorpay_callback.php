@@ -3,23 +3,32 @@
  * ZipZapZoi - Razorpay Callback Handler
  * POST /api/razorpay_callback.php
  * 
- * Handles POST redirects from Razorpay (especially on Mobile devices
- * where iframe fallback causes a POST to the callback_url).
+ * Handles redirects from Razorpay (iframe overlay or mobile redirect).
+ * Uses window.top.location.href to break out of any iframe restrictions.
  */
 require_once __DIR__ . '/config.php';
 
+function jsRedirect($url) {
+    echo "<!DOCTYPE html><html><head><title>Redirecting...</title></head><body style='background:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;'>";
+    echo "<h2>Processing Payment...</h2>";
+    echo "<script>window.top.location.href = '" . addslashes($url) . "';</script>";
+    echo "</body></html>";
+    exit;
+}
+
 $user = requireAuth();
 
-$payment_id = $_POST['razorpay_payment_id'] ?? '';
-$order_id   = $_POST['razorpay_order_id']   ?? '';
-$signature  = $_POST['razorpay_signature']  ?? '';
+// Razorpay sends via POST if redirect:false, or GET if redirect:true
+$payment_id = $_POST['razorpay_payment_id'] ?? $_GET['razorpay_payment_id'] ?? '';
+$order_id   = $_POST['razorpay_order_id']   ?? $_GET['razorpay_order_id'] ?? '';
+$signature  = $_POST['razorpay_signature']  ?? $_GET['razorpay_signature'] ?? '';
 
 $action = $_GET['action'] ?? '';
+$error  = $_POST['error'] ?? $_GET['error'] ?? '';
 
 // If payment failed or user cancelled, redirect back to dashboard
-if (isset($_POST['error']) || !$payment_id) {
-    header("Location: /Seller Dashboard.html?error=payment_failed");
-    exit;
+if ($error || !$payment_id) {
+    jsRedirect("/Seller Dashboard.html?error=payment_failed");
 }
 
 if ($action === 'plan') {
@@ -29,30 +38,12 @@ if ($action === 'plan') {
     $ads       = (int)($_GET['ads'] ?? 0);
     $days      = (int)($_GET['days'] ?? 0);
     
-    // Simulate the JSON body that /api/transactions.php expects
-    $_SERVER['REQUEST_METHOD'] = 'POST';
-    $_POST = [];
-    $input_json = json_encode([
-        'plan_id' => $plan_id,
-        'plan_name' => $plan_name,
-        'amount' => $amount,
-        'ads' => $ads,
-        'days' => $days,
-        'razorpay_payment_id' => $payment_id,
-        'razorpay_order_id' => $order_id,
-        'razorpay_signature' => $signature
-    ]);
-    
-    // Mock getBody() by overriding the function? No, we can't redefine functions.
-    // Instead, let's just do the verification right here!
-    
     $keys = getRazorpayKeys();
     $secret = $keys['razorpay_secret'] ?? '';
     
     $expected = hash_hmac('sha256', $order_id . '|' . $payment_id, $secret);
     if (!hash_equals($expected, $signature)) {
-        header("Location: /Payment.html?error=signature_mismatch");
-        exit;
+        jsRedirect("/Payment.html?error=signature_mismatch");
     }
     
     $db = getDB();
@@ -67,8 +58,7 @@ if ($action === 'plan') {
     )->execute([$user['id'], $plan_id, $plan_name, $amount, $payment_id]);
     
     // Redirect to Success Receipt
-    header("Location: /Payment.html?success=1&txn=" . urlencode($payment_id) . "&plan=" . urlencode($plan_id) . "&amount=" . urlencode($amount));
-    exit;
+    jsRedirect("/Payment.html?success=1&txn=" . urlencode($payment_id) . "&plan=" . urlencode($plan_id) . "&amount=" . urlencode($amount));
 
 } elseif ($action === 'boost') {
     $listing_id = (int)($_GET['listing_id'] ?? 0);
@@ -79,8 +69,7 @@ if ($action === 'plan') {
     $secret = $keys['razorpay_secret'] ?? '';
     $expected = hash_hmac('sha256', $order_id . '|' . $payment_id, $secret);
     if (!hash_equals($expected, $signature)) {
-        header("Location: /Seller Dashboard.html?error=signature_mismatch");
-        exit;
+        jsRedirect("/Seller Dashboard.html?error=signature_mismatch");
     }
     
     $db = getDB();
@@ -96,8 +85,7 @@ if ($action === 'plan') {
          VALUES (?, 'boost', 'Ad Boost', ?, 'boost', ?)"
     )->execute([$user['id'], $amount, $payment_id]);
     
-    header("Location: /Seller Dashboard.html?boost_success=1");
-    exit;
+    jsRedirect("/Seller Dashboard.html?boost_success=1");
 
 } elseif ($action === 'renewal') {
     $listing_id = (int)($_GET['listing_id'] ?? 0);
@@ -107,8 +95,7 @@ if ($action === 'plan') {
     $secret = $keys['razorpay_secret'] ?? '';
     $expected = hash_hmac('sha256', $order_id . '|' . $payment_id, $secret);
     if (!hash_equals($expected, $signature)) {
-        header("Location: /Seller Dashboard.html?error=signature_mismatch");
-        exit;
+        jsRedirect("/Seller Dashboard.html?error=signature_mismatch");
     }
     
     $db = getDB();
@@ -121,9 +108,8 @@ if ($action === 'plan') {
          VALUES (?, 'renewal', 'Ad Renewal', ?, 'renewal', ?)"
     )->execute([$user['id'], $amount, $payment_id]);
     
-    header("Location: /Seller Dashboard.html?renew_success=1");
-    exit;
+    jsRedirect("/Seller Dashboard.html?renew_success=1");
 }
 
-header("Location: /Seller Dashboard.html");
-exit;
+jsRedirect("/Seller Dashboard.html");
+
