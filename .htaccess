@@ -1,4 +1,6 @@
 <IfModule mod_rewrite.c>
+# Pass Authorization header to PHP
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
 RewriteEngine On
 
 # Redirect HTTP to HTTPS

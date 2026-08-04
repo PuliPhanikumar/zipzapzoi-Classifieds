@@ -857,11 +857,12 @@
     async function onPaymentSuccess(response, user, amount) {
       const btn = document.getElementById('payBtn');
       // ALWAYS redirect to success — payment is confirmed by Razorpay
-      // Record transaction in background, don't block redirect on failure
+      const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token');
+      const headers = { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}) };
       try {
         const txnRes = await fetch('/api/transactions.php', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: headers,
           credentials: 'include',
           body: JSON.stringify({
             plan_id:             selectedPlan.id,

@@ -10,11 +10,16 @@ const API = (() => {
 
   // ── Core fetch helper ─────────────────────────────────────────
   async function req(endpoint, options = {}) {
+    const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token');
     const defaults = {
       credentials: 'include',  // send session cookie automatically
-      headers: {},
+      headers: token ? { 'Authorization': 'Bearer ' + token } : {},
     };
-    const merged = { ...defaults, ...options };
+    const merged = {
+      ...defaults,
+      ...options,
+      headers: { ...defaults.headers, ...(options.headers || {}) }
+    };
     if (merged.body && typeof merged.body === 'object') {
       merged.headers['Content-Type'] = 'application/json';
       merged.body = JSON.stringify(merged.body);

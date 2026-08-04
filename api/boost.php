@@ -101,7 +101,7 @@ if ($keyId && $secret) {
     }
 
     $rp = json_decode($rpBody, true);
-    if (!$rp || ($rp['status'] ?? '') !== 'captured') {
+    if (!$rp || !in_array($rp['status'] ?? '', ['captured', 'authorized'])) {
         jsonError('Payment has not been captured yet. Complete payment first.');
     }
     if ((int)($rp['amount'] ?? 0) < $expectedPaise) {

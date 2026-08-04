@@ -108,17 +108,20 @@ function jsonError(string $message, int $code = 400): void {
 
 // ── Auth: Get Current User From Session Cookie OR Bearer Token ────────
 function getCurrentUser(): ?array {
-    // Check Authorization: Bearer <token> header first (mobile app)
-    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    // Check Authorization: Bearer <token> header first (mobile app & web client)
+    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
     if (empty($authHeader) && function_exists('apache_request_headers')) {
         $headers = apache_request_headers();
-        $authHeader = $headers['Authorization'] ?? '';
+        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
     }
-    if (!empty($authHeader) && str_starts_with($authHeader, 'Bearer ')) {
-        $token = trim(substr($authHeader, 7));
-    } else {
-        // Fallback to cookie (desktop web)
-        $token = $_COOKIE[SESSION_COOKIE] ?? '';
+    
+    $token = '';
+    if (!empty($authHeader) && preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+        $token = trim($matches[1]);
+    }
+    if (empty($token)) {
+        // Fallback to cookie (desktop web) or request parameter
+        $token = $_COOKIE[SESSION_COOKIE] ?? $_REQUEST['auth_token'] ?? $_REQUEST['token'] ?? '';
     }
 
     if (!$token || strlen($token) < 32) return null;
