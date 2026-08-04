@@ -29,7 +29,7 @@ function listPayments(): void {
                 t.razorpay_payment_id, t.razorpay_order_id, t.status, t.created_at,
                 u.name AS user_name, u.email AS user_email
          FROM transactions t
-         JOIN users u ON u.id = t.user_id
+         LEFT JOIN users u ON u.id = t.user_id
          ORDER BY t.created_at DESC
          LIMIT 500"
     );
