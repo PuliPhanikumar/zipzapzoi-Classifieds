@@ -402,6 +402,27 @@
     ══════════════════════════════════════════ -->
     <div id="tab-users" class="tab-panel">
 
+      <!-- ── Section 0: Pending Verifications ── -->
+      <div class="card" id="pendingVerificationsSection" style="padding:0;overflow:hidden;margin-bottom:20px;display:none;border-top:3px solid #eab308;">
+        <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:12px;background:#fefce8;">
+          <div style="flex:1;">
+            <div style="font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px;">
+              <span class="material-symbols-outlined" style="color:#eab308;font-size:20px;">verified</span>
+              Pending ID Verifications
+              <span id="pendingVerificationsBadge" style="background:#eab308;color:#fff;border-radius:99px;font-size:11px;padding:2px 8px;"></span>
+            </div>
+            <div style="font-size:12px;color:#a16207;margin-top:2px;">Users who have uploaded their Govt ID and are waiting for Trusted Seller approval.</div>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="tbl"><thead><tr>
+            <th>User</th><th>Email</th><th>Phone</th><th>ID Document</th><th>Requested On</th>
+            <th style="text-align:right;">Actions</th>
+          </tr></thead>
+          <tbody id="pendingVerificationsTableBody"></tbody></table>
+        </div>
+      </div>
+
       <!-- ── Section 1: Regular Users ── -->
       <div class="card" style="padding:0;overflow:hidden;margin-bottom:20px;">
         <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:12px;background:#f8fafc;">
@@ -821,6 +842,13 @@
               <p class="text-muted">Require OTP on admin login</p>
             </div>
             <label class="toggle"><input type="checkbox" id="cfg2FA"><span class="toggle-slider"></span></label>
+          </label>
+          <label style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;">
+            <div>
+              <p style="font-size:13px;font-weight:700;">Require Manual ID Verification</p>
+              <p class="text-muted">If ON, users must upload a Govt ID and be manually approved to get the Trusted Seller badge. If OFF, they get it automatically upon phone OTP.</p>
+            </div>
+            <label class="toggle"><input type="checkbox" id="cfgRequireManualVerification"><span class="toggle-slider"></span></label>
           </label>
           <div style="padding:14px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;">
             <label class="form-label">Session Timeout (Minutes)</label>
@@ -1357,9 +1385,34 @@ async function loadUsers() {
 
   const regularUsers = allUsers.filter(function(u){ return u.role === 'user'; });
   const adminUsers   = allUsers.filter(function(u){ return u.role === 'admin' || u.role === 'super_admin'; });
+  const pendingUsers = regularUsers.filter(function(u){ return u.verification_status === 'pending'; });
 
   const cntBadge = document.getElementById('userCountBadge');
   if (cntBadge) cntBadge.textContent = regularUsers.length > 0 ? regularUsers.length : '';
+
+  const pendingSec = document.getElementById('pendingVerificationsSection');
+  const pendingBody = document.getElementById('pendingVerificationsTableBody');
+  const pendingBadge = document.getElementById('pendingVerificationsBadge');
+  if (pendingSec && pendingBody && pendingBadge) {
+    if (pendingUsers.length > 0) {
+      pendingSec.style.display = 'block';
+      pendingBadge.textContent = pendingUsers.length;
+      pendingBody.innerHTML = pendingUsers.map(function(u) {
+        return '<tr>' +
+          '<td><div style="font-weight:700;font-size:13px;">' + esc(u.name) + '</div></td>' +
+          '<td style="font-size:12px;color:#64748b;">' + esc(u.email) + '</td>' +
+          '<td style="font-size:12px;">' + esc(u.phone || '-') + '</td>' +
+          '<td><a href="' + esc(u.verification_id_url) + '" target="_blank" class="btn btn-ghost btn-sm" style="color:#2563eb;"><span class="material-symbols-outlined" style="font-size:14px;margin-right:4px;">visibility</span>View ID</a></td>' +
+          '<td style="font-size:11px;color:#94a3b8;">' + fmt(u.created_at) + '</td>' +
+          '<td style="text-align:right;white-space:nowrap;">' +
+            '<button onclick="approveVerification(' + u.id + ')" class="btn btn-sm btn-primary" style="background:#16a34a;border-color:#16a34a;margin-right:4px;">Approve</button>' +
+            '<button onclick="rejectVerification(' + u.id + ')" class="btn btn-sm btn-danger">Reject</button>' +
+          '</td></tr>';
+      }).join('');
+    } else {
+      pendingSec.style.display = 'none';
+    }
+  }
 
   // Render regular users
   const tbody = document.getElementById('usersTableBody');
@@ -1414,10 +1467,24 @@ async function toggleUserActive(id, active) {
 async function toggleUserTrusted(id, isTrusted) {
   const actionName = isTrusted ? 'trust' : 'untrust';
   const r = await apiPut('/api/admin/users.php', {id, action: actionName});
-  if (r?.success) { showToast(isTrusted ? 'Seller marked as Trusted!' : 'Trusted status removed.', 'success'); }
+  if (r?.success) { showToast(isTrusted ? 'Seller marked as Trusted!' : 'Trusted status removed.', 'success'); loadUsers(); }
   else showToast(r?.error || 'Error updating trusted status', 'error');
 }
-// approveVerification / rejectVerification removed — users self-verify via registration OTP.
+
+async function approveVerification(id) {
+  if(!confirm('Are you sure you want to approve this ID and grant Trusted Seller status?')) return;
+  const r = await apiPut('/api/admin/users.php', {id, action: 'trust'});
+  if (r?.success) { showToast('ID Approved and user is now Trusted!', 'success'); loadUsers(); }
+  else showToast(r?.error || 'Error approving', 'error');
+}
+
+async function rejectVerification(id) {
+  if(!confirm('Are you sure you want to reject this ID verification?')) return;
+  const r = await apiPut('/api/admin/users.php', {id, action: 'reject_verification'});
+  if (r?.success) { showToast('Verification rejected.', 'success'); loadUsers(); }
+  else showToast(r?.error || 'Error rejecting', 'error');
+}
+
 function openAddUserModal(defaultRole='user') {
   document.getElementById('userModalTitle').textContent = defaultRole === 'admin' ? 'Add Admin' : 'Add User';
   document.getElementById('editUserId').value='';
@@ -2182,6 +2249,8 @@ async function loadSettingsUI() {
   set('cfgIPs',     cfg.ip_allowlist||'');
   const el2fa = document.getElementById('cfg2FA');
   if (el2fa) el2fa.checked = cfg.security_2fa==='1';
+  const elManualVerify = document.getElementById('cfgRequireManualVerification');
+  if (elManualVerify) elManualVerify.checked = cfg.require_manual_verification==='1';
   // AI moderation
   set('autoRejectKeywords', cfg.ai_blacklist);
   const elSpam = document.getElementById('antiSpamToggle');
@@ -2269,6 +2338,7 @@ async function saveSecuritySettings() {
   const r = await apiPost('/api/admin/settings.php', {settings:{
     session_timeout_mins: document.getElementById('cfgTimeout')?.value||'60',
     security_2fa:         document.getElementById('cfg2FA')?.checked?'1':'0',
+    require_manual_verification: document.getElementById('cfgRequireManualVerification')?.checked?'1':'0',
     ip_allowlist:         document.getElementById('cfgIPs')?.value||''
   }});
   if (r?.success) { showToast('Security policy enforced!'); logAction('SECURITY_UPDATE','Security settings saved'); }

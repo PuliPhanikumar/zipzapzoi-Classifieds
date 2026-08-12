@@ -28,8 +28,8 @@ function listUsers(): void {
     $db     = getDB();
     $search = '%' . ($_GET['search'] ?? '') . '%';
     $stmt   = $db->prepare(
-        "SELECT u.id, u.name, u.email, u.phone, u.role, u.is_verified, u.is_active,
-                u.city, u.state, u.created_at,
+        "SELECT u.id, u.name, u.email, u.phone, u.role, u.is_verified, u.is_active, u.trusted_seller,
+                u.city, u.state, u.created_at, u.verification_status, u.verification_id_url,
                 (SELECT COUNT(*) FROM listings l WHERE l.user_id = u.id) AS active_listings
          FROM users u
          WHERE (u.name LIKE :q OR u.email LIKE :q2)
@@ -110,14 +110,19 @@ function updateUser(array $admin): void {
             jsonOk(['message' => 'User unbanned.']);
 
         case 'trust':
-            $db->prepare('UPDATE users SET trusted_seller=1 WHERE id=?')->execute([$id]);
+            $db->prepare("UPDATE users SET trusted_seller=1, verification_status='verified', verification_id_url=NULL WHERE id=?")->execute([$id]);
             adminLog($admin, 'TRUST_SELLER', "User ID: $id");
             jsonOk(['message' => 'User marked as Trusted Seller.']);
             
         case 'untrust':
-            $db->prepare('UPDATE users SET trusted_seller=0 WHERE id=?')->execute([$id]);
+            $db->prepare("UPDATE users SET trusted_seller=0, verification_status='unverified' WHERE id=?")->execute([$id]);
             adminLog($admin, 'UNTRUST_SELLER', "User ID: $id");
             jsonOk(['message' => 'User Trusted Seller status removed.']);
+            
+        case 'reject_verification':
+            $db->prepare("UPDATE users SET verification_status='rejected', verification_id_url=NULL WHERE id=?")->execute([$id]);
+            adminLog($admin, 'REJECT_VERIFICATION', "User ID: $id");
+            jsonOk(['message' => 'Verification rejected.']);
 
         case 'verify':
             $db->prepare('UPDATE users SET is_verified=1 WHERE id=?')->execute([$id]);

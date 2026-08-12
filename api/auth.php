@@ -131,6 +131,12 @@ function handleVerifyOtp(array $b): void {
         )->execute([$meta['name'], $email, $meta['phone'], $meta['password'], 'user', $newReferralCode, $referredById]);
         $userId = (int) $db->lastInsertId();
 
+        // Check verification mode
+        $cfg = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'require_manual_verification'")->fetchColumn();
+        if ($cfg !== '1') {
+            $db->prepare("UPDATE users SET trusted_seller = 1, verification_status = 'verified' WHERE id = ?")->execute([$userId]);
+        }
+
         // Grant new-user free quota (3 ads)
         $expiry = date('Y-m-d H:i:s', strtotime('+30 days'));
         
@@ -523,6 +529,8 @@ function sanitizeUser(array $u): array {
         'city'          => $u['city'],
         'state'         => $u['state'],
         'is_verified'   => (bool)$u['is_verified'],
+        'trusted_seller'=> !empty($u['trusted_seller']),
+        'verification_status'=> $u['verification_status'] ?? 'unverified',
         'created_at'    => $u['created_at'],
         'referral_code' => $u['referral_code'] ?? null,
         'total_listings'=> $totalListings,

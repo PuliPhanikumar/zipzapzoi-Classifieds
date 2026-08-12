@@ -51,7 +51,7 @@ function saveSettings(array $admin): void {
         'razorpay_key', 'razorpay_secret', 'razorpay_currency', 'razorpay_env',
         'plan_config', 'featured_prices', 'max_images_per_listing',
         'site_name', 'site_tagline', 'support_email', 'otp_expiry_mins',
-        'security_2fa', 'ip_allowlist', 'ai_blacklist', 'auto_approve_listings',
+        'security_2fa', 'ip_allowlist', 'ai_blacklist', 'auto_approve_listings', 'require_manual_verification',
     ];
 
     $stmt = $db->prepare(

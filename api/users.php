@@ -7,6 +7,10 @@
  */
 require_once __DIR__ . '/config.php';
 
+try {
+    getDB()->exec("ALTER TABLE users ADD COLUMN verification_status ENUM('unverified', 'pending', 'rejected', 'verified') DEFAULT 'unverified', ADD COLUMN verification_id_url VARCHAR(255) DEFAULT NULL");
+} catch (\PDOException $e) {}
+
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = $_GET['id'] ?? 'me';
 $action = $_GET['action'] ?? '';
@@ -17,6 +21,7 @@ elseif ($method === 'POST') {
     if ($action === 'notify') handleNotify();
     elseif ($action === 'report') handleReport();
     elseif ($action === 'review') handleReview();
+    elseif ($action === 'verify_identity') handleVerifyIdentity();
     else jsonError('Unknown action', 400);
 }
 else jsonError('Method not allowed', 405);
@@ -224,5 +229,46 @@ function handleReview(): void {
         jsonError('Failed to save review. Please try again.');
     }
 
-    jsonOk(['message' => 'Review posted successfully!']);
+    jsonOk(['message' => 'Review submitted successfully.']);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// POST ?action=verify_identity - Upload Govt ID to request verification
+// ─────────────────────────────────────────────────────────────────────
+function handleVerifyIdentity(): void {
+    $me = requireAuth();
+    if ($me['trusted_seller']) jsonError('You are already verified.');
+
+    if (!isset($_FILES['id_photo']) || $_FILES['id_photo']['error'] !== UPLOAD_ERR_OK) {
+        jsonError('Please upload a valid image of your Govt ID.');
+    }
+
+    $file = $_FILES['id_photo'];
+    $allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!in_array($file['type'], $allowed)) {
+        jsonError('Invalid image format. Allowed: JPG, PNG, WEBP.');
+    }
+
+    if ($file['size'] > 5 * 1024 * 1024) {
+        jsonError('Image is too large. Max size is 5MB.');
+    }
+
+    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $filename = 'id_' . $me['id'] . '_' . time() . '.' . $ext;
+    
+    // Ensure the uploads directory exists
+    $uploadDir = __DIR__ . '/../uploads/ids';
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+    
+    $dest = $uploadDir . '/' . $filename;
+    if (!move_uploaded_file($file['tmp_name'], $dest)) {
+        jsonError('Failed to save the image.');
+    }
+
+    $url = '/uploads/ids/' . $filename;
+
+    getDB()->prepare("UPDATE users SET verification_status = 'pending', verification_id_url = ? WHERE id = ?")
+           ->execute([$url, $me['id']]);
+
+    jsonOk(['message' => 'Verification submitted.', 'verification_status' => 'pending']);
 }
