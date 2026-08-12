@@ -566,7 +566,7 @@ async function submitReport() {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          user_id: sellerId,
+          reported_user_id: sellerId,   // was 'user_id' — fixed to match users.php handleReport
           reason,
           details,
           type: 'user'

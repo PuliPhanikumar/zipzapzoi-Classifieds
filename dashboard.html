@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -293,12 +293,27 @@
     // Theme Icon Sync
     if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
 
-    // Universal Auth Binding
-    (function(){
+    // ── Auth: verify session via API, fallback to localStorage for instant paint ──
+    (async function(){
       const navArea = document.getElementById('navAuthArea');
-      const userData = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      // Instant paint from localStorage (may be stale)
+      let userData = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      // Async verify with server — updates if stale / clears if session expired
+      try {
+        const r = await fetch('/api/auth.php?action=me', { credentials: 'include' });
+        const d = await r.json();
+        if (d.success && d.data) {
+          userData = d.data;
+          localStorage.setItem('zzz_user', JSON.stringify(userData));
+        } else {
+          // Session expired — clear stale data but keep on this page
+          localStorage.removeItem('zzz_user');
+          userData = null;
+        }
+      } catch(e) { /* API unavailable — use localStorage */ }
 
       if(userData){
+
         // Logged In
         document.getElementById('welcomeTitle').textContent = `Welcome back, ${userData.name.split(' ')[0]}!`;
         

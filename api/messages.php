@@ -76,9 +76,15 @@ function getThread(array $user, int $otherId): void {
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     $msgs = $stmt->fetchAll();
-    // Mark received messages as read
-    $db->prepare('UPDATE messages SET is_read = 1 WHERE to_user_id = ? AND from_user_id = ?')
-       ->execute([(int)$user['id'], $otherId]);
+    // Mark received messages as read — scoped to this specific thread
+    // (include listing_id filter when available to avoid marking unrelated conversations)
+    if ($lid) {
+        $db->prepare('UPDATE messages SET is_read = 1 WHERE to_user_id = ? AND from_user_id = ? AND listing_id = ?')
+           ->execute([(int)$user['id'], $otherId, $lid]);
+    } else {
+        $db->prepare('UPDATE messages SET is_read = 1 WHERE to_user_id = ? AND from_user_id = ?')
+           ->execute([(int)$user['id'], $otherId]);
+    }
     jsonOk($msgs);
 }
 

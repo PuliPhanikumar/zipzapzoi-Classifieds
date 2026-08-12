@@ -134,6 +134,16 @@ function handleReport(): void {
     $details    = clean($b['details'] ?? '');
     $db         = getDB();
 
+    // Validate: must report someone or something
+    if (!$reportedId && !$listingId) {
+        jsonError('Must specify a user or listing to report.');
+    }
+
+    // Cannot report yourself
+    if ($reportedId && $reportedId === (int)$user['id']) {
+        jsonError('You cannot report yourself.');
+    }
+
     try {
         $db->exec(
             'CREATE TABLE IF NOT EXISTS user_reports (
@@ -147,14 +157,25 @@ function handleReport(): void {
                 created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )'
         );
+
+        // Duplicate check: prevent same user reporting same target twice
+        $dup = $db->prepare(
+            'SELECT id FROM user_reports WHERE reported_by = ? AND reported_user <=> ? AND listing_id <=> ?'
+        );
+        $dup->execute([(int)$user['id'], $reportedId ?: null, $listingId ?: null]);
+        if ($dup->fetch()) {
+            jsonError('You have already submitted a report for this item or user.', 409);
+        }
+
         $db->prepare(
             'INSERT INTO user_reports (reported_by, reported_user, listing_id, reason, details) VALUES (?, ?, ?, ?, ?)'
         )->execute([(int)$user['id'], $reportedId ?: null, $listingId ?: null, $reason, $details]);
     } catch (\Exception $e) {
         error_log('user_reports error: ' . $e->getMessage());
+        jsonError('Could not submit report. Please try again.', 500);
     }
 
-    jsonOk(['message' => 'Report submitted. Thank you.']);
+    jsonOk(['message' => 'Report submitted. Our team will review shortly.']);
 }
 
 // ─────────────────────────────────────────────────────────────────────

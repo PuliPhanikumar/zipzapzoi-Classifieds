@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="en"><head>
+<html lang="en-IN"><head>
   <script>
     if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
@@ -18,6 +18,10 @@
   <meta property="og:image" content="https://www.zipzapzoi.com/images/default-share.png"/>
   <meta name="robots" content="index, follow"/>
   <link rel="canonical" href="https://zipzapzoi.com/"/>
+  <!-- JSON-LD: Organization + WebSite (Google Sitelinks Searchbox + Brand Knowledge Panel) -->
+  <script type="application/ld+json">
+  [{"@context":"https://schema.org","@type":"Organization","name":"ZipZapZoi","url":"https://www.zipzapzoi.com","logo":"https://www.zipzapzoi.com/images/logo.png","description":"India fastest growing free classified ads platform. Buy, sell and find anything near you.","address":{"@type":"PostalAddress","addressCountry":"IN"}},{"@context":"https://schema.org","@type":"WebSite","name":"ZipZapZoi Classifieds","url":"https://www.zipzapzoi.com","potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://www.zipzapzoi.com/SearchResult.html?q={search_term_string}"},"query-input":"required name=search_term_string"}}]
+  </script>
 <title>ZipZapZoi - Buy, Sell & Rent Locally | Free Classifieds</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&amp;display=swap" rel="stylesheet"/>
@@ -273,19 +277,6 @@
   }
   .animate-logo-bouncy {
     animation: bounce-gentle 3s infinite ease-in-out;
-  }
-</style>
-
-
-
-<link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet"/>
-</head>
-<body class="font-display overflow-hidden bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
-<div class="relative flex h-dvh w-full flex-col items-center justify-center bg-gradient-to-r from-sky-blue via-hot-pink to-sunny-yellow bg-[length:400%_400%] animate-gradient-bg group/design-root overflow-hidden perspective">
-<div class="absolute inset-0 opacity-50">
-<span class="material-symbols-outlined absolute text-7xl text-white animate-fall-1 icon-shadow" style="left: 10%; animation-duration: 8s; animation-delay: -2s;">restaurant</span>
-<span class="material-symbols-outlined absolute text-6xl text-white animate-fall-2 icon-shadow" style="left: 20%; animation-duration: 11s; animation-delay: -5s;">local_shipping</span>
-<span class="material-symbols-outlined absolute text-8xl text-white animate-fall-3 icon-shadow" style="left: 30%; animation-duration: 9s; animation-delay: 0s;">sell</span>
 <span class="material-symbols-outlined absolute text-7xl text-white animate-fall-1 icon-shadow" style="left: 40%; animation-duration: 13s; animation-delay: -7s;">menu_book</span>
 <span class="material-symbols-outlined absolute text-6xl text-white animate-fall-2 icon-shadow" style="left: 50%; animation-duration: 7s; animation-delay: -3s;">directions_car</span>
 <span class="material-symbols-outlined absolute text-8xl text-white animate-fall-3 icon-shadow" style="left: 60%; animation-duration: 10s; animation-delay: -1s;">map</span>

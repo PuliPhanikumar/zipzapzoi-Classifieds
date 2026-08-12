@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -468,11 +468,24 @@
     // ═══════════════════════════════════════════
     //  INIT — Read plan from URL / sessionStorage
     // ═══════════════════════════════════════════
-    const currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-    if (!currentUser) {
-      window.location.href = 'Login Page.html?redirect=Payment.html';
-      throw new Error('Not authenticated');
+    // Session verify via API (not stale localStorage)
+    let currentUser = null;
+    async function initUser() {
+      try {
+        const meRes = await fetch('/api/auth.php?action=me', { credentials: 'include' });
+        const meData = await meRes.json();
+        if (meData.success && meData.data) {
+          currentUser = meData.data;
+          localStorage.setItem('zzz_user', JSON.stringify(currentUser));
+        }
+      } catch(e) {}
+      if (!currentUser) currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      if (!currentUser) {
+        window.location.href = 'Login Page.html?redirect=Payment.html';
+        throw new Error('Not authenticated');
+      }
     }
+    initUser();
 
     // Read plan from URL params
     const params = new URLSearchParams(window.location.search);
@@ -697,9 +710,13 @@
           vpa:     activeTab.includes('upi') ? (document.getElementById('upiId').value || '') : ''
         },
         notes: {
-          plan_id:  planId,
-          user_id:  currentUser.id,
-          discount: discountPct + '%'
+          action:    'plan',
+          plan_id:   planId,
+          plan_name: selectedPlan.name || planId,
+          user_id:   String(currentUser.id),
+          ads:       String(selectedPlan.ads || 0),
+          days:      String(selectedPlan.days || 30),
+          discount:  discountPct + '%'
         },
         theme: { color: '#019863' },
         handler: function(response) {

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -1004,7 +1004,7 @@
       }
       
       printWindow.document.write(`
-        <html>
+        <html lang="en-IN">
           <head>
             <title>Print Flyer - ${title}</title>
             <style>
@@ -1363,7 +1363,13 @@
         name: 'ZipZapZoi — Ad Boost',
         description: `${_boostDays}-Day Featured Boost · ₹${basePrice}`,
         prefill: { name: user.name || '', email: user.email || '', contact: user.phone || '' },
-        notes: { listing_id: _boostListingId, boost_days: _boostDays },
+        notes: {
+          action:     'boost',
+          listing_id: String(_boostListingId),
+          boost_days: String(_boostDays),
+          days:       String(_boostDays),
+          user_id:    String(currentUser ? currentUser.id : (user ? user.id : ''))
+        },
         theme: { color: '#019863' },
         handler: async function(response) {
           // Payment succeeded — call boost API
@@ -1488,7 +1494,12 @@
         name:        'ZipZapZoi — Ad Renewal',
         description: `Renew: ${_renewListingTitle.substring(0, 50)}`,
         prefill:     { name: user.name || '', email: user.email || '', contact: user.phone || '' },
-        notes:       { listing_id: _renewListingId, type: 'renewal' },
+        notes: {
+          action:     'renewal',
+          listing_id: String(_renewListingId),
+          days:       '30',
+          user_id:    String(currentUser ? currentUser.id : (user ? user.id : ''))
+        },
         theme:       { color: '#ef4444' },
         handler: async function(response) {
           try {

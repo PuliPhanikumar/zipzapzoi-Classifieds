@@ -5,10 +5,7 @@
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../fcm_helper.php';
 
-$user = requireAuth();
-if ($user['role'] !== 'admin' && $user['role'] !== 'super_admin') {
-    jsonError('Unauthorized', 403);
-}
+$user = requireAdmin();  // SECURITY: was requireAuth() — any user could broadcast
 
 $b     = getBody();
 $title = trim($b['title'] ?? '');

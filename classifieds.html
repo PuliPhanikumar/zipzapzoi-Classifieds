@@ -439,7 +439,7 @@
       let currentPage = 1;
       let allListings = [];
       let favIds = new Set();   // populated from API — keeps heart states accurate
-      const currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      let currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
 
       // =====================================
       // 2. INITIALIZATION
@@ -464,7 +464,21 @@
             }
           }).catch(e => console.log('Schema refresh error:', e));
         }, 50);
-      });
+
+        // Non-blocking session verify — runs after paint
+        fetch('/api/auth.php?action=me', { credentials: 'include' }).then(r => r.json()).then(d => {
+          if (d.success && d.data) {
+            currentUser = d.data;
+            localStorage.setItem('zzz_user', JSON.stringify(currentUser));
+            renderAuth();
+            loadFavIds();
+          } else if (!d.success) {
+            currentUser = null;
+            localStorage.removeItem('zzz_user');
+            renderAuth();
+          }
+        }).catch(() => {});
+      }); // end DOMContentLoaded
 
       // Storage sync removed — data now comes from PHP API
 
