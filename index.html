@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en"><head>
   <script>
     if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -243,15 +243,7 @@
     }
   </style>
   <script src="js/data-manager.js"></script>
-  
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HVTZDKTMJ9"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-HVTZDKTMJ9');
-    </script>
+  <!-- GA4 loaded by js/utils.js - no inline block needed -->
   <link rel="manifest" href="manifest.json">
   <script>
     if ('serviceWorker' in navigator) {
