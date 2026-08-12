@@ -38,10 +38,10 @@ if (file_exists($envFile)) {
     }
 }
 
-define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
-define('DB_NAME', $_ENV['DB_NAME'] ?? 'u572945141_Classifieds_db');
-define('DB_USER', $_ENV['DB_USER'] ?? 'u572945141_Classifieds_db');
-define('DB_PASS', $_ENV['DB_PASS'] ?? 'Dhiyanshi#28');
+define('DB_HOST',    $_ENV['DB_HOST']    ?? getenv('DB_HOST')    ?: 'localhost');
+define('DB_NAME',    $_ENV['DB_NAME']    ?? getenv('DB_NAME')    ?: (function(){ http_response_code(500); die(json_encode(['success'=>false,'error'=>'Server configuration error: DB_NAME not set.'])); })());
+define('DB_USER',    $_ENV['DB_USER']    ?? getenv('DB_USER')    ?: (function(){ http_response_code(500); die(json_encode(['success'=>false,'error'=>'Server configuration error: DB_USER not set.'])); })());
+define('DB_PASS',    $_ENV['DB_PASS']    ?? getenv('DB_PASS')    ?: (function(){ http_response_code(500); die(json_encode(['success'=>false,'error'=>'Server configuration error: DB_PASS not set.'])); })());
 define('DB_CHARSET', 'utf8mb4');
 
 // ── Session / Cookie Settings ─────────────────────────────────────────

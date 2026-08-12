@@ -28,6 +28,7 @@ switch ($action) {
     case 'verify_sensitive_otp': handleVerifySensitiveOtp($body);break;
     case 'validate_reset_token': handleValidateResetToken();     break;
     case 'update_fcm':           handleUpdateFcm($body);         break;
+    case 'change_password':      handleChangePassword($body);    break;
     default:                     jsonError('Unknown action', 400);
 }
 
@@ -407,6 +408,33 @@ function handleUpdateFcm(array $b): void {
         }
     }
     jsonOk();
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// CHANGE PASSWORD — requires current password + new password
+// ─────────────────────────────────────────────────────────────────────
+function handleChangePassword(array $b): void {
+    $user            = requireAuth();
+    $currentPassword = $b['current_password'] ?? '';
+    $newPassword     = $b['new_password']     ?? '';
+
+    if (!$currentPassword) jsonError('Current password is required.');
+    if (strlen($newPassword) < 6) jsonError('New password must be at least 6 characters.');
+
+    $db   = getDB();
+    $stmt = $db->prepare('SELECT password_hash FROM users WHERE id = ?');
+    $stmt->execute([$user['id']]);
+    $row  = $stmt->fetch();
+
+    if (!$row || !password_verify($currentPassword, $row['password_hash'])) {
+        jsonError('Current password is incorrect.', 401);
+    }
+
+    $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
+    $db->prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+       ->execute([$newHash, $user['id']]);
+
+    jsonOk(['message' => 'Password changed successfully.']);
 }
 
 // ─────────────────────────────────────────────────────────────────────

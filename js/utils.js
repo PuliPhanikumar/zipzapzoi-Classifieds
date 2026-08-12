@@ -4,20 +4,36 @@
  */
 
 // ============================================
-// Google Analytics (GA4) Placeholder
+// ⚙️ SITE-WIDE CONFIG — Update these values
+// ============================================
+// 🔴 ACTION REQUIRED: Replace with your real GA4 Measurement ID from
+//    https://analytics.google.com → Admin → Data Streams → Measurement ID
+//    Format: G-XXXXXXXXXX
+const ZZZ_GA4_ID = 'G-HVTZDKTMJ9';
+
+// ============================================
+// Google Analytics (GA4)
 // ============================================
 (function() {
+    if (!ZZZ_GA4_ID || ZZZ_GA4_ID === 'YOUR_GA4_ID_HERE') {
+        console.warn('[ZipZapZoi] GA4 not configured. Set ZZZ_GA4_ID in js/utils.js');
+        return;
+    }
     const script = document.createElement('script');
     script.async = true;
-    script.src = 'https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX';
+    script.src = 'https://www.googletagmanager.com/gtag/js?id=' + ZZZ_GA4_ID;
     document.head.appendChild(script);
 
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     window.gtag = gtag;
     gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX');
+    gtag('config', ZZZ_GA4_ID, {
+        send_page_view: true,
+        cookie_flags: 'SameSite=None;Secure',
+    });
 })();
+
 
 // ============================================
 // Global Dark Mode Initializer
