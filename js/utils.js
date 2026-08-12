@@ -439,3 +439,40 @@ window.escapeHtml = function(unsafe) {
     }
   });
 };
+
+// ============================================
+// Phase 5: Global Micro-Animations Engine
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+  // 1. Initialize Scroll Reveal Observer
+  const observerOptions = {
+    root: null,
+    rootMargin: '0px',
+    threshold: 0.1
+  };
+  
+  window.ZZZ = window.ZZZ || {};
+  window.ZZZ.scrollObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach((entry, index) => {
+      if (entry.isIntersecting) {
+        // Add a slight stagger delay based on index for elements that appear together
+        setTimeout(() => {
+          entry.target.classList.add('reveal-visible');
+        }, index * 100); // 100ms stagger
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // 2. Observe initial elements on load
+  document.querySelectorAll('.reveal-hidden').forEach(el => {
+    window.ZZZ.scrollObserver.observe(el);
+  });
+});
+
+// Helper function to observe dynamically added elements (like loaded listings)
+window.ZZZ.observeElements = function(elements) {
+  if (window.ZZZ.scrollObserver && elements) {
+    elements.forEach(el => window.ZZZ.scrollObserver.observe(el));
+  }
+};

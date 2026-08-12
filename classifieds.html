@@ -22,6 +22,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <link href="css/animations.css" rel="stylesheet"/>
     <script>
       tailwind.config = {
         darkMode: "class",
@@ -157,7 +158,7 @@
 <body class="font-display min-h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
     
     <!-- HEADER -->
-    <header class="sticky top-0 z-50 bg-white/80 dark:bg-card-dark/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 shadow-sm transition-colors duration-300">
+    <header class="sticky top-0 z-50 glass-nav shadow-sm transition-colors duration-300">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div class="flex items-center justify-between">
           
@@ -704,11 +705,11 @@
         let skeletons = '';
         for(let i=0; i<6; i++) {
             skeletons += `
-            <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 p-4 animate-pulse">
-                <div class="h-48 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl mb-4"></div>
-                <div class="h-4 w-3/4 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
-                <div class="h-6 w-1/2 bg-gray-200 dark:bg-gray-800 rounded mb-4"></div>
-                <div class="h-3 w-1/3 bg-gray-200 dark:bg-gray-800 rounded"></div>
+            <div class="bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 p-4">
+                <div class="h-48 w-full skeleton-box rounded-2xl mb-4"></div>
+                <div class="h-4 w-3/4 skeleton-box rounded mb-2"></div>
+                <div class="h-6 w-1/2 skeleton-box rounded mb-4"></div>
+                <div class="h-3 w-1/3 skeleton-box rounded"></div>
             </div>`;
         }
         grid.innerHTML = skeletons;
@@ -802,13 +803,13 @@
             const timeDelay = index * 0.05; // Cascade animation
 
             return `
-              <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer relative group opacity-0 animate-pop" style="animation-delay: ${timeDelay}s" onclick="window.location.href='Listing Detail.html?id=${l.id}'">
+              <div class="listing-card-physics reveal-hidden bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer relative group" onclick="window.location.href='Listing Detail.html?id=${l.id}'">
                 
                 <!-- Image Area -->
                 <div class="relative h-56 overflow-hidden bg-gray-100 dark:bg-gray-900" 
                      onmouseenter="startHoverGallery(this, '${encodeURIComponent(JSON.stringify(l.images || []))}')"
                      onmouseleave="stopHoverGallery(this, '${l.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}')">
-                  <img src="${l.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                  <img src="${l.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}" loading="lazy" class="w-full h-full object-cover listing-img-zoom group-hover:scale-110">
                   
                   <!-- Progress Dots -->
                   <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 gallery-dots"></div>
@@ -852,7 +853,9 @@
           } else {
               grid.innerHTML = htmlCards;
           }
-          
+          if (window.ZZZ && window.ZZZ.observeElements) {
+              window.ZZZ.observeElements(grid.querySelectorAll('.reveal-hidden'));
+          }
           const lmc = document.getElementById('loadMoreContainer');
           if (lmc) {
               if (filtered.length >= 20) {
