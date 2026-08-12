@@ -51,17 +51,33 @@ if ($action === 'plan') {
     }
     
     $db = getDB();
-    // Grant Quota
-    $db->prepare("UPDATE users SET quota = quota + ?, is_verified = 1 WHERE id = ?")
-       ->execute([$ads, $user['id']]);
-       
-    // Insert Transaction
+
+    // Prevent replay attacks — check payment not already processed
+    $dup = $db->prepare('SELECT id FROM transactions WHERE razorpay_payment_id = ?');
+    $dup->execute([$payment_id]);
+    if ($dup->fetch()) jsRedirect("/Payment.html?success=1&txn=" . urlencode($payment_id) . "&already=1");
+
+    // Record transaction (matches transactions.php schema)
     $db->prepare(
-        "INSERT INTO user_transactions (user_id, plan_id, plan_name, amount, type, txn_id)
-         VALUES (?, ?, ?, ?, 'plan', ?)"
-    )->execute([$user['id'], $plan_id, $plan_name, $amount, $payment_id]);
-    
-    // Redirect to Success Receipt
+        'INSERT INTO transactions (user_id, plan_id, plan_name, amount, razorpay_payment_id, razorpay_order_id, status)
+         VALUES (?, ?, ?, ?, ?, ?, "success")'
+    )->execute([$user['id'], $plan_id, $plan_name, $amount, $payment_id, $order_id]);
+
+    // Grant quota via user_quotas table (correct table — NOT users.quota column)
+    if ($ads > 0) {
+        $expires = date('Y-m-d H:i:s', strtotime("+{$days} days"));
+        $db->prepare(
+            'INSERT INTO user_quotas (user_id, ads_remaining, total_granted, plan_id, plan_name, expires_at)
+             VALUES (?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+               ads_remaining = ads_remaining + VALUES(ads_remaining),
+               total_granted = total_granted + VALUES(total_granted),
+               plan_id    = VALUES(plan_id),
+               plan_name  = VALUES(plan_name),
+               expires_at = GREATEST(IFNULL(expires_at, "2000-01-01"), VALUES(expires_at))'
+        )->execute([$user['id'], $ads, $ads, $plan_id, $plan_name, $expires]);
+    }
+
     jsRedirect("/Payment.html?success=1&txn=" . urlencode($payment_id) . "&plan=" . urlencode($plan_id) . "&amount=" . urlencode($amount));
 
 } elseif ($action === 'boost') {
@@ -77,18 +93,25 @@ if ($action === 'plan') {
     }
     
     $db = getDB();
+
+    // Prevent replay
+    $dup = $db->prepare('SELECT id FROM transactions WHERE razorpay_payment_id = ?');
+    $dup->execute([$payment_id]);
+    if ($dup->fetch()) jsRedirect("/Seller Dashboard.html?boost_success=1&already=1");
+
     $expiry = date('Y-m-d H:i:s', strtotime("+$days days"));
     $db->prepare(
         "INSERT INTO promoted_listings (listing_id, promoted_until, type, txn_id)
          VALUES (?, ?, 'featured', ?)
-         ON DUPLICATE KEY UPDATE promoted_until = GREATEST(promoted_until, VALUES(promoted_until))"
+         ON DUPLICATE KEY UPDATE promoted_until = GREATEST(promoted_until, VALUES(promoted_until)), txn_id = VALUES(txn_id)"
     )->execute([$listing_id, $expiry, $payment_id]);
-    
+
+    // Record transaction (consistent with transactions.php schema)
     $db->prepare(
-        "INSERT INTO user_transactions (user_id, plan_id, plan_name, amount, type, txn_id)
-         VALUES (?, 'boost', 'Ad Boost', ?, 'boost', ?)"
-    )->execute([$user['id'], $amount, $payment_id]);
-    
+        'INSERT INTO transactions (user_id, plan_id, plan_name, amount, razorpay_payment_id, razorpay_order_id, status)
+         VALUES (?, "boost", "Ad Boost", ?, ?, ?, "success")'
+    )->execute([$user['id'], $amount, $payment_id, $order_id]);
+
     jsRedirect("/Seller Dashboard.html?boost_success=1");
 
 } elseif ($action === 'renewal') {
@@ -103,15 +126,22 @@ if ($action === 'plan') {
     }
     
     $db = getDB();
+
+    // Prevent replay
+    $dup = $db->prepare('SELECT id FROM transactions WHERE razorpay_payment_id = ?');
+    $dup->execute([$payment_id]);
+    if ($dup->fetch()) jsRedirect("/Seller Dashboard.html?renew_success=1&already=1");
+
     $newExpiry = date('Y-m-d H:i:s', strtotime("+30 days"));
     $db->prepare("UPDATE listings SET expires_at = ?, status = 'active' WHERE id = ? AND user_id = ?")
        ->execute([$newExpiry, $listing_id, $user['id']]);
-       
+
+    // Record transaction (consistent with transactions.php schema)
     $db->prepare(
-        "INSERT INTO user_transactions (user_id, plan_id, plan_name, amount, type, txn_id)
-         VALUES (?, 'renewal', 'Ad Renewal', ?, 'renewal', ?)"
-    )->execute([$user['id'], $amount, $payment_id]);
-    
+        'INSERT INTO transactions (user_id, plan_id, plan_name, amount, razorpay_payment_id, razorpay_order_id, status)
+         VALUES (?, "renewal", "Ad Renewal", ?, ?, ?, "success")'
+    )->execute([$user['id'], $amount, $payment_id, $order_id]);
+
     jsRedirect("/Seller Dashboard.html?renew_success=1");
 }
 

@@ -1,14 +1,15 @@
 <?php
 /**
  * ZipZapZoi — Notifications API
- * GET    /api/notifications.php           - Get current user's notifications
- * POST   /api/notifications.php?action=read - Mark notifications as read
+ * GET    /api/notifications.php             → get current user's notifications
+ * POST   /api/notifications.php?action=read → mark all as read
+ * DELETE /api/notifications.php?id=X       → delete single notification
  */
 require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/auth.php'; // ensure auth logic is available
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
+$id     = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 // Auto-create table
 try {
@@ -26,30 +27,36 @@ try {
     ");
 } catch (Exception $e) {}
 
-$user = getCurrentUser();
-if (!$user) {
-    jsonError('Unauthorized', 401);
-}
+// requireAuth() — consistent with all other API files (was getCurrentUser())
+$user = requireAuth();
 
 if ($method === 'GET') {
     $db = getDB();
     $stmt = $db->prepare("SELECT * FROM user_notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50");
     $stmt->execute([$user['id']]);
     $notifications = $stmt->fetchAll();
-    
+
     $unread_stmt = $db->prepare("SELECT COUNT(*) FROM user_notifications WHERE user_id = ? AND is_read = 0");
     $unread_stmt->execute([$user['id']]);
     $unread_count = $unread_stmt->fetchColumn();
 
     jsonOk([
         'notifications' => $notifications,
-        'unread_count' => (int)$unread_count
+        'unread_count'  => (int)$unread_count
     ]);
+
 } elseif ($method === 'POST' && $action === 'read') {
     $db = getDB();
-    $stmt = $db->prepare("UPDATE user_notifications SET is_read = 1 WHERE user_id = ?");
-    $stmt->execute([$user['id']]);
-    jsonOk(['message' => 'Notifications marked as read']);
+    $db->prepare("UPDATE user_notifications SET is_read = 1 WHERE user_id = ?")
+       ->execute([$user['id']]);
+    jsonOk(['message' => 'All notifications marked as read']);
+
+} elseif ($method === 'DELETE' && $id) {
+    $db = getDB();
+    $db->prepare("DELETE FROM user_notifications WHERE id = ? AND user_id = ?")
+       ->execute([$id, $user['id']]);
+    jsonOk(['message' => 'Notification deleted']);
+
 } else {
     jsonError('Method not allowed', 405);
 }

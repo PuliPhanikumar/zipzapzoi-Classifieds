@@ -573,7 +573,7 @@
         if (metaUrl) metaUrl.content = siteUrl + '/Listing%20Detail.html?id=' + l.id;
         if (canonical) canonical.href = siteUrl + '/Listing%20Detail.html?id=' + l.id;
 
-        // Structured Data JSON-LD
+        // ── Structured Data JSON-LD (Rich Results — Google ItemPage + BreadcrumbList) ──
         let jsonLdScript = document.getElementById('json-ld');
         if (!jsonLdScript) {
             jsonLdScript = document.createElement('script');
@@ -581,20 +581,66 @@
             jsonLdScript.type = 'application/ld+json';
             document.head.appendChild(jsonLdScript);
         }
-        jsonLdScript.textContent = JSON.stringify({
+        const conditionMap = {
+          'new': 'https://schema.org/NewCondition',
+          'like_new': 'https://schema.org/LikeNewCondition',
+          'good': 'https://schema.org/UsedCondition',
+          'fair': 'https://schema.org/DamagedCondition',
+          'used': 'https://schema.org/UsedCondition'
+        };
+        const listingImages = (l.images && l.images.length > 0)
+          ? l.images.map(img => img.startsWith('http') ? img : siteUrl + '/' + img)
+          : [siteUrl + '/images/default-share.png'];
+
+        jsonLdScript.textContent = JSON.stringify([
+          {
             "@context": "https://schema.org/",
-            "@type": "Product",
+            "@type": "ItemPage",
             "name": l.title,
-            "image": (l.images && l.images.length > 0) ? l.images : [siteUrl + "/images/default-share.png"],
-            "description": l.description,
-            "offers": {
+            "description": (l.description || '').substring(0, 500),
+            "url": siteUrl + '/Listing%20Detail.html?id=' + l.id,
+            "datePublished": l.created_at,
+            "dateModified": l.updated_at || l.created_at,
+            "image": listingImages,
+            "author": {
+              "@type": "Person",
+              "name": l.seller_name || 'Seller'
+            },
+            "mainEntity": {
+              "@type": "Product",
+              "name": l.title,
+              "description": (l.description || '').substring(0, 500),
+              "image": listingImages,
+              "brand": { "@type": "Brand", "name": "ZipZapZoi" },
+              "offers": {
                 "@type": "Offer",
                 "priceCurrency": "INR",
-                "price": parseFloat(l.price || 0),
-                "itemCondition": "https://schema.org/UsedCondition",
-                "availability": "https://schema.org/InStock"
+                "price": l.price_type === 'free' ? 0 : parseFloat(l.price || 0),
+                "itemCondition": conditionMap[l.condition] || 'https://schema.org/UsedCondition',
+                "availability": "https://schema.org/InStock",
+                "url": siteUrl + '/Listing%20Detail.html?id=' + l.id,
+                "seller": {
+                  "@type": "Person",
+                  "name": l.seller_name || 'Seller'
+                },
+                "areaServed": {
+                  "@type": "Place",
+                  "name": [l.location_city, l.location_state].filter(Boolean).join(', ') || 'India'
+                }
+              }
             }
-        });
+          },
+          {
+            "@context": "https://schema.org/",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home",        "item": siteUrl + "/" },
+              { "@type": "ListItem", "position": 2, "name": "Classifieds", "item": siteUrl + "/classifieds.html" },
+              { "@type": "ListItem", "position": 3, "name": l.category || "Listing", "item": siteUrl + "/classifieds.html?category=" + encodeURIComponent(l.category || '') },
+              { "@type": "ListItem", "position": 4, "name": l.title }
+            ]
+          }
+        ]);
 
         // 🌟 Boosted/Promo badges
         const boostBadgeEl = document.getElementById('detailBoostBadge');

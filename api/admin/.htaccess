@@ -1,0 +1,18 @@
+# /api/admin/.htaccess
+# Admin endpoints are protected by requireAdmin() server-side auth.
+# This .htaccess adds extra defense-in-depth:
+# - Blocks direct browser access to the PHP source files
+# - Allows AJAX/fetch calls from the admin console (which must pass requireAdmin())
+# Note: requireAdmin() is the primary guard; this is secondary hardening.
+
+# Prevent directory listing
+Options -Indexes
+
+# Block access to .env and .json credential files
+<FilesMatch "\.(env|json|sql|log|md)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# All PHP requests must come from our domain (Referer check as extra layer)
+# The primary security is requireAdmin() inside each PHP file

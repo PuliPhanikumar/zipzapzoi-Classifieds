@@ -1,4 +1,22 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.zipzapzoi.com/sitemap.xml
+# Block private and server-side paths
+Disallow: /api/
+Disallow: /uploads/
+Disallow: /AdminConsoleV2.html
+Disallow: /AdministrationConsoleMobile.html
+Disallow: /test.html
+Disallow: /*.env$
+Disallow: /*.sql$
+Disallow: /*.json$
+
+# Block URL parameters that create duplicate pages for bots
+Disallow: /*?*error=*
+Disallow: /*?*admin_preview=*
+
+# Crawl delay for good measure
+Crawl-delay: 1
+
+# Sitemap index (static + dynamic listings)
+Sitemap: https://www.zipzapzoi.com/sitemap_index.xml
