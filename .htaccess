@@ -21,8 +21,16 @@ Options -Indexes
     Deny from all
 </Files>
 
-# Allow sitemap.xml to be accessed
-<Files "sitemap.xml">
+# Redirect sitemap.xml to sitemap.php
+RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
+# Serve dynamic OpenGraph tags to social scrapers for listing URLs
+RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|WhatsApp|Twitterbot|Pinterest|Googlebot|LinkedInBot) [NC]
+RewriteCond %{REQUEST_URI} ^/Listing\sDetail\.html$ [NC]
+RewriteRule .* /listing.php [L]
+
+# Allow sitemap.php to be accessed
+<Files "sitemap.php">
     Allow from all
 </Files>
 # Error Document 404
