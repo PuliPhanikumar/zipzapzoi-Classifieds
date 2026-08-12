@@ -116,7 +116,11 @@ function sendMessage(array $user): void {
     // Send Push Notification if FCM token exists
     if (!empty($recipient['fcm_token'])) {
         $senderName = $user['name'] ?: 'Someone';
-        sendFcmPush($recipient['fcm_token'], "New Message from $senderName", clean($body));
+        $listingIdStr = !empty($b['listing_id']) ? (string)$b['listing_id'] : '';
+        sendFcmPush($recipient['fcm_token'], "New Message from $senderName", clean($body), [
+            'partner_id' => (string)$user['id'],
+            'listing_id' => $listingIdStr
+        ]);
     }
 
     jsonOk(['message' => 'Message sent.'], 201);

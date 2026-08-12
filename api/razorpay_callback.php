@@ -7,6 +7,7 @@
  * Uses window.top.location.href to break out of any iframe restrictions.
  */
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/fcm_helper.php';
 
 function jsRedirect($url) {
     echo "<!DOCTYPE html><html><head><title>Redirecting...</title></head><body style='background:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;'>";
@@ -78,6 +79,9 @@ if ($action === 'plan') {
         )->execute([$user['id'], $ads, $ads, $plan_id, $plan_name, $expires]);
     }
 
+    if (!empty($user['fcm_token'])) {
+        sendFcmPush($user['fcm_token'], "Payment Successful!", "Your $plan_name has been activated.");
+    }
     jsRedirect("/Payment.html?success=1&txn=" . urlencode($payment_id) . "&plan=" . urlencode($plan_id) . "&amount=" . urlencode($amount));
 
 } elseif ($action === 'boost') {
@@ -112,6 +116,9 @@ if ($action === 'plan') {
          VALUES (?, "boost", "Ad Boost", ?, ?, ?, "success")'
     )->execute([$user['id'], $amount, $payment_id, $order_id]);
 
+    if (!empty($user['fcm_token'])) {
+        sendFcmPush($user['fcm_token'], "Ad Boosted!", "Your ad has been successfully promoted for $days days.");
+    }
     jsRedirect("/Seller Dashboard.html?boost_success=1");
 
 } elseif ($action === 'renewal') {
@@ -142,6 +149,9 @@ if ($action === 'plan') {
          VALUES (?, "renewal", "Ad Renewal", ?, ?, ?, "success")'
     )->execute([$user['id'], $amount, $payment_id, $order_id]);
 
+    if (!empty($user['fcm_token'])) {
+        sendFcmPush($user['fcm_token'], "Ad Renewed!", "Your ad has been successfully renewed for 30 days.");
+    }
     jsRedirect("/Seller Dashboard.html?renew_success=1");
 }
 

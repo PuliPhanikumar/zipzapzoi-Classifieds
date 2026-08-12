@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+  (function() {
+    try {
+      const userStr = localStorage.getItem('zzz_user') || sessionStorage.getItem('zzz_user');
+      if (!userStr) throw new Error('No user');
+      const user = JSON.parse(userStr);
+      if (user.role !== 'admin' && user.role !== 'super_admin') throw new Error('Not admin');
+    } catch (e) {
+      window.location.href = '/index.html';
+    }
+  })();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AdminOS Ultimate – ZipZapZoi Classifieds</title>
