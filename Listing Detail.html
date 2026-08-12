@@ -119,14 +119,7 @@
       .thumbSwiper .swiper-slide-thumb-active { opacity: 1; border-color: #10b981; /* Matches secondary/primary vibe */ transform: scale(0.95); }
   </style>
 
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HVTZDKTMJ9"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-HVTZDKTMJ9');
-    </script>
+  <!-- GA4 loaded by js/utils.js — removed duplicate inline block to prevent double-firing -->
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet"/>
 
 
@@ -544,13 +537,13 @@
           renderData();
           fetchSellerRating();
 
-          // Non-blocking favourite state (only for logged-in users)
+          // Non-blocking favourite state — uses ids_only fast path (single DB query)
           if (viewer) {
-            fetch('/api/favorites.php', { credentials: 'include' })
+            fetch('/api/favorites.php?ids_only=1', { credentials: 'include' })
               .then(r => r.json())
               .then(d => {
-                if (d.success) {
-                  isFavorite = (d.data || []).some(f => f.id === currentListing.id);
+                if (d.success && Array.isArray(d.data)) {
+                  isFavorite = d.data.map(String).includes(String(currentListing.id));
                   updateFavIcon();
                 }
               }).catch(() => {});
@@ -900,7 +893,18 @@
           }).join('');
         }
 
-        // Add to Recent Views
+        // Record view in history
+        // — Logged-in users: persist to MySQL via history.php (used by classifieds.html 'Recently Viewed')
+        // — Guest users: persist to localStorage as fallback
+        if (viewer) {
+          fetch('/api/history.php', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ listing_id: parseInt(l.id) })
+          }).catch(() => {});  // fire-and-forget
+        }
+        // Always keep localStorage so guests see recents too
         let recents = JSON.parse(localStorage.getItem('zzz_recents') || '[]');
         recents = recents.filter(x => String(x.id) !== String(l.id));
         recents.unshift({
