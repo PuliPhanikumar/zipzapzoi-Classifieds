@@ -85,14 +85,7 @@
       .view-toggle-btn.active { background: #019863; color: white; }
     </style>
 
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HVTZDKTMJ9"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-HVTZDKTMJ9');
-    </script>
+  <!-- GA4 loaded by js/utils.js — removed duplicate inline block to prevent double-firing -->
   <link rel="canonical" href="https://www.zipzapzoi.com/SearchResult.html" />
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet"/>
 
@@ -278,6 +271,7 @@
       let currentQuery = '';
       let currentLoc    = '';
       let allListings   = [];
+      let favIds        = new Set();   // pre-fetched from API on load
       let currentViewMode = 'grid';
       let searchMap = null, searchMarkers = [];
 
@@ -313,6 +307,15 @@
 
         const urlCat = params.get('cat');
         if (urlCat) { catSelect.value = urlCat; updateSubcategories(); }
+
+        // Pre-fetch fav IDs so heart buttons show correct state
+        try {
+          const favRes = await fetch('/api/favorites.php?ids_only=1', { credentials: 'include' });
+          const favData = await favRes.json();
+          if (favData.success && Array.isArray(favData.data)) {
+            favIds = new Set(favData.data.map(String));
+          }
+        } catch(e) { /* silently skip — hearts just show unfilled */ }
 
         // Initial fetch
         await fetchListings();
@@ -351,7 +354,9 @@
           }
 
           q.push('status=active', 'limit=200');
-          const res  = await fetch('/api/listings.php?' + q.join('&'));
+          // credentials:include is required so the session cookie is sent and
+          // the server can personalize results for logged-in users
+          const res  = await fetch('/api/listings.php?' + q.join('&'), { credentials: 'include' });
           const data = await res.json();
           if (data.success && data.data && data.data.listings) {
             allListings = data.data.listings;
@@ -453,8 +458,7 @@
           return;
         }
 
-          const favs = window.ZZZ ? window.ZZZ.getFavoriteIds()
-                                  : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+          const favs = [...favIds];  // pre-fetched from /api/favorites.php on page load
 
           grid.innerHTML = filtered.map((l, i) => {
             const isFav = favs.includes(l.id);

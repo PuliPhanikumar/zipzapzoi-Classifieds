@@ -73,14 +73,7 @@
     @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HVTZDKTMJ9"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-HVTZDKTMJ9');
-    </script>
+  <!-- GA4 loaded by js/utils.js — removed duplicate inline block to prevent double-firing -->
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet"/>
 
 
@@ -211,13 +204,28 @@
     </main>
   </div>
 
+    <script src="js/utils.js"></script>
     <script>
-    // â”€â”€â”€ AUTH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── AUTH ─────────────────────────────────────
     const currentUser = JSON.parse(localStorage.getItem('zzz_user') || 'null');
     if (!currentUser) {
       window.location.href = 'Login Page.html?redirect=Inbox.html';
       throw new Error('Not authenticated');
     }
+
+    // Non-blocking session verify — catches cases where localStorage is stale
+    // after session expiry on server side
+    fetch('/api/auth.php?action=me', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        if (!d.success) {
+          localStorage.removeItem('zzz_user');
+          window.location.href = 'Login Page.html?redirect=Inbox.html';
+        } else {
+          // Refresh local cache with latest server data
+          localStorage.setItem('zzz_user', JSON.stringify(d.data.user || d.data));
+        }
+      }).catch(() => { /* offline — allow cached session */ });
 
     document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
 
@@ -505,6 +513,6 @@
     (async function(){ await loadInbox(); checkChatIntent(); })();
 
   </script>
-  <script src="js/utils.js"></script>
+  <!-- utils.js already loaded before the main script above -->
 </body>
 </html>

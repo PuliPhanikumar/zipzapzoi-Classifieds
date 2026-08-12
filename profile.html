@@ -61,14 +61,7 @@
     .dark .tab-inactive { color: #9ca3af; }
   </style>
 
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HVTZDKTMJ9"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-HVTZDKTMJ9');
-    </script>
+  <!-- GA4 loaded by js/utils.js — removed duplicate inline block to prevent double-firing -->
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet"/>
 
 
@@ -562,26 +555,35 @@ function closeReportModal() {
 async function submitReport() {
     const reason = document.getElementById('reportReason').value;
     const details = document.getElementById('reportDetails').value.trim();
-    const newFlag = {
-        id: 'flag_' + Date.now(),
-        reportedUserId: sellerId,
-        reportedUserName: document.getElementById('profileName').textContent,
-        reportedBy: currentUser.id,
-        reportedByName: currentUser.name,
-        reason, details,
-        date: new Date().toISOString(),
-        status: 'pending'
-    };
+    if (!reason) return showToast('Please select a reason.', 'error');
+
+    const btn = document.querySelector('#reportModal button[onclick="submitReport()"]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
+
     try {
-      await fetch('/api/users.php?action=report', {
+      const res = await fetch('/api/users.php?action=report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(newFlag)
+        body: JSON.stringify({
+          user_id: sellerId,
+          reason,
+          details,
+          type: 'user'
+        })
       });
-    } catch(e) { console.error('Report failed:', e); }
-    showToast("User reported. Thank you.");
-    closeReportModal();
+      const data = await res.json();
+      if (data.success) {
+        showToast('User reported. Our team will review shortly. Thank you.');
+        closeReportModal();
+      } else {
+        showToast(data.error || 'Could not submit report. Please try again.', 'error');
+      }
+    } catch(e) {
+      showToast('Network error. Please check your connection and try again.', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Submit Report'; }
+    }
 }
 
 /* ========== REVIEWS ========== */

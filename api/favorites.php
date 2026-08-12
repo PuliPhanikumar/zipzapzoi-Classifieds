@@ -19,7 +19,18 @@ elseif ($method === 'DELETE')                   removeFavorite($user);
 else jsonError('Method not allowed', 405);
 
 function getFavorites(array $user): void {
-    $db   = getDB();
+    $db = getDB();
+
+    // Fast path: ?ids_only=1 returns just an array of listing IDs
+    // Used by classifieds.html and SearchResult.html to set heart button state
+    if (!empty($_GET['ids_only'])) {
+        $stmt = $db->prepare('SELECT listing_id FROM favorites WHERE user_id = ?');
+        $stmt->execute([(int)$user['id']]);
+        $ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        jsonOk(array_map('intval', $ids));
+        return;
+    }
+
     $stmt = $db->prepare(
         'SELECT l.id, l.title, l.price, l.price_type, l.images, l.location_city,
                 l.location_state, l.category, l.status, l.created_at,

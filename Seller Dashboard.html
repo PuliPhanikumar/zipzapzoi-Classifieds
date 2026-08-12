@@ -59,14 +59,7 @@
     #performanceChart { max-height:220px; }
   </style>
 
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HVTZDKTMJ9"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-HVTZDKTMJ9');
-    </script>
+  <!-- GA4 loaded by js/utils.js — removed duplicate inline block to prevent double-firing -->
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet"/>
 
 
@@ -601,8 +594,8 @@
     // Notifications Logic
     let notifsLoaded = false;
     async function toggleNotifications() {
-      const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
-      if(!user) return;
+      // currentUser already verified by loadDashboard() via /api/auth.php?action=me
+      if (!currentUser) return;
       let modal = document.getElementById('notifModal');
       if (modal) { modal.remove(); return; }
       
@@ -650,8 +643,8 @@
       } catch(e){}
     }
 
-    // Fetch initial count
-    if (localStorage.getItem('zzz_user')) {
+    // Fetch initial notification count — uses currentUser (already API-verified in loadDashboard)
+    if (currentUser) {
        fetch('/api/notifications.php', {credentials: 'include'})
          .then(r => r.json())
          .then(data => {

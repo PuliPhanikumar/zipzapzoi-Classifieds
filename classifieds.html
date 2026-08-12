@@ -445,6 +445,7 @@
       let activeCategory = 'All';
       let currentPage = 1;
       let allListings = [];
+      let favIds = new Set();   // populated from API — keeps heart states accurate
       const currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
 
       // =====================================
@@ -454,16 +455,16 @@
         if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
         renderAuth();
         renderCategories();
-        renderRecentViews();
+        renderRecentViews();   // loads from history API
         renderStories();
         renderGrid();
+        if (currentUser) loadFavIds();  // pre-fetch fav IDs so hearts render correctly
 
-        // Background schema refresh from DB
+        // Background schema refresh from DB — memory only, no localStorage write
         setTimeout(() => {
           fetch('/api/schema.php').then(r => r.json()).then(d => {
             if (d.success && d.data && d.data.source !== 'default' && Array.isArray(d.data.categories) && d.data.categories.length > 0) {
-              localStorage.setItem('zzz_classifieds_schema', JSON.stringify(d.data));
-              // Update local array
+              // Keep schema in memory only — no localStorage to prevent stale data
               categories.length = 0;
               categories.push({ id: 'All', icon: 'explore', label: 'Explore' }, ...d.data.categories);
               renderCategories();
@@ -516,6 +517,17 @@
             const icon = document.getElementById('themeIcon');
             if(icon) icon.textContent = 'light_mode';
         }
+      }
+
+      // ── Pre-fetch favourite IDs from API so heart buttons reflect real DB state ──
+      async function loadFavIds() {
+        try {
+          const res = await fetch('/api/favorites.php?ids_only=1', { credentials: 'include' });
+          const data = await res.json();
+          if (data.success && Array.isArray(data.data)) {
+            favIds = new Set(data.data.map(String));
+          }
+        } catch(e) { /* silently ignore — hearts just show unfilled */ }
       }
 
       function openPostChoiceModal() {
@@ -583,34 +595,54 @@
         renderGrid();
       }
 
-      function renderRecentViews() {
-        const recents = JSON.parse(localStorage.getItem('zzz_recents') || '[]');
+      async function renderRecentViews() {
         const container = document.getElementById('recentlyViewedContainer');
         const grid = document.getElementById('recentlyViewedGrid');
-        
-        if (recents.length === 0) {
-          if(container) container.classList.add('hidden');
+        if (!container || !grid) return;
+
+        // Logged-in users: fetch from server history API
+        if (currentUser) {
+          try {
+            const res = await fetch('/api/history.php?limit=10', { credentials: 'include' });
+            const data = await res.json();
+            const recents = data.success && Array.isArray(data.data) ? data.data : [];
+            if (recents.length === 0) { container.classList.add('hidden'); return; }
+            container.classList.remove('hidden');
+            grid.innerHTML = recents.map(l => `
+              <a href="Listing Detail.html?id=${l.id}" class="snap-start shrink-0 w-48 bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-lg transition-all group block">
+                <div class="h-32 bg-gray-100 dark:bg-gray-800 overflow-hidden relative">
+                  <img src="${escapeHtml(l.images?.[0] || l.thumbnail || 'images/placeholder-item.png')}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy">
+                </div>
+                <div class="p-3 bg-white dark:bg-card-dark relative z-10">
+                  <h4 class="font-bold text-gray-900 dark:text-white text-sm truncate mb-1">${escapeHtml(l.title)}</h4>
+                  <div class="flex items-center justify-between text-xs font-black text-primary">₹${parseFloat(l.price||0).toLocaleString('en-IN')}</div>
+                </div>
+              </a>
+            `).join('');
+          } catch(e) { container.classList.add('hidden'); }
           return;
         }
 
-        if(container) container.classList.remove('hidden');
-        if(grid) {
-          grid.innerHTML = recents.map(l => `
-            <a href="Listing Detail.html?id=${l.id}" class="snap-start shrink-0 w-48 bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-lg transition-all group block">
-              <div class="h-32 bg-gray-100 dark:bg-gray-800 overflow-hidden relative">
-                <img src="${l.img}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-              </div>
-              <div class="p-3 bg-white dark:bg-card-dark relative z-10">
-                <h4 class="font-bold text-gray-900 dark:text-white text-sm truncate mb-1">${escapeHtml(l.title)}</h4>
-                <div class="flex items-center justify-between text-xs font-black text-primary">₹${parseFloat(l.price||0).toLocaleString('en-IN')}</div>
-              </div>
-            </a>
-          `).join('');
-        }
+        // Guest: use localStorage recents (no server session)
+        const recents = JSON.parse(localStorage.getItem('zzz_recents') || '[]');
+        if (recents.length === 0) { container.classList.add('hidden'); return; }
+        container.classList.remove('hidden');
+        grid.innerHTML = recents.map(l => `
+          <a href="Listing Detail.html?id=${l.id}" class="snap-start shrink-0 w-48 bg-white dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-lg transition-all group block">
+            <div class="h-32 bg-gray-100 dark:bg-gray-800 overflow-hidden relative">
+              <img src="${escapeHtml(l.img || 'images/placeholder-item.png')}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+            </div>
+            <div class="p-3 bg-white dark:bg-card-dark relative z-10">
+              <h4 class="font-bold text-gray-900 dark:text-white text-sm truncate mb-1">${escapeHtml(l.title)}</h4>
+              <div class="flex items-center justify-between text-xs font-black text-primary">₹${parseFloat(l.price||0).toLocaleString('en-IN')}</div>
+            </div>
+          </a>
+        `).join('');
       }
 
       function clearRecentViews() {
         localStorage.removeItem('zzz_recents');
+        if (currentUser) fetch('/api/history.php', { method: 'DELETE', credentials: 'include' }).catch(()=>{});
         renderRecentViews();
       }
 
@@ -756,7 +788,7 @@
             return;
           }
 
-          const favs = window.ZZZ ? window.ZZZ.getFavoriteIds() : JSON.parse(localStorage.getItem('zzz_favorites') || '[]');
+          const favs = [...favIds];  // populated from /api/favorites.php on page load
 
           const htmlCards = filtered.map((l, index) => {
             const isFav = favs.includes(l.id);
