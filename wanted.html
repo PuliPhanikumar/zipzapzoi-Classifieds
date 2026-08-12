@@ -201,11 +201,22 @@
   <script>
     let currentUser = null;
     let schema = {};
+    let globalBrain = null;
     let currentCategoryKey = null;
     let currentCategory = null;
 
     document.addEventListener("DOMContentLoaded", async () => {
       currentUser = getCurrentUser();
+      if (currentUser) {
+          fetch('/api/auth.php?action=me', { credentials: 'include' }).then(r => r.json()).then(d => {
+              if (d.success && d.data) {
+                  localStorage.setItem('zzz_user', JSON.stringify(d.data));
+              } else if (!d.success) {
+                  localStorage.removeItem('zzz_user');
+                  window.location.href = 'Login Page.html?redirect=wanted.html';
+              }
+          }).catch(()=>{});
+      }
       if (!currentUser) {
           window.location.href = 'Login Page.html?redirect=wanted.html';
           return;
@@ -215,6 +226,7 @@
       try {
           const res = await fetch('/api/schema.php').then(r => r.json());
           let brain = (res.success && res.data && res.data.source !== 'default') ? res.data : ZZZ_SCHEMA;
+          globalBrain = brain;
           
           if(brain.categories) {
               brain.categories.forEach(cat => {
@@ -302,8 +314,10 @@
         
         if(!subcategoryLabel) return;
 
-        let brain = null;
-        try { brain = JSON.parse(localStorage.getItem('zzz_classifieds_schema')); } catch(e){}
+        let brain = globalBrain;
+        if(!brain) {
+           try { brain = JSON.parse(localStorage.getItem('zzz_classifieds_schema')); } catch(e){}
+        }
         if(!brain) brain = ZZZ_SCHEMA;
         
         const subcatObj = (brain.subcategories||[]).find(s => s.label === subcategoryLabel && s.categoryId === currentCategoryKey);

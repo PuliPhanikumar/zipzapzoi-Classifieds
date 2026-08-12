@@ -163,7 +163,7 @@ function getAll(): void {
 
     // Decode JSON fields
     foreach ($rows as &$row) {
-        $row['images'] = json_decode($row['images'] ?? '[]', true) ?: [];
+        $row['images'] = normalizeImagesArray(json_decode($row['images'] ?? '[]', true) ?: []);
         $row['fields'] = json_decode($row['fields'] ?? '{}', true) ?: [];
         $row['price']  = (float)$row['price'];
         $row['views']  = (int)$row['views'];
@@ -173,6 +173,9 @@ function getAll(): void {
         $row['is_top']         = !empty($row['is_top']);
         $row['hide_phone']     = !empty($row['hide_phone']);
         $row['allow_whatsapp'] = !empty($row['allow_whatsapp']);
+        if (array_key_exists('seller_avatar', $row)) {
+            $row['seller_avatar'] = toAbsoluteUrl($row['seller_avatar']);
+        }
     }
 
     jsonOk([
@@ -202,11 +205,38 @@ function getOne(int $id): void {
     $row = $stmt->fetch();
     if (!$row) jsonError('Listing not found.', 404);
 
-    // Increment view count
-    $db->prepare('UPDATE listings SET views = views + 1 WHERE id = ?')->execute([$id]);
-    $row['views']++;
+    // Rate-limited view count — once per IP per listing per hour
+    $visitorIp  = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    $hourBucket = date('Y-m-d H');  // e.g. "2026-08-12 14"
+    try {
+        $db->exec(
+            'CREATE TABLE IF NOT EXISTS listing_view_log (
+                id           INT AUTO_INCREMENT PRIMARY KEY,
+                listing_id   INT NOT NULL,
+                visitor_ip   VARCHAR(45) NOT NULL,
+                hour_bucket  VARCHAR(14) NOT NULL,
+                created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY uniq_view (listing_id, visitor_ip, hour_bucket)
+            )'
+        );
+        // INSERT IGNORE silently skips if same IP already counted this hour
+        $inserted = $db->prepare(
+            'INSERT IGNORE INTO listing_view_log (listing_id, visitor_ip, hour_bucket) VALUES (?, ?, ?)'
+        );
+        $inserted->execute([$id, $visitorIp, $hourBucket]);
+        if ($inserted->rowCount() > 0) {
+            // Only count if this is a new view for this IP+hour
+            $db->prepare('UPDATE listings SET views = views + 1 WHERE id = ?')->execute([$id]);
+            $row['views']++;
+        }
+    } catch (PDOException $e) {
+        // Fallback: if table creation fails, increment anyway (better than breaking the page)
+        $db->prepare('UPDATE listings SET views = views + 1 WHERE id = ?')->execute([$id]);
+        $row['views']++;
+    }
 
-    $row['images'] = json_decode($row['images'] ?? '[]', true) ?: [];
+    $row['images'] = normalizeImagesArray(json_decode($row['images'] ?? '[]', true) ?: []);
+    $row['seller_avatar'] = toAbsoluteUrl($row['seller_avatar'] ?? null);
     $row['fields'] = json_decode($row['fields'] ?? '{}', true) ?: [];
     $row['price']  = (float)$row['price'];
     $row['id']     = (int)$row['id'];
@@ -223,7 +253,7 @@ function getOne(int $id): void {
     $sim->execute([$row['category'], $id, 'active']);
     $similar = $sim->fetchAll();
     foreach ($similar as &$s) {
-        $imgs = json_decode($s['images'] ?? '[]', true) ?: [];
+        $imgs = normalizeImagesArray(json_decode($s['images'] ?? '[]', true) ?: []);
         $s['thumbnail'] = $imgs[0] ?? null;
         unset($s['images']);
     }
@@ -656,8 +686,11 @@ function deleteListing(int $id): void {
     // Delete images from disk
     $images = json_decode($listing['images'] ?? '[]', true) ?: [];
     foreach ($images as $imgPath) {
-        $full = __DIR__ . '/../' . ltrim($imgPath, '/');
-        if (file_exists($full)) @unlink($full);
+        $filename = basename($imgPath);
+        $full = UPLOAD_DIR . $filename;
+        if (file_exists($full) && strpos(realpath($full), realpath(UPLOAD_DIR)) === 0) {
+            @unlink($full);
+        }
     }
     $db->prepare('DELETE FROM listings WHERE id = ?')->execute([$id]);
     jsonOk(['message' => 'Listing deleted.']);

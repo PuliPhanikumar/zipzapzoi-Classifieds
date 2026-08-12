@@ -274,6 +274,7 @@
       let favIds        = new Set();   // pre-fetched from API on load
       let currentViewMode = 'grid';
       let searchMap = null, searchMarkers = [];
+      let currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
 
       function getSchema() {
         return (window.ZZZ && window.ZZZ.getClassifiedsSchema && window.ZZZ.getClassifiedsSchema())
@@ -294,6 +295,17 @@
       });
       document.addEventListener('DOMContentLoaded', async () => {
         if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
+
+        // Non-blocking session verify — updates stale localStorage
+        fetch('/api/auth.php?action=me', { credentials: 'include' }).then(r => r.json()).then(d => {
+          if (d.success && d.data) {
+            currentUser = d.data;
+            localStorage.setItem('zzz_user', JSON.stringify(currentUser));
+          } else if (!d.success) {
+            currentUser = null;
+            localStorage.removeItem('zzz_user');
+          }
+        }).catch(() => {});
 
         const schema = getSchema();
         const catSelect = document.getElementById('catFilter');
@@ -495,8 +507,7 @@
       }
 
       async function toggleFav(id, btn) {
-        const user = window.ZZZ ? window.ZZZ.getCurrentUser()
-                                : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const user = currentUser;
         if (!user) {
           window.location.href = `Login Page.html?redirect=${encodeURIComponent('SearchResult.html?q=' + currentQuery)}`;
           return;

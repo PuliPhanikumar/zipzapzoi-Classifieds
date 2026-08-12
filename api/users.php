@@ -62,7 +62,9 @@ function getProfile(string $id): void {
         unset($profile['email']);
         unset($profile['phone']);
     }
-
+    if ($profile) {
+        $profile['avatar'] = toAbsoluteUrl($profile['avatar'] ?? null);
+    }
     jsonOk($profile);
 }
 
@@ -85,7 +87,11 @@ function updateProfile(): void {
     // Return updated user
     $stmt = $db->prepare('SELECT id, name, email, phone, role, avatar, city, state, is_verified FROM users WHERE id = ?');
     $stmt->execute([(int)$user['id']]);
-    jsonOk($stmt->fetch());
+    $updatedUser = $stmt->fetch();
+    if ($updatedUser) {
+        $updatedUser['avatar'] = toAbsoluteUrl($updatedUser['avatar'] ?? null);
+    }
+    jsonOk($updatedUser);
 }
 
 // ─────────────────────────────────────────────────────────────────────

@@ -51,7 +51,7 @@ if ($method === 'GET') {
     foreach ($rows as &$row) {
         if (!empty($row['images'])) {
             $decoded = json_decode($row['images'], true);
-            $row['images'] = is_array($decoded) ? $decoded : [$row['images']];
+            $row['images'] = normalizeImagesArray(is_array($decoded) ? $decoded : [$row['images']]);
         } else {
             $row['images'] = [];
         }

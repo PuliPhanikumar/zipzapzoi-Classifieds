@@ -262,3 +262,17 @@ function verifyRazorpaySignature(string $orderId, string $paymentId, string $sig
     $expected = hash_hmac('sha256', $orderId . '|' . $paymentId, $secret);
     return hash_equals($expected, $signature);
 }
+
+// ── Image URL Normalization (App/Web Sync) ──────────────────────────
+// Guarantees all clients (especially Android/iOS) receive absolute URLs
+function toAbsoluteUrl(?string $url): ?string {
+    if (empty($url)) return $url;
+    if (str_starts_with($url, '/uploads/')) {
+        return 'https://www.zipzapzoi.com' . $url;
+    }
+    return $url;
+}
+
+function normalizeImagesArray(array $images): array {
+    return array_map('toAbsoluteUrl', $images);
+}

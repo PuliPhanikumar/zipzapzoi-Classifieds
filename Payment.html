@@ -793,6 +793,19 @@
 
       // Show success
       document.getElementById('successScreen').classList.remove('hidden');
+
+      // Refresh session in background so updated quota is saved to localStorage
+      // This ensures when user navigates away, header counts are correct
+      fetch('/api/auth.php?action=me', { credentials: 'include' })
+        .then(r => r.json())
+        .then(d => {
+          if (d.success && d.data) {
+            localStorage.setItem('zzz_user', JSON.stringify(d.data));
+            if (window.ZZZ && typeof window.ZZZ.renderAuthArea === 'function') {
+                window.ZZZ.renderAuthArea();
+            }
+          }
+        }).catch(()=>{});
     }
 
     function downloadReceipt() {

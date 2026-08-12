@@ -501,12 +501,24 @@
     <script>
       let currentListing = null;
       let isFavorite     = false;
+      let currentUser    = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
       // Gallery globals — must be accessible by openLightbox, pgNav, etc.
       let pgImages       = [];
       let pgCurrentIndex = 0;
 
       document.addEventListener('DOMContentLoaded', async () => {
         if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
+
+        // Non-blocking session verify — updates stale localStorage
+        fetch('/api/auth.php?action=me', { credentials: 'include' }).then(r => r.json()).then(d => {
+          if (d.success && d.data) {
+            currentUser = d.data;
+            localStorage.setItem('zzz_user', JSON.stringify(currentUser));
+          } else if (!d.success) {
+            currentUser = null;
+            localStorage.removeItem('zzz_user');
+          }
+        }).catch(() => {});
 
         const params = new URLSearchParams(window.location.search);
         const id = params.get('id');
@@ -524,7 +536,7 @@
 
           currentListing = data.data;
 
-          const viewer     = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+          const viewer     = currentUser;
           const isAdminPreview = new URLSearchParams(window.location.search).get('admin_preview') === '1' || localStorage.getItem('adminToken') !== null;
           const canInspect = isAdminPreview || (viewer && (viewer.id === currentListing.user_id || viewer.role === 'admin' || viewer.role === 'super_admin'));
           
@@ -1001,7 +1013,7 @@
       }
 
       async function toggleFav() {
-        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const user = currentUser;
         if (!user) {
           window.location.href = 'Login Page.html?redirect=' + encodeURIComponent('Listing Detail.html?id=' + currentListing.id);
           return;
@@ -1048,7 +1060,7 @@
 
       // ─── REPORT LISTING ─────────────────────────────────────────────────
       function reportListing() {
-        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const user = currentUser;
         if (!user) {
           window.location.href = 'Login Page.html?redirect=' + encodeURIComponent('Listing Detail.html?id=' + currentListing.id);
           return;
@@ -1100,7 +1112,7 @@
 
       // ─── CHAT ──────────────────────────────────────────────────────────
       function initiateChat() {
-        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const user = currentUser;
         if (!user) { window.location.href = 'Login Page.html?redirect=' + encodeURIComponent('Listing Detail.html?id=' + currentListing.id); return; }
         if (String(user.id) === String(currentListing.user_id)) { showToast('You cannot chat with yourself!', 'error'); return; }
         openFloatingChat(currentListing.user_id, currentListing.seller_name || 'Seller');
@@ -1108,7 +1120,7 @@
 
       // ─── OFFER ────────────────────────────────────────────────────────
       function makeOffer() {
-        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const user = currentUser;
         if (!user) { window.location.href = 'Login Page.html?redirect=' + encodeURIComponent('Listing Detail.html?id=' + currentListing.id); return; }
         if (String(user.id) === String(currentListing.user_id)) { showToast('You cannot offer on your own listing!', 'error'); return; }
         document.getElementById('modalListingTitle').textContent = currentListing.title;
@@ -1148,7 +1160,7 @@
 
       async function loadFloatingMessages() {
         if (!chatWidgetPartnerId || !currentListing) return;
-        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const user = currentUser;
         if (!user) return;
         try {
           const p = new URLSearchParams({ thread: chatWidgetPartnerId, listing_id: currentListing.id });
@@ -1159,7 +1171,7 @@
       }
 
       function renderFloatingMessages(msgs) {
-        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const user = currentUser;
         if (!user) return;
         const feed = document.getElementById('chatWidgetFeed');
         if (!msgs || msgs.length === 0) {
@@ -1182,7 +1194,7 @@
       }
 
       async function sendFloatingMessage(type, overrideText) {
-        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const user = currentUser;
         if (!user || !chatWidgetPartnerId) return;
         const inputEl = document.getElementById('chatWidgetInput');
         const txt = overrideText != null ? overrideText : (inputEl ? inputEl.value.trim() : '');
@@ -1210,7 +1222,7 @@
       }
 
       function openInInbox() {
-        const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+        const user = currentUser;
         if (!user) { window.location.href = 'Login Page.html'; return; }
         localStorage.setItem('zzz_chat_intent', JSON.stringify({
           partnerId: chatWidgetPartnerId, partnerName: chatWidgetPartnerName,

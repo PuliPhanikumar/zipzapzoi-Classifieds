@@ -808,7 +808,7 @@
                 <div class="relative h-56 overflow-hidden bg-gray-100 dark:bg-gray-900" 
                      onmouseenter="startHoverGallery(this, '${encodeURIComponent(JSON.stringify(l.images || []))}')"
                      onmouseleave="stopHoverGallery(this, '${l.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}')">
-                  <img src="${l.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                  <img src="${l.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
                   
                   <!-- Progress Dots -->
                   <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 gallery-dots"></div>
@@ -860,6 +860,29 @@
               } else {
                   lmc.classList.add('hidden');
               }
+          }
+          
+          // Inject JSON-LD ItemList schema for SEO
+          if (!append && filtered.length > 0) {
+            const scriptId = 'json-ld-itemlist';
+            let oldScript = document.getElementById(scriptId);
+            if (oldScript) oldScript.remove();
+            
+            const jsonLd = {
+              "@context": "https://schema.org",
+              "@type": "ItemList",
+              "itemListElement": filtered.map((l, idx) => ({
+                "@type": "ListItem",
+                "position": idx + 1,
+                "url": window.location.origin + "/Listing Detail.html?id=" + l.id,
+                "name": l.title
+              }))
+            };
+            const script = document.createElement('script');
+            script.id = scriptId;
+            script.type = 'application/ld+json';
+            script.textContent = JSON.stringify(jsonLd);
+            document.head.appendChild(script);
           }
           
         } catch(e) {

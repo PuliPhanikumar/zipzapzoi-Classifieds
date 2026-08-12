@@ -519,7 +519,7 @@ function sanitizeUser(array $u): array {
         'email'         => $u['email'],
         'phone'         => $u['phone'],
         'role'          => $u['role'],
-        'avatar'        => $u['avatar'],
+        'avatar'        => toAbsoluteUrl($u['avatar'] ?? null),
         'city'          => $u['city'],
         'state'         => $u['state'],
         'is_verified'   => (bool)$u['is_verified'],

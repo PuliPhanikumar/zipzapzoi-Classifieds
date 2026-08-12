@@ -44,7 +44,7 @@ function getFavorites(array $user): void {
     $stmt->execute([(int)$user['id']]);
     $rows = $stmt->fetchAll();
     foreach ($rows as &$r) {
-        $r['images'] = json_decode($r['images'] ?? '[]', true) ?: [];
+        $r['images'] = normalizeImagesArray(json_decode($r['images'] ?? '[]', true) ?: []);
         $r['thumbnail'] = $r['images'][0] ?? null;
         $r['price'] = (float)$r['price'];
         $r['id'] = (int)$r['id'];

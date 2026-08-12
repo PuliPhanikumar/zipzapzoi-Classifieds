@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
@@ -307,6 +307,18 @@
     // Auto-fill and Header Auth Logic
     document.addEventListener('DOMContentLoaded', () => {
       const authArea = document.getElementById('headerAuthArea');
+
+      fetch('/api/auth.php?action=me', { credentials: 'include' }).then(r => r.json()).then(d => {
+          if (d.success && d.data) {
+              localStorage.setItem('zzz_user', JSON.stringify(d.data));
+              const user = d.data;
+              if (user.name) document.getElementById('fbName').value = user.name;
+              if (user.email) document.getElementById('fbEmail').value = user.email;
+          } else {
+              localStorage.removeItem('zzz_user');
+          }
+      }).catch(()=>{});
+
       try {
         const userStr = localStorage.getItem('zzz_user') || localStorage.getItem('zipzapzoi_current_user');
         if (userStr) {
