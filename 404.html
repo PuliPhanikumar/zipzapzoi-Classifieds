@@ -1,122 +1,183 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" class="">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Not Found — ZipZapZoi Classifieds</title>
   <meta name="robots" content="noindex">
-  <script>
-    if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-    }
-  </script>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="Page not found - ZipZapZoi. The page you're looking for doesn't exist. Browse our classifieds instead."/>
-  <meta property="og:type" content="website"/>
-  <meta property="og:url" content="https://zipzapzoi.com/"/>
-  <meta property="og:title" content="Page Not Found - ZipZapZoi"/>
-  <meta property="og:description" content="This page doesn't exist. Head back to ZipZapZoi to find local classifieds."/>
-  <meta property="og:image" content="https://www.zipzapzoi.com/images/default-share.png"/>
-  <meta name="robots" content="index, follow"/>
-  <link rel="canonical" href="https://zipzapzoi.com/"/>
-  <title>ZipZapZoi - Page Not Found</title>
+  <meta name="description" content="Oops! This page doesn't exist. Find great deals on ZipZapZoi Classifieds — India's coolest buy & sell platform.">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
-
-  <script>
-    tailwind.config = {
-      darkMode: "class",
-        theme: {
-        extend: {
-          fontFamily: { sans: ["Spline Sans", "sans-serif"] },
-          colors: { "primary": "#019863", "secondary": "#4D96A9", "bg-light": "#F7F9FC" ,
-            "background-light": "#f0f4f8",
-            "background-dark": "#0f172a",
-            "card-dark": "#1e293b"},
-          animation: {
-            'float': 'float 6s ease-in-out infinite',
-          },
-          keyframes: {
-            float: {
-              '0%, 100%': { transform: 'translateY(0)' },
-              '50%': { transform: 'translateY(-20px)' },
-            }
-          }
-        }
-      }
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Spline+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <link rel="stylesheet" href="css/animations.css">
+  <script>if(localStorage.getItem('zzz_dark')==='1')document.documentElement.classList.add('dark');</script>
+  <style>
+    body { font-family: 'Spline Sans', sans-serif; }
+    .bounce-404 {
+      animation: bounce404 2.5s ease-in-out infinite;
     }
-  </script>
-  <style>.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }</style>
-  <!-- GA4 loaded by js/utils.js - no inline block needed -->
-<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet"/>
-
-
-
-<style id="zzz-logo-styles">
-  @keyframes bounce-gentle {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
-  }
-  @keyframes bounce-in-letter {
-    0% { opacity: 0; transform: translateY(-15px) scale(0.9); }
-    50% { opacity: 1; transform: translateY(3px) scale(1.05); }
-    75% { transform: translateY(-1px) scale(0.98); }
-    100% { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  .animate-bounce-in {
-    opacity: 0;
-    display: inline-block;
-    animation: bounce-in-letter 0.5s cubic-bezier(0.28, 0.84, 0.42, 1) forwards;
-  }
-  .animate-logo-bouncy {
-    animation: bounce-gentle 3s infinite ease-in-out;
-  }
-</style>
-
-
-
-<link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet"/>
+    @keyframes bounce404 {
+      0%,100% { transform: translateY(0) rotate(-2deg); }
+      50%      { transform: translateY(-24px) rotate(2deg); }
+    }
+    .float-emoji { animation: floatEmoji 3s ease-in-out infinite; }
+    @keyframes floatEmoji {
+      0%,100% { transform: translateY(0) scale(1); }
+      50%      { transform: translateY(-12px) scale(1.08); }
+    }
+    .glow-btn {
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .glow-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(0,102,255,0.3);
+    }
+    .glow-btn:active { transform: scale(0.97); }
+    .card-hover {
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+    }
+    .shimmer-bg {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .dark .shimmer-bg {
+      background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+      background-size: 200% 100%;
+    }
+    @keyframes shimmer { 0%{ background-position: -200% 0; } 100%{ background-position: 200% 0; } }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      animation: rise 4s infinite;
+      opacity: 0;
+    }
+    @keyframes rise {
+      0%   { transform: translateY(0) scale(0); opacity: 0.8; }
+      100% { transform: translateY(-120px) scale(1.5); opacity: 0; }
+    }
+  </style>
 </head>
-<body class="bg-bg-light h-screen flex flex-col items-center justify-center text-center p-6 overflow-hidden relative bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100 transition-colors duration-300">
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-pink-50 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
 
-  <div class="absolute top-20 left-20 text-gray-200 animate-float" style="animation-delay: 0s;">
-    <span class="material-symbols-outlined text-9xl">rocket_launch</span>
-  </div>
-  <div class="absolute bottom-20 right-20 text-gray-200 animate-float" style="animation-delay: 2s;">
-    <span class="material-symbols-outlined text-9xl">satellite_alt</span>
-  </div>
+  <!-- Floating background particles -->
+  <div class="absolute inset-0 pointer-events-none" id="particles"></div>
 
-  <div class="relative z-10 max-w-lg">
-    <div class="mb-8 relative inline-block">
-      <div class="w-40 h-40 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center animate-float">
-        <span class="material-symbols-outlined text-8xl text-gray-400">sentiment_very_dissatisfied</span>
-      </div>
-      <div class="absolute -right-4 -bottom-4 bg-primary text-white w-16 h-16 flex items-center justify-center rounded-full font-bold text-xl shadow-lg border-4 border-white transform rotate-12">
-        404
-      </div>
+  <div class="text-center max-w-lg mx-auto relative z-10">
+
+    <!-- Big animated 404 -->
+    <div class="bounce-404 mb-2 select-none" style="font-family:'Fredoka One',cursive;font-size:clamp(80px,20vw,140px);line-height:1;background:linear-gradient(135deg,#0066ff,#7c3aed,#ff007f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">
+      404
     </div>
 
-    <h1 class="text-4xl md:text-6xl font-bold text-gray-800 dark:text-white mb-4">Lost in Space?</h1>
-    <p class="text-lg text-gray-500 dark:text-gray-400 mb-8">
-      Oops! The page you are looking for doesn't exist or has been moved. 
-      Let's get you back on track.
+    <!-- Floating emoji -->
+    <div class="float-emoji text-5xl mb-6">🕵️</div>
+
+    <!-- Heading -->
+    <h1 class="text-2xl md:text-3xl font-black text-gray-900 dark:text-white mb-3 leading-tight">
+      This page pulled a disappearing act!
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 text-base mb-8 leading-relaxed">
+      The page you're looking for doesn't exist or has been moved. But don't worry — amazing deals are still waiting for you! 🛍️
     </p>
 
-    <div class="flex flex-col sm:flex-row gap-4 justify-center">
-      <a href="index.html" class="bg-primary hover:bg-green-700 text-white px-8 py-3 rounded-full font-bold shadow-lg transition-transform hover:-translate-y-1 flex items-center justify-center gap-2">
-        <span class="material-symbols-outlined">home</span> Go Home
+    <!-- Action Buttons -->
+    <div class="flex flex-col sm:flex-row gap-3 justify-center mb-12">
+      <a href="index.html" class="glow-btn px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-2xl shadow-lg flex items-center gap-2 justify-center text-sm">
+        <span class="material-symbols-outlined text-[18px]">home</span>
+        Back to Home
       </a>
-      <a href="classifieds.html" class="bg-white dark:bg-card-dark hover:bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 px-8 py-3 rounded-full font-bold shadow-sm transition-transform hover:-translate-y-1 flex items-center justify-center gap-2">
-        <span class="material-symbols-outlined">search</span> Browse Ads
+      <a href="classifieds.html" class="glow-btn px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold rounded-2xl shadow-lg flex items-center gap-2 justify-center text-sm">
+        <span class="material-symbols-outlined text-[18px]">store</span>
+        Browse Listings
       </a>
+      <button onclick="history.back()" class="px-6 py-3 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all active:scale-97 flex items-center gap-2 justify-center text-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        Go Back
+      </button>
     </div>
+
+    <!-- Divider -->
+    <div class="flex items-center gap-3 mb-6">
+      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-800"></div>
+      <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">🔥 Trending right now</span>
+      <div class="flex-1 h-px bg-gray-200 dark:bg-gray-800"></div>
+    </div>
+
+    <!-- Hot Listings Preview -->
+    <div id="notFoundListings" class="flex gap-3 overflow-x-auto pb-2 justify-start" style="scrollbar-width:none;-ms-overflow-style:none;">
+      <!-- Skeleton loaders -->
+      <div class="flex-none w-36 card-hover">
+        <div class="h-24 rounded-xl mb-2 shimmer-bg"></div>
+        <div class="h-3 rounded shimmer-bg mb-1 w-4/5"></div>
+        <div class="h-3 rounded shimmer-bg w-3/5"></div>
+      </div>
+      <div class="flex-none w-36 card-hover">
+        <div class="h-24 rounded-xl mb-2 shimmer-bg"></div>
+        <div class="h-3 rounded shimmer-bg mb-1 w-4/5"></div>
+        <div class="h-3 rounded shimmer-bg w-3/5"></div>
+      </div>
+      <div class="flex-none w-36 card-hover">
+        <div class="h-24 rounded-xl mb-2 shimmer-bg"></div>
+        <div class="h-3 rounded shimmer-bg mb-1 w-4/5"></div>
+        <div class="h-3 rounded shimmer-bg w-3/5"></div>
+      </div>
+    </div>
+
   </div>
 
-  <footer class="absolute bottom-6 text-gray-400 text-sm">
-    &copy; 2026 ZipZapZoi.
-  </footer>
+  <script>
+    // Fetch trending listings for preview
+    (async () => {
+      try {
+        const res = await fetch('/api/listings.php?sort=trending&status=active&limit=6');
+        const d   = await res.json();
+        if (!d.success || !d.data?.listings?.length) return;
+        const grid = document.getElementById('notFoundListings');
+        grid.innerHTML = d.data.listings.map(l => {
+          const img   = l.images?.[0] || '';
+          const title = (l.title || '').replace(/</g, '&lt;').substring(0, 30);
+          const price = Number(l.price).toLocaleString('en-IN');
+          return `
+            <a href="Listing Detail.html?id=${l.id}" class="flex-none w-36 text-left group card-hover rounded-xl">
+              <div class="relative h-24 rounded-xl overflow-hidden mb-2 bg-gray-100 dark:bg-gray-800">
+                ${img ? `<img src="${img}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" alt="${title}">` : '<div class="w-full h-full flex items-center justify-center text-gray-300 text-2xl">📦</div>'}
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
+                  <span class="text-white text-[11px] font-black">₹${price}</span>
+                </div>
+              </div>
+              <p class="text-xs font-bold text-gray-800 dark:text-white truncate">${title}</p>
+              <p class="text-[10px] text-gray-400 dark:text-gray-500 truncate">${l.location_city || l.location || ''}</p>
+            </a>`;
+        }).join('');
+      } catch(e) { /* silent fail */ }
+    })();
 
-  <script src="js/utils.js"></script>
+    // Floating particles
+    const container = document.getElementById('particles');
+    const colors = ['#0066ff', '#7c3aed', '#ff007f', '#10b981', '#f59e0b'];
+    for (let i = 0; i < 18; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.random() * 10 + 4;
+      p.style.cssText = `
+        width:${size}px; height:${size}px;
+        background:${colors[Math.floor(Math.random() * colors.length)]};
+        left:${Math.random() * 100}vw;
+        top:${Math.random() * 100}vh;
+        animation-duration:${Math.random() * 3 + 3}s;
+        animation-delay:${Math.random() * 4}s;
+        opacity:0.15;
+      `;
+      container.appendChild(p);
+    }
+  </script>
 </body>
 </html>

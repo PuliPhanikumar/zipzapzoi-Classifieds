@@ -320,6 +320,19 @@
 </div>
 </div>
 </div>
+
+<!-- 🔥 HOT DEALS SECTION -->
+<section class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 mb-6">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="text-2xl">&#128293;</span>
+    <h2 class="text-xl font-black text-gray-900 dark:text-white tracking-tight">Hot Deals</h2>
+    <span class="text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-full animate-pulse">TRENDING NOW</span>
+    <a href="classifieds.html" class="ml-auto text-xs font-bold text-primary hover:underline flex items-center gap-1">
+      View All <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+    </a>
+  </div>
+  <div id="indexHotDeals" class="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory" style="scrollbar-width:none;-ms-overflow-style:none;"></div>
+</section>
 <script>
   // Auto-redirect from Splash to Dashboard after 4 seconds
   setTimeout(function() {
@@ -339,7 +352,31 @@ body.loaded {
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   document.body.classList.add("loaded");
+  fetchIndexHotDeals();
 });
+
+async function fetchIndexHotDeals() {
+  try {
+    const res = await fetch('/api/listings.php?sort=trending&status=active&limit=8');
+    const data = await res.json();
+    if (!data.success || !data.data.listings.length) return;
+    const grid = document.getElementById('indexHotDeals');
+    if (!grid) return;
+    grid.innerHTML = data.data.listings.map(l => `
+      <div onclick="window.location.href='Listing Detail.html?id=${l.id}'" class="flex-none w-44 cursor-pointer group snap-start bg-white/10 dark:bg-black/30 backdrop-blur-sm p-2 rounded-2xl">
+        <div class="relative h-32 rounded-xl overflow-hidden mb-2">
+          <img src="${l.images?.[0] || 'https://via.placeholder.com/200x150?text=No+Image'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" alt="${(l.title || '').replace(/"/g, '')}">
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+            <div class="text-white text-xs font-black">&#8377;${Number(l.price).toLocaleString('en-IN')}</div>
+          </div>
+          ${l.is_boosted_active ? '<div class="absolute top-2 left-2 bg-yellow-400 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">&#9889; Featured</div>' : ''}
+        </div>
+        <p class="text-xs font-bold text-gray-800 dark:text-white truncate" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5); color: white;">${(l.title||'').replace(/</g,'&lt;')}</p>
+        <p class="text-[10px] text-gray-300">&#128293; ${(l.views||0).toLocaleString()} views</p>
+      </div>
+    `).join('');
+  } catch(e) { console.warn('Hot deals error', e); }
+}
 </script>
 <script src="scripts/auth.js"></script>
 <script src="scripts/boot.js"></script>
