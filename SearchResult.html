@@ -339,6 +339,24 @@
       }
 
       async function fetchListings() {
+        const grid = document.getElementById('resultsGrid');
+        const empty = document.getElementById('emptyState');
+        const count = document.getElementById('resultCount');
+        
+        // Show skeleton
+        grid.classList.remove('hidden');
+        empty.classList.add('hidden'); empty.classList.remove('flex');
+        grid.innerHTML = Array(4).fill(0).map(() => `
+          <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 relative">
+            <div class="animate-pulse h-48 bg-gray-200 dark:bg-gray-700"></div>
+            <div class="p-4 sm:p-5 flex flex-col space-y-3">
+              <div class="animate-pulse h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+              <div class="animate-pulse h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+              <div class="animate-pulse h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mt-2"></div>
+            </div>
+          </div>
+        `).join('');
+
         try {
           const q = [];
           if (currentQuery) q.push('search=' + encodeURIComponent(currentQuery));
@@ -348,6 +366,9 @@
           
           const subcat = document.getElementById('subcatFilter') ? document.getElementById('subcatFilter').value : 'all';
           if (subcat !== 'all') q.push('subcategory=' + encodeURIComponent(subcat));
+
+          const city = new URLSearchParams(window.location.search).get('city');
+          if (city) q.push('city=' + encodeURIComponent(city));
 
           const sort = document.getElementById('sortFilter').value;
           q.push('sort=' + encodeURIComponent(sort));
@@ -365,20 +386,46 @@
             q.push('radius=' + radius);
           }
 
-          q.push('status=active', 'limit=200');
-          // credentials:include is required so the session cookie is sent and
-          // the server can personalize results for logged-in users
+          q.push('status=active', 'limit=40');
           const res  = await fetch('/api/listings.php?' + q.join('&'), { credentials: 'include' });
           const data = await res.json();
           if (data.success && data.data && data.data.listings) {
             allListings = data.data.listings;
+            renderResultsLocal();
           } else {
             allListings = [];
+            grid.classList.add('hidden');
+            empty.classList.remove('hidden'); empty.classList.add('flex');
+            empty.innerHTML = `
+              <div class="animate-float mb-8">
+                  <div class="w-32 h-32 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center shadow-2xl border-4 border-white dark:border-card-dark">
+                      <span class="material-symbols-outlined text-6xl text-red-500">error</span>
+                  </div>
+              </div>
+              <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-2">Oops! Something went wrong</h2>
+              <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">We couldn't load the listings. Please try again later.</p>
+              <button onclick="fetchListings()" class="bg-primary hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all transform active:scale-95">
+                  Retry
+              </button>
+            `;
           }
         } catch(e) {
           console.error('Failed to fetch listings:', e);
+          grid.classList.add('hidden');
+          empty.classList.remove('hidden'); empty.classList.add('flex');
+          empty.innerHTML = `
+            <div class="animate-float mb-8">
+                <div class="w-32 h-32 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center shadow-2xl border-4 border-white dark:border-card-dark">
+                    <span class="material-symbols-outlined text-6xl text-red-500">error</span>
+                </div>
+            </div>
+            <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-2">Network Error</h2>
+            <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">Failed to connect to the server. Please check your internet connection.</p>
+            <button onclick="fetchListings()" class="bg-primary hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all transform active:scale-95">
+                Retry
+            </button>
+          `;
         }
-        renderResultsLocal();
       }
 
       function updateSearch() {
@@ -467,6 +514,18 @@
         if (filtered.length === 0) {
           grid.classList.add('hidden');
           empty.classList.remove('hidden'); empty.classList.add('flex');
+          empty.innerHTML = `
+             <div class="animate-float mb-8">
+                 <div class="w-32 h-32 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center shadow-2xl border-4 border-white dark:border-card-dark">
+                     <span class="material-symbols-outlined text-6xl text-blue-500">search_off</span>
+                 </div>
+             </div>
+             <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-2">No matches found</h2>
+             <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">We couldn't find anything matching your search. Try adjusting your keywords or clearing your filters to see more listings.</p>
+             <button onclick="clearSearch()" class="bg-primary hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all transform active:scale-95">
+                 Clear Search
+             </button>
+          `;
           return;
         }
 

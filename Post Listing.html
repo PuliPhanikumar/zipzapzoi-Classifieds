@@ -498,20 +498,40 @@
   }
 
   let schema = {};
+  window.currentSchemaData = null;
 
-  // DEFENSIVE: Force clear any potentially corrupted empty schema from localStorage
-  try {
-    const cachedStr = localStorage.getItem('zzz_classifieds_schema');
-    if (cachedStr) {
-        const cached = JSON.parse(cachedStr);
-        if (!cached.categories || cached.categories.length === 0) {
-            localStorage.removeItem('zzz_classifieds_schema');
-        }
+  function processBrain(brain) {
+    if (!brain || !brain.categories || brain.categories.length === 0) {
+      const catSec = document.getElementById('catSection');
+      if(catSec) catSec.innerHTML = `<div class="bg-red-50 dark:bg-red-900/20 p-8 rounded-[2rem] border border-red-200 dark:border-red-800 text-center shadow-xl"><span class="material-symbols-outlined text-red-500 text-5xl mb-4">error</span><h3 class="text-red-700 dark:text-red-400 font-bold text-xl">Service Unavailable</h3><p class="text-red-600 dark:text-red-300 mt-2">Could not load the category system. Please refresh the page or try again later.</p></div>`;
+      return;
     }
-  } catch(e) {}
+    
+    window.currentSchemaData = brain;
+    schema = {};
+    
+    brain.categories.forEach(cat => {
+      const mySubs = (brain.subcategories || []).filter(s => s.categoryId === cat.id);
+      schema[cat.id] = {
+        label: cat.label,
+        icon: cat.icon,
+        color: cat.color || 'text-gray-500 dark:text-gray-400',
+        priceLabel: cat.priceLabel,
+        hidePrice: cat.hidePrice,
+        photoLimit: cat.photoLimit,
+        note: cat.note,
+        subs: mySubs.map(s => s.label),
+        subIds: mySubs,
+        fields: [] 
+      };
+    });
+    
+    if (typeof renderCategories === 'function') {
+        renderCategories();
+    }
+  }
 
-  function loadSchemaFromBrain() {
-    // Step 1: Use schema.js immediately (synchronous, always works, 14 categories)
+  function loadSchemaFallback() {
     let brain = null;
     try {
         if (window.ZZZ && typeof window.ZZZ.getClassifiedsSchema === 'function') {
@@ -522,79 +542,24 @@
     if (!brain || !brain.categories || brain.categories.length === 0) {
       brain = (typeof ZZZ_SCHEMA !== 'undefined' ? ZZZ_SCHEMA : { categories: [], subcategories: [], fields: [] });
     }
-    
-    // FINAL DEFENSIVE FALLBACK
-    if (!brain.categories || brain.categories.length === 0) {
-        console.error("CRITICAL: Schema categories are totally empty!");
-        document.getElementById('catSection').innerHTML = `<div class="bg-red-50 dark:bg-red-900/20 p-8 rounded-[2rem] border border-red-200 dark:border-red-800 text-center shadow-xl"><span class="material-symbols-outlined text-red-500 text-5xl mb-4">error</span><h3 class="text-red-700 dark:text-red-400 font-bold text-xl">Service Unavailable</h3><p class="text-red-600 dark:text-red-300 mt-2">Could not load the category system. Please refresh the page or try again later.</p></div>`;
-        return;
-    }
-    
-    brain.categories.forEach(cat => {
-      // 1. Create Category Object
-      schema[cat.id] = {
-        label: cat.label,
-        icon: cat.icon,
-        color: cat.color || 'text-gray-500 dark:text-gray-400',
-        priceLabel: cat.priceLabel, // Custom Price Label
-        hidePrice: cat.hidePrice,   // Charity logic
-        photoLimit: cat.photoLimit, // Photo limits
-        note: cat.note,             // Notes
-        subs: [],
-        fields: [] 
-      };
-
-      // 2. Find Subcategories
-      const mySubs = (brain.subcategories || []).filter(s => s.categoryId === cat.id);
-      schema[cat.id].subs = mySubs.map(s => s.label);
-      
-      // 3. Store ID mapping for field retrieval later
-      schema[cat.id].subIds = mySubs; // Store objects {id, label}
-    });
+    processBrain(brain);
   }
 
-  // Load the brain immediately (uses schema.js — instant, works offline)
-  loadSchemaFromBrain();
-
-  // Background: refresh from DB so admin-configured categories reach ALL users
-  setTimeout(function() {
-    fetch('/api/schema.php').then(function(r){ return r.json(); }).then(function(d) {
-      if (!d.success || !d.data || d.data.source === 'default') return;
-      var brain = d.data;
-      if (!Array.isArray(brain.categories) || brain.categories.length === 0) return;
-      localStorage.setItem('zzz_classifieds_schema', JSON.stringify(brain));
-      
-      // Clear the local schema so it exactly matches the DB schema (admin settings)
-      schema = {};
-      
-      brain.categories.forEach(function(cat) {
-        var mySubs = (brain.subcategories||[]).filter(function(s){ return s.categoryId === cat.id; });
-        schema[cat.id] = {
-          label: cat.label, icon: cat.icon,
-          color: cat.color || 'text-gray-500 dark:text-gray-400',
-          priceLabel: cat.priceLabel, hidePrice: cat.hidePrice,
-          photoLimit: cat.photoLimit, note: cat.note,
-          subs: mySubs.map(function(s){ return s.label; }),
-          subIds: mySubs, fields: []
-        };
-      });
-      // Re-render category grid if user hasn't selected a category yet
-      if (!currentCategoryKey) {
-        var grid = document.getElementById('categoryGrid');
-        if (grid) {
-          grid.innerHTML = '';
-          Object.keys(schema).forEach(function(key) {
-            var cat = schema[key];
-            var div = document.createElement('div');
-            div.className = 'cursor-pointer flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-transparent bg-gray-50/50 dark:bg-gray-800/50 hover:border-secondary hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 gap-3 group';
-            div.innerHTML = '<span class="material-symbols-outlined text-4xl ' + cat.color + ' group-hover:scale-110 transition-transform">' + (cat.icon || 'category') + '</span><span class="text-sm font-bold text-center">' + cat.label + '</span>';
-            div.onclick = (function(k){ return function(){ selectCategory(k); }; })(key);
-            grid.appendChild(div);
-          });
+  document.addEventListener('DOMContentLoaded', () => {
+    fetch('/api/schema.php')
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && d.data && d.data.categories && d.data.categories.length > 0) {
+          processBrain(d.data);
+        } else {
+          loadSchemaFallback();
         }
-      }
-    }).catch(function(err){ console.error('Schema fetch error:', err); });
-  }, 0);
+      })
+      .catch(err => {
+        console.error('Schema fetch error:', err);
+        loadSchemaFallback();
+      });
+  });
 
   // --- 2. INDIA LOCATIONS DATA ---
   const indiaData = {
@@ -662,18 +627,21 @@
 
   // --- 4. INITIALIZATION ---
   
-  // Render Categories
-  Object.keys(schema).forEach(key => {
-    const cat = schema[key];
-    const div = document.createElement('div');
-    div.className = `cursor-pointer flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-transparent bg-gray-50/50 dark:bg-gray-800/50 hover:border-secondary hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 gap-3 group`;
-    div.innerHTML = `
-      <span class="material-symbols-outlined text-4xl ${cat.color} group-hover:scale-110 transition-transform">${cat.icon}</span>
-      <span class="text-sm font-bold text-center">${cat.label}</span>
-    `;
-    div.onclick = () => selectCategory(key);
-    categoryGrid.appendChild(div);
-  });
+  function renderCategories() {
+    if (!categoryGrid) return;
+    categoryGrid.innerHTML = '';
+    Object.keys(schema).forEach(key => {
+      const cat = schema[key];
+      const div = document.createElement('div');
+      div.className = `cursor-pointer flex flex-col items-center justify-center p-6 rounded-3xl border-2 border-transparent bg-gray-50/50 dark:bg-gray-800/50 hover:border-secondary hover:bg-white dark:bg-card-dark dark:hover:bg-gray-700 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 gap-3 group`;
+      div.innerHTML = `
+        <span class="material-symbols-outlined text-4xl ${cat.color} group-hover:scale-110 transition-transform">${cat.icon || 'category'}</span>
+        <span class="text-sm font-bold text-center">${cat.label}</span>
+      `;
+      div.onclick = () => selectCategory(key);
+      categoryGrid.appendChild(div);
+    });
+  }
 
   // Populate States
   Object.keys(indiaData).forEach(state => {
@@ -754,7 +722,7 @@
     // Setup Listener for Subcategory Change -> Populate Fields
     subCategorySelect.onchange = (e) => {
         const selectedSubLabel = e.target.value;
-        let brain = window.ZZZ && window.ZZZ.getClassifiedsSchema ? window.ZZZ.getClassifiedsSchema() : null;
+        let brain = window.currentSchemaData;
         if (!brain || !brain.fields || brain.fields.length === 0) brain = window.ZZZ_SCHEMA || { fields: [] };
         
         // Find subcategory ID using the label

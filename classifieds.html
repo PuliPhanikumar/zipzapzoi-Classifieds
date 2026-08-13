@@ -316,6 +316,16 @@
 
       
           
+          <!-- HOT DEALS 🔥 -->
+          <div id="hotDealsSection" class="mb-10 hidden">
+            <div class="flex items-center gap-2 mb-4">
+              <span class="text-2xl">&#128293;</span>
+              <h2 class="text-xl font-black text-gray-900 dark:text-white tracking-tight">Hot Deals</h2>
+              <span class="text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-full animate-pulse">TRENDING NOW</span>
+            </div>
+            <div id="hotDealsGrid" class="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory" style="scrollbar-width:none;-ms-overflow-style:none;"></div>
+          </div>
+
           <!-- RECENTLY VIEWED (Dynamically injected) -->
           <div id="recentlyViewedContainer" class="mb-10 hidden">
             <div class="flex justify-between items-center mb-4">
@@ -329,12 +339,17 @@
 
           <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
             <h2 id="gridTitle" class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Fresh Recommendations</h2>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3 flex-wrap">
+              <a href="map.html" class="text-xs font-black text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-all shadow-md flex items-center gap-1 active:scale-95">
+                <span class="material-symbols-outlined text-[16px]">map</span> Map View
+              </a>
               <button onclick="openAlertModal()" class="text-xs font-black text-white bg-primary hover:bg-green-700 px-3 py-1.5 rounded-lg transition-all shadow-md flex items-center gap-1 active:scale-95">
                 <span class="material-symbols-outlined text-[16px]">notifications_active</span> Set Alert
               </button>
               <select id="sortFilter" onchange="renderGrid()" class="bg-transparent text-sm font-bold text-gray-600 dark:text-gray-300 border-none focus:ring-0 cursor-pointer">
                 <option value="newest">Newest First</option>
+                <option value="trending">🔥 Trending</option>
+                <option value="for_you">✨ For You</option>
                 <option value="price_low">Price: Low to High</option>
                 <option value="price_high">Price: High to Low</option>
               </select>
@@ -451,6 +466,7 @@
         renderCategories();
         renderRecentViews();   // loads from history API
         renderStories();
+        fetchHotDeals();
         renderGrid();
         if (currentUser) loadFavIds();  // pre-fetch fav IDs so hearts render correctly
 
@@ -742,8 +758,16 @@
         const maxP = document.getElementById('maxPrice').value;
         if (!isNaN(parseFloat(maxP)) && maxP !== "") params.append('max_price', maxP);
         
-        const sort = document.getElementById('sortFilter').value;
-        params.append('sort', sort);
+        const sortVal = document.getElementById('sortFilter')?.value || 'newest';
+        if (sortVal === 'for_you') {
+          try {
+            const me = JSON.parse(localStorage.getItem('zzz_user') || '{}');
+            if (me.city) params.append('city', me.city);
+          } catch(e) {}
+          params.append('sort', 'newest');
+        } else {
+          params.append('sort', sortVal);
+        }
 
         // Fetch from API
         try {
@@ -820,6 +844,10 @@
 
                   <!-- ⚡ Boosted Badge -->
                   ${l.is_boosted_active ? `<div class="absolute top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg flex items-center gap-1 animate-pulse card-image-wrap">⚡ Featured</div>` : ''}
+                  <!-- 🔻 Price Drop Badge -->
+                  ${l.is_price_drop ? `<div class="absolute bottom-3 left-3 bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full card-image-wrap flex items-center gap-0.5">🔻 Price Drop</div>` : ''}
+                  <!-- 🔥 Hot Badge -->
+                  ${(l.views > 50) ? `<div class="absolute bottom-3 right-3 bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full card-image-wrap flex items-center gap-0.5">🔥 Hot</div>` : ''}
 
                   <!-- Favorite Button -->
                   <button onclick="event.stopPropagation(); toggleFav('${l.id}', this)" class="fav-btn absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center card-image-wrap ${isFav ? 'active' : ''}">
@@ -838,9 +866,10 @@
                   
                   <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4">${escapeHtml(l.description || '')}</p>
                   
-                  <div class="flex items-center gap-4 text-xs font-bold text-gray-400 dark:text-gray-500 pt-4 border-t border-gray-100 dark:border-gray-800">
+                  <div class="flex items-center gap-3 text-xs font-bold text-gray-400 dark:text-gray-500 pt-4 border-t border-gray-100 dark:border-gray-800">
                     <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">location_on</span> ${escapeHtml(l.location_city || l.location || 'Local')}</span>
-                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> ${l.created_at ? new Date(l.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : 'Just now'}</span>
+                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">visibility</span> ${(l.views||0).toLocaleString()}</span>
+                    <button onclick="event.stopPropagation(); shareListingCard('${l.id}','${encodeURIComponent(l.title)}')" class="ml-auto flex items-center gap-1 text-gray-400 hover:text-primary transition-colors" title="Share"><span class="material-symbols-outlined text-[16px]">share</span></button>
                   </div>
                 </div>
 
@@ -891,6 +920,42 @@
         } catch(e) {
           console.error('Error fetching listings:', e);
           grid.innerHTML = '<div class="col-span-full text-center text-red-500 py-10">Error loading listings. Please try again later.</div>';
+        }
+      }
+
+      // ===== HOT DEALS =====
+      async function fetchHotDeals() {
+        try {
+          const res = await fetch('/api/listings.php?sort=trending&status=active&limit=10');
+          const data = await res.json();
+          if (!data.success || !data.data.listings.length) return;
+          const section = document.getElementById('hotDealsSection');
+          const grid = document.getElementById('hotDealsGrid');
+          section.classList.remove('hidden');
+          grid.innerHTML = data.data.listings.map(l => `
+            <div onclick="window.location.href='Listing Detail.html?id=${l.id}'" class="flex-none w-44 cursor-pointer group snap-start">
+              <div class="relative h-32 rounded-2xl overflow-hidden mb-2">
+                <img src="${l.images?.[0] || 'https://via.placeholder.com/200x150?text=No+Image'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy">
+                ${l.is_price_drop ? '<div class="absolute top-2 left-2 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">🔻 Drop</div>' : ''}
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                  <div class="text-white text-xs font-black">₹${Number(l.price).toLocaleString()}</div>
+                </div>
+              </div>
+              <p class="text-xs font-bold text-gray-800 dark:text-white truncate">${escapeHtml(l.title)}</p>
+              <p class="text-[10px] text-gray-400">🔥 ${(l.views||0).toLocaleString()} views</p>
+            </div>
+          `).join('');
+        } catch(e) { console.warn('Hot deals error', e); }
+      }
+
+      // ===== SHARE CARD =====
+      function shareListingCard(id, encodedTitle) {
+        const title = decodeURIComponent(encodedTitle);
+        const url = window.location.origin + '/Listing Detail.html?id=' + id;
+        if (navigator.share) {
+          navigator.share({ title: title + ' — ZipZapZoi', url });
+        } else {
+          navigator.clipboard.writeText(url).then(() => showToast('Link copied!', 'success')).catch(() => {});
         }
       }
 

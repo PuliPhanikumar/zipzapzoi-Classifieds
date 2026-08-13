@@ -383,6 +383,21 @@
         <div id="listingsList" class="space-y-3"></div>
       </div>
 
+      <!-- ── OFFERS RECEIVED ──────────────────── -->
+      <div class="mt-8">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-black text-orange-900 dark:text-orange-100 text-lg flex items-center gap-2">
+            <span class="material-symbols-outlined text-orange-500">local_offer</span> Offers Received
+          </h3>
+        </div>
+        <div id="offersList" class="space-y-3">
+           <div class="text-center py-10 bg-white dark:bg-card-dark rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+             <span class="material-symbols-outlined text-4xl text-gray-300 dark:text-gray-600 mb-2 block">local_offer</span>
+             <p class="text-gray-500 dark:text-gray-400 font-semibold text-sm">Loading offers...</p>
+           </div>
+        </div>
+      </div>
+
       <!-- ── MY WANTED REQUESTS ──────────────────── -->
       <div class="mt-8">
         <div class="flex items-center justify-between mb-4">
@@ -834,7 +849,11 @@
         }
 
         // Load my listings from API
-        const lRes  = await fetch(`/api/listings.php?user_id=${me.id}&status=all&limit=100`, { credentials: 'include' });
+        const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token') || '';
+        const lRes  = await fetch(`/api/listings.php?user_id=${me.id}&status=all&limit=100`, { 
+            credentials: 'include',
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
         const lData = await lRes.json();
         if (lData.success) {
           allMyListings = lData.data.listings || [];
@@ -844,6 +863,7 @@
         initChart();
         fetchMyReviews(me.id);
         fetchMyWanted(me.id);
+        fetchOffers(me.id);
 
       } catch (err) {
         showToast('Failed to load dashboard. Check connection.', 'error');
@@ -1292,6 +1312,68 @@
                 if (user) fetchMyWanted(user.id);
             } else {
                 showToast(res.error || 'Failed to delete', 'error');
+            }
+        } catch(e) {
+            showToast('Network error', 'error');
+        }
+    }
+
+    async function fetchOffers(userId) {
+        try {
+            const res = await fetch('/api/offers.php?my_offers_as_seller=1', { credentials: 'include' }).then(r=>r.json());
+            const list = document.getElementById('offersList');
+            const offers = res.data && res.data.offers ? res.data.offers : [];
+            if (offers.length === 0) {
+                list.innerHTML = `
+                   <div class="text-center py-10 bg-white dark:bg-card-dark rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                     <span class="material-symbols-outlined text-4xl text-gray-300 dark:text-gray-600 mb-2 block">local_offer</span>
+                     <p class="text-gray-500 dark:text-gray-400 font-semibold text-sm">No offers received yet.</p>
+                   </div>`;
+                return;
+            }
+            list.innerHTML = offers.map(offer => `
+                <div class="bg-white dark:bg-card-dark p-4 rounded-2xl border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-sm hover:shadow-md transition-shadow gap-4">
+                    <div>
+                        <div class="text-[10px] font-black text-orange-500 uppercase tracking-wider mb-1">OFFER</div>
+                        <h4 class="font-bold text-gray-900 dark:text-white mb-1"><a href="Listing Detail.html?id=${offer.listing_id}" class="hover:underline">${escapeHtml(offer.listing_title || 'Listing')}</a></h4>
+                        <div class="text-xs text-gray-500 mb-1">Buyer: <strong>${escapeHtml(offer.buyer_name || 'Buyer')}</strong></div>
+                        <div class="text-sm text-gray-900 dark:text-white">Offered: <span class="font-black text-green-600">₹${Number(offer.offer_amount).toLocaleString()}</span> (Asking: ₹${Number(offer.asking_price || 0).toLocaleString()})</div>
+                        <div class="text-[10px] text-gray-400 mt-1">${new Date(offer.created_at).toLocaleString()}</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${offer.status === 'pending' ? `
+                            <button onclick="handleOffer(${offer.id}, 'accept')" class="px-3 py-1.5 bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 font-bold rounded-lg text-xs transition-colors">Accept</button>
+                            <button onclick="handleOffer(${offer.id}, 'decline')" class="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 font-bold rounded-lg text-xs transition-colors">Decline</button>
+                        ` : `
+                            <span class="text-xs font-black px-2 py-1 rounded-lg ${offer.status === 'accepted' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'} uppercase">${offer.status}</span>
+                        `}
+                    </div>
+                </div>
+            `).join('');
+        } catch(e) {
+            document.getElementById('offersList').innerHTML = '<p class="text-red-500 p-4">Error loading offers</p>';
+        }
+    }
+
+    async function handleOffer(offerId, action) {
+        if (!confirm('Are you sure you want to ' + action + ' this offer?')) return;
+        try {
+            const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token') || '';
+            const res = await fetch('/api/offers.php?id=' + offerId, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                credentials: 'include',
+                body: JSON.stringify({ action: action })
+            }).then(r=>r.json());
+            if (res.success) {
+                showToast('Offer ' + action + 'ed successfully', 'success');
+                const user = JSON.parse(localStorage.getItem('zzz_user') || '{}');
+                fetchOffers(user.id);
+            } else {
+                showToast(res.error || 'Failed to update offer', 'error');
             }
         } catch(e) {
             showToast('Network error', 'error');

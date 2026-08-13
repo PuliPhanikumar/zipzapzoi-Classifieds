@@ -168,15 +168,40 @@
     <script src="js/utils.js"></script>
     <script src="js/api.js"></script>
     <script>
+      function getAuthHeaders() {
+          return {
+              'Authorization': 'Bearer ' + (localStorage.getItem('zipzapzoi_token') || ''),
+              'Content-Type': 'application/json'
+          };
+      }
+
+      function showLoginRequired() {
+          const grid = document.getElementById('favoritesGrid');
+          const empty = document.getElementById('emptyState');
+          const count = document.getElementById('favCount');
+          
+          grid.classList.add('hidden');
+          count.textContent = 'Login required';
+          
+          empty.innerHTML = `
+             <div class="relative w-32 h-32 mb-6">
+                 <div class="absolute inset-0 bg-gray-100 dark:bg-gray-800 rounded-full animate-ping opacity-75"></div>
+                 <div class="relative w-full h-full bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                     <span class="material-symbols-outlined text-6xl text-gray-400">lock</span>
+                 </div>
+             </div>
+             <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-2">Please log in to view your favorites</h2>
+             <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md">You need to be logged in to see your saved items.</p>
+             <a href="Login Page.html?redirect=favorites.html" class="bg-primary hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all transform active:scale-95">
+                 Log In
+             </a>
+          `;
+          empty.classList.remove('hidden');
+          empty.classList.add('flex');
+      }
+
       document.addEventListener('DOMContentLoaded', () => {
         if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
-        
-        const user = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-        if(!user) {
-            window.location.href = 'Login Page.html?redirect=favorites.html';
-            return;
-        }
-
         loadFavorites();
       });
 
@@ -187,9 +212,26 @@
 
         grid.innerHTML = '<div class="col-span-full py-10 text-center"><div class="animate-pulse flex flex-col items-center"><div class="h-8 w-8 bg-gray-200 rounded-full mb-2"></div><div class="h-4 w-32 bg-gray-200 rounded"></div></div></div>';
 
+        const token = localStorage.getItem('zipzapzoi_token');
+        if (!token) {
+            showLoginRequired();
+            return;
+        }
+
         try {
-          const res = await (window.ZZZ && window.ZZZ.api ? window.ZZZ.api.fetch('/api/favorites.php') : fetch('/api/favorites.php').then(r => r.json()));
-          const favListings = res.data || [];
+          const res = await fetch('/api/favorites.php', {
+              method: 'GET',
+              credentials: 'include',
+              headers: getAuthHeaders()
+          });
+          
+          if (res.status === 401) {
+              showLoginRequired();
+              return;
+          }
+          
+          const responseData = await res.json();
+          const favListings = responseData.data || [];
 
           if(favListings.length === 0) {
               grid.classList.add('hidden');
@@ -204,7 +246,9 @@
           empty.classList.remove('flex');
           count.textContent = `${favListings.length} item${favListings.length === 1 ? '' : 's'} saved`;
 
-          grid.innerHTML = favListings.map((l, index) => {
+          grid.innerHTML = favListings.map((fav, index) => {
+            const l = fav.listing;
+            if (!l) return '';
             const img = l.thumbnail || l.images?.[0] || l.image || 'https://via.placeholder.com/400x300?text=No+Image';
             return `
               <div id="card-${l.id}" class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer relative group opacity-0 animate-pop" style="animation-delay: ${index * 0.05}s" onclick="window.location.href='Listing Detail.html?id=${l.id}'">
@@ -237,19 +281,23 @@
 
       async function removeFav(id) {
         try {
-          const res = await fetch(`/api/favorites.php?listing_id=${id}`, {
+          const res = await fetch('/api/favorites.php', {
             method: 'DELETE',
-            credentials: 'include'
+            credentials: 'include',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ listing_id: id })
           });
           const data = await res.json();
           if (!data.success) {
             console.error('Remove fav error:', data.error);
-            showToast('Could not remove from favorites.', 'error');
+            if (typeof showToast === 'function') showToast('Could not remove from favorites.', 'error');
+            else alert('Could not remove from favorites.');
             return;
           }
         } catch(e) {
           console.error('Remove fav error:', e);
-          showToast('Network error. Try again.', 'error');
+          if (typeof showToast === 'function') showToast('Network error. Try again.', 'error');
+          else alert('Network error. Try again.');
           return;
         }
         const card = document.getElementById(`card-${id}`);
@@ -262,6 +310,20 @@
             if (cardsLeft === 0) {
               document.getElementById('favoritesGrid').classList.add('hidden');
               const empty = document.getElementById('emptyState');
+              // Restore empty state to original
+              empty.innerHTML = `
+                 <div class="relative w-32 h-32 mb-6">
+                     <div class="absolute inset-0 bg-red-100 dark:bg-red-900/30 rounded-full animate-ping opacity-75"></div>
+                     <div class="relative w-full h-full bg-red-50 dark:bg-red-900/50 rounded-full flex items-center justify-center">
+                         <span class="material-symbols-outlined text-6xl text-red-400">favorite_border</span>
+                     </div>
+                 </div>
+                 <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-2">No favorites yet</h2>
+                 <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md">Items you heart will magically appear here. Start exploring the marketplace to find things you love!</p>
+                 <a href="classifieds.html" class="bg-primary hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all transform active:scale-95">
+                     Explore Marketplace
+                 </a>
+              `;
               empty.classList.remove('hidden');
               empty.classList.add('flex');
             }

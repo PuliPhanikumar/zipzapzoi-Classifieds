@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -1130,9 +1130,31 @@
         document.getElementById('offerModal').classList.remove('hidden');
       }
       function closeOfferModal() { document.getElementById('offerModal').classList.add('hidden'); }
-      function submitOffer() {
+      async function submitOffer() {
         const offer = document.getElementById('offerAmountInput').value.trim();
         if (!offer || isNaN(offer) || parseFloat(offer) <= 0) { showToast('Enter a valid offer amount.', 'error'); return; }
+        try {
+          const token = localStorage.getItem('zipzapzoi_token') || '';
+          const res = await fetch('/api/offers.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            credentials: 'include',
+            body: JSON.stringify({ listing_id: currentListing.id, amount: parseFloat(offer), message: 'Offer via ZipZapZoi' })
+          });
+          const data = await res.json();
+          closeOfferModal();
+          if (data.success) {
+            showToast('Offer sent! The seller will be notified.', 'success');
+            openFloatingChat(currentListing.user_id, currentListing.seller_name || 'Seller');
+            sendFloatingMessage('text', 'Hi! I have sent an official price offer via ZipZapZoi. Please check your seller dashboard!');
+          } else {
+            showToast(data.error || 'Could not send offer. Please try again.', 'error');
+          }
+        } catch(e) {
+          closeOfferModal();
+          showToast('Network error. Please check your connection.', 'error');
+        }
+      }
         closeOfferModal();
         openFloatingChat(currentListing.user_id, currentListing.seller_name || 'Seller');
         sendFloatingMessage('text', `Hi! I’d like to offer Rs. ${Number(offer).toLocaleString('en-IN')} for "${currentListing.title}". Is this acceptable?`);

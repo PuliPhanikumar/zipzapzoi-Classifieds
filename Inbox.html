@@ -237,12 +237,13 @@
     }
     if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
 
-    // â”€â”€â”€ STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // --- STATE ---
     let allThreads   = [];
     let activeThread = null;   // { otherId, listingId, otherName }
-    let pollTimer    = null;
+    let displayedMessageIds = new Set();
+    let globalPollTimer = null;
 
-    // â”€â”€â”€ 1. LOAD INBOX â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // --- 1. LOAD INBOX ---
     async function loadInbox() {
       try {
         const res  = await fetch('/api/messages.php', { credentials: 'include' });
@@ -250,10 +251,11 @@
         if (!data.success) return;
         allThreads = data.data || [];
         renderList();
+        updateUnreadBadge();
       } catch(e) {}
     }
 
-    // â”€â”€â”€ 2. RENDER CONVERSATION LIST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // --- 2. RENDER CONVERSATION LIST ---
     function renderList() {
       const container = document.getElementById('conversationList');
       const q = (document.getElementById('searchBox').value || '').toLowerCase();
@@ -305,9 +307,10 @@
       }).join('');
     }
 
-    // â”€â”€â”€ 3. OPEN THREAD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // --- 3. OPEN THREAD ---
     async function openThread(otherId, listingId, otherName) {
       activeThread = { otherId, listingId: listingId || 0, otherName };
+      displayedMessageIds.clear();
 
       document.getElementById('emptyState').classList.add('hidden');
       document.getElementById('chatArea').classList.remove('hidden');
@@ -339,32 +342,95 @@
       document.getElementById('messagesFeed').innerHTML =
         '<div class="flex justify-center items-center h-full py-10"><span class="material-symbols-outlined text-4xl text-gray-300">hourglass_empty</span></div>';
 
-      try {
-        const params = new URLSearchParams({ thread: otherId });
-        if (listingId) params.set('listing_id', listingId);
-        const res  = await fetch('/api/messages.php?' + params, { credentials: 'include' });
-        const data = await res.json();
-        if (data.success) renderMessages(data.data || []);
-        await loadInbox();
-      } catch(e) {}
-
-      clearInterval(pollTimer);
-      pollTimer = setInterval(refreshThread, 15000);
+      await refreshThread(true);
+      await loadInbox(); // refresh inbox to clear unread counts
     }
 
-    async function refreshThread() {
+    async function refreshThread(isInitial = false) {
       if (!activeThread) return;
       try {
         const { otherId, listingId } = activeThread;
         const params = new URLSearchParams({ thread: otherId });
         if (listingId) params.set('listing_id', listingId);
+        
         const res  = await fetch('/api/messages.php?' + params, { credentials: 'include' });
         const data = await res.json();
-        if (data.success) renderMessages(data.data || []);
+        if (data.success) {
+          const msgs = data.data || [];
+          if (isInitial) {
+            renderMessages(msgs);
+            msgs.forEach(m => displayedMessageIds.add(m.id));
+          } else {
+            // smoothly append new messages
+            let hasNew = false;
+            msgs.forEach(m => {
+              if (!displayedMessageIds.has(m.id)) {
+                hasNew = true;
+                appendMessage(m);
+                displayedMessageIds.add(m.id);
+                // Mark as read explicitly
+                if (String(m.from_user_id) !== String(currentUser.id)) {
+                   fetch('/api/messages.php?id=' + m.id, { method: 'PUT', credentials: 'include' });
+                }
+              }
+            });
+            if (hasNew) {
+               const feed = document.getElementById('messagesFeed');
+               feed.scrollTop = feed.scrollHeight;
+            }
+          }
+        }
       } catch(e) {}
     }
 
-    // â”€â”€â”€ 4. RENDER MESSAGES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    async function refreshMessages() {
+      try {
+        const res  = await fetch('/api/messages.php', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) return;
+        
+        const newThreads = data.data || [];
+        let hasNewMessage = false;
+        
+        newThreads.forEach(nt => {
+           const oldt = allThreads.find(ot => ot.other_user_id === nt.other_user_id && ot.listing_id === nt.listing_id);
+           if (!oldt || new Date(nt.last_time) > new Date(oldt.last_time)) {
+              // Ignore if it's from us
+              if (nt.unread_count > (oldt ? oldt.unread_count : 0)) {
+                 hasNewMessage = true;
+              }
+           }
+        });
+
+        allThreads = newThreads;
+        renderList();
+        updateUnreadBadge();
+
+        if (hasNewMessage) {
+           showToast('New message', 'success');
+        }
+
+        if (activeThread) {
+           await refreshThread();
+        }
+      } catch(e) {}
+    }
+
+    function updateUnreadBadge() {
+       fetch('/api/messages.php?action=unread_count', { credentials: 'include' })
+         .then(r => r.json())
+         .then(d => {
+            if(d.success) {
+               const badge = document.getElementById('unreadBadgeNav');
+               if (badge) {
+                  badge.textContent = d.data.count;
+                  badge.style.display = d.data.count > 0 ? 'flex' : 'none';
+               }
+            }
+         });
+    }
+
+    // --- 4. RENDER MESSAGES ---
     function renderMessages(msgs) {
       const feed   = document.getElementById('messagesFeed');
       const bottom = feed.scrollHeight - feed.clientHeight <= feed.scrollTop + 80;
@@ -374,21 +440,32 @@
         return;
       }
 
-      feed.innerHTML = msgs.map(m => {
-        const isMe = String(m.from_user_id) === String(currentUser.id);
-        const side = isMe
-          ? 'bg-bubble-me dark:bg-primary text-gray-800 dark:text-white rounded-tr-none'
-          : 'bg-white dark:bg-card-dark text-gray-800 dark:text-white rounded-tl-none';
-        const time = new Date(m.created_at).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
-        return '<div class="flex w-full ' + (isMe?'justify-end':'justify-start') + ' slide-in">' +
-          '<div class="msg-bubble px-4 py-2 rounded-xl shadow-sm text-sm ' + side + '">' +
-          sanitizeInput(m.body || '') +
-          '<div class="msg-time ' + (isMe?'text-green-800 dark:text-green-100':'text-gray-400') + '">' + time +
-          (isMe ? ' <span class="material-symbols-outlined text-[10px] text-blue-500 align-middle ml-1">done_all</span>' : '') +
-          '</div></div></div>';
-      }).join('');
+      feed.innerHTML = '';
+      msgs.forEach(m => appendMessage(m, false));
 
       if (bottom || msgs.length <= 5) feed.scrollTop = feed.scrollHeight;
+    }
+    
+    function appendMessage(m, scrollToBottom = true) {
+      const feed   = document.getElementById('messagesFeed');
+      if (feed.querySelector('.py-20')) {
+        feed.innerHTML = '';
+      }
+      const isMe = String(m.from_user_id) === String(currentUser.id);
+      const side = isMe
+        ? 'bg-bubble-me dark:bg-primary text-gray-800 dark:text-white rounded-tr-none'
+        : 'bg-white dark:bg-card-dark text-gray-800 dark:text-white rounded-tl-none';
+      const time = new Date(m.created_at).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+      
+      const div = document.createElement('div');
+      div.className = 'flex w-full ' + (isMe?'justify-end':'justify-start') + ' slide-in';
+      div.innerHTML = '<div class="msg-bubble px-4 py-2 rounded-xl shadow-sm text-sm ' + side + '">' +
+        sanitizeInput(m.body || '') +
+        '<div class="msg-time ' + (isMe?'text-green-800 dark:text-green-100':'text-gray-400') + '">' + time +
+        (isMe ? ' <span class="material-symbols-outlined text-[10px] text-blue-500 align-middle ml-1">done_all</span>' : '') +
+        '</div></div>';
+      feed.appendChild(div);
+      if (scrollToBottom) feed.scrollTop = feed.scrollHeight;
     }
 
     // â”€â”€â”€ 5. SEND MESSAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -491,26 +568,30 @@
       setTimeout(function(){t.classList.add('translate-y-4','opacity-0');setTimeout(function(){t.remove();},300);},4000);
     }
 
-    // â”€â”€â”€ 8. NAVIGATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // --- 8. NAVIGATION ---
     function closeChatMobile() {
-      clearInterval(pollTimer); activeThread=null;
+      activeThread=null;
       document.getElementById('activeChat').classList.add('hidden');
       document.getElementById('sidebar').classList.remove('hidden');
       renderList();
     }
     function closeChatDesktop() {
-      clearInterval(pollTimer); activeThread=null;
+      activeThread=null;
       document.getElementById('activeChat').classList.add('hidden');
       document.getElementById('emptyState').classList.remove('hidden');
       renderList();
     }
 
-    // â”€â”€â”€ 9. EVENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // --- 9. EVENTS ---
     document.getElementById('msgInput').addEventListener('keypress', function(e){ if(e.key==='Enter') sendMessage(); });
     document.getElementById('searchBox').addEventListener('input', renderList);
 
-    // â”€â”€â”€ 10. INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    (async function(){ await loadInbox(); checkChatIntent(); })();
+    // --- 10. INIT ---
+    (async function(){ 
+      await loadInbox(); 
+      checkChatIntent(); 
+      globalPollTimer = setInterval(refreshMessages, 10000);
+    })();
 
   </script>
   <!-- utils.js already loaded before the main script above -->

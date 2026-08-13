@@ -327,9 +327,9 @@ function showToast(message, type = 'success') {
 /* ========== INIT ========== */
 const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
 const urlParams = new URLSearchParams(window.location.search);
-const sellerId = urlParams.get('sellerId');
+const userId = urlParams.get('id') || urlParams.get('sellerId');
 
-if (!sellerId) {
+if (!userId) {
   showToast("No seller profile specified. Redirecting to listings.", "error");
   window.location.href = "classifieds.html";
 }
@@ -337,7 +337,7 @@ if (!sellerId) {
 // Avatar + Review button
 if (currentUser) {
   document.getElementById('navAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
-  if (String(currentUser.id) !== String(sellerId)) {
+  if (String(currentUser.id) !== String(userId)) {
      document.getElementById('btnLeaveReview').classList.remove('hidden');
   }
 } else {
@@ -366,9 +366,14 @@ async function loadProfile() {
   let sellerAvatar = null;
   // 1. Fetch Profile Data
   try {
-    const profileRes = await window.API.Users.get(sellerId);
-    if(profileRes.success && profileRes.data) {
-      const u = profileRes.data;
+    const res = await fetch('/api/users.php?id=' + userId);
+    if(res.status === 404) {
+      document.body.innerHTML = '<div class="min-h-screen flex flex-col items-center justify-center text-center p-4"> <span class="material-symbols-outlined text-6xl text-gray-300 mb-4 block">person_off</span> <h1 class="text-3xl font-black text-gray-800 dark:text-white mb-2">User Not Found</h1> <p class="text-gray-500 mb-6">This seller profile does not exist or has been removed.</p> <a href="classifieds.html" class="bg-primary text-white font-bold py-3 px-6 rounded-full">Go Back to Marketplace</a></div>';
+      return;
+    }
+    const data = await res.json();
+    if(data) {
+      const u = data;
       sellerName = u.name || sellerName;
       sellerLocation = u.city || u.state || sellerLocation;
       isVerified = u.is_verified || u.verified;
@@ -381,7 +386,7 @@ async function loadProfile() {
         document.getElementById('statMemberSince').textContent = memberSince;
       }
       
-      if (currentUser && currentUser.id == sellerId && u.referral_code) {
+      if (currentUser && currentUser.id == userId && u.referral_code) {
         document.getElementById('referralSection').classList.remove('hidden');
         document.getElementById('referralSection').classList.add('flex');
         document.getElementById('userReferralCode').textContent = u.referral_code;
@@ -416,7 +421,8 @@ async function loadProfile() {
   grid.innerHTML = '<div class="col-span-full py-10 text-center"><div class="animate-pulse flex flex-col items-center"><div class="h-8 w-8 bg-gray-200 rounded-full mb-2"></div><div class="h-4 w-32 bg-gray-200 rounded"></div></div></div>';
   
   try {
-    const listingsRes = await API.Listings.getAll({ user_id: sellerId, status: 'active' });
+    const lRes = await fetch(`/api/listings.php?user_id=${userId}&status=active`);
+    const listingsRes = await lRes.json();
     const sellerListings = listingsRes.data && listingsRes.data.listings ? listingsRes.data.listings : [];
 
     if (sellerListings.length > 0) {
@@ -459,7 +465,7 @@ async function loadProfile() {
   // 3. Fetch Reviews
   const reviewContainer = document.getElementById('content-reviews');
   try {
-    const revRes = await fetch(`/api/reviews.php?seller_id=${sellerId}`).then(r => r.json());
+    const revRes = await fetch(`/api/reviews.php?seller_id=${userId}`).then(r => r.json());
     if (revRes.success && revRes.data) {
        const stats = revRes.data.stats;
        const reviews = revRes.data.reviews;
@@ -526,8 +532,8 @@ function startChat() {
      }
      return;
   }
-  if (currentUser.id === sellerId) return showToast("You cannot chat with yourself!", "error");
-  const intent = { action: 'start_chat', partnerId: sellerId, partnerName: document.getElementById('profileName').textContent };
+  if (currentUser.id === userId) return showToast("You cannot chat with yourself!", "error");
+  const intent = { action: 'start_chat', partnerId: userId, partnerName: document.getElementById('profileName').textContent };
   localStorage.setItem('zzz_chat_intent', JSON.stringify(intent));
   window.location.href = "Inbox.html";
 }
@@ -542,7 +548,7 @@ function shareProfile() {
 function openReportModal() {
     if(!currentUser) {
         showToast("Please login to report users", "error");
-        setTimeout(() => window.location.href = `Login Page.html?redirect=${encodeURIComponent('profile.html?sellerId=' + sellerId)}`, 1500);
+        setTimeout(() => window.location.href = `Login Page.html?redirect=${encodeURIComponent('profile.html?id=' + userId)}`, 1500);
         return;
     }
     document.getElementById('reportModal').classList.remove('hidden');
@@ -566,7 +572,7 @@ async function submitReport() {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          reported_user_id: sellerId,   // was 'user_id' — fixed to match users.php handleReport
+          reported_user_id: userId,   // was 'user_id' — fixed to match users.php handleReport
           reason,
           details,
           type: 'user'
@@ -614,7 +620,7 @@ async function submitReview() {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          seller_id: sellerId,
+          seller_id: userId,
           rating: stars,
           comment: text
         })

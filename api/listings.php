@@ -98,8 +98,11 @@ function getAll(): void {
         'newest'    => 'l.created_at DESC',
         'oldest'    => 'l.created_at ASC',
         'price_asc' => 'l.price ASC',
+        'price_high'=> 'l.price DESC',
+        'price_low' => 'l.price ASC',
         'price_desc'=> 'l.price DESC',
         'popular'   => 'l.views DESC',
+        'trending'  => '(l.views + (SELECT COUNT(*) FROM favorites fv WHERE fv.listing_id = l.id) * 3) DESC, l.created_at DESC',
     ];
     $sort = $sortMap[$_GET['sort'] ?? 'newest'] ?? 'l.created_at DESC';
 
@@ -134,7 +137,8 @@ function getAll(): void {
     $sql = "SELECT l.*, u.name AS seller_name, u.avatar AS seller_avatar,
                    u.city AS seller_city, u.phone AS seller_phone, u.trusted_seller AS seller_trusted,
                    (SELECT COUNT(*) FROM favorites f WHERE f.listing_id = l.id) AS favorite_count,
-                   (l.boosted = 1 AND l.boosted_until > NOW()) AS is_boosted_active
+                   (l.boosted = 1 AND l.boosted_until > NOW()) AS is_boosted_active,
+                   (l.original_price IS NOT NULL AND l.original_price > l.price) AS is_price_drop
                    {$distanceSelect}
             FROM listings l
             JOIN users u ON u.id = l.user_id
@@ -173,6 +177,10 @@ function getAll(): void {
         $row['is_top']         = !empty($row['is_top']);
         $row['hide_phone']     = !empty($row['hide_phone']);
         $row['allow_whatsapp'] = !empty($row['allow_whatsapp']);
+        $row['is_price_drop']  = !empty($row['is_price_drop']);
+        $row['seller_trusted'] = !empty($row['seller_trusted']);
+        $row['views']          = (int)($row['views'] ?? 0);
+        $row['favorite_count'] = (int)($row['favorite_count'] ?? 0);
         if (array_key_exists('seller_avatar', $row)) {
             $row['seller_avatar'] = toAbsoluteUrl($row['seller_avatar']);
         }
@@ -244,6 +252,8 @@ function getOne(int $id): void {
     $row['is_top']         = !empty($row['is_top']);
     $row['hide_phone']     = !empty($row['hide_phone']);
     $row['allow_whatsapp'] = !empty($row['allow_whatsapp']);
+    $row['seller_trusted'] = !empty($row['seller_trusted']);
+    $row['is_price_drop']  = isset($row['original_price']) && $row['original_price'] > $row['price'];
 
     // Similar listings
     $sim = $db->prepare(
