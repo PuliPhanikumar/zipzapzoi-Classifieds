@@ -405,7 +405,7 @@
           <div class="relative">
             <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">lock</span>
             <input type="password" id="password" class="input-field" placeholder="Create a strong password" required autocomplete="new-password"/>
-            <button type="button" onclick="togglePass()" class="absolute right-3 top-3.5 text-gray-400 hover:text-primary transition-colors">
+            <button type="button" onclick="togglePass('password', 'eyeIcon')" class="absolute right-3 top-3.5 text-gray-400 hover:text-primary transition-colors">
               <span id="eyeIcon" class="material-symbols-outlined text-[20px]">visibility</span>
             </button>
           </div>
@@ -413,6 +413,17 @@
                 <div class="pw-strength-fill" id="pwStrengthFill" style="width:0%;background:#ef4444;"></div>
               </div>
               <p class="text-xs font-bold mt-1" id="pwStrengthLabel" style="color:#9ca3af;">Enter a strong password</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5" for="confirm_password">Confirm Password</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-3.5 text-gray-400 text-[20px]">lock</span>
+            <input type="password" id="confirm_password" class="input-field" placeholder="Confirm your password" required autocomplete="new-password"/>
+            <button type="button" onclick="togglePass('confirm_password', 'eyeIconConfirm')" class="absolute right-3 top-3.5 text-gray-400 hover:text-primary transition-colors">
+              <span id="eyeIconConfirm" class="material-symbols-outlined text-[20px]">visibility</span>
+            </button>
+          </div>
         </div>
 
         <div class="flex items-start gap-3 mt-2 pt-2">
@@ -583,9 +594,9 @@
     document.getElementById('themeIcon').textContent = dark ? 'light_mode' : 'dark_mode';
   }
 
-  function togglePass() {
-    const input = document.getElementById('password');
-    const icon = document.getElementById('eyeIcon');
+  function togglePass(inputId = 'password', iconId = 'eyeIcon') {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
     input.type = input.type === 'password' ? 'text' : 'password';
     icon.textContent = input.type === 'password' ? 'visibility' : 'visibility_off';
   }
@@ -736,6 +747,10 @@
       // Account created! Save user to localStorage for UI
       const user = data.data.user;
       localStorage.setItem('zzz_user', JSON.stringify(user));
+      if (data.data.token) {
+        localStorage.setItem('zipzapzoi_token', data.data.token);
+        localStorage.setItem('zzz_token', data.data.token);
+      }
       localStorage.removeItem('zipzapzoi_current_user');
       clearInterval(_countdownId);
 
@@ -792,12 +807,14 @@
     const phone    = document.getElementById('phone').value.trim();
     const email    = document.getElementById('email').value.trim().toLowerCase();
     const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
     const refCode  = document.getElementById('referral_code').value.trim();
     const terms    = document.getElementById('terms').checked;
     const honeypot = document.getElementById('hp_website').value;
     const btn      = document.getElementById('regBtn');
 
-    if (!name || !phone || !email || !password) { showToast('Please fill in all fields.', 'error'); return; }
+    if (!name || !phone || !email || !password || !confirmPassword) { showToast('Please fill in all fields.', 'error'); return; }
+    if (password !== confirmPassword) { showToast('Passwords do not match.', 'error'); return; }
     if (!/^\d{10}$/.test(phone)) { showToast('Please enter a valid 10-digit phone number.', 'error'); return; }
     if (password.length < 6) { showToast('Password must be at least 6 characters.', 'error'); return; }
     if (!terms) { showToast('Please agree to the Terms & Conditions.', 'error'); return; }

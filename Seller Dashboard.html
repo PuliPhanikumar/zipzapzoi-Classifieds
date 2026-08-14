@@ -963,7 +963,7 @@
         }
 
         // Load my listings from API
-        const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token') || '';
+        const token = localStorage.getItem('zipzapzoi_token') || sessionStorage.getItem('zipzapzoi_token') || '';
         const lRes  = await fetch(`/api/listings.php?user_id=${me.id}&status=all&limit=100`, { 
             credentials: 'include',
             headers: { 'Authorization': 'Bearer ' + token }

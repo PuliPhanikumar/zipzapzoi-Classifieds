@@ -249,9 +249,19 @@
             </a>
           
           <div class="flex items-center gap-4" id="headerAuthArea">
-            <a href="wanted.html" class="hidden sm:flex items-center gap-1 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
-              <span class="material-symbols-outlined text-[18px]">manage_search</span> Wanted Board
-            </a>
+            <nav class="hidden md:flex items-center gap-4">
+              <a href="index.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Home</a>
+              <a href="classifieds.html" class="text-sm font-bold text-primary transition-colors">Classifieds</a>
+              <a href="wanted.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Wanted</a>
+              <a href="Post Listing.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Post Ad</a>
+              <a href="map.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Map</a>
+              <a href="Inbox.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors relative">
+                Inbox <span id="unreadBadgeNav" class="absolute -top-2 -right-3 bg-red-500 text-white text-[10px] rounded-full px-1.5 hidden">0</span>
+              </a>
+              <a href="Seller Dashboard.html" class="flex items-center gap-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-[18px]">dashboard</span> Dashboard
+              </a>
+            </nav>
             <button onclick="toggleDarkMode()" aria-label="Toggle Dark Mode" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center text-gray-600 dark:text-gray-400">
                <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
             </button>

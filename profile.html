@@ -187,7 +187,13 @@
       <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400">
         <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
       </button>
-      <div id="navAvatar" class="h-9 w-9 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-md">U</div>
+      <div class="relative">
+        <button id="navAvatarBtn" class="h-9 w-9 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-md cursor-pointer" onclick="document.getElementById('userDropdown').classList.toggle('hidden')">U</button>
+        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-card-dark rounded-xl shadow-lg border border-gray-100 dark:border-gray-800 py-2 z-50">
+          <button onclick="openEditProfile()" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Edit Profile</button>
+          <button onclick="handleLogout()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Logout</button>
+        </div>
+      </div>
     </div>
   </div>
 </header>
@@ -444,13 +450,20 @@ if (!userId) {
 
 // Avatar + Review button
 if (currentUser) {
-  document.getElementById('navAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+  document.getElementById('navAvatarBtn').textContent = currentUser.name.charAt(0).toUpperCase();
   if (String(currentUser.id) !== String(userId)) {
      document.getElementById('btnLeaveReview').classList.remove('hidden');
   }
 } else {
-  document.getElementById('navAvatar').textContent = "?";
+  document.getElementById('navAvatarBtn').textContent = "?";
 }
+
+document.addEventListener('click', (e) => {
+  const dropdown = document.getElementById('userDropdown');
+  if (dropdown && !dropdown.classList.contains('hidden') && !e.target.closest('.relative')) {
+    dropdown.classList.add('hidden');
+  }
+});
 
 // Dark mode icon sync
 if (document.documentElement.classList.contains('dark')) {
@@ -745,6 +758,89 @@ async function submitReview() {
     } catch(e) {
       showToast('Network error. Please try again.', 'error');
     }
+}
+
+let selectedAvatarFile = null;
+function handleAvatarSelect(e) {
+  if (e.target.files && e.target.files[0]) {
+    selectedAvatarFile = e.target.files[0];
+    document.getElementById('editAvatarPreview').src = URL.createObjectURL(selectedAvatarFile);
+  }
+}
+function openEditProfile() {
+  if (!currentUser) return;
+  document.getElementById('editName').value = currentUser.name || '';
+  document.getElementById('editCity').value = currentUser.city || '';
+  document.getElementById('editPhone').value = currentUser.phone || '';
+  document.getElementById('editAvatarPreview').src = currentUser.avatar || `https://placehold.co/96x96/019863/white?text=${currentUser.name.charAt(0)}`;
+  document.getElementById('editProfileModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('editProfileContent').classList.remove('scale-95'), 10);
+  document.getElementById('userDropdown').classList.add('hidden');
+}
+function closeEditProfile() {
+  document.getElementById('editProfileContent').classList.add('scale-95');
+  setTimeout(() => document.getElementById('editProfileModal').classList.add('hidden'), 200);
+}
+async function saveProfile() {
+  let avatarUrl = currentUser.avatar;
+  const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token');
+  const btn = document.querySelector('#editProfileModal button[onclick="saveProfile()"]');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  
+  if (selectedAvatarFile) {
+    const formData = new FormData();
+    formData.append('file', selectedAvatarFile);
+    try {
+      const uploadRes = await fetch('/api/uploads.php', { method: 'POST', body: formData, headers: { 'Authorization': 'Bearer ' + token } });
+      const uploadData = await uploadRes.json();
+      if (uploadData.success) {
+        avatarUrl = uploadData.data.url;
+      } else {
+        showToast(uploadData.error || 'Image upload failed', 'error');
+      }
+    } catch(e) { showToast('Image upload network error', 'error'); }
+  }
+
+  const payload = {
+    name: document.getElementById('editName').value,
+    city: document.getElementById('editCity').value,
+    phone: document.getElementById('editPhone').value,
+    avatar: avatarUrl
+  };
+
+  try {
+    const res = await fetch('/api/users.php?action=update_profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Profile updated!');
+      currentUser.name = payload.name;
+      currentUser.city = payload.city;
+      currentUser.phone = payload.phone;
+      currentUser.avatar = payload.avatar;
+      localStorage.setItem('zzz_user', JSON.stringify(currentUser));
+      closeEditProfile();
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      showToast(data.error || 'Update failed', 'error');
+    }
+  } catch(e) {
+    showToast('Network error', 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Changes';
+  }
+}
+
+function handleLogout() {
+  fetch('/api/auth.php?action=logout').then(() => {
+    localStorage.removeItem('zzz_user');
+    localStorage.removeItem('zipzapzoi_token');
+    localStorage.removeItem('zzz_token');
+    window.location.href = 'Login Page.html';
+  });
 }
 
 loadProfile();

@@ -271,7 +271,7 @@
 
         <!-- 6-box OTP input -->
         <div class="flex gap-2 justify-center mb-6" id="otpBoxes">
-          <input type="text" maxlength="1" class="otp-box" data-idx="0" oninput="otpBoxInput(this, 0)" onkeydown="otpBoxKeydown(event, 0)"/>
+          <input type="text" maxlength="1" class="otp-box" data-idx="0" oninput="otpBoxInput(this, 0)" onkeydown="otpBoxKeydown(event, 0)" onpaste="otpBoxPaste(event)"/>
           <input type="text" maxlength="1" class="otp-box" data-idx="1" oninput="otpBoxInput(this, 1)" onkeydown="otpBoxKeydown(event, 1)"/>
           <input type="text" maxlength="1" class="otp-box" data-idx="2" oninput="otpBoxInput(this, 2)" onkeydown="otpBoxKeydown(event, 2)"/>
           <input type="text" maxlength="1" class="otp-box" data-idx="3" oninput="otpBoxInput(this, 3)" onkeydown="otpBoxKeydown(event, 3)"/>
@@ -311,10 +311,30 @@
 
   function otpBoxKeydown(e, idx) {
     const boxes = document.querySelectorAll('.otp-box');
-    if (e.key === 'Backspace' && !boxes[idx].value && idx > 0) {
-      boxes[idx - 1].focus();
-      boxes[idx - 1].value = '';
-      boxes[idx - 1].classList.remove('filled');
+    if (e.key === 'Backspace') {
+      if (!boxes[idx].value && idx > 0) {
+        boxes[idx - 1].focus();
+        boxes[idx - 1].value = '';
+        boxes[idx - 1].classList.remove('filled');
+      }
+    }
+  }
+
+  function otpBoxPaste(e) {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+    const boxes = document.querySelectorAll('.otp-box');
+    text.split('').forEach((ch, i) => {
+      if (boxes[i]) {
+        boxes[i].value = ch;
+        boxes[i].classList.add('filled');
+      }
+    });
+    if (text.length === 6) {
+      boxes[5].focus();
+      setTimeout(verifyOtp, 300);
+    } else {
+      if (boxes[text.length]) boxes[text.length].focus();
     }
   }
 
@@ -380,8 +400,13 @@
         if (data.data && data.data.user) {
           localStorage.setItem('zzz_user', JSON.stringify(data.data.user));
         }
+        if (document.getElementById('rememberMe').checked) {
+          localStorage.setItem('zzz_remember_email', email);
+        } else {
+          localStorage.removeItem('zzz_remember_email');
+        }
         btnText.textContent = 'Redirecting...';
-        const redirect = new URLSearchParams(location.search).get('redirect') || 'Seller Dashboard.html';
+        const redirect = new URLSearchParams(location.search).get('redirect') || 'classifieds.html';
         window.location.href = redirect;
       } else if (data.error && data.error.toLowerCase().includes('otp')) {
         _pendingEmail = email;
@@ -427,7 +452,12 @@
         if (data.data && data.data.user) {
           localStorage.setItem('zzz_user', JSON.stringify(data.data.user));
         }
-        const redirect = new URLSearchParams(location.search).get('redirect') || 'Seller Dashboard.html';
+        if (document.getElementById('rememberMe').checked) {
+          localStorage.setItem('zzz_remember_email', _pendingEmail);
+        } else {
+          localStorage.removeItem('zzz_remember_email');
+        }
+        const redirect = new URLSearchParams(location.search).get('redirect') || 'classifieds.html';
         window.location.href = redirect;
       } else {
         showOtpError(data.error || 'Invalid OTP. Try again.');
@@ -452,10 +482,16 @@
     } catch(e) { showOtpError('Could not resend. Try again.'); }
   }
 
-  // Enter key on password field
+  // Enter key on password field and Remember me load
   document.addEventListener('DOMContentLoaded', () => {
     const pwField = document.getElementById('loginPassword');
     if (pwField) pwField.addEventListener('keypress', e => { if (e.key === 'Enter') handleLogin(); });
+
+    const rememberedEmail = localStorage.getItem('zzz_remember_email');
+    if (rememberedEmail) {
+      document.getElementById('loginEmail').value = rememberedEmail;
+      document.getElementById('rememberMe').checked = true;
+    }
   });
 </script>
 
