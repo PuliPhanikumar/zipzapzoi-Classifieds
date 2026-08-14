@@ -259,12 +259,27 @@
       <h1 class="font-bold text-xl tracking-tight text-gray-800 dark:text-white">Messages</h1>
     </div>
     <div class="flex items-center gap-4">
-      <a href="Seller Dashboard.html" class="hidden md:flex items-center gap-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
-        <span class="material-symbols-outlined text-lg">dashboard</span> Dashboard
-      </a>
-      <div class="h-9 w-9 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-md border-2 border-white" id="userAvatar">U</div>
+      <nav class="hidden md:flex items-center gap-4">
+        <a href="index.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Home</a>
+        <a href="classifieds.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Classifieds</a>
+        <a href="Post Listing.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Post Ad</a>
+        <a href="map.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Map</a>
+        <a href="Inbox.html" class="text-sm font-bold text-primary transition-colors relative">
+          Inbox <span id="unreadBadgeNav" class="absolute -top-2 -right-3 bg-red-500 text-white text-[10px] rounded-full px-1.5 hidden">0</span>
+        </a>
+        <a href="Seller Dashboard.html" class="flex items-center gap-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+          <span class="material-symbols-outlined text-lg">dashboard</span> Dashboard
+        </a>
+      </nav>
+      <div class="h-9 w-9 rounded-full bg-primary text-white flex items-center justify-center font-bold shadow-md border-2 border-white cursor-pointer" id="userAvatar" onclick="logout()">U</div>
     </div>
   </header>
+  <script>
+    function logout() {
+      localStorage.removeItem('zzz_user');
+      window.location.href = 'Login Page.html';
+    }
+  </script>
 
   <div class="flex-1 flex overflow-hidden">
     
@@ -402,7 +417,7 @@
     // --- 1. LOAD INBOX ---
     async function loadInbox() {
       try {
-        const res  = await fetch('/api/messages.php', { credentials: 'include' });
+        const res  = await fetch('/api/messages.php?conversations=1', { credentials: 'include' });
         const data = await res.json();
         if (!data.success) return;
         allThreads = data.data || [];
@@ -506,7 +521,7 @@
       if (!activeThread) return;
       try {
         const { otherId, listingId } = activeThread;
-        const params = new URLSearchParams({ thread: otherId });
+        const params = new URLSearchParams({ with: otherId });
         if (listingId) params.set('listing_id', listingId);
         
         const res  = await fetch('/api/messages.php?' + params, { credentials: 'include' });
@@ -541,7 +556,7 @@
 
     async function refreshMessages() {
       try {
-        const res  = await fetch('/api/messages.php', { credentials: 'include' });
+        const res  = await fetch('/api/messages.php?conversations=1', { credentials: 'include' });
         const data = await res.json();
         if (!data.success) return;
         
@@ -746,7 +761,7 @@
     (async function(){ 
       await loadInbox(); 
       checkChatIntent(); 
-      globalPollTimer = setInterval(refreshMessages, 10000);
+      globalPollTimer = setInterval(refreshMessages, 5000);
     })();
 
   // === GEN Z INBOX FEATURES ===

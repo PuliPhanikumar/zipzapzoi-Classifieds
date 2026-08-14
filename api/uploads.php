@@ -8,6 +8,7 @@
  * Returns: { success: true, data: { url, urls[], files[] } }
  */
 require_once __DIR__ . '/config.php';
+header('Content-Type: application/json; charset=UTF-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') jsonError('POST only', 405);
 $user = requireAuth();
@@ -151,7 +152,9 @@ if (empty($results)) {
     jsonError('No valid image files received. Accepted: JPG, PNG, WebP, GIF under ' . MAX_UPLOAD_MB . 'MB each.');
 }
 
-$urls = array_column($results, 'url');
+$urls = array_map('toAbsoluteUrl', array_column($results, 'url'));
+foreach ($results as &$r) { $r['url'] = toAbsoluteUrl($r['url']); }
+unset($r);
 
 jsonOk([
     'url'   => $urls[0],       // backwards compat for single-upload callers

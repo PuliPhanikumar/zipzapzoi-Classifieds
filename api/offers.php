@@ -210,6 +210,7 @@ elseif ($method === 'PUT') {
                     from_user_id INT NOT NULL,
                     to_user_id INT NOT NULL,
                     listing_id INT NOT NULL,
+                    subject VARCHAR(255) DEFAULT NULL,
                     body TEXT NOT NULL,
                     is_read TINYINT(1) DEFAULT 0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -4,17 +4,25 @@
  * DB: u572945141_Classifieds_db | Host: Hostinger
  */
 
-// ── CORS Headers & Cache Prevention ─────────────────────────────────────
-header('Content-Type: application/json; charset=UTF-8');
-header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
-header('Pragma: no-cache');
-header('Expires: 0');
-header('X-LiteSpeed-Cache-Control: no-cache');
-header('Access-Control-Allow-Origin: https://www.zipzapzoi.com');
+// CORS — allow zipzapzoi.com (www + non-www) and localhost dev
+$_allowedOrigins = [
+    'https://www.zipzapzoi.com',
+    'https://zipzapzoi.com',
+    'http://localhost',
+    'http://localhost:3000',
+    'http://127.0.0.1',
+];
+$_origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($_origin, $_allowedOrigins)) {
+    header('Access-Control-Allow-Origin: ' . $_origin);
+} else {
+    header('Access-Control-Allow-Origin: https://www.zipzapzoi.com');
+}
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 header('Access-Control-Allow-Credentials: true');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
+
 
 // ── Set default timezone for PHP mathematically exact dates ───────
 date_default_timezone_set('Asia/Kolkata');

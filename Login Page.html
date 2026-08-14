@@ -381,7 +381,7 @@
           localStorage.setItem('zzz_user', JSON.stringify(data.data.user));
         }
         btnText.textContent = 'Redirecting...';
-        const redirect = new URLSearchParams(location.search).get('redirect') || 'dashboard.html';
+        const redirect = new URLSearchParams(location.search).get('redirect') || 'Seller Dashboard.html';
         window.location.href = redirect;
       } else if (data.error && data.error.toLowerCase().includes('otp')) {
         _pendingEmail = email;
@@ -415,7 +415,7 @@
       const res = await fetch('/api/auth.php?action=verify_login_otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: _pendingEmail, otp: code }),
+        body: JSON.stringify({ email: _pendingEmail, otp: code, action: 'login' }),
         credentials: 'include'
       });
       const data = await res.json();
@@ -427,7 +427,7 @@
         if (data.data && data.data.user) {
           localStorage.setItem('zzz_user', JSON.stringify(data.data.user));
         }
-        const redirect = new URLSearchParams(location.search).get('redirect') || 'dashboard.html';
+        const redirect = new URLSearchParams(location.search).get('redirect') || 'Seller Dashboard.html';
         window.location.href = redirect;
       } else {
         showOtpError(data.error || 'Invalid OTP. Try again.');

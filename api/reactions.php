@@ -65,12 +65,11 @@ if ($method === 'GET') {
     if (!in_array($reaction, $allowed)) jsonError('Invalid reaction', 400);
     if (!$session_id) jsonError('Missing session_id', 400);
 
-    // Get user_id if logged in
     $user_id = null;
-    try {
-        $u = requireAuth();
+    $u = getCurrentUser();
+    if ($u) {
         $user_id = $u['id'];
-    } catch (Exception $e) {}
+    }
 
     $db = getDB();
 

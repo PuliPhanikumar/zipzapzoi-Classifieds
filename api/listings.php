@@ -443,6 +443,7 @@ function createListing(): void {
     $expires = date('Y-m-d H:i:s', strtotime("+{$expiresDays} days"));
     $lat = isset($b['lat']) && $b['lat'] !== '' ? (float)$b['lat'] : null;
     $lng = isset($b['lng']) && $b['lng'] !== '' ? (float)$b['lng'] : null;
+    $originalPrice = isset($b['original_price']) && $b['original_price'] !== '' ? (float)$b['original_price'] : null;
 
     $isStory = !empty($b['is_story']) ? 1 : 0;
     $videoUrl = clean($b['video_url'] ?? '');
@@ -454,9 +455,9 @@ function createListing(): void {
 
     $db->prepare(
         'INSERT INTO listings
-         (user_id, title, description, category, subcategory, price, price_type,
+         (user_id, title, description, category, subcategory, price, original_price, price_type,
           location_city, location_state, location_area, lat, lng, is_story, video_url, is_highlight, is_top, hide_phone, allow_whatsapp, contact_phone, images, fields, status, expires_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )->execute([
         $uid,
         $title,
@@ -464,6 +465,7 @@ function createListing(): void {
         $category,
         clean($b['subcategory'] ?? ''),
         max(0, (float)($b['price'] ?? 0)),
+        $originalPrice,
         $priceType,
         clean($b['location_city']  ?? ''),
         clean($b['location_state'] ?? ''),

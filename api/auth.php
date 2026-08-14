@@ -108,8 +108,8 @@ function handleVerifyOtp(array $b): void {
     $row = $stmt->fetch();
     if (!$row) jsonError('Invalid or expired OTP. Please try again.');
 
-    // Mark OTP as used
-    $db->prepare('UPDATE otp_tokens SET used = 1 WHERE id = ?')->execute([$row['id']]);
+    // Delete OTP as it is now used
+    $db->prepare('DELETE FROM otp_tokens WHERE id = ?')->execute([$row['id']]);
 
     if ($action === 'register') {
         $meta = json_decode($row['meta'], true);
@@ -189,7 +189,7 @@ function handleLogin(array $b): void {
     if (!$password) jsonError('Password is required.');
 
     $db = getDB();
-    $stmt = $db->prepare('SELECT * FROM users WHERE (email = ? OR phone = ?) AND is_active = 1');
+    $stmt = $db->prepare('SELECT * FROM users WHERE (email = ? OR phone = ?) AND is_active = 1 AND is_verified = 1');
     $stmt->execute([$loginId, $loginId]);
     $user = $stmt->fetch();
 
@@ -395,7 +395,7 @@ function handleVerifySensitiveOtp(array $b): void {
     $stmt->execute([$user['email'], $otp, $now]);
     $row = $stmt->fetch();
     if (!$row) jsonError('Invalid or expired OTP.');
-    $db->prepare('UPDATE otp_tokens SET used = 1 WHERE id = ?')->execute([$row['id']]);
+    $db->prepare('DELETE FROM otp_tokens WHERE id = ?')->execute([$row['id']]);
     jsonOk(['verified' => true]);
 }
 
