@@ -781,6 +781,7 @@ loadProfile();
   // Intercept user data load and inject profile cover + stats
   const _origProfileLoad = window.loadProfile;
   document.addEventListener('DOMContentLoaded', () => {
+    // Load from localStorage first (instant)
     setTimeout(() => {
       try {
         const storedUser = JSON.parse(localStorage.getItem('zzz_user') || '{}');
@@ -788,11 +789,50 @@ loadProfile();
           const img = document.getElementById('profileAvatarImg');
           if (img) img.src = storedUser.avatar;
         }
-        if (storedUser.listings_count) animateCounter(document.getElementById('statListings'), storedUser.listings_count, 800);
-        if (storedUser.favorites_count) animateCounter(document.getElementById('statFavorites'), storedUser.favorites_count, 800);
         renderAchievements(storedUser);
       } catch(e) {}
-    }, 600);
+    }, 300);
+
+    // Also hook into the page's existing user API fetch by intercepting
+    // after the profile page loads its data (wait for DOM to populate)
+    setTimeout(() => {
+      try {
+        // Try to read stats from DOM elements already rendered by existing page JS
+        const nameEl = document.querySelector('[data-profile-name], #profileName, .profile-name, h1');
+        const avatarEl = document.querySelector('#profileAvatar, .profile-avatar, [data-avatar]');
+        if (avatarEl && avatarEl.src) {
+          const img = document.getElementById('profileAvatarImg');
+          if (img) img.src = avatarEl.src;
+        }
+
+        // Fetch user's own listings count from API
+        const userId = new URLSearchParams(location.search).get('id');
+        const myUser = JSON.parse(localStorage.getItem('zzz_user') || '{}');
+        const targetId = userId || myUser.id;
+        const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || '';
+
+        if (targetId) {
+          fetch(`/api/listings.php?user_id=${targetId}&status=active&limit=100`, {
+            headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+          })
+          .then(r => r.json())
+          .then(data => {
+            const listings = (data.data && data.data.listings) ? data.data.listings : [];
+            const totalViews = listings.reduce((a, l) => a + (parseInt(l.views) || 0), 0);
+            const totalFavs = listings.reduce((a, l) => a + (parseInt(l.favorite_count) || 0), 0);
+            animateCounter(document.getElementById('statListings'), listings.length, 800);
+            animateCounter(document.getElementById('statViews'), totalViews, 1200);
+            animateCounter(document.getElementById('statFavorites'), totalFavs, 1000);
+            renderAchievements({ ...myUser, total_listings: listings.length });
+          }).catch(() => {});
+        } else {
+          // Fallback from localStorage
+          const storedUser = JSON.parse(localStorage.getItem('zzz_user') || '{}');
+          if (storedUser.listings_count) animateCounter(document.getElementById('statListings'), storedUser.listings_count, 800);
+          renderAchievements(storedUser);
+        }
+      } catch(e) {}
+    }, 1200);
   });
 </script>
 

@@ -910,14 +910,25 @@
   }
   window.advanceRegStep = advanceRegStep;
   // Auto-detect when OTP section shows up
-  const regOtpSection = document.getElementById('otpSection') || document.getElementById('verifyStep') || document.getElementById('stepOTP');
+  const regOtpSection = document.getElementById('stepOTP') || document.getElementById('otpSection') || document.getElementById('verifyStep');
   if (regOtpSection) {
-    const obs = new MutationObserver(() => {
-      if (!regOtpSection.classList.contains('hidden') && regOtpSection.style.display !== 'none') {
-        advanceRegStep(2);
-      }
+    const obs = new MutationObserver((mutations) => {
+      mutations.forEach(m => {
+        if (m.attributeName === 'class') {
+          const isVisible = !regOtpSection.classList.contains('hidden');
+          if (isVisible) advanceRegStep(2);
+        }
+      });
     });
-    obs.observe(regOtpSection, { attributes: true });
+    obs.observe(regOtpSection, { attributes: true, attributeFilter: ['class', 'style'] });
+  }
+  // Also detect success step
+  const regSuccessSection = document.getElementById('stepSuccess');
+  if (regSuccessSection) {
+    const obs2 = new MutationObserver(() => {
+      if (!regSuccessSection.classList.contains('hidden')) advanceRegStep(3);
+    });
+    obs2.observe(regSuccessSection, { attributes: true, attributeFilter: ['class'] });
   }
 </script>
 </body>

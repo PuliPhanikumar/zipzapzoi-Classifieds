@@ -774,8 +774,11 @@
       inp.addEventListener('keydown', e => {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
-          const sendBtn = document.getElementById('sendMessageBtn') || document.querySelector('button[onclick*="sendMessage"]');
-          if (sendBtn) sendBtn.click();
+          if (typeof sendMessage === 'function') { sendMessage(); }
+          else {
+            const sendBtn = document.querySelector('button[onclick*="sendMessage"]');
+            if (sendBtn) sendBtn.click();
+          }
         }
       });
     });

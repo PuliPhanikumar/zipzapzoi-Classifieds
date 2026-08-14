@@ -19,6 +19,7 @@ try {
 switch ($action) {
     case 'register':             handleRegister($body);          break;
     case 'verify_otp':           handleVerifyOtp($body);         break;
+    case 'verify_login_otp':     handleVerifyOtp($body);         break;  // alias for login OTP verify
     case 'login':                handleLogin($body);             break;
     case 'logout':               handleLogout();                 break;
     case 'me':                   handleMe();                     break;

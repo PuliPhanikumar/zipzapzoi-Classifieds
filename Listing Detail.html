@@ -1362,6 +1362,13 @@
           closeOfferModal();
           showToast('Network error. Please check your connection.', 'error');
         }
+      }
+    </script>
+    
+    <!-- This HTML was previously misplaced, but restoring it to exactly what the user had for safety -->
+    <div id="reportModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-md shadow-2xl relative">
+        <h3 class="text-2xl font-display font-bold text-gray-900 dark:text-white mb-2">Report Listing</h3>
         <p class="text-sm text-gray-500 mb-4">Please let us know why you are reporting this listing or seller. We will investigate immediately.</p>
         <textarea id="reportReason" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-gray-900 dark:text-white mb-4 focus:ring-2 focus:ring-primary outline-none" rows="4" placeholder="e.g. It's a scam, inappropriate content, fake price..."></textarea>
         <div class="flex justify-end gap-3">
@@ -1371,5 +1378,96 @@
       </div>
     </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/abKU=" crossorigin=""></script>
+
+  <script>
+    // === GEN Z: REACTIONS + WATCHERS ===
+    (function() {
+      // Generate/retrieve persistent session ID
+      let _sid = localStorage.getItem('zzz_session_id');
+      if (!_sid) {
+        _sid = 'sess_' + Math.random().toString(36).substr(2,16) + Date.now().toString(36);
+        localStorage.setItem('zzz_session_id', _sid);
+      }
+
+      // Get listing ID from URL
+      const _lid = new URLSearchParams(location.search).get('id');
+
+      // Load reaction counts + user's own reactions
+      async function loadReactions() {
+        if (!_lid) return;
+        try {
+          const res = await fetch(`/api/reactions.php?listing_id=${_lid}&session_id=${encodeURIComponent(_sid)}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          if (!data.success) return;
+          const counts = data.data.counts;
+          const mine   = data.data.my_reactions || [];
+          ['fire','heart','wow','eyes','hundred'].forEach(r => {
+            const el = document.getElementById('react-' + r);
+            if (el) el.textContent = counts[r] || 0;
+            const btn = document.querySelector(`[data-reaction="${r}"]`);
+            if (btn) btn.classList.toggle('reacted', mine.includes(r));
+          });
+        } catch(e) {}
+      }
+
+      // Toggle a reaction (click handler called from HTML buttons)
+      window.toggleReaction = async function(reaction, btn) {
+        if (!_lid) return;
+        const emoji = btn ? btn.querySelector('.reaction-emoji') : null;
+        if (emoji) { emoji.style.transform = 'scale(1.5)'; setTimeout(() => { emoji.style.transform = ''; }, 300); }
+        try {
+          const token = localStorage.getItem('zipzapzoi_token') || '';
+          const res = await fetch('/api/reactions.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}) },
+            body: JSON.stringify({ listing_id: parseInt(_lid), reaction, session_id: _sid })
+          });
+          if (!res.ok) return;
+          const data = await res.json();
+          if (!data.success) return;
+          const counts = data.data.counts;
+          ['fire','heart','wow','eyes','hundred'].forEach(r => {
+            const el = document.getElementById('react-' + r);
+            if (el) el.textContent = counts[r] || 0;
+          });
+          if (btn) btn.classList.toggle('reacted');
+        } catch(e) {}
+      };
+
+      // Load + update watcher count
+      async function loadWatchers() {
+        if (!_lid) return;
+        try {
+          // Send heartbeat
+          await fetch('/api/watchers.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ listing_id: parseInt(_lid), session_id: _sid })
+          });
+          // Get fresh count
+          const res = await fetch(`/api/watchers.php?listing_id=${_lid}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          if (data.success) {
+            const el = document.getElementById('watcherCount');
+            if (el) el.textContent = data.data.count + ' watching';
+          }
+        } catch(e) {}
+      }
+
+      // Init on DOM ready
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+          if (_lid) {
+            loadReactions();
+            loadWatchers();
+            setInterval(loadWatchers, 60000); // heartbeat every 60s
+          }
+        }, 800);
+      });
+    })();
+  </script>
+
   </body>
   </html>

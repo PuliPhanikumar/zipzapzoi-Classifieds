@@ -2307,21 +2307,48 @@
 
   // Hook into existing dashboard load
   document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-      // Try to get stats from cached data or DOM
-      const listings = window._myListings || [];
-      const user = JSON.parse(localStorage.getItem('zzz_user') || '{}');
+    // Try immediately from localStorage
+    const user = JSON.parse(localStorage.getItem('zzz_user') || '{}');
 
-      const totalViews = listings.reduce((a, l) => a + (l.views || 0), 0);
-      const activeCount = listings.filter(l => l.status === 'active').length;
-      const totalFavs = listings.reduce((a, l) => a + (l.favorite_count || 0), 0);
+    // Strategy 1: Fetch fresh stats directly from API
+    const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || '';
+    if (token) {
+      setTimeout(() => {
+        fetch('/api/listings.php?my_listings=1&status=active&limit=200', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        })
+        .then(r => r.json())
+        .then(data => {
+          const listings = (data.data && data.data.listings) ? data.data.listings : [];
+          window._myListings = listings;
 
-      animateDashStat('gzStatViews', totalViews, 1200);
-      animateDashStat('gzStatListings', activeCount, 800);
-      animateDashStat('gzStatFavs', totalFavs, 1000);
+          const totalViews = listings.reduce((a, l) => a + (parseInt(l.views) || 0), 0);
+          const activeCount = listings.filter(l => l.status === 'active').length;
+          const totalFavs  = listings.reduce((a, l) => a + (parseInt(l.favorite_count) || 0), 0);
 
-      if (listings.length) loadGZAchievements(user, listings);
-    }, 1500); // Wait for existing dashboard to load data first
+          animateDashStat('gzStatViews', totalViews, 1200);
+          animateDashStat('gzStatListings', activeCount, 800);
+          animateDashStat('gzStatFavs', totalFavs, 1000);
+
+          // Fetch offer count
+          return fetch('/api/offers.php?my_offers_as_seller=1', {
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+        })
+        .then(r => r.json())
+        .then(data => {
+          const offerCount = (data.data && Array.isArray(data.data)) ? data.data.length : 0;
+          animateDashStat('gzStatOffers', offerCount, 600);
+          const listings = window._myListings || [];
+          loadGZAchievements(user, listings);
+        })
+        .catch(() => {
+          // Fallback: try to read from DOM already rendered by existing dashboard
+          const listingCards = document.querySelectorAll('[data-listing-id], .listing-row, .listing-card');
+          animateDashStat('gzStatListings', listingCards.length, 600);
+        });
+      }, 1000);
+    }
   });
 </script>
 </body>

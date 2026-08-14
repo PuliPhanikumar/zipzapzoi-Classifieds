@@ -1722,7 +1722,7 @@
     clearTimeout(_suggDebounce);
     _suggDebounce = setTimeout(async () => {
       try {
-        const cat = document.getElementById('category')?.value || document.getElementById('adCategory')?.value || '';
+        const cat = document.getElementById('subCategorySelect')?.value || document.getElementById('postCategory')?.value || '';
         const res = await fetch(`/api/listings.php?action=similar_titles&q=${encodeURIComponent(val)}&category=${encodeURIComponent(cat)}`);
         const data = await res.json();
         const titles = (data.data && data.data.titles) ? data.data.titles : [];
@@ -1758,7 +1758,7 @@
     if (!hint || !hintText || !price || price <= 0) { hint?.classList.add('hidden'); return; }
     
     try {
-      const cat = document.getElementById('category')?.value || document.getElementById('adCategory')?.value || '';
+      const cat = document.getElementById('subCategorySelect')?.value || document.getElementById('postCategory')?.value || '';
       const title = document.getElementById('postTitle')?.value || '';
       if (!title || title.length < 3) return;
       const res = await fetch(`/api/listings.php?action=similar_titles&q=${encodeURIComponent(title)}&category=${encodeURIComponent(cat)}`);
