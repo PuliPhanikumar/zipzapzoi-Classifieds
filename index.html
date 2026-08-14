@@ -336,8 +336,8 @@
 <script>
   // Auto-redirect from Splash to Dashboard after 4 seconds
   setTimeout(function() {
-    // Redirect to dashboard.html (must exist in same folder)
-    window.location.href = "dashboard.html";
+    // Redirect to classifieds.html
+    window.location.href = "classifieds.html";
   }, 4000); // 4000 = 4 seconds, change as needed
 </script>
 <style>
@@ -365,13 +365,13 @@ async function fetchIndexHotDeals() {
     grid.innerHTML = data.data.listings.map(l => `
       <div onclick="window.location.href='Listing Detail.html?id=${l.id}'" class="flex-none w-44 cursor-pointer group snap-start bg-white/10 dark:bg-black/30 backdrop-blur-sm p-2 rounded-2xl">
         <div class="relative h-32 rounded-xl overflow-hidden mb-2">
-          <img src="${l.images?.[0] || 'https://via.placeholder.com/200x150?text=No+Image'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" alt="${(l.title || '').replace(/"/g, '')}">
+          <img src="${l.images?.[0] || 'https://via.placeholder.com/200x150?text=No+Image'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" alt="${escapeHtml(l.title || '')}">
           <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
             <div class="text-white text-xs font-black">&#8377;${Number(l.price).toLocaleString('en-IN')}</div>
           </div>
           ${l.is_boosted_active ? '<div class="absolute top-2 left-2 bg-yellow-400 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">&#9889; Featured</div>' : ''}
         </div>
-        <p class="text-xs font-bold text-gray-800 dark:text-white truncate" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5); color: white;">${(l.title||'').replace(/</g,'&lt;')}</p>
+        <p class="text-xs font-bold text-gray-800 dark:text-white truncate" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5); color: white;">${escapeHtml(l.title || '')}</p>
         <p class="text-[10px] text-gray-300">&#128293; ${(l.views||0).toLocaleString()} views</p>
       </div>
     `).join('');
