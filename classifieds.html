@@ -558,9 +558,23 @@
       <script src="js/utils.js"></script>
       <script>
       // =====================================
+      // UTILITY: XSS-safe HTML escape
+      // =====================================
+      function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      // =====================================
       // 1. DATA & STATE
       // =====================================
       const classifiedsSchema = window.ZZZ ? window.ZZZ.getClassifiedsSchema() : window.ZZZ_SCHEMA;
+
       const categories = [{ id: 'All', icon: 'explore', label: 'Explore' }, ...classifiedsSchema.categories];
 
       let activeCategory = 'All';
