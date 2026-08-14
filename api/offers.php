@@ -146,6 +146,28 @@ elseif ($method === 'GET') {
         $offers = $stmt->fetchAll(PDO::FETCH_ASSOC);
         jsonOk(['offers' => $offers]);
     } 
+    elseif (isset($_GET['my_offers_as_seller']) && (int)$_GET['my_offers_as_seller'] === 1) {
+        // Seller sees all offers on all their listings
+        $stmt = $db->prepare("
+            SELECT o.*, u.name AS buyer_name, u.avatar AS buyer_avatar, l.title AS listing_title, l.images AS listing_images 
+            FROM offers o
+            JOIN users u ON o.buyer_id = u.id
+            JOIN listings l ON o.listing_id = l.id
+            WHERE o.seller_id = ?
+            ORDER BY o.updated_at DESC
+        ");
+        $stmt->execute([$user['id']]);
+        $offers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Decode images
+        foreach ($offers as &$offer) {
+            $imgs = json_decode($offer['listing_images'] ?? '[]', true);
+            $offer['listing_image'] = is_array($imgs) && count($imgs) > 0 ? $imgs[0] : null;
+            unset($offer['listing_images']);
+        }
+
+        jsonOk(['offers' => $offers]);
+    }
     else {
         jsonError("Missing required parameters.", 400);
     }

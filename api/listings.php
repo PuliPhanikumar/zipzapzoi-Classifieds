@@ -9,6 +9,12 @@
  */
 require_once __DIR__ . '/config.php';
 
+// Auto-migrate schema for original_price (used by price drop feature)
+try {
+    $db = getDB();
+    $db->exec("ALTER TABLE listings ADD COLUMN original_price DECIMAL(10,2) NULL DEFAULT NULL AFTER price");
+} catch (Exception $e) { /* Ignore if column already exists */ }
+
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
