@@ -59,6 +59,79 @@
       color: #6b7280;
     }
     .dark .tab-inactive { color: #9ca3af; }
+
+    /* === GEN Z PROFILE === */
+    /* Cover banner */
+    .profile-cover {
+      height: 180px;
+      background: linear-gradient(135deg, #019863 0%, #06c47e 50%, #4D96A9 100%);
+      background-size: 300% 300%;
+      animation: coverShift 8s ease infinite;
+      position: relative;
+      overflow: hidden;
+    }
+    @keyframes coverShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    .profile-cover::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    /* Avatar ring */
+    .avatar-ring {
+      border: 4px solid white;
+      box-shadow: 0 0 0 3px #019863, 0 8px 24px rgba(0,0,0,0.2);
+      transition: box-shadow 0.3s;
+    }
+    .avatar-ring:hover { box-shadow: 0 0 0 3px #f43f8f, 0 8px 24px rgba(0,0,0,0.3); }
+
+    /* Trust score arc */
+    .trust-ring {
+      width: 80px; height: 80px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .trust-ring svg { transform: rotate(-90deg); }
+    .trust-ring-value {
+      position: absolute;
+      font-weight: 900;
+      font-size: 1rem;
+      color: #019863;
+    }
+
+    /* Stat pills */
+    .stat-pill {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 20px;
+      border-radius: 16px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+    }
+    html.dark .stat-pill { background: #1e293b; border-color: #334155; }
+    .stat-pill:hover { transform: scale(1.06); border-color: #019863; }
+    .stat-pill-value { font-weight: 900; font-size: 1.25rem; color: #111827; }
+    html.dark .stat-pill-value { color: #f3f4f6; }
+    .stat-pill-label { font-size: 0.7rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Achievement badges */
+    .achievement-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      transition: transform 0.2s;
+    }
+    .achievement-badge:hover { transform: scale(1.08); }
   </style>
 
   <!-- GA4 loaded by js/utils.js — removed duplicate inline block to prevent double-firing -->
@@ -124,6 +197,16 @@
 
   <!-- Profile Card -->
   <div class="bg-white dark:bg-[#1e293b] rounded-[3rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.4)] mb-12 relative z-10 border-[3px] border-white dark:border-transparent">
+          <!-- Profile Cover -->
+          <div class="profile-cover rounded-t-3xl -m-6 mb-0 relative" id="profileCoverBanner">
+            <div class="absolute bottom-0 right-4 translate-y-1/2">
+              <div class="w-24 h-24 rounded-full overflow-hidden avatar-ring" id="profileAvatarLarge">
+                <img id="profileAvatarImg" src="https://placehold.co/96x96/019863/white?text=U" class="w-full h-full object-cover" alt="Profile"/>
+              </div>
+            </div>
+          </div>
+          <div class="mt-16 mb-4"></div>
+
     <!-- Cover -->
     <div class="h-48 md:h-60 bg-gradient-to-r from-teal-200 to-emerald-200 dark:from-teal-900 dark:to-emerald-800 rounded-t-[2.8rem] relative overflow-hidden">
       <!-- Playful bubbly shapes -->
@@ -156,6 +239,31 @@
             <span class="material-symbols-outlined text-[18px]">location_on</span>
             <span id="sellerLoc">India</span>
           </p>
+          
+          <!-- Stats Row -->
+          <div class="flex gap-3 mt-5 flex-wrap">
+            <div class="stat-pill flex-1 min-w-20 stagger-item">
+              <span class="stat-pill-value" id="statListings">0</span>
+              <span class="stat-pill-label">Listings</span>
+            </div>
+            <div class="stat-pill flex-1 min-w-20 stagger-item">
+              <span class="stat-pill-value" id="statFavorites">0</span>
+              <span class="stat-pill-label">Saves</span>
+            </div>
+            <div class="stat-pill flex-1 min-w-20 stagger-item">
+              <span class="stat-pill-value" id="statViews">0</span>
+              <span class="stat-pill-label">Views</span>
+            </div>
+            <div class="stat-pill flex-1 min-w-20 stagger-item">
+              <span class="stat-pill-value" id="statRating">—</span>
+              <span class="stat-pill-label">Rating</span>
+            </div>
+          </div>
+
+          <!-- Achievement Badges -->
+          <div class="flex flex-wrap gap-2 mt-4" id="achievementBadges">
+            <!-- Injected by JS -->
+          </div>
         </div>
 
         <!-- Action Buttons -->
@@ -640,6 +748,52 @@ async function submitReview() {
 }
 
 loadProfile();
+</script>
+
+<script>
+  // === GEN Z PROFILE ENHANCEMENTS ===
+  function animateCounter(el, target, duration) {
+    if (!el) return;
+    let start = 0;
+    const step = target / (duration / 16);
+    const timer = setInterval(() => {
+      start = Math.min(start + step, target);
+      el.textContent = Math.floor(start).toLocaleString('en-IN');
+      if (start >= target) clearInterval(timer);
+    }, 16);
+  }
+
+  function renderAchievements(user) {
+    const badges = [];
+    if (user.trusted_seller) badges.push({ icon: '🏅', label: 'Trusted Seller', color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' });
+    if (user.total_listings >= 10) badges.push({ icon: '🚀', label: 'Power Seller', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' });
+    if (user.avg_rating >= 4.5) badges.push({ icon: '⭐', label: '5-Star Rated', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' });
+    if (user.is_verified) badges.push({ icon: '✅', label: 'Verified', color: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400' });
+
+    const container = document.getElementById('achievementBadges');
+    if (container) {
+      container.innerHTML = badges.map(b =>
+        `<span class="achievement-badge ${b.color}">${b.icon} ${b.label}</span>`
+      ).join('');
+    }
+  }
+
+  // Intercept user data load and inject profile cover + stats
+  const _origProfileLoad = window.loadProfile;
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      try {
+        const storedUser = JSON.parse(localStorage.getItem('zzz_user') || '{}');
+        if (storedUser.avatar) {
+          const img = document.getElementById('profileAvatarImg');
+          if (img) img.src = storedUser.avatar;
+        }
+        if (storedUser.listings_count) animateCounter(document.getElementById('statListings'), storedUser.listings_count, 800);
+        if (storedUser.favorites_count) animateCounter(document.getElementById('statFavorites'), storedUser.favorites_count, 800);
+        renderAchievements(storedUser);
+      } catch(e) {}
+    }, 600);
+  });
 </script>
 
 </body>

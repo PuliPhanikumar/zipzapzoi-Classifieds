@@ -87,6 +87,85 @@
 
 
 
+    /* === GEN Z DASHBOARD === */
+    /* Animated stat tiles */
+    .stat-tile {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      border: 1px solid #e5e7eb;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: default;
+      position: relative;
+      overflow: hidden;
+    }
+    html.dark .stat-tile { background: #1e293b; border-color: #334155; }
+    .stat-tile:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.1); }
+    html.dark .stat-tile:hover { box-shadow: 0 16px 40px rgba(0,0,0,0.4); }
+    .stat-tile::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 20px 20px 0 0;
+    }
+    .stat-tile.green::after { background: linear-gradient(90deg, #019863, #06c47e); }
+    .stat-tile.blue::after { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .stat-tile.pink::after { background: linear-gradient(90deg, #f43f8f, #fb7185); }
+    .stat-tile.amber::after { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .stat-value { font-size: 2rem; font-weight: 900; line-height: 1; margin-bottom: 4px; }
+    .stat-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; }
+    html.dark .stat-label { color: #94a3b8; }
+    .stat-icon { font-size: 2.5rem; line-height: 1; margin-bottom: 12px; }
+
+    /* Achievement row */
+    .achievement-card {
+      background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+      border: 1px solid #bbf7d0;
+      border-radius: 16px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: transform 0.2s;
+    }
+    html.dark .achievement-card { background: rgba(1,152,99,0.12); border-color: rgba(1,152,99,0.3); }
+    .achievement-card:hover { transform: scale(1.02); }
+
+    /* Quick action pills */
+    .quick-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      border: none;
+      color: white;
+    }
+    .quick-action:hover { transform: scale(1.06); }
+    .quick-action:active { transform: scale(0.95); }
+
+    /* Sparkline mini chart */
+    .sparkline-bar {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 40px;
+    }
+    .sparkline-bar .bar {
+      flex: 1;
+      border-radius: 4px 4px 0 0;
+      background: #019863;
+      opacity: 0.3;
+      transition: opacity 0.2s, height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .sparkline-bar .bar.active { opacity: 1; }
+    .sparkline-bar .bar:hover { opacity: 0.8; }
+</style>
 <link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet"/>
 </head>
 
@@ -287,6 +366,41 @@
           <span class="material-symbols-outlined">add</span> Post New Ad
         </button>
       </div>
+
+              <!-- Gen Z Stats Tiles -->
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 mt-6" id="genZStatsRow">
+                <div class="stat-tile green stagger-item">
+                  <div class="stat-icon">📈</div>
+                  <div class="stat-value text-emerald-600 dark:text-emerald-400" id="gzStatViews">0</div>
+                  <div class="stat-label">Total Views</div>
+                </div>
+                <div class="stat-tile blue stagger-item">
+                  <div class="stat-icon">📦</div>
+                  <div class="stat-value text-blue-600 dark:text-blue-400" id="gzStatListings">0</div>
+                  <div class="stat-label">Active Ads</div>
+                </div>
+                <div class="stat-tile pink stagger-item">
+                  <div class="stat-icon">❤️</div>
+                  <div class="stat-value text-pink-600 dark:text-pink-400" id="gzStatFavs">0</div>
+                  <div class="stat-label">Saves</div>
+                </div>
+                <div class="stat-tile amber stagger-item">
+                  <div class="stat-icon">💬</div>
+                  <div class="stat-value text-amber-600 dark:text-amber-400" id="gzStatOffers">0</div>
+                  <div class="stat-label">Offers</div>
+                </div>
+              </div>
+
+              <!-- Achievement Badges Row -->
+              <div class="flex flex-wrap gap-3 mb-6" id="gzAchievements"></div>
+
+              <!-- Quick Actions Row -->
+              <div class="flex flex-wrap gap-3 mb-8">
+                <button class="quick-action haptic-tap" style="background: linear-gradient(135deg, #019863, #06c47e);" onclick="window.location.href='Post Listing.html'">📋 Post New Ad</button>
+                <button class="quick-action haptic-tap" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);" onclick="window.location.href='classifieds.html'">🔍 Browse Market</button>
+                <button class="quick-action haptic-tap" style="background: linear-gradient(135deg, #f43f8f, #fb7185);" onclick="window.location.href='Inbox.html'">📬 Messages</button>
+                <button class="quick-action haptic-tap" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);" onclick="window.location.href='map.html'">🗺️ Map View</button>
+              </div>
 
       <!-- ── STATS GRID ───────────────────── -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -2154,6 +2268,61 @@
             }[m];
         });
     }
+  // === GEN Z DASHBOARD STATS ===
+  function animateDashStat(id, target, duration) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let start = 0;
+    const step = Math.max(1, target / (duration / 16));
+    const timer = setInterval(() => {
+      start = Math.min(start + step, target);
+      el.textContent = Math.floor(start).toLocaleString('en-IN');
+      if (start >= target) clearInterval(timer);
+    }, 16);
+  }
+
+  function loadGZAchievements(user, listings) {
+    const badges = [];
+    const totalViews = listings.reduce((a, l) => a + (l.views || 0), 0);
+    const activeCount = listings.filter(l => l.status === 'active').length;
+
+    if (user.trusted_seller) badges.push({ icon: '🏅', label: 'Trusted Seller', cls: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300' });
+    if (activeCount >= 5) badges.push({ icon: '🚀', label: 'Power Seller', cls: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' });
+    if (totalViews >= 500) badges.push({ icon: '🔥', label: 'Trending Creator', cls: 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300' });
+    if (user.is_verified) badges.push({ icon: '✅', label: 'Verified', cls: 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300' });
+
+    const cont = document.getElementById('gzAchievements');
+    if (cont && badges.length) {
+      cont.innerHTML = badges.map(b =>
+        `<div class="achievement-card">
+          <span class="text-2xl">${b.icon}</span>
+          <div>
+            <div class="font-black text-sm ${b.cls.split(' ').pop()}">${b.label}</div>
+            <div class="text-xs text-gray-500">Achievement unlocked!</div>
+          </div>
+        </div>`
+      ).join('');
+    }
+  }
+
+  // Hook into existing dashboard load
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      // Try to get stats from cached data or DOM
+      const listings = window._myListings || [];
+      const user = JSON.parse(localStorage.getItem('zzz_user') || '{}');
+
+      const totalViews = listings.reduce((a, l) => a + (l.views || 0), 0);
+      const activeCount = listings.filter(l => l.status === 'active').length;
+      const totalFavs = listings.reduce((a, l) => a + (l.favorite_count || 0), 0);
+
+      animateDashStat('gzStatViews', totalViews, 1200);
+      animateDashStat('gzStatListings', activeCount, 800);
+      animateDashStat('gzStatFavs', totalFavs, 1000);
+
+      if (listings.length) loadGZAchievements(user, listings);
+    }, 1500); // Wait for existing dashboard to load data first
+  });
 </script>
 </body>
 </html>

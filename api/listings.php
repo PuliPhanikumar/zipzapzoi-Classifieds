@@ -23,6 +23,7 @@ $id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
 switch ($method) {
     case 'GET':
         if (isset($_GET['action']) && $_GET['action'] === 'stats') getStats();
+        elseif (isset($_GET['action']) && $_GET['action'] === 'similar_titles') getSimilarTitles();
         elseif ($id) getOne($id);
         else getAll();
         break;
@@ -710,6 +711,29 @@ function deleteListing(int $id): void {
     }
     $db->prepare('DELETE FROM listings WHERE id = ?')->execute([$id]);
     jsonOk(['message' => 'Listing deleted.']);
+}
+
+// SIMILAR TITLES (for AI-style suggestions on Post Listing)
+function getSimilarTitles(): void {
+    $q        = clean($_GET['q'] ?? '');
+    $category = clean($_GET['category'] ?? '');
+    if (strlen($q) < 3) { jsonOk(['titles' => []]); return; }
+
+    $db = getDB();
+    $where = ["l.status = 'active'", "l.title LIKE :q"];
+    $params = [':q' => '%' . $q . '%'];
+
+    if ($category) {
+        $where[] = 'l.category = :cat';
+        $params[':cat'] = $category;
+    }
+
+    $sql = 'SELECT DISTINCT l.title, l.price, l.category FROM listings l WHERE ' . implode(' AND ', $where) . ' ORDER BY l.views DESC LIMIT 6';
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    jsonOk(['titles' => $rows]);
 }
 
 // ─────────────────────────────────────────────────────────────────────

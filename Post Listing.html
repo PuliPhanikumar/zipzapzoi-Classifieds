@@ -85,8 +85,86 @@
   .animate-logo-bouncy {
     animation: bounce-gentle 3s infinite ease-in-out;
   }
-</style>
 
+    /* === GEN Z POST LISTING === */
+    /* AI Title Suggestions dropdown */
+    #titleSuggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 2px solid #019863;
+      border-top: none;
+      border-radius: 0 0 12px 12px;
+      z-index: 50;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      overflow: hidden;
+    }
+    html.dark #titleSuggestions { background: #1e293b; border-color: #059669; }
+    .suggestion-item {
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid #f0f4f8;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    html.dark .suggestion-item { border-color: #334155; color: #e2e8f0; }
+    .suggestion-item:hover { background: #f0fdf4; }
+    html.dark .suggestion-item:hover { background: rgba(1,152,99,0.15); }
+    .suggestion-item:last-child { border-bottom: none; }
+    .suggestion-price { font-size: 0.75rem; color: #019863; font-weight: 800; margin-left: 8px; }
+
+    /* Drag-drop upload zone */
+    .upload-zone {
+      border: 2.5px dashed #d1d5db;
+      border-radius: 16px;
+      transition: all 0.25s;
+      cursor: pointer;
+    }
+    html.dark .upload-zone { border-color: #374151; }
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: #019863;
+      background: #f0fdf4;
+      transform: scale(1.01);
+    }
+    html.dark .upload-zone:hover, html.dark .upload-zone.drag-over {
+      background: rgba(1,152,99,0.08);
+    }
+    .upload-zone.drag-over { box-shadow: 0 0 20px rgba(1,152,99,0.3); }
+
+    /* Urgency toggle pills */
+    .urgency-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 9999px;
+      border: 2px solid #e5e7eb;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      font-weight: 700;
+      font-size: 0.85rem;
+      user-select: none;
+      background: white;
+      color: #374151;
+    }
+    html.dark .urgency-toggle { background: #1e293b; border-color: #334155; color: #e2e8f0; }
+    .urgency-toggle input { display: none; }
+    .urgency-toggle.checked {
+      border-color: #019863;
+      background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+      color: #166534;
+    }
+    html.dark .urgency-toggle.checked { background: rgba(1,152,99,0.2); color: #86efac; }
+    .urgency-toggle:hover { transform: scale(1.04); }
+
+    /* Price comparison hint */
+    #priceHint {
+      transition: all 0.3s;
+    }
+</style>
 
 
 <link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet"/>
@@ -213,7 +291,10 @@
         <div class="space-y-6">
           <div>
             <label class="block text-sm font-bold mb-2">Ad Title *</label>
-            <input type="text" id="postTitle" class="w-full rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4" placeholder="e.g. iPhone 14 Pro Max 256GB - Brand New" required>
+            <div class="relative">
+              <input type="text" id="postTitle" class="w-full rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4" placeholder="e.g. iPhone 14 Pro Max 256GB - Brand New" required oninput="fetchTitleSuggestions(this.value)" onfocus="fetchTitleSuggestions(this.value)">
+              <div id="titleSuggestions" class="hidden"></div>
+            </div>
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Mention key features like Brand, Model, Type</p>
           </div>
 
@@ -222,7 +303,10 @@
               <label id="priceLabel" class="block text-sm font-bold mb-2">Price (₹) *</label>
               <div class="relative">
                 <span class="absolute left-4 top-3.5 text-gray-500 dark:text-gray-400">₹</span>
-                <input type="number" id="postPrice" class="w-full pl-8 rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4" placeholder="0">
+                <input type="number" id="postPrice" class="w-full pl-8 rounded-xl border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 py-3 px-4" placeholder="0" oninput="checkPriceHint(this.value)">
+              </div>
+              <div id="priceHint" class="hidden mt-2 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl text-xs font-bold text-amber-700 dark:text-amber-400">
+                💡 <span id="priceHintText"></span>
               </div>
             </div>
             <div class="flex items-center gap-4 mt-8">
@@ -314,7 +398,7 @@
         <div id="photoUploadContainer">
            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4" id="photoLimitText">Add up to 8 photos. First photo is your cover image.</p>
         
-        <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-800 transition-colors cursor-pointer relative">
+        <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-800 transition-colors cursor-pointer relative upload-zone">
           <input type="file" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" id="fileInput">
           <span class="material-symbols-outlined text-4xl text-gray-400 mb-2">add_a_photo</span>
           <p class="font-medium text-secondary">Click to upload or drag & drop</p>
@@ -433,7 +517,22 @@
         </div>
       </div>
       
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+                  <!-- ⚡ URGENCY TOGGLES -->
+            <div class="mt-6 mb-6">
+              <label class="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide">Boost Options</label>
+              <div class="flex flex-wrap gap-3">
+                <label class="urgency-toggle" id="urgentToggle" onclick="this.classList.toggle('checked')">
+                  <input type="checkbox" name="is_urgent" value="1"> ⚡ Mark as Urgent
+                </label>
+                <label class="urgency-toggle" id="negotiableToggle" onclick="this.classList.toggle('checked')">
+                  <input type="checkbox" name="is_negotiable" value="1"> 💬 Price Negotiable
+                </label>
+                <label class="urgency-toggle" id="whatsappToggle" onclick="this.classList.toggle('checked')">
+                  <input type="checkbox" name="allow_whatsapp" value="1"> 📲 WhatsApp Contact
+                </label>
+              </div>
+            </div>
+<div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
           <button type="button" onclick="goToStep3()" class="text-gray-600 dark:text-gray-300 font-bold px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all w-full sm:w-auto">Back: Media</button>
           <button type="button" id="finalSubmitBtn" class="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-bold py-3 px-10 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all w-full sm:w-auto">Publish Ad Now ✨</button>
       </div>
@@ -1613,6 +1712,98 @@
             videoInput.removeAttribute('required');
         }
     }
-  </script>
+  
+  // === AI TITLE SUGGESTIONS ===
+  let _suggDebounce = null;
+  window.fetchTitleSuggestions = async function(val) {
+    const box = document.getElementById('titleSuggestions');
+    if (!box) return;
+    if (!val || val.length < 3) { box.classList.add('hidden'); return; }
+    clearTimeout(_suggDebounce);
+    _suggDebounce = setTimeout(async () => {
+      try {
+        const cat = document.getElementById('category')?.value || document.getElementById('adCategory')?.value || '';
+        const res = await fetch(`/api/listings.php?action=similar_titles&q=${encodeURIComponent(val)}&category=${encodeURIComponent(cat)}`);
+        const data = await res.json();
+        const titles = (data.data && data.data.titles) ? data.data.titles : [];
+        if (!titles.length) { box.classList.add('hidden'); return; }
+        box.innerHTML = titles.map(t => `
+          <div class="suggestion-item" onclick="applySuggestion('${t.title.replace(/'/g, "\\'")}')">
+            ${t.title}
+            <span class="suggestion-price">₹${Number(t.price).toLocaleString('en-IN')}</span>
+            <span class="text-xs text-gray-400 ml-1">(${t.category})</span>
+          </div>`).join('');
+        box.classList.remove('hidden');
+      } catch(e) { box.classList.add('hidden'); }
+    }, 350);
+  };
+
+  window.applySuggestion = function(title) {
+    const input = document.getElementById('postTitle');
+    if (input) { input.value = title; input.dispatchEvent(new Event('input')); }
+    document.getElementById('titleSuggestions')?.classList.add('hidden');
+  };
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#titleSuggestions') && !e.target.closest('#postTitle')) {
+      document.getElementById('titleSuggestions')?.classList.add('hidden');
+    }
+  });
+
+  // === PRICE HINT ===
+  window.checkPriceHint = async function(val) {
+    const price = parseFloat(val);
+    const hint = document.getElementById('priceHint');
+    const hintText = document.getElementById('priceHintText');
+    if (!hint || !hintText || !price || price <= 0) { hint?.classList.add('hidden'); return; }
+    
+    try {
+      const cat = document.getElementById('category')?.value || document.getElementById('adCategory')?.value || '';
+      const title = document.getElementById('postTitle')?.value || '';
+      if (!title || title.length < 3) return;
+      const res = await fetch(`/api/listings.php?action=similar_titles&q=${encodeURIComponent(title)}&category=${encodeURIComponent(cat)}`);
+      const data = await res.json();
+      const titles = (data.data && data.data.titles) ? data.data.titles : [];
+      if (titles.length < 2) { hint.classList.add('hidden'); return; }
+
+      const prices = titles.map(t => parseFloat(t.price)).filter(p => p > 0).sort((a,b) => a-b);
+      if (!prices.length) return;
+      const minP = prices[0], maxP = prices[prices.length - 1];
+      const avgP = prices.reduce((a,b) => a+b, 0) / prices.length;
+
+      if (price > avgP * 1.5) {
+        hintText.textContent = `Similar items sell for ₹${Math.round(minP).toLocaleString()}–₹${Math.round(maxP).toLocaleString()}. Your price might be high.`;
+      } else if (price < avgP * 0.5) {
+        hintText.textContent = `Great deal! Similar items go for ₹${Math.round(avgP).toLocaleString()} on average.`;
+      } else {
+        hintText.textContent = `Competitive price! Similar items: ₹${Math.round(minP).toLocaleString()}–₹${Math.round(maxP).toLocaleString()}.`;
+      }
+      hint.classList.remove('hidden');
+    } catch(e) {}
+  };
+
+  // === DRAG & DROP UPLOAD ZONE ===
+  function initDragDrop() {
+    const zone = document.querySelector('.upload-zone');
+    if (!zone) return;
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      const files = e.dataTransfer.files;
+      if (files.length) {
+        const input = document.getElementById('fileInput') || document.querySelector('input[type=file]');
+        if (input) {
+          const dt = new DataTransfer();
+          Array.from(files).forEach(f => dt.items.add(f));
+          input.files = dt.files;
+          input.dispatchEvent(new Event('change'));
+        }
+      }
+    });
+  }
+  document.addEventListener('DOMContentLoaded', initDragDrop);
+</script>
 </body>
 </html>
