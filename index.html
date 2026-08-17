@@ -355,6 +355,17 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchIndexHotDeals();
 });
 
+// UTILITY: XSS-safe HTML escape
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 async function fetchIndexHotDeals() {
   try {
     const res = await fetch('/api/listings.php?sort=trending&status=active&limit=8');
