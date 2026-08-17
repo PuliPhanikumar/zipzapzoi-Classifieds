@@ -311,9 +311,6 @@
       <span class="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-white/80" style="font-family: 'Fredoka One', cursive; filter: drop-shadow(0px 8px 16px rgba(0,0,0,0.4));">
         ZipZap<span class="text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 to-vibrant-pink">Zoi</span>
       </span>
-      <span class="mt-4 px-5 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/30 text-white font-bold tracking-[0.3em] uppercase text-sm shadow-xl">
-        Classifieds
-      </span>
     </h1>
   </div>
 </div>
@@ -324,29 +321,10 @@
   <div class="p-1 rounded-full bg-black/30 backdrop-blur-xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden relative h-14 flex items-center">
     <div class="absolute inset-0 bg-gradient-to-r from-lime-green via-sunny-yellow to-hot-pink opacity-40 animate-pulse"></div>
     <div class="absolute left-1 top-1 bottom-1 rounded-full bg-white animate-progress" style="width: 0%; box-shadow: 0 0 25px rgba(255,255,255,1);"></div>
-    <span class="absolute inset-0 flex items-center justify-center text-white font-black text-xs tracking-[0.2em] z-10 drop-shadow-md mix-blend-overlay">ENTERING ZOI...</span>
+    <span class="absolute inset-0 flex items-center justify-center text-white font-black text-xs tracking-[0.2em] z-10 drop-shadow-md mix-blend-overlay">ENTERING ZOI... 😊</span>
   </div>
 </div>
 </div>
-
-<!-- 🔥 HOT DEALS SECTION (Gen Z Glassmorphism) -->
-<section class="relative z-20 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-auto mb-10 animate-phrase-in opacity-0" style="animation-fill-mode: forwards; animation-delay: 1.2s;">
-  <div class="bg-black/30 backdrop-blur-2xl border border-white/20 rounded-[2rem] p-5 md:p-8 shadow-[0_30px_60px_rgba(0,0,0,0.4)]">
-    <div class="flex items-center gap-4 mb-6">
-      <div class="bg-gradient-to-br from-orange-500 to-red-600 p-3 rounded-2xl shadow-inner">
-        <span class="text-2xl md:text-3xl drop-shadow-md leading-none flex">&#128293;</span>
-      </div>
-      <div>
-        <h2 class="text-2xl md:text-3xl font-black text-white tracking-tight">Trending Deals</h2>
-        <p class="text-sm text-white/70 font-bold mt-1">Snag these before they're gone ⚡</p>
-      </div>
-      <a href="classifieds.html" class="ml-auto bg-white/10 hover:bg-white/25 transition-all duration-300 px-5 py-2.5 rounded-full text-sm font-black text-white flex items-center gap-2 border border-white/20 shadow-lg hover:scale-105 active:scale-95">
-        Explore <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
-      </a>
-    </div>
-    <div id="indexHotDeals" class="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory" style="scrollbar-width:none;-ms-overflow-style:none;"></div>
-  </div>
-</section>
 <script>
   // Auto-redirect from Splash to Dashboard after 4 seconds
   setTimeout(function() {
@@ -354,45 +332,7 @@
     window.location.href = "classifieds.html";
   }, 4000); // 4000 = 4 seconds, change as needed
 </script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  fetchIndexHotDeals();
-});
 
-// UTILITY: XSS-safe HTML escape
-function escapeHtml(str) {
-  if (str === null || str === undefined) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-async function fetchIndexHotDeals() {
-  try {
-    const res = await fetch('/api/listings.php?sort=trending&status=active&limit=8');
-    const data = await res.json();
-    if (!data.success || !data.data.listings.length) return;
-    const grid = document.getElementById('indexHotDeals');
-    if (!grid) return;
-    grid.innerHTML = data.data.listings.map(l => `
-      <div onclick="window.location.href='Listing Detail.html?id=${l.id}'" class="flex-none w-44 cursor-pointer group snap-start bg-white/10 dark:bg-black/30 backdrop-blur-sm p-2 rounded-2xl">
-        <div class="relative h-32 rounded-xl overflow-hidden mb-2">
-          <img src="${l.images?.[0] || 'https://via.placeholder.com/200x150?text=No+Image'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" alt="${escapeHtml(l.title || '')}">
-          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-            <div class="text-white text-xs font-black">&#8377;${Number(l.price).toLocaleString('en-IN')}</div>
-          </div>
-          ${l.is_boosted_active ? '<div class="absolute top-2 left-2 bg-yellow-400 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">&#9889; Featured</div>' : ''}
-        </div>
-        <p class="text-xs font-bold text-gray-800 dark:text-white truncate" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5); color: white;">${escapeHtml(l.title || '')}</p>
-        <p class="text-[10px] text-gray-300">&#128293; ${(l.views||0).toLocaleString()} views</p>
-      </div>
-    `).join('');
-  } catch(e) { console.warn('Hot deals error', e); }
-}
-</script>
 <script src="scripts/auth.js"></script>
 <script src="scripts/boot.js"></script>
   <script src="js/utils.js"></script>
