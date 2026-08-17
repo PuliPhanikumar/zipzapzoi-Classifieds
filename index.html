@@ -340,18 +340,8 @@
     window.location.href = "classifieds.html";
   }, 4000); // 4000 = 4 seconds, change as needed
 </script>
-<style>
-body {
-  opacity: 0;
-  transition: opacity 0.8s ease-in-out;
-}
-body.loaded {
-  opacity: 1;
-}
-</style>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  document.body.classList.add("loaded");
   fetchIndexHotDeals();
 });
 
