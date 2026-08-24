@@ -385,7 +385,7 @@ function createListing(): void {
                     }
                 }
             } elseif (str_starts_with($img, '/') || str_starts_with($img, 'http')) {
-                if (filter_var($img, FILTER_VALIDATE_URL) || preg_match('/^\/uploads\/lst_[0-9a-zA-Z_]+\.(jpg|jpeg|png|webp|gif)$/', $img)) {
+                if (filter_var($img, FILTER_VALIDATE_URL) || preg_match('/^\/uploads\/(listings\/)?lst_[0-9a-zA-Z_]+\.(jpg|jpeg|png|webp|gif)$/', $img)) {
                     $imageUrls[] = $img;
                 }
             }
@@ -584,7 +584,7 @@ function updateListing(int $id): void {
                 }
             } elseif (str_starts_with($img, '/') || str_starts_with($img, 'http')) {
                 // Ensure it's a valid URL, not a path traversal payload
-                if (filter_var($img, FILTER_VALIDATE_URL) || preg_match('/^\/uploads\/lst_[0-9a-zA-Z_]+\.(jpg|jpeg|png|webp|gif)$/', $img)) {
+                if (filter_var($img, FILTER_VALIDATE_URL) || preg_match('/^\/uploads\/(listings\/)?lst_[0-9a-zA-Z_]+\.(jpg|jpeg|png|webp|gif)$/', $img)) {
                     $processedImages[] = $img;
                 }
             }
@@ -592,9 +592,12 @@ function updateListing(int $id): void {
         
         // Storage Bloat: Active delete old images when replacing them
         $oldImages = json_decode($listing['images'], true) ?: [];
-        $removedImages = array_diff($oldImages, $processedImages);
-        foreach ($removedImages as $oldImg) {
-            $filename = basename($oldImg);
+        $oldBasenames = array_map('basename', $oldImages);
+        $newBasenames = array_map('basename', $processedImages);
+        
+        $removedBasenames = array_diff($oldBasenames, $newBasenames);
+        foreach ($removedBasenames as $filename) {
+            if (!$filename) continue;
             $filepath = UPLOAD_DIR . $filename;
             // Additional check to prevent any accidental path traversal deletion
             if (file_exists($filepath) && strpos(realpath($filepath), realpath(UPLOAD_DIR)) === 0) {
