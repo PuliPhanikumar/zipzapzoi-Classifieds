@@ -762,7 +762,12 @@
 
   stateSelect.addEventListener('change', (e) => {
     const state = e.target.value;
-    citySelect.innerHTML = '<option value="">Select City</option>';
+    while(citySelect.firstChild) citySelect.removeChild(citySelect.firstChild);
+    const defaultCityOpt = document.createElement('option');
+    defaultCityOpt.value = "";
+    defaultCityOpt.textContent = "Select City";
+    citySelect.appendChild(defaultCityOpt);
+
     if (state && indiaData[state]) {
       indiaData[state].forEach(city => {
         const opt = document.createElement('option');
@@ -785,7 +790,12 @@
     goToStep2();
     
     // Reset & Populate Subcategories
-    subCategorySelect.innerHTML = '<option value="">Select Subcategory...</option>';
+    while(subCategorySelect.firstChild) subCategorySelect.removeChild(subCategorySelect.firstChild);
+    const defaultSubcatOpt = document.createElement('option');
+    defaultSubcatOpt.value = "";
+    defaultSubcatOpt.textContent = "Select Subcategory...";
+    subCategorySelect.appendChild(defaultSubcatOpt);
+
     currentCategory.subs.forEach(sub => {
       const opt = document.createElement('option');
       opt.value = sub;

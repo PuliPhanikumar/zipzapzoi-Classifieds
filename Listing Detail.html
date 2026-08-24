@@ -502,6 +502,9 @@
                 <button onclick="generateSharePoster()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-2 text-sm">
                   <span class="material-symbols-outlined text-[18px]">wallpaper</span> Download Share Poster
                 </button>
+                <button onclick="shareOnWhatsApp()" class="w-full py-3.5 rounded-xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-2 text-sm mt-3">
+                  <span class="material-symbols-outlined text-[18px]">share</span> Share on WhatsApp
+                </button>
               </div>
 
             <!-- 😍 EMOJI REACTION BAR -->
@@ -713,11 +716,53 @@
       let currentListing = null;
       let isFavorite     = false;
       let currentUser    = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
-      // Gallery globals — must be accessible by openLightbox, pgNav, etc.
-      let pgImages       = [];
-      let pgCurrentIndex = 0;
+      // Gallery globals
+      window.pgImages       = [];
+      window.pgCurrentIndex = 0;
+
+      window.pgSetImage = function(idx, dir) {
+        if (!window.pgImages || !window.pgImages.length) return;
+        window.pgCurrentIndex = (idx + window.pgImages.length) % window.pgImages.length;
+        const src = window.pgImages[window.pgCurrentIndex];
+        const mainImg = document.getElementById('pgMainImg');
+        const blur    = document.getElementById('pgBlur');
+        const counter = document.getElementById('pgCounter');
+        if(!mainImg) return;
+        // 3D bounce animation based on direction
+        mainImg.classList.remove('anim-left', 'anim-right', 'fade-in');
+        void mainImg.offsetWidth; // force reflow
+        mainImg.src = src;
+        if (dir === 1)       mainImg.classList.add('anim-right');
+        else if (dir === -1) mainImg.classList.add('anim-left');
+        else                 mainImg.classList.add('fade-in');
+        if(blur) blur.style.backgroundImage = `url('${src}')`;
+        if (counter) counter.textContent = `${window.pgCurrentIndex + 1} / ${window.pgImages.length}`;
+        // Update thumbnails active state
+        document.querySelectorAll('.pg-thumb').forEach((t, i) => {
+          t.classList.toggle('active', i === window.pgCurrentIndex);
+        });
+        // Scroll active thumb safely without scrolling the whole page
+        const activeThumb = document.querySelectorAll('.pg-thumb')[window.pgCurrentIndex];
+        const pgThumbs = document.getElementById('pgThumbs');
+        if (activeThumb && pgThumbs) {
+          const scrollLeft = activeThumb.offsetLeft - (pgThumbs.clientWidth / 2) + (activeThumb.clientWidth / 2);
+          pgThumbs.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+        }
+      };
+
+      window.pgNav = function(dir) { window.pgSetImage(window.pgCurrentIndex + dir, dir); };
 
       document.addEventListener('DOMContentLoaded', async () => {
+        // Swipe gesture support for gallery
+        const pgMain = document.getElementById('pgMain');
+        if(pgMain) {
+          let pgTouchStartX = 0;
+          pgMain.addEventListener('touchstart', e => { pgTouchStartX = e.changedTouches[0].clientX; }, { passive: true });
+          pgMain.addEventListener('touchend', e => {
+            const diff = pgTouchStartX - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 40) window.pgNav(diff > 0 ? 1 : -1);
+          }, { passive: true });
+        }
         if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
 
         // Non-blocking session verify — updates stale localStorage
@@ -1041,48 +1086,8 @@
         }
 
         // ── VANILLA GALLERY ─────────────────────────────────────────────
-        pgImages = Array.isArray(l.images) ? l.images : [];
-        pgCurrentIndex = 0;
-
-        function pgSetImage(idx, dir) {
-          if (!pgImages.length) return;
-          pgCurrentIndex = (idx + pgImages.length) % pgImages.length;
-          const src = pgImages[pgCurrentIndex];
-          const mainImg = document.getElementById('pgMainImg');
-          const blur    = document.getElementById('pgBlur');
-          const counter = document.getElementById('pgCounter');
-          // 3D bounce animation based on direction
-          mainImg.classList.remove('anim-left', 'anim-right', 'fade-in');
-          void mainImg.offsetWidth; // force reflow
-          mainImg.src = src;
-          if (dir === 1)       mainImg.classList.add('anim-right');
-          else if (dir === -1) mainImg.classList.add('anim-left');
-          else                 mainImg.classList.add('fade-in');
-          blur.style.backgroundImage = `url('${src}')`;
-          if (counter) counter.textContent = `${pgCurrentIndex + 1} / ${pgImages.length}`;
-          // Update thumbnails active state
-          document.querySelectorAll('.pg-thumb').forEach((t, i) => {
-            t.classList.toggle('active', i === pgCurrentIndex);
-          });
-            // Scroll active thumb safely without scrolling the whole page
-            const activeThumb = document.querySelectorAll('.pg-thumb')[pgCurrentIndex];
-            const pgThumbs = document.getElementById('pgThumbs');
-            if (activeThumb && pgThumbs) {
-              const scrollLeft = activeThumb.offsetLeft - (pgThumbs.clientWidth / 2) + (activeThumb.clientWidth / 2);
-              pgThumbs.scrollTo({ left: scrollLeft, behavior: 'smooth' });
-            }
-        }
-
-        window.pgNav = function(dir) { pgSetImage(pgCurrentIndex + dir, dir); };
-
-        // Swipe gesture support
-        const pgMain = document.getElementById('pgMain');
-        let pgTouchStartX = 0;
-        pgMain.addEventListener('touchstart', e => { pgTouchStartX = e.changedTouches[0].clientX; }, { passive: true });
-        pgMain.addEventListener('touchend', e => {
-          const diff = pgTouchStartX - e.changedTouches[0].clientX;
-          if (Math.abs(diff) > 40) pgNav(diff > 0 ? 1 : -1);
-        }, { passive: true });
+        window.pgImages = Array.isArray(l.images) ? l.images : [];
+        window.pgCurrentIndex = 0;
 
         // Render gallery
         if (l.is_story == 1 && l.video_url) {
@@ -1099,17 +1104,17 @@
             // Adjust container for portrait video typical of stories
             document.getElementById('pgWrap').style.aspectRatio = '9/16';
             document.getElementById('pgWrap').style.maxHeight = '80vh';
-        } else if (pgImages.length > 0) {
-          if (pgImages.length === 1) document.getElementById('pgWrap').classList.add('single');
+        } else if (window.pgImages.length > 0) {
+          if (window.pgImages.length === 1) document.getElementById('pgWrap').classList.add('single');
           // Build thumbnails
           const thumbsEl = document.getElementById('pgThumbs');
-          thumbsEl.innerHTML = pgImages.map((src, i) =>
-            `<div class="pg-thumb${i===0?' active':''}" onclick="pgSetImage(${i})"><img src="${src}" loading="lazy" alt="Photo ${i+1}"></div>`
+          thumbsEl.innerHTML = window.pgImages.map((src, i) =>
+            `<div class="pg-thumb${i===0?' active':''}" onclick="window.pgSetImage(${i})"><img src="${src}" loading="lazy" alt="Photo ${i+1}"></div>`
           ).join('');
           // Show first image
-          pgSetImage(0);
+          window.pgSetImage(0);
           // Auto-advance (every 5s)
-          if (pgImages.length > 1) setInterval(() => pgNav(1), 5000);
+          if (window.pgImages.length > 1) setInterval(() => window.pgNav(1), 5000);
         } else {
           document.getElementById('pgMainImg').src = 'https://placehold.co/800x450/1e293b/6b7280?text=No+Image+Available';
           document.getElementById('pgWrap').classList.add('single');
@@ -1186,26 +1191,26 @@
         document.getElementById('contentArea').style.opacity = '1';
       }
 
-      // Lightbox - works with our vanilla gallery's pgImages
-      let lbCurrent = 0;
-      function openLightbox(idx) {
-        if (!pgImages || !pgImages.length) return;
-        lbCurrent = (idx || 0);
-        document.getElementById('lightboxImg').src = pgImages[lbCurrent];
-        document.getElementById('lbCounter').textContent = (lbCurrent + 1) + ' / ' + pgImages.length;
+      // Lightbox - works with our vanilla gallery's window.pgImages
+      window.lbCurrent = 0;
+      window.openLightbox = function(idx) {
+        if (!window.pgImages || !window.pgImages.length) return;
+        window.lbCurrent = (idx || 0);
+        document.getElementById('lightboxImg').src = window.pgImages[window.lbCurrent];
+        document.getElementById('lbCounter').textContent = (window.lbCurrent + 1) + ' / ' + window.pgImages.length;
         document.getElementById('lightbox').classList.add('open');
-      }
-      function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
-      function lbStep(dir) {
-        if (!pgImages || !pgImages.length) return;
-        lbCurrent = (lbCurrent + dir + pgImages.length) % pgImages.length;
-        document.getElementById('lightboxImg').src = pgImages[lbCurrent];
-        document.getElementById('lbCounter').textContent = (lbCurrent + 1) + ' / ' + pgImages.length;
-      }
+      };
+      window.closeLightbox = function() { document.getElementById('lightbox').classList.remove('open'); };
+      window.lbStep = function(dir) {
+        if (!window.pgImages || !window.pgImages.length) return;
+        window.lbCurrent = (window.lbCurrent + dir + window.pgImages.length) % window.pgImages.length;
+        document.getElementById('lightboxImg').src = window.pgImages[window.lbCurrent];
+        document.getElementById('lbCounter').textContent = (window.lbCurrent + 1) + ' / ' + window.pgImages.length;
+      };
       document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') closeLightbox();
-        if (e.key === 'ArrowLeft') lbStep(-1);
-        if (e.key === 'ArrowRight') lbStep(1);
+        if (e.key === 'Escape') window.closeLightbox();
+        if (e.key === 'ArrowLeft') window.lbStep(-1);
+        if (e.key === 'ArrowRight') window.lbStep(1);
       });
 
       // ─── FAVOURITES ──────────────────────────────────────────────────
@@ -1317,6 +1322,21 @@
         const dark = document.documentElement.classList.toggle('dark');
         localStorage.setItem('zzz_theme', dark ? 'dark' : 'light');
         document.getElementById('themeIcon').textContent = dark ? 'light_mode' : 'dark_mode';
+      }
+
+      // ─── SHARE ON WHATSAPP ────────────────────────────────────────────
+      function shareOnWhatsApp() {
+        if(!currentListing) return;
+        const url = window.location.href;
+        let text = `Check out "${currentListing.title}" on ZipZapZoi Classifieds! \n`;
+        if (currentListing.price > 0) {
+            text += `Price: ₹${parseFloat(currentListing.price).toLocaleString('en-IN')}\n`;
+        }
+        text += `Location: ${currentListing.location_city || 'Local'}\n`;
+        text += url;
+        
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        window.open(whatsappUrl, '_blank');
       }
 
       // ─── CHAT ──────────────────────────────────────────────────────────
