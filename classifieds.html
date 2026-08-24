@@ -843,19 +843,29 @@
       async function renderGrid(append = false) {
         const grid = document.getElementById('listingsGrid');
 
+        const sort = document.getElementById('sortFilter')?.value || currentSort || 'newest';
+
         if (!append) { currentPage = 1; }
+        
         // Show Skeletons
         let skeletons = '';
-        for(let i=0; i<6; i++) {
+        for(let i=0; i<8; i++) {
             skeletons += `
-            <div class="bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 p-4">
-                <div class="h-48 w-full skeleton-box rounded-2xl mb-4"></div>
-                <div class="h-4 w-3/4 skeleton-box rounded mb-2"></div>
-                <div class="h-6 w-1/2 skeleton-box rounded mb-4"></div>
-                <div class="h-3 w-1/3 skeleton-box rounded"></div>
+            <div class="skeleton-card-placeholder animate-pulse bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm">
+              <div class="bg-gray-200 dark:bg-gray-700 h-48 w-full"></div>
+              <div class="p-4 space-y-3">
+                <div class="bg-gray-200 dark:bg-gray-700 h-4 rounded w-3/4"></div>
+                <div class="bg-gray-200 dark:bg-gray-700 h-6 rounded w-1/2"></div>
+                <div class="bg-gray-200 dark:bg-gray-700 h-3 rounded w-full"></div>
+              </div>
             </div>`;
         }
-        grid.innerHTML = skeletons;
+        
+        if (!append) {
+            grid.innerHTML = skeletons;
+        } else {
+            grid.insertAdjacentHTML('beforeend', skeletons);
+        }
 
         // Build API query parameters
         const params = new URLSearchParams();
@@ -885,15 +895,14 @@
         const maxP = document.getElementById('maxPrice').value;
         if (!isNaN(parseFloat(maxP)) && maxP !== "") params.append('max_price', maxP);
         
-        const sortVal = currentSort || document.getElementById('sortFilter')?.value || 'newest';
-        if (sortVal === 'for_you') {
+        if (sort === 'for_you') {
           try {
             const me = JSON.parse(localStorage.getItem('zzz_user') || '{}');
             if (me.city) params.append('city', me.city);
           } catch(e) {}
           params.append('sort', 'newest');
         } else {
-          params.append('sort', sortVal);
+          params.append('sort', sort);
         }
 
         // Fetch from API
@@ -934,16 +943,23 @@
           // Fetch Demand Marquee data for the current category
           fetchWantedAds();
 
+          // Remove skeletons first
+          grid.querySelectorAll('.skeleton-card-placeholder').forEach(el => el.remove());
+
           // Render
           if(filtered.length === 0) {
-            grid.innerHTML = `
-              <div class="col-span-full flex flex-col items-center justify-center py-20 text-center animate-pop">
-                <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">search_off</span>
-                <h3 class="text-xl font-bold text-gray-800 dark:text-white">No results found</h3>
-                <p class="text-gray-500 dark:text-gray-400 mt-2">Try adjusting your filters or search query.</p>
-                <button onclick="clearFilters()" class="mt-6 font-bold text-primary hover:underline">Clear Filters</button>
-              </div>
-            `;
+            if (!append) {
+              grid.innerHTML = `
+                <div class="col-span-full flex flex-col items-center justify-center py-20 text-center animate-pop">
+                  <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">search_off</span>
+                  <h3 class="text-xl font-bold text-gray-800 dark:text-white">No results found</h3>
+                  <p class="text-gray-500 dark:text-gray-400 mt-2">Try adjusting your filters or search query.</p>
+                  <button onclick="clearFilters()" class="mt-6 font-bold text-primary hover:underline">Clear Filters</button>
+                </div>
+              `;
+            }
+            const lmc = document.getElementById('loadMoreContainer');
+            if (lmc) lmc.classList.add('hidden');
             return;
           }
 
@@ -1048,6 +1064,11 @@
           console.error('Error fetching listings:', e);
           grid.innerHTML = '<div class="col-span-full text-center text-red-500 py-10">Error loading listings. Please try again later.</div>';
         }
+      }
+
+      async function loadMore() {
+        currentPage++;
+        renderGrid(true);
       }
 
       // ===== ONLINE USERS COUNTER =====

@@ -9,6 +9,7 @@ require_once __DIR__ . '/config.php';
 
 try {
     getDB()->exec("ALTER TABLE users ADD COLUMN verification_status ENUM('unverified', 'pending', 'rejected', 'verified') DEFAULT 'unverified', ADD COLUMN verification_id_url VARCHAR(255) DEFAULT NULL");
+    getDB()->exec("ALTER TABLE users ADD COLUMN trusted_seller TINYINT(1) NOT NULL DEFAULT 0");
 } catch (\PDOException $e) {}
 
 $method = $_SERVER['REQUEST_METHOD'];

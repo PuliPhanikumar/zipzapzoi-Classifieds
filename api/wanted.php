@@ -7,6 +7,8 @@
  */
 require_once __DIR__ . '/config.php';
 
+try { getDB()->exec("ALTER TABLE users ADD COLUMN trusted_seller TINYINT(1) NOT NULL DEFAULT 0"); } catch(Exception $e) {}
+
 // Auto-migrate schema for wanted_ads
 try {
     $db = getDB();
@@ -85,7 +87,7 @@ if ($method === 'GET') {
         $row['budget_max'] = (float)$row['budget_max'];
     }
     
-    jsonOk(['wanted_ads' => $rows]);
+    jsonOk($rows);
 } elseif ($method === 'POST') {
     $user = requireAuth();
     $body = getBody();
@@ -108,6 +110,14 @@ if ($method === 'GET') {
     if ($max < $min) jsonError('Max budget cannot be less than Min budget.');
     
     $db = getDB();
+    
+    // Rate limit: max 5 active wanted ads per user
+    $activeCount = $db->prepare("SELECT COUNT(*) FROM wanted_ads WHERE user_id = ? AND status = 'active'");
+    $activeCount->execute([$user['id']]);
+    if ((int)$activeCount->fetchColumn() >= 5) {
+        jsonError('You can have a maximum of 5 active wanted requests at a time. Please delete older ones first.');
+    }
+
     $stmt = $db->prepare("INSERT INTO wanted_ads (user_id, title, category, subcategory, description, budget_min, budget_max, location_state, location_city, dynamic_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->execute([$user['id'], $title, $category, $subcategory, $desc, $min, $max, $state, $city, $dynamic_data]);
     

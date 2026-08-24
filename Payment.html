@@ -654,6 +654,43 @@
         paymentMethod = selectedBank ? `Wallet (${selectedBank})` : 'Wallet';
       }
 
+      // FREE ORDER BYPASS (like Amazon/Swiggy — skip payment gateway for 100% promo discounts)
+      if (totalAmt <= 0) {
+        const btn = document.getElementById('payNowBtn') || document.querySelector('button[onclick="initiatePayment()"]');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin">⟳</span> Activating...' }
+        try {
+          const freeRes = await fetch('/api/transactions.php', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              plan_id: planId,
+              plan_name: selectedPlan.name,
+              amount: 0,
+              ads: selectedPlan.ads,
+              days: selectedPlan.days,
+              razorpay_payment_id: 'FREE-' + Date.now(),
+              razorpay_order_id: 'FREE-' + Date.now(),
+              razorpay_signature: 'promo_free',
+              payment_method: 'promo_code',
+              promo_code: typeof appliedPromoCode !== 'undefined' ? appliedPromoCode : ''
+            })
+          });
+          const freeData = await freeRes.json();
+          if (freeData.success) {
+            paymentMethod = 'Promo Code (Free)';
+            completePayment({ razorpay_payment_id: freeData.data?.txn_id || 'FREE', razorpay_order_id: '', razorpay_signature: '' });
+          } else {
+            showToast(freeData.error || 'Could not activate free plan. Please contact support.', 'error');
+            if (btn) { btn.disabled = false; btn.innerHTML = 'Activate Free Plan'; }
+          }
+        } catch(e) {
+          showToast('Network error. Please try again.', 'error');
+          if (btn) { btn.disabled = false; btn.innerHTML = 'Activate Free Plan'; }
+        }
+        return; // STOP — do not proceed to Razorpay
+      }
+
       // ── RAZORPAY STANDARD CHECKOUT ─────────────────────────
       if (typeof Razorpay === 'undefined') {
         showToast('Razorpay SDK not loaded. Please refresh the page.', 'error');

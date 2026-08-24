@@ -275,8 +275,13 @@
     </div>
   </header>
   <script>
-    function logout() {
+    async function logout() {
+      try { 
+        await fetch('/api/auth.php?action=logout', { method: 'POST', credentials: 'include' }); 
+      } catch(e) {}
       localStorage.removeItem('zzz_user');
+      localStorage.removeItem('zipzapzoi_token');
+      localStorage.removeItem('zzz_token');
       window.location.href = 'Login Page.html';
     }
   </script>

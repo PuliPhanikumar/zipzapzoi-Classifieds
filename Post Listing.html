@@ -530,15 +530,15 @@
                   <!-- ⚡ URGENCY TOGGLES -->
             <div class="mt-6 mb-6">
               <label class="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide">Boost Options</label>
-              <div class="flex flex-wrap gap-3">
-                <label class="urgency-toggle" id="urgentToggle" onclick="this.classList.toggle('checked')">
-                  <input type="checkbox" name="is_urgent" value="1"> ⚡ Mark as Urgent
+              <div class="flex flex-wrap gap-3" id="boostOptionsContainer">
+                <label class="urgency-toggle" id="urgentToggle">
+                  <input type="checkbox" name="is_urgent" id="boostUrgent" value="1"> ⚡ Mark as Urgent
                 </label>
-                <label class="urgency-toggle" id="negotiableToggle" onclick="this.classList.toggle('checked')">
-                  <input type="checkbox" name="is_negotiable" value="1"> 💬 Price Negotiable
+                <label class="urgency-toggle" id="negotiableToggle">
+                  <input type="checkbox" name="is_negotiable" id="boostNegotiable" value="1"> 💬 Price Negotiable
                 </label>
-                <label class="urgency-toggle" id="whatsappToggle" onclick="this.classList.toggle('checked')">
-                  <input type="checkbox" name="allow_whatsapp" value="1"> 📲 WhatsApp Contact
+                <label class="urgency-toggle" id="whatsappToggle">
+                  <input type="checkbox" name="allow_whatsapp" id="boostWhatsapp" value="1"> 📲 WhatsApp Contact
                 </label>
               </div>
             </div>
@@ -887,6 +887,41 @@
     updateProgressBar(1);
   });
 
+  // Geocode address input using OpenStreetMap Nominatim (free, no API key)
+  let _geocodeDebounce;
+  function geocodeInput(val) {
+    clearTimeout(_geocodeDebounce);
+    if (!val || val.length < 5) return;
+    _geocodeDebounce = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)},India&limit=1`, {
+          headers: { 'Accept-Language': 'en' }
+        });
+        const data = await res.json();
+        if (data && data[0]) {
+          const lat = parseFloat(data[0].lat);
+          const lng = parseFloat(data[0].lon);
+          // Store lat/lng for submission
+          window._geocodedLat = lat;
+          window._geocodedLng = lng;
+          // Auto-fill state and city if dropdowns are empty
+          const addr = data[0].address || {};
+          const stateEl = document.getElementById('stateSelect');
+          const cityEl = document.getElementById('citySelect');
+          if (stateEl && !stateEl.value && addr.state) {
+            // Try to match state
+            const stateOpts = Array.from(stateEl.options);
+            const match = stateOpts.find(o => o.value.toLowerCase().includes(addr.state.toLowerCase().substring(0,5)));
+            if (match) {
+              stateEl.value = match.value;
+              stateEl.dispatchEvent(new Event('change'));
+            }
+          }
+        }
+      } catch(e) { /* silent fail — geocoding is optional */ }
+    }, 800);
+  }
+
   // --- 5.1 PHOTO RENDERER ---
   window.removeExistingPhoto = function(index) {
         existingUrlsArray.splice(index, 1);
@@ -1185,7 +1220,7 @@
              <span class="text-2xl font-black text-primary block">
                ${currentCategory && currentCategory.hidePrice ? 'Free' : '₹ ' + (price || '0')}
              </span>
-             ${document.querySelector('#priceRow input[type="checkbox"]').checked ? '<span class="text-[10px] font-bold text-secondary bg-secondary/10 px-1.5 py-0.5 rounded">Negotiable</span>' : ''}
+             ${(document.querySelector('#priceRow input[type="checkbox"]') && document.querySelector('#priceRow input[type="checkbox"]').checked) ? '<span class="text-[10px] font-bold text-secondary bg-secondary/10 px-1.5 py-0.5 rounded">Negotiable</span>' : ''}
           </div>
         </div>
 
@@ -1198,11 +1233,23 @@
 
         <div class="flex items-center gap-3 mt-2 pt-4 border-t border-gray-100 dark:border-gray-800 dark:border-gray-700">
            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-primary text-white flex items-center justify-center font-bold">
-             ${JSON.parse(localStorage.getItem('zzz_user') || '{"name":"User"}').name.charAt(0)}
+             ${(() => {
+                 try {
+                     const u = JSON.parse(localStorage.getItem('zzz_user'));
+                     return (u && u.name) ? u.name.charAt(0).toUpperCase() : 'U';
+                 } catch(e) { return 'U'; }
+             })()}
            </div>
            <div>
              <p class="text-xs text-gray-400 font-bold">Posted By</p>
-             <p class="text-sm font-bold text-gray-800 dark:text-white dark:text-gray-200">${JSON.parse(localStorage.getItem('zzz_user') || '{"name":"You"}').name}</p>
+             <p class="text-sm font-bold text-gray-800 dark:text-white dark:text-gray-200">
+               ${(() => {
+                   try {
+                       const u = JSON.parse(localStorage.getItem('zzz_user'));
+                       return (u && u.name) ? u.name : 'You';
+                   } catch(e) { return 'You'; }
+               })()}
+             </p>
            </div>
         </div>
 
@@ -1214,9 +1261,11 @@
     // previewModal.classList.remove('hidden');
     // previewModal.classList.add('flex');
   }
-  // --- 7. EDIT MODE LOGIC ---
+  // --- 7. EDIT MODE & AUTO-FILL LOGIC ---
   const urlParams = new URLSearchParams(window.location.search);
   const editId = urlParams.get('id');
+  const urlTitle = urlParams.get('title');
+  const urlCat = urlParams.get('category');
 
   if(editId) {
     fetch(`/api/listings.php?id=${editId}`, { credentials: 'include' })
@@ -1264,6 +1313,21 @@
         }
       })
       .catch(e => console.error('Failed to load listing for edit:', e));
+  } else if (urlTitle || urlCat) {
+      if (urlTitle) {
+          document.getElementById('postTitle').value = urlTitle;
+      }
+      if (urlCat) {
+          setTimeout(() => {
+              const key = Object.keys(schema).find(k => 
+                  schema[k].label.toLowerCase() === urlCat.toLowerCase() || 
+                  k.toLowerCase() === urlCat.toLowerCase()
+              );
+              if (key) {
+                  selectCategory(key);
+              }
+          }, 300);
+      }
   }
 
   // --- 8. SUBMIT HANDLER ---
@@ -1450,8 +1514,9 @@
           } else if (upData && !upData.success) {
             showToast('Image upload failed: ' + (upData.error || 'Unknown error') + '. Listing posted without photos.', 'error');
           }
-        } catch(e) {
-          showToast('Network error uploading images. Listing will be posted without photos.', 'error');
+        } catch(err) {
+          showToast('Upload failed. Please check your connection and try again.', 'error');
+          console.error('[ZZZ Upload Error]', err);
         }
       }
 
@@ -1459,13 +1524,15 @@
       const isStory = !!(document.getElementById('postIsStory') && document.getElementById('postIsStory').checked);
       const videoUrl = document.getElementById('postVideoUrl') ? document.getElementById('postVideoUrl').value.trim() : null;
 
+      const isBoostNegotiable = document.getElementById('boostNegotiable') && document.getElementById('boostNegotiable').checked;
+      const finalNegotiable = negotiable || isBoostNegotiable;
       const payload = {
         title:          document.getElementById('postTitle').value.trim(),
         description:    document.getElementById('postDescription').value.trim(),
         category:       schema[currentCategoryKey].label,
         subcategory:    subCategorySelect.value,
         price,
-        price_type:     isCharity ? 'free' : (negotiable ? 'negotiable' : 'fixed'),
+        price_type:     isCharity ? 'free' : (finalNegotiable ? 'negotiable' : 'fixed'),
         location_city:  document.getElementById('citySelect').value,
         location_state: document.getElementById('stateSelect').value,
         location_area:  document.getElementById('specificLocation').value,
@@ -1476,9 +1543,9 @@
         is_story:       isStory ? 1 : 0,
         video_url:      isStory ? videoUrl : null,
         contact_phone:  document.getElementById('contactPhone')?.value || '',
-        allow_whatsapp: document.getElementById('allowWhatsApp')?.checked ? 1 : 0,
+        allow_whatsapp: (document.getElementById('allowWhatsApp')?.checked || (document.getElementById('boostWhatsapp') && document.getElementById('boostWhatsapp').checked)) ? 1 : 0,
         hide_phone:     document.getElementById('hidePhone')?.checked ? 1 : 0,
-        is_urgent:      document.getElementById('upsellUrgent')?.checked ? 1 : 0,
+        is_urgent:      (document.getElementById('upsellUrgent')?.checked || (document.getElementById('boostUrgent') && document.getElementById('boostUrgent').checked)) ? 1 : 0,
         is_highlight:   document.getElementById('upsellHighlight')?.checked ? 1 : 0,
         is_top:         document.getElementById('upsellTop')?.checked ? 1 : 0
       };
@@ -1511,8 +1578,7 @@
         finalSubmitBtn.innerHTML = '<span>Post Now</span><span class="material-symbols-outlined">send</span>';
         confirmPostBtn.disabled  = false;
         confirmPostBtn.textContent = editId ? 'Update Listing' : 'Confirm & Post';
-        previewModal.classList.add('hidden'); previewModal.classList.remove('flex');
-        return;
+        throw new Error(data.error || 'Failed to post. Please try again.');
       }
 
       hideModal();
@@ -1520,7 +1586,7 @@
 
     } catch (err) {
       console.error('Post listing error:', err);
-      showToast('Network error. Please check your connection and try again.', 'error');
+      showToast(err.message || 'Network error. Please check your connection and try again.', 'error');
       finalSubmitBtn.disabled = false;
       finalSubmitBtn.innerHTML = '<span>Post Now</span><span class="material-symbols-outlined">send</span>';
       confirmPostBtn.disabled  = false;
@@ -1814,6 +1880,17 @@
     });
   }
   document.addEventListener('DOMContentLoaded', initDragDrop);
+  
+  // Fix for Boost Options dead buttons visual toggle
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.urgency-toggle input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', function() {
+        if(this.parentElement) {
+          this.parentElement.classList.toggle('checked', this.checked);
+        }
+      });
+    });
+  });
 </script>
 </body>
 </html>

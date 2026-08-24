@@ -472,13 +472,18 @@
 
   async function resendOtp() {
     try {
-      await fetch('/api/auth.php?action=login', {
+      const res = await fetch('/api/auth.php?action=login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: _pendingEmail, password: _pendingPassword }),
         credentials: 'include'
       });
-      showOtpError('OTP resent! Check your inbox.');
+      const data = await res.json();
+      if (data.success || (data.error && data.error.toLowerCase().includes('otp'))) {
+        showOtpError('OTP resent! Check your inbox.');
+      } else {
+        showOtpError(data.error || 'Could not resend. Try again.');
+      }
     } catch(e) { showOtpError('Could not resend. Try again.'); }
   }
 

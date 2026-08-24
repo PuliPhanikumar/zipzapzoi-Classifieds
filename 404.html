@@ -157,7 +157,13 @@
               <p class="text-[10px] text-gray-400 dark:text-gray-500 truncate">${l.location_city || l.location || ''}</p>
             </a>`;
         }).join('');
-      } catch(e) { /* silent fail */ }
+      } catch(e) { 
+        // On error, clear skeletons
+        const skeletonContainer = document.getElementById('notFoundListings');
+        if (skeletonContainer) {
+          skeletonContainer.innerHTML = '<div class="col-span-full text-center py-8 text-gray-400"><span class="text-4xl">😅</span><p class="mt-2 font-bold">Could not load trending ads right now.</p><a href="classifieds.html" class="mt-3 inline-block text-primary font-bold hover:underline">Browse All Ads →</a></div>';
+        }
+      }
     })();
 
     // Floating particles

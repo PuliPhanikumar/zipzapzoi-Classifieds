@@ -24,11 +24,12 @@ elseif ($method === 'PUT'  && $id)                   markRead($user, $id);
 else jsonError('Method not allowed', 405);
 
 function getInbox(array $user): void {
-    $db   = getDB();
-    // Get latest message per conversation thread
+    $db  = getDB();
+    $uid = (int)$user['id'];
+    // Get only the latest message per unique conversation thread (efficient SQL grouping)
     $stmt = $db->prepare(
-        'SELECT m.*,
-                CASE WHEN m.from_user_id = :me THEN m.to_user_id ELSE m.from_user_id END AS other_user_id,
+        'SELECT m.*, 
+                CASE WHEN m.from_user_id = ? THEN m.to_user_id ELSE m.from_user_id END AS other_user_id,
                 u1.name AS from_name, u1.avatar AS from_avatar,
                 u2.name AS to_name, u2.avatar AS to_avatar,
                 l.title AS listing_title
@@ -36,29 +37,38 @@ function getInbox(array $user): void {
          JOIN users u1 ON u1.id = m.from_user_id
          JOIN users u2 ON u2.id = m.to_user_id
          LEFT JOIN listings l ON l.id = m.listing_id
-         WHERE m.from_user_id = :me2 OR m.to_user_id = :me3
+         WHERE m.id IN (
+             SELECT MAX(id) FROM messages
+             WHERE from_user_id = ? OR to_user_id = ?
+             GROUP BY LEAST(from_user_id, to_user_id), GREATEST(from_user_id, to_user_id), COALESCE(listing_id, 0)
+         )
          ORDER BY m.created_at DESC
-         LIMIT 100'
+         LIMIT 50'
     );
-    $stmt->execute([':me' => (int)$user['id'], ':me2' => (int)$user['id'], ':me3' => (int)$user['id']]);
+    $stmt->execute([$uid, $uid, $uid]);
     $rows = $stmt->fetchAll();
-    // Group by other_user_id + listing_id thread
+    
+    // Build thread objects with unread counts
     $threads = [];
     foreach ($rows as $r) {
-        $key = $r['other_user_id'] . '_' . ($r['listing_id'] ?? '0');
-        if (!isset($threads[$key])) {
-            $threads[$key] = [
-                'other_user_id'    => (int)$r['other_user_id'],
-                'other_user_name'  => $r['from_user_id'] == $user['id'] ? $r['to_name'] : $r['from_name'],
-                'listing_id'       => $r['listing_id'],
-                'listing_title'    => $r['listing_title'],
-                'last_message'     => $r['body'],
-                'last_time'        => $r['created_at'],
-                'unread_count'     => 0,
-                'messages'         => [],
-            ];
-        }
-        if (!$r['is_read'] && $r['to_user_id'] == $user['id']) $threads[$key]['unread_count']++;
+        $otherId = (int)$r['other_user_id'];
+        // Get unread count for this thread
+        $unreadStmt = $db->prepare(
+            'SELECT COUNT(*) FROM messages WHERE to_user_id = ? AND from_user_id = ? AND is_read = 0'
+        );
+        $unreadStmt->execute([$uid, $otherId]);
+        $unreadCount = (int)$unreadStmt->fetchColumn();
+        
+        $threads[] = [
+            'other_user_id'   => $otherId,
+            'other_user_name' => $r['from_user_id'] == $uid ? ($r['to_name'] ?? 'User') : ($r['from_name'] ?? 'User'),
+            'other_avatar'    => $r['from_user_id'] == $uid ? ($r['to_avatar'] ?? null) : ($r['from_avatar'] ?? null),
+            'listing_id'      => $r['listing_id'],
+            'listing_title'   => $r['listing_title'],
+            'last_message'    => $r['body'],
+            'last_time'       => $r['created_at'],
+            'unread_count'    => $unreadCount,
+        ];
     }
     jsonOk(array_values($threads));
 }

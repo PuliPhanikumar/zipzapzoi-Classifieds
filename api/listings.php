@@ -9,11 +9,17 @@
  */
 require_once __DIR__ . '/config.php';
 
-// Auto-migrate schema for original_price (used by price drop feature)
-try {
+// Auto-migrate schema for missing columns (to prevent 500 errors)
+try { 
     $db = getDB();
-    $db->exec("ALTER TABLE listings ADD COLUMN original_price DECIMAL(10,2) NULL DEFAULT NULL AFTER price");
-} catch (Exception $e) { /* Ignore if column already exists */ }
+    // Only run if column doesn't exist
+    $cols = $db->query("SHOW COLUMNS FROM listings")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('original_price', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN original_price DECIMAL(10,2) NULL DEFAULT NULL AFTER price");
+    if (!in_array('lat', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN lat DECIMAL(10, 8) NULL AFTER location_area");
+    if (!in_array('lng', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN lng DECIMAL(11, 8) NULL AFTER lat");
+    if (!in_array('is_story', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN is_story TINYINT(1) NOT NULL DEFAULT 0");
+    if (!in_array('video_url', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN video_url VARCHAR(255) NULL");
+} catch (Exception $e) {}
 
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
@@ -220,34 +226,13 @@ function getOne(int $id): void {
     $row = $stmt->fetch();
     if (!$row) jsonError('Listing not found.', 404);
 
-    // Rate-limited view count — once per IP per listing per hour
-    $visitorIp  = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-    $hourBucket = date('Y-m-d H');  // e.g. "2026-08-12 14"
-    try {
-        $db->exec(
-            'CREATE TABLE IF NOT EXISTS listing_view_log (
-                id           INT AUTO_INCREMENT PRIMARY KEY,
-                listing_id   INT NOT NULL,
-                visitor_ip   VARCHAR(45) NOT NULL,
-                hour_bucket  VARCHAR(14) NOT NULL,
-                created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE KEY uniq_view (listing_id, visitor_ip, hour_bucket)
-            )'
-        );
-        // INSERT IGNORE silently skips if same IP already counted this hour
-        $inserted = $db->prepare(
-            'INSERT IGNORE INTO listing_view_log (listing_id, visitor_ip, hour_bucket) VALUES (?, ?, ?)'
-        );
-        $inserted->execute([$id, $visitorIp, $hourBucket]);
-        if ($inserted->rowCount() > 0) {
-            // Only count if this is a new view for this IP+hour
+    // Increment view counter (not for owner)
+    $currentViewer = getCurrentUser();
+    if (!$currentViewer || (int)$currentViewer['id'] !== (int)$row['user_id']) {
+        try {
             $db->prepare('UPDATE listings SET views = views + 1 WHERE id = ?')->execute([$id]);
             $row['views']++;
-        }
-    } catch (PDOException $e) {
-        // Fallback: if table creation fails, increment anyway (better than breaking the page)
-        $db->prepare('UPDATE listings SET views = views + 1 WHERE id = ?')->execute([$id]);
-        $row['views']++;
+        } catch(Exception $e) {}
     }
 
     $row['images'] = normalizeImagesArray(json_decode($row['images'] ?? '[]', true) ?: []);
@@ -453,37 +438,41 @@ function createListing(): void {
     $allowWhatsapp = !empty($b['allow_whatsapp']) ? 1 : 0;
     $contactPhone  = clean($b['contact_phone'] ?? '');
 
-    $db->prepare(
-        'INSERT INTO listings
-         (user_id, title, description, category, subcategory, price, original_price, price_type,
-          location_city, location_state, location_area, lat, lng, is_story, video_url, is_highlight, is_top, hide_phone, allow_whatsapp, contact_phone, images, fields, status, expires_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    )->execute([
-        $uid,
-        $title,
-        clean($b['description'] ?? ''),
-        $category,
-        clean($b['subcategory'] ?? ''),
-        max(0, (float)($b['price'] ?? 0)),
-        $originalPrice,
-        $priceType,
-        clean($b['location_city']  ?? ''),
-        clean($b['location_state'] ?? ''),
-        clean($b['location_area']  ?? ''),
-        $lat,
-        $lng,
-        $isStory,
-        $videoUrl,
-        $isHighlight,
-        $isTop,
-        $hidePhone,
-        $allowWhatsapp,
-        $contactPhone,
-        json_encode($imageUrls),
-        json_encode($b['fields'] ?? []),
-        $status,
-        $expires,
-    ]);
+    try {
+        $db->prepare(
+            'INSERT INTO listings
+             (user_id, title, description, category, subcategory, price, original_price, price_type,
+              location_city, location_state, location_area, lat, lng, is_story, video_url, is_highlight, is_top, hide_phone, allow_whatsapp, contact_phone, images, fields, status, expires_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        )->execute([
+            $uid,
+            $title,
+            clean($b['description'] ?? ''),
+            $category,
+            clean($b['subcategory'] ?? ''),
+            max(0, (float)($b['price'] ?? 0)),
+            $originalPrice,
+            $priceType,
+            clean($b['location_city']  ?? ''),
+            clean($b['location_state'] ?? ''),
+            clean($b['location_area']  ?? ''),
+            $lat,
+            $lng,
+            $isStory,
+            $videoUrl,
+            $isHighlight,
+            $isTop,
+            $hidePhone,
+            $allowWhatsapp,
+            $contactPhone,
+            json_encode($imageUrls),
+            json_encode($b['fields'] ?? []),
+            $status,
+            $expires,
+        ]);
+    } catch (PDOException $e) {
+        jsonError('DB Error: ' . $e->getMessage(), 500);
+    }
     $listingId = (int)$db->lastInsertId();
 
     // ── Deduct quota (charity posts don't use quota) ──────────────

@@ -336,11 +336,15 @@
 </div>
 </div>
 <script>
-  // Auto-redirect from Splash to Dashboard after 4 seconds
-  setTimeout(function() {
-    // Redirect to classifieds.html
+  if (localStorage.getItem('zzz_user')) {
     window.location.href = "classifieds.html";
-  }, 4000); // 4000 = 4 seconds, change as needed
+  } else {
+    // Auto-redirect from Splash to Dashboard after 4 seconds
+    setTimeout(function() {
+      // Redirect to classifieds.html
+      window.location.href = "classifieds.html";
+    }, 4000); // 4000 = 4 seconds, change as needed
+  }
 </script>
 
 <script src="scripts/auth.js"></script>

@@ -228,6 +228,18 @@ elseif ($method === 'PUT') {
     elseif ($action === 'decline') {
         $stmt = $db->prepare("UPDATE offers SET status = 'declined' WHERE id = ?");
         $stmt->execute([$offer_id]);
+        
+        // Notify buyer of decline
+        try {
+            $notif_text = "Your offer has been declined by the seller.";
+            $link = "Listing Detail.html?id={$listing_id}";
+            $db->prepare("INSERT INTO user_notifications (user_id, type, title, message, link) VALUES (?, 'offer_declined', 'Offer Declined', ?, ?)")
+               ->execute([$buyer_id, $notif_text, $link]);
+            // Send auto-message
+            $db->prepare("INSERT INTO messages (from_user_id, to_user_id, listing_id, body) VALUES (?, ?, ?, ?)")
+               ->execute([$user['id'], $buyer_id, $listing_id, "Sorry, your offer has been declined. Feel free to make a new offer or contact me."]);
+        } catch(Exception $e) {}
+
         jsonOk(['message' => 'Offer declined.']);
     } 
     elseif ($action === 'counter') {

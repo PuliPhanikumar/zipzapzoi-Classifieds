@@ -156,29 +156,75 @@ function recordTransaction(array $user): void {
             $amount = (float)$b['amount'];
         }
     } else {
-        // Free transaction (e.g. free plan, admin grant) — no Razorpay needed
+        // ── FREE TRANSACTION HANDLER ──────────────────────────────────
+        // Supports: monthly_free plan, OR any paid plan made free by a 100% promo code
+        // Like Amazon/Swiggy: bypass payment gateway when final amount is ₹0
+        
+        $paymentMethod = clean($b['payment_method'] ?? '');
+        $promoCode     = clean($b['promo_code'] ?? '');
+        $isPromoFree   = ($paymentMethod === 'promo_code' && !empty($promoCode));
+
         if ($planId === 'monthly_free') {
-            // Check if already claimed this month
+            // Monthly free plan — check once per month
             $startOfMonth = date('Y-m-01 00:00:00');
             $chk = $db->prepare("SELECT id FROM transactions WHERE user_id = ? AND plan_id = 'monthly_free' AND created_at >= ?");
             $chk->execute([(int)$user['id'], $startOfMonth]);
             if ($chk->fetch()) {
                 jsonError('You have already claimed your free ad for this month.');
             }
+        } elseif ($isPromoFree) {
+            // Promo code made this plan 100% free — validate promo code
+            // Check if promo code exists and is valid in system_settings
+            $promoConfig = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'promo_codes'")->fetchColumn();
+            $promoCodes  = $promoConfig ? json_decode($promoConfig, true) : [];
+            
+            $promoValid = false;
+            if (is_array($promoCodes)) {
+                foreach ($promoCodes as $pc) {
+                    $code = is_array($pc) ? ($pc['code'] ?? '') : $pc;
+                    if (strtoupper(trim($code)) === strtoupper($promoCode)) {
+                        $promoValid = true;
+                        break;
+                    }
+                }
+            }
+            
+            // If no promo config exists in DB, allow it (admin hasn't set it up yet)
+            if (!$promoValid && !empty($promoCodes)) {
+                error_log("ZZZ Txn: Invalid promo code '$promoCode' used by user {$user['id']}");
+                jsonError('Invalid or expired promo code. Please check and try again.');
+            }
+            
+            // Set promo-specific payment ID for record keeping
+            if (!$rzpPaymentId) {
+                $rzpPaymentId = 'PROMO-' . strtoupper($promoCode) . '-' . time();
+            }
+            
+            error_log("ZZZ Txn: Promo code '$promoCode' accepted for plan '$planId'. User:{$user['id']}");
         } else {
-            jsonError('Unauthorized free plan request. Only monthly_free is allowed.', 403);
+            error_log("ZZZ Txn: Unauthorized free plan attempt. Plan:'$planId' Method:'$paymentMethod' User:{$user['id']}");
+            jsonError('This plan requires payment. If you have a promo code, please apply it first.', 403);
         }
     }
 
+
+    // ── Auto-migrate transactions table for payment_method column ────
+    try { $db->exec("ALTER TABLE transactions ADD COLUMN payment_method VARCHAR(50) DEFAULT 'razorpay'"); } catch(Exception $e) {}
+    try { $db->exec("ALTER TABLE transactions ADD COLUMN promo_code VARCHAR(50) DEFAULT NULL"); } catch(Exception $e) {}
+
     // ── Record the transaction ────────────────────────────────────
-    $status = 'success';
+    $status         = 'success';
+    $finalPayMethod = isset($paymentMethod) && $paymentMethod ? $paymentMethod : 'razorpay';
+    $finalPromoCode = isset($promoCode) && $promoCode ? $promoCode : null;
+
     $db->prepare(
         'INSERT INTO transactions
-         (user_id, plan_id, plan_name, amount, razorpay_payment_id, razorpay_order_id, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?)'
+         (user_id, plan_id, plan_name, amount, razorpay_payment_id, razorpay_order_id, status, payment_method, promo_code)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )->execute([
         (int)$user['id'], $planId, $planName, $amount,
-        $rzpPaymentId ?: null, $rzpOrderId ?: null, $status
+        $rzpPaymentId ?: null, $rzpOrderId ?: null, $status,
+        $finalPayMethod, $finalPromoCode
     ]);
     $txnId = (int)$db->lastInsertId();
 
@@ -193,13 +239,17 @@ function recordTransaction(array $user): void {
                total_granted = total_granted + VALUES(total_granted),
                plan_id    = VALUES(plan_id),
                plan_name  = VALUES(plan_name),
-               expires_at = GREATEST(IFNULL(expires_at, '2000-01-01'), VALUES(expires_at))'
+               expires_at = GREATEST(IFNULL(expires_at, \'2000-01-01\'), VALUES(expires_at))'
         )->execute([(int)$user['id'], $ads, $ads, $planId, $planName, $expires]);
     }
 
     jsonOk([
         'transaction_id' => $txnId,
+        'txn_id'         => 'TXN' . str_pad($txnId, 8, '0', STR_PAD_LEFT),
         'ads_granted'    => $ads,
-        'message'        => "Payment verified. {$ads} ads added to your account.",
+        'payment_method' => $finalPayMethod,
+        'message'        => $amount > 0
+            ? "Payment verified. {$ads} ad(s) added to your account."
+            : "Plan activated successfully! {$ads} ad(s) added to your account.",
     ], 201);
 }

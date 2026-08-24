@@ -1365,7 +1365,118 @@
       }
     </script>
     
-    <!-- This HTML was previously misplaced, but restoring it to exactly what the user had for safety -->
+    <script>
+      // ─── FLOATING CHAT WIDGET ──────────────────────────────────────────
+      let _chatRecipientId = null;
+
+      function openFloatingChat(sellerId, sellerName) {
+        _chatRecipientId = sellerId;
+        const widget = document.getElementById('floatingChatWidget');
+        const nameEl = document.getElementById('chatWidgetName');
+        const avatarEl = document.getElementById('chatWidgetAvatar');
+        const feed = document.getElementById('chatWidgetFeed');
+        if (!widget) return;
+        if (nameEl) nameEl.textContent = sellerName || 'Seller';
+        if (avatarEl) avatarEl.textContent = (sellerName || 'S').charAt(0).toUpperCase();
+        // Show widget with slide-in animation
+        widget.style.transform = 'translateY(0)';
+        // Load existing messages
+        if (feed) {
+          feed.innerHTML = '<div class="flex justify-center"><span class="text-xs bg-white/70 dark:bg-gray-700/70 px-3 py-1 rounded-full text-gray-500">Loading messages...</span></div>';
+          const listId = currentListing ? currentListing.id : '';
+          fetch(`/api/messages.php?thread=${sellerId}&listing_id=${listId}`, { credentials: 'include' })
+            .then(r => r.json())
+            .then(d => {
+              feed.innerHTML = '';
+              if (d.success && Array.isArray(d.data) && d.data.length > 0) {
+                d.data.forEach(msg => appendChatMessage(msg.body, msg.from_user_id == (currentUser && currentUser.id) ? 'out' : 'in'));
+              } else {
+                const intro = currentListing ? `Hi! I'm interested in your listing: "${currentListing.title}". Is it still available?` : 'Hi! I have a question about your listing.';
+                feed.innerHTML = `<div class="flex justify-center"><span class="text-xs bg-white/70 dark:bg-gray-700/70 px-3 py-1 rounded-full text-gray-500">Start a conversation</span></div>`;
+                document.getElementById('chatWidgetInput').placeholder = intro;
+              }
+              feed.scrollTop = feed.scrollHeight;
+            })
+            .catch(() => { feed.innerHTML = '<div class="text-center text-xs text-gray-400 py-4">Could not load messages. Type to start a new conversation.</div>'; });
+        }
+        document.getElementById('chatWidgetInput')?.focus();
+      }
+
+      function closeFloatingChat() {
+        const widget = document.getElementById('floatingChatWidget');
+        if (widget) widget.style.transform = 'translateY(120%)';
+      }
+
+      function openInInbox() {
+        if (_chatRecipientId && currentListing) {
+          window.open(`Inbox.html?thread=${_chatRecipientId}&listing_id=${currentListing.id}`, '_blank');
+        } else {
+          window.open('Inbox.html', '_blank');
+        }
+      }
+
+      async function sendFloatingMessage(type, prefillText) {
+        if (!currentUser) {
+          window.location.href = 'Login Page.html?redirect=' + encodeURIComponent(window.location.href);
+          return;
+        }
+        if (!_chatRecipientId) { showToast('Could not determine seller. Please try again.', 'error'); return; }
+
+        const input = document.getElementById('chatWidgetInput');
+        const text = prefillText || (input ? input.value.trim() : '');
+        if (!text) { showToast('Please type a message first.', 'error'); return; }
+
+        // Optimistically append message
+        appendChatMessage(text, 'out');
+        if (input) input.value = '';
+
+        try {
+          const res = await fetch('/api/messages.php', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to_user_id: _chatRecipientId,
+              listing_id: currentListing ? currentListing.id : null,
+              subject: currentListing ? ('Re: ' + currentListing.title) : 'New Message',
+              body: text
+            })
+          });
+          const data = await res.json();
+          if (!data.success) {
+            showToast(data.error || 'Could not send message.', 'error');
+          }
+        } catch(e) {
+          showToast('Network error. Message may not have been sent.', 'error');
+        }
+      }
+
+      function appendChatMessage(text, direction) {
+        const feed = document.getElementById('chatWidgetFeed');
+        if (!feed) return;
+        const isOut = direction === 'out';
+        const bubble = document.createElement('div');
+        bubble.className = `flex ${isOut ? 'justify-end' : 'justify-start'} mb-1`;
+        bubble.innerHTML = `<div class="max-w-[80%] px-4 py-2 rounded-2xl text-sm font-medium shadow-sm ${isOut ? 'bg-primary text-white rounded-br-sm' : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-sm'}">${text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+        feed.appendChild(bubble);
+        feed.scrollTop = feed.scrollHeight;
+      }
+
+      // ─── SELLER HYPE CHIPS (optional UI enhancement) ──────────────────
+      function initSellerHypeChips(listing) {
+        // Renders small "trust" chips on the seller card if they have badges
+        if (!listing) return;
+        const container = document.getElementById('sellerHypeChips');
+        if (!container) return; // Element is optional
+        const chips = [];
+        if (listing.is_verified || listing.seller_is_verified) chips.push('<span class="inline-flex items-center gap-1 text-xs font-black bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full">✓ Verified</span>');
+        if (listing.trusted_seller || listing.seller_trusted) chips.push('<span class="inline-flex items-center gap-1 text-xs font-black bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2.5 py-1 rounded-full">⭐ Trusted Seller</span>');
+        if (chips.length > 0) {
+          container.innerHTML = chips.join('');
+          container.classList.remove('hidden');
+        }
+      }
+    </script>
     <div id="reportModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div class="bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-md shadow-2xl relative">
         <h3 class="text-2xl font-display font-bold text-gray-900 dark:text-white mb-2">Report Listing</h3>

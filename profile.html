@@ -834,13 +834,17 @@ async function saveProfile() {
   }
 }
 
-function handleLogout() {
-  fetch('/api/auth.php?action=logout').then(() => {
-    localStorage.removeItem('zzz_user');
-    localStorage.removeItem('zipzapzoi_token');
-    localStorage.removeItem('zzz_token');
-    window.location.href = 'Login Page.html';
-  });
+async function handleLogout() {
+  try {
+    await fetch('/api/auth.php?action=logout', { 
+      method: 'POST', 
+      credentials: 'include' 
+    });
+  } catch(e) {}
+  localStorage.removeItem('zzz_user');
+  localStorage.removeItem('zipzapzoi_token');
+  localStorage.removeItem('zzz_token');
+  window.location.href = 'Login Page.html';
 }
 
 loadProfile();

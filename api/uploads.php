@@ -13,6 +13,18 @@ header('Content-Type: application/json; charset=UTF-8');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') jsonError('POST only', 405);
 $user = requireAuth();
 
+// --- Rate Limiting: Max 100 uploads per user per day ---
+try {
+    $db = getDB();
+    $db->exec("CREATE TABLE IF NOT EXISTS upload_logs (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, INDEX(user_id, created_at))");
+    
+    $stmt = $db->prepare("SELECT COUNT(*) FROM upload_logs WHERE user_id = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)");
+    $stmt->execute([(int)$user['id']]);
+    if ((int)$stmt->fetchColumn() > 100) {
+        jsonError('Upload rate limit exceeded. Please try again tomorrow.', 429);
+    }
+} catch (Exception $e) {}
+
 // Create upload directory if not exists
 if (!is_dir(UPLOAD_DIR)) {
     @mkdir(UPLOAD_DIR, 0755, true);
@@ -156,8 +168,18 @@ $urls = array_map('toAbsoluteUrl', array_column($results, 'url'));
 foreach ($results as &$r) { $r['url'] = toAbsoluteUrl($r['url']); }
 unset($r);
 
+// Log successful uploads for rate limiting
+try {
+    $db = getDB();
+    $stmt = $db->prepare("INSERT INTO upload_logs (user_id) VALUES (?)");
+    foreach ($results as $res) {
+        $stmt->execute([(int)$user['id']]);
+    }
+} catch (Exception $e) {}
+
 jsonOk([
     'url'   => $urls[0],       // backwards compat for single-upload callers
     'urls'  => $urls,          // new multi-upload callers
     'files' => $results,
 ]);
+
