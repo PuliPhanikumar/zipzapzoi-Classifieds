@@ -399,10 +399,24 @@
         }
 
         function initMap() {
-            // Default center: India
+            const params = new URLSearchParams(window.location.search);
+            const urlLat = params.get('lat');
+            const urlLng = params.get('lng');
+            
+            let center = [19.0760, 72.8777]; // Mumbai default
+            let zoom = 12;
+            
+            if (urlLat && urlLng) {
+                center = [parseFloat(urlLat), parseFloat(urlLng)];
+            } else if (!urlLat && !urlLng) {
+                // Default center: Mumbai if no params
+                center = [19.0760, 72.8777];
+                zoom = 12;
+            }
+
             map = L.map('map', {
                 zoomControl: false // move zoom control
-            }).setView([20.5937, 78.9629], 5);
+            }).setView(center, zoom);
             
             L.control.zoom({ position: 'bottomright' }).addTo(map);
 
@@ -505,7 +519,7 @@
                 // Popup content
                 const popupContent = `
                     <div class="custom-popup-content flex flex-col">
-                        <img src="${escapeHtml(imgUrl)}" alt="Listing">
+                        <img src="${escapeHtml(imgUrl)}" onerror="this.src='https://placehold.co/400x300/1e293b/6b7280?text=No+Image'" alt="Listing">
                         <div class="info">
                             <h4 class="font-bold text-sm truncate mb-1">${escapeHtml(item.title)}</h4>
                             <div class="text-primary font-black mb-1">${priceText}</div>
@@ -539,7 +553,7 @@
                          onmouseleave="unhighlightMarker(${item.id})"
                          onclick="openMarkerPopup(${item.id})">
                         <div class="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900 relative">
-                            <img src="${escapeHtml(imgUrl)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                            <img src="${escapeHtml(imgUrl)}" onerror="this.src='https://placehold.co/400x300/1e293b/6b7280?text=No+Image'" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
                         </div>
                         <div class="flex-1 min-w-0 flex flex-col justify-between py-1">
                             <div>
@@ -592,12 +606,42 @@
                     });
                 }, error => {
                     btn.classList.remove('animate-spin');
-                    alert("Location access denied or unavailable.");
+                    alert("Location access denied or unavailable. Defaulting to Mumbai.");
+                    map.flyTo([19.0760, 72.8777], 13, { animate: true, duration: 1.5 });
+                    // loadListingsInView automatically runs on moveend
                 });
             } else {
-                alert("Geolocation is not supported by your browser.");
+                alert("Geolocation is not supported by your browser. Defaulting to Mumbai.");
+                map.flyTo([19.0760, 72.8777], 13, { animate: true, duration: 1.5 });
             }
         }
     </script>
+    
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-card-dark/90 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800 flex justify-around items-center h-16 z-[60] pb-safe shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+      <a href="classifieds.html" class="flex flex-col items-center gap-1 text-gray-500 hover:text-primary transition-colors w-1/5">
+        <span class="material-symbols-outlined text-[24px]">home</span>
+        <span class="text-[10px] font-bold">Home</span>
+      </a>
+      <a href="wanted.html" class="flex flex-col items-center gap-1 text-gray-500 hover:text-primary transition-colors w-1/5">
+        <span class="material-symbols-outlined text-[24px]">campaign</span>
+        <span class="text-[10px] font-bold">Wanted</span>
+      </a>
+      <div class="w-1/5 flex justify-center -mt-6">
+        <a href="Post Listing.html" class="w-12 h-12 bg-gradient-to-r from-primary to-green-500 rounded-full flex items-center justify-center text-white shadow-lg transform transition-transform active:scale-95 border-4 border-white dark:border-card-dark">
+          <span class="material-symbols-outlined text-[24px]">add</span>
+        </a>
+      </div>
+      <a href="Inbox.html" class="flex flex-col items-center gap-1 text-gray-500 hover:text-primary transition-colors w-1/5 relative">
+        <span class="material-symbols-outlined text-[24px]">chat</span>
+        <span class="text-[10px] font-bold">Chat</span>
+        <span class="zzz-unread-badge absolute top-0 right-2 w-2.5 h-2.5 bg-red-500 border border-white dark:border-card-dark rounded-full hidden"></span>
+      </a>
+      <a href="Seller Dashboard.html" class="flex flex-col items-center gap-1 text-gray-500 hover:text-primary transition-colors w-1/5">
+        <span class="material-symbols-outlined text-[24px]">person</span>
+        <span class="text-[10px] font-bold">Profile</span>
+      </a>
+    </nav>
+    
 </body>
 </html>

@@ -155,11 +155,16 @@
       <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex flex-col lg:flex-row gap-8">
         
         <!-- SIDEBAR FILTERS -->
-        <aside id="filterSidebar" class="w-full lg:w-64 shrink-0 hidden lg:block">
-          <div class="sticky top-[120px] bg-white dark:bg-card-dark p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
-            <h3 class="font-bold text-lg text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-              <span class="material-symbols-outlined">filter_list</span> Refine Results
-            </h3>
+        <aside id="filterSidebar" class="fixed inset-0 z-[100] hidden lg:block lg:relative lg:inset-auto lg:z-auto w-full lg:w-64 shrink-0 bg-black/50 lg:bg-transparent backdrop-blur-sm lg:backdrop-blur-none" onclick="if(event.target===this) toggleMobileFilters()">
+          <div class="absolute inset-y-0 left-0 w-4/5 max-w-[300px] bg-white dark:bg-card-dark p-6 h-full overflow-y-auto lg:h-auto lg:sticky lg:top-[120px] lg:w-full lg:max-w-none lg:rounded-3xl border-r lg:border border-gray-100 dark:border-gray-800 shadow-2xl lg:shadow-sm">
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
+                <span class="material-symbols-outlined">filter_list</span> Refine Results
+              </h3>
+              <button onclick="toggleMobileFilters()" class="lg:hidden text-gray-500 hover:text-gray-900 dark:hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
             <div class="space-y-6">
               <div>
                 <label class="block text-sm font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Category</label>
@@ -240,6 +245,11 @@
           <div id="resultsGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             <!-- 3D Cards rendered here via JS -->
           </div>
+          <div id="loadMoreContainer" class="hidden flex justify-center mt-8 mb-8">
+             <button onclick="loadMore()" class="bg-white border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold py-3 px-8 rounded-full transition-colors flex items-center gap-2">
+                 Load More
+             </button>
+          </div>
 
 
           <!-- MAP VIEW -->
@@ -271,6 +281,7 @@
       let currentQuery = '';
       let currentLoc    = '';
       let allListings   = [];
+      let currentPage   = 1;
       let favIds        = new Set();   // pre-fetched from API on load
       let currentViewMode = 'grid';
       let searchMap = null, searchMarkers = [];
@@ -338,24 +349,28 @@
         document.getElementById('radiusLabel').textContent = val == 0 ? 'Any' : val + ' km';
       }
 
-      async function fetchListings() {
+      async function fetchListings(append = false) {
         const grid = document.getElementById('resultsGrid');
         const empty = document.getElementById('emptyState');
         const count = document.getElementById('resultCount');
         
+        if (!append) currentPage = 1;
+
         // Show skeleton
-        grid.classList.remove('hidden');
-        empty.classList.add('hidden'); empty.classList.remove('flex');
-        grid.innerHTML = Array(4).fill(0).map(() => `
-          <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 relative">
-            <div class="animate-pulse h-48 bg-gray-200 dark:bg-gray-700"></div>
-            <div class="p-4 sm:p-5 flex flex-col space-y-3">
-              <div class="animate-pulse h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-              <div class="animate-pulse h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
-              <div class="animate-pulse h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mt-2"></div>
+        if (!append) {
+          grid.classList.remove('hidden');
+          empty.classList.add('hidden'); empty.classList.remove('flex');
+          grid.innerHTML = Array(4).fill(0).map(() => `
+            <div class="card-3d bg-white dark:bg-card-dark rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 relative">
+              <div class="animate-pulse h-48 bg-gray-200 dark:bg-gray-700"></div>
+              <div class="p-4 sm:p-5 flex flex-col space-y-3">
+                <div class="animate-pulse h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                <div class="animate-pulse h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+                <div class="animate-pulse h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mt-2"></div>
+              </div>
             </div>
-          </div>
-        `).join('');
+          `).join('');
+        }
 
         try {
           const q = [];
@@ -386,14 +401,18 @@
             q.push('radius=' + radius);
           }
 
-          q.push('status=active', 'limit=40');
+          q.push('status=active', 'page=' + currentPage, 'limit=20');
           const res  = await fetch('/api/listings.php?' + q.join('&'), { credentials: 'include' });
           const data = await res.json();
           if (data.success && data.data && data.data.listings) {
-            allListings = data.data.listings;
-            renderResultsLocal();
+            if (append) {
+              allListings = allListings.concat(data.data.listings);
+            } else {
+              allListings = data.data.listings;
+            }
+            renderResultsLocal(append, data.data.listings);
           } else {
-            allListings = [];
+            allListings = append ? allListings : [];
             grid.classList.add('hidden');
             empty.classList.remove('hidden'); empty.classList.add('flex');
             empty.innerHTML = `
@@ -426,6 +445,11 @@
             </button>
           `;
         }
+      }
+
+      async function loadMore() {
+        currentPage++;
+        await fetchListings(true);
       }
 
       function updateSearch() {
@@ -498,7 +522,7 @@
         fetchListings(); // Fetch new data based on filters
       }
 
-      function renderResultsLocal() {
+      function renderResultsLocal(append = false, newItems = []) {
         const grid  = document.getElementById('resultsGrid');
         const empty = document.getElementById('emptyState');
         const count = document.getElementById('resultCount');
@@ -506,12 +530,12 @@
         grid.classList.remove('hidden');
         empty.classList.add('hidden'); empty.classList.remove('flex');
 
-        let filtered = allListings;
+        let filtered = append ? newItems : allListings;
         let label = '"' + (currentQuery || 'All') + '"';
         if (currentLoc) label += ' in ' + currentLoc;
-        count.textContent = `${filtered.length} result${filtered.length !== 1 ? 's' : ''} for ${label}`;
+        count.textContent = `${allListings.length} result${allListings.length !== 1 ? 's' : ''} for ${label}`;
 
-        if (filtered.length === 0) {
+        if (!append && filtered.length === 0) {
           grid.classList.add('hidden');
           empty.classList.remove('hidden'); empty.classList.add('flex');
           empty.innerHTML = `
@@ -531,7 +555,7 @@
 
           const favs = [...favIds];  // pre-fetched from /api/favorites.php on page load
 
-          grid.innerHTML = filtered.map((l, i) => {
+          const htmlCards = filtered.map((l, i) => {
             const isFav = favs.includes(l.id);
             const img   = l.images?.[0] || l.image || 'https://via.placeholder.com/400x300?text=No+Image';
             return `
@@ -560,6 +584,21 @@
                 </div>
               </div>`;
           }).join('');
+
+          if (append) {
+            grid.insertAdjacentHTML('beforeend', htmlCards);
+          } else {
+            grid.innerHTML = htmlCards;
+          }
+
+          const lmc = document.getElementById('loadMoreContainer');
+          if (lmc) {
+            if ((append && newItems.length >= 20) || (!append && filtered.length >= 20)) {
+              lmc.classList.remove('hidden');
+            } else {
+              lmc.classList.add('hidden');
+            }
+          }
 
           window.dispatchEvent(new Event('zzz:resultsRendered'));
         
@@ -713,5 +752,31 @@
     };
 
     </script>
+    
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-card-dark/90 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800 flex justify-around items-center h-16 z-[60] pb-safe shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+      <a href="classifieds.html" class="flex flex-col items-center gap-1 text-gray-500 hover:text-primary transition-colors w-1/5">
+        <span class="material-symbols-outlined text-[24px]">home</span>
+        <span class="text-[10px] font-bold">Home</span>
+      </a>
+      <a href="wanted.html" class="flex flex-col items-center gap-1 text-gray-500 hover:text-primary transition-colors w-1/5">
+        <span class="material-symbols-outlined text-[24px]">campaign</span>
+        <span class="text-[10px] font-bold">Wanted</span>
+      </a>
+      <div class="w-1/5 flex justify-center -mt-6">
+        <a href="Post Listing.html" class="w-12 h-12 bg-gradient-to-r from-primary to-green-500 rounded-full flex items-center justify-center text-white shadow-lg transform transition-transform active:scale-95 border-4 border-white dark:border-card-dark">
+          <span class="material-symbols-outlined text-[24px]">add</span>
+        </a>
+      </div>
+      <a href="Inbox.html" class="flex flex-col items-center gap-1 text-gray-500 hover:text-primary transition-colors w-1/5 relative">
+        <span class="material-symbols-outlined text-[24px]">chat</span>
+        <span class="text-[10px] font-bold">Chat</span>
+        <span class="zzz-unread-badge absolute top-0 right-2 w-2.5 h-2.5 bg-red-500 border border-white dark:border-card-dark rounded-full hidden"></span>
+      </a>
+      <a href="Seller Dashboard.html" class="flex flex-col items-center gap-1 text-gray-500 hover:text-primary transition-colors w-1/5">
+        <span class="material-symbols-outlined text-[24px]">person</span>
+        <span class="text-[10px] font-bold">Profile</span>
+      </a>
+    </nav>
 </body>
 </html>
