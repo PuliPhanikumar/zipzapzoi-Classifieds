@@ -141,10 +141,15 @@ try {
             razorpay_payment_id VARCHAR(255),
             razorpay_order_id VARCHAR(255),
             status VARCHAR(50) DEFAULT 'pending',
+            payment_method VARCHAR(50) DEFAULT 'razorpay',
+            promo_code VARCHAR(50) DEFAULT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             INDEX idx_user (user_id)
         )
     ");
+    // Add missing columns if table already exists
+    try { $db->exec("ALTER TABLE transactions ADD COLUMN payment_method VARCHAR(50) DEFAULT 'razorpay'"); } catch(Exception $e) {}
+    try { $db->exec("ALTER TABLE transactions ADD COLUMN promo_code VARCHAR(50) DEFAULT NULL"); } catch(Exception $e) {}
 } catch(Exception $e) {}
 
 $db->prepare(

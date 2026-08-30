@@ -24,6 +24,9 @@ try {
     if (!in_array('hide_phone', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN hide_phone TINYINT(1) NOT NULL DEFAULT 0");
     if (!in_array('allow_whatsapp', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN allow_whatsapp TINYINT(1) NOT NULL DEFAULT 0");
     if (!in_array('contact_phone', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN contact_phone VARCHAR(20) NULL");
+    if (!in_array('boosted', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN boosted TINYINT(1) NOT NULL DEFAULT 0");
+    if (!in_array('boosted_until', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN boosted_until DATETIME NULL");
+    if (!in_array('view_count', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN view_count INT NOT NULL DEFAULT 0");
 } catch (Exception $e) {}
 
 $method = $_SERVER['REQUEST_METHOD'];
