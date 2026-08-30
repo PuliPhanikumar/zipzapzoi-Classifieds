@@ -85,6 +85,36 @@ function recordTransaction(array $user): void {
 
     $db = getDB();
 
+    $paymentMethod = clean($b['payment_method'] ?? '');
+    $promoCode     = clean($b['promo_code'] ?? '');
+    
+    // Apply promo code discount if provided
+    if ($paymentMethod === 'promo_code' && !empty($promoCode)) {
+        $promoConfig = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'promo_codes'")->fetchColumn();
+        $promoCodes  = $promoConfig ? json_decode($promoConfig, true) : [];
+        $validCoupon = null;
+        if (!is_array($promoCodes) || empty($promoCodes)) {
+            if (strtoupper($promoCode) === 'ZOI100') {
+                $validCoupon = ['code' => 'ZOI100', 'discount' => 100];
+            }
+        } else {
+            foreach ($promoCodes as $pc) {
+                $c = is_array($pc) ? ($pc['code'] ?? '') : $pc;
+                if (strtoupper(trim($c)) === strtoupper($promoCode)) {
+                    $validCoupon = is_array($pc) ? $pc : ['code' => $c, 'discount' => 100];
+                    break;
+                }
+            }
+        }
+        
+        if ($validCoupon) {
+            $discountPct = (float)($validCoupon['discount'] ?? 100);
+            $amount = max(0, $amount - round($amount * $discountPct / 100));
+        } else {
+            jsonError('Invalid or expired promo code.');
+        }
+    }
+
     // ── Determine if this is a PAID transaction ───────────────────
     $isPaid = ($amount > 0);
     error_log("ZZZ Txn: Plan found. ID:$planId Amount:$amount Ads:$ads Days:$days IsPaid:" . ($isPaid?'yes':'no'));

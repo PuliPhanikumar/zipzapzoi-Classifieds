@@ -19,6 +19,11 @@ try {
     if (!in_array('lng', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN lng DECIMAL(11, 8) NULL AFTER lat");
     if (!in_array('is_story', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN is_story TINYINT(1) NOT NULL DEFAULT 0");
     if (!in_array('video_url', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN video_url VARCHAR(255) NULL");
+    if (!in_array('is_highlight', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN is_highlight TINYINT(1) NOT NULL DEFAULT 0");
+    if (!in_array('is_top', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN is_top TINYINT(1) NOT NULL DEFAULT 0");
+    if (!in_array('hide_phone', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN hide_phone TINYINT(1) NOT NULL DEFAULT 0");
+    if (!in_array('allow_whatsapp', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN allow_whatsapp TINYINT(1) NOT NULL DEFAULT 0");
+    if (!in_array('contact_phone', $cols)) $db->exec("ALTER TABLE listings ADD COLUMN contact_phone VARCHAR(20) NULL");
 } catch (Exception $e) {}
 
 $method = $_SERVER['REQUEST_METHOD'];

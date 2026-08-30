@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <script>
@@ -611,11 +611,9 @@
       if (!input) { msg.textContent = 'Please enter a code.'; msg.className = 'text-xs mt-1 text-red-500 font-bold'; msg.classList.remove('hidden'); return; }
 
       try {
-        const res = await fetch('/api/schema.php').then(r => r.json());
-        const coupons = (res.success && res.data && res.data.coupons) ? res.data.coupons : [];
-        const coupon = coupons.find(c => c.code && c.code.toUpperCase() === input);
-        if (!coupon) {
-          msg.textContent = 'Invalid coupon code.';
+        const res = await fetch('/api/verify_promo.php?code=' + encodeURIComponent(input)).then(r => r.json());
+        if (!res.success) {
+          msg.textContent = res.error || 'Invalid coupon code.';
           msg.className = 'text-xs mt-1 text-red-500 font-bold';
           msg.classList.remove('hidden');
           currentDiscount = 0;
@@ -729,6 +727,44 @@
       const originalPrice = selectedPlan.price;
       const discountAmount = Math.round(originalPrice * discount / 100);
       const finalAmount = originalPrice - discountAmount;
+      
+      // --- 100% Promo Code Bypass ---
+      if (finalAmount <= 0) {
+        try {
+          await (window.ZZZ && window.ZZZ.api ? window.ZZZ.api.fetch('/api/transactions.php', {
+            method: 'POST',
+            body: JSON.stringify({
+              plan_id: selectedPlan.id,
+              plan_name: selectedPlan.name,
+              amount: 0,
+              ads: selectedPlan.ads,
+              days: selectedPlan.days,
+              payment_method: 'promo_code',
+              promo_code: document.getElementById('promoCodeInput').value.trim()
+            })
+          }) : fetch('/api/transactions.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              plan_id: selectedPlan.id,
+              plan_name: selectedPlan.name,
+              amount: 0,
+              ads: selectedPlan.ads,
+              days: selectedPlan.days,
+              payment_method: 'promo_code',
+              promo_code: document.getElementById('promoCodeInput').value.trim()
+            })
+          }));
+          if (pendingListing) await savePendingListing();
+          showToast('100% Promo applied! Plan activated.', 'success');
+          setTimeout(() => { window.location.href = 'Seller Dashboard.html'; }, 1500);
+        } catch(e) {
+          showToast(e.message || 'Error activating promo plan.', 'error');
+        }
+        return;
+      }
+
       const amountInPaise = Math.round(finalAmount * 100); // Razorpay needs paise (₹1 = 100 paise)
 
       // ── Load currency from admin config ─────────────────────────────────
@@ -851,6 +887,7 @@
       // ALWAYS redirect to success — payment is confirmed by Razorpay
       const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token');
       const headers = { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}) };
+      const pCode = document.getElementById('promoCodeInput').value.trim();
       try {
         const txnRes = await fetch('/api/transactions.php', {
           method: 'POST',
@@ -864,7 +901,7 @@
             days:                selectedPlan.days,
             razorpay_payment_id: response.razorpay_payment_id || '',
             razorpay_order_id:   response.razorpay_order_id   || '',
-            razorpay_signature:  response.razorpay_signature   || ''
+            razorpay_signature: response.razorpay_signature || '', payment_method: document.getElementById('promoCodeInput').value.trim() ? 'promo_code' : 'razorpay', promo_code: document.getElementById('promoCodeInput').value.trim()
           })
         });
         const txnData = await txnRes.json();
