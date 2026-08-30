@@ -751,7 +751,6 @@
         localStorage.setItem('zipzapzoi_token', data.data.token);
         localStorage.setItem('zzz_token', data.data.token);
       }
-      localStorage.removeItem('zzz_user');
       clearInterval(_countdownId);
 
       document.getElementById('stepOTP').classList.add('hidden');
@@ -781,12 +780,12 @@
     clearOtpBoxes();
     startResendTimer(30);
     try {
-      const { name, phone, email, password } = _pendingData;
+      const { name, phone, email, password, referral_code, hp_website } = _pendingData;
       const res  = await fetch('/api/auth.php?action=register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ name, phone, email, password })
+        body: JSON.stringify({ name, phone, email, password, referral_code, hp_website })
       });
       const data = await res.json();
       if (data.success) {
@@ -846,7 +845,7 @@
       }
 
       // OTP sent by PHP server-side — show OTP step
-      _pendingData = { name, phone, email, password };
+      _pendingData = { name, phone, email, password, referral_code: refCode, hp_website: honeypot };
       showOtpStep();
       startCountdown((data.data.expires_in || 900) * 1000);
       startResendTimer(30);

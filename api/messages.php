@@ -14,7 +14,7 @@ $user   = requireAuth();
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 $id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
-$thread = isset($_GET['thread']) ? (int)$_GET['thread'] : null;
+$thread = isset($_GET['with']) ? (int)$_GET['with'] : (isset($_GET['thread']) ? (int)$_GET['thread'] : null);
 
 if ($method === 'GET' && $action === 'unread_count') getUnreadCount($user);
 elseif ($method === 'GET' && $thread)                getThread($user, $thread);

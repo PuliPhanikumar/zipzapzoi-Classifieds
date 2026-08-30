@@ -344,11 +344,8 @@
           </div>
         `;
       } else {
-        // Guest
-        navArea.innerHTML = `
-          <a href="Login Page.html?redirect=dashboard.html" class="px-4 py-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">Log In</a>
-          <a href="User Registration.html" class="px-5 py-2.5 bg-primary hover:bg-[#e06512] text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/30 transition-transform active:scale-95">Sign Up</a>
-        `;
+        // Guest - redirect to login
+        window.location.href = 'Login Page.html?redirect=dashboard.html';
       }
     })();
 

@@ -621,8 +621,8 @@
           updatePrices();
           return;
         }
-        currentDiscount = coupon.discount;
-        msg.textContent = `✅ Coupon ${coupon.code} applied: ${currentDiscount}% off!`;
+        currentDiscount = res.data.discount;
+        msg.textContent = `✅ Coupon ${input} applied: ${currentDiscount}% off!`;
         msg.className = 'text-xs mt-1 text-green-500 font-bold';
         msg.classList.remove('hidden');
         updatePrices();
@@ -850,7 +850,8 @@
       if (typeof Razorpay === 'undefined') {
         showToast('Razorpay SDK not loaded. Redirecting to payment page...', 'error');
         // Fallback to Payment.html
-        const url = `Payment.html?plan=${encodeURIComponent(selectedPlan.id)}&discount=${currentDiscount}`;
+        const pCode = document.getElementById('promoCodeInput').value.trim();
+        const url = `Payment.html?plan=${encodeURIComponent(selectedPlan.id)}&discount=${currentDiscount}&promocode=${encodeURIComponent(pCode)}`;
         setTimeout(() => window.location.href = url, 1500);
         return;
       }
@@ -901,7 +902,9 @@
             days:                selectedPlan.days,
             razorpay_payment_id: response.razorpay_payment_id || '',
             razorpay_order_id:   response.razorpay_order_id   || '',
-            razorpay_signature: response.razorpay_signature || '', payment_method: document.getElementById('promoCodeInput').value.trim() ? 'promo_code' : 'razorpay', promo_code: document.getElementById('promoCodeInput').value.trim()
+            razorpay_signature:  response.razorpay_signature  || '',
+            payment_method:      pCode ? 'promo_code' : 'razorpay',
+            promo_code:          pCode
           })
         });
         const txnData = await txnRes.json();

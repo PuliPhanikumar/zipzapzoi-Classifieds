@@ -491,6 +491,7 @@
     const params = new URLSearchParams(window.location.search);
     const planId = params.get('plan') || sessionStorage.getItem('zzz_pending_plan_id');
     const discountPct = parseFloat(params.get('discount') || '0');
+    const promoCodeStr = params.get('promocode') || '';
 
     let selectedPlan = null;
     let baseFee = 0;
@@ -673,7 +674,7 @@
               razorpay_order_id: 'FREE-' + Date.now(),
               razorpay_signature: 'promo_free',
               payment_method: 'promo_code',
-              promo_code: typeof appliedPromoCode !== 'undefined' ? appliedPromoCode : ''
+              promo_code: promoCodeStr
             })
           });
           const freeData = await freeRes.json();

@@ -240,8 +240,7 @@
           empty.classList.remove('flex');
           count.textContent = `${favListings.length} item${favListings.length === 1 ? '' : 's'} saved`;
 
-          grid.innerHTML = favListings.map((fav, index) => {
-            const l = fav.listing;
+          grid.innerHTML = favListings.map((l, index) => {
             if (!l) return '';
             const img = l.thumbnail || l.images?.[0] || l.image || 'https://via.placeholder.com/400x300?text=No+Image';
             return `

@@ -602,7 +602,13 @@
       .then(r => r.json())
       .then(d => {
         if (!d.success) { localStorage.removeItem('zzz_user'); }
-        else localStorage.setItem('zzz_user', JSON.stringify(d.data));
+        else {
+          localStorage.setItem('zzz_user', JSON.stringify(d.data));
+          const urlParams = new URLSearchParams(window.location.search);
+          if (!urlParams.has('id') && d.data.quota && d.data.quota.ads_remaining <= 0) {
+              window.location.href = 'Classifieds Plans.html';
+          }
+        }
       }).catch(() => {});
   }
 
@@ -1390,7 +1396,7 @@
     // Perform algorithmic check if it's a new post (not an edit)
     if (!isEdit && payload && payload.category) {
       try {
-         const matchRes = await fetch(`/api/wanted.php?category=${encodeURIComponent(payload.category)}`);
+         const matchRes = await fetch(`/api/wanted.php?category=${encodeURIComponent(payload.category)}`, { credentials: 'include' });
          const matchData = await matchRes.json();
          const matches = matchData.data && matchData.data.wanted_ads ? matchData.data.wanted_ads : [];
          if (matches.length > 0) {
@@ -1399,6 +1405,11 @@
          }
       } catch (e) { console.log('Match check failed silently'); }
     }
+    
+    // Auto redirect after 3 seconds
+    setTimeout(() => {
+        window.location.href = 'Seller Dashboard.html';
+    }, 3000);
   }
 
   async function handleSubmit() {
@@ -1809,7 +1820,7 @@
     _suggDebounce = setTimeout(async () => {
       try {
         const cat = document.getElementById('subCategorySelect')?.value || document.getElementById('postCategory')?.value || '';
-        const res = await fetch(`/api/listings.php?action=similar_titles&q=${encodeURIComponent(val)}&category=${encodeURIComponent(cat)}`);
+        const res = await fetch(`/api/listings.php?action=similar_titles&q=${encodeURIComponent(val)}&category=${encodeURIComponent(cat)}`, { credentials: 'include' });
         const data = await res.json();
         const titles = (data.data && data.data.titles) ? data.data.titles : [];
         if (!titles.length) { box.classList.add('hidden'); return; }
@@ -1847,7 +1858,7 @@
       const cat = document.getElementById('subCategorySelect')?.value || document.getElementById('postCategory')?.value || '';
       const title = document.getElementById('postTitle')?.value || '';
       if (!title || title.length < 3) return;
-      const res = await fetch(`/api/listings.php?action=similar_titles&q=${encodeURIComponent(title)}&category=${encodeURIComponent(cat)}`);
+      const res = await fetch(`/api/listings.php?action=similar_titles&q=${encodeURIComponent(title)}&category=${encodeURIComponent(cat)}`, { credentials: 'include' });
       const data = await res.json();
       const titles = (data.data && data.data.titles) ? data.data.titles : [];
       if (titles.length < 2) { hint.classList.add('hidden'); return; }

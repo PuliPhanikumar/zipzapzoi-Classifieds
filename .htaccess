@@ -3,7 +3,10 @@
 SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
 RewriteEngine On
 
-# Redirect HTTP to HTTPS
+# Redirect HTTP to HTTPS and non-www to www
+RewriteCond %{HTTP_HOST} ^zipzapzoi\.com [NC]
+RewriteRule ^(.*)$ https://www.zipzapzoi.com/$1 [L,R=301]
+
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 

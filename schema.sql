@@ -211,3 +211,10 @@ CREATE TABLE IF NOT EXISTS `reports` (
   FOREIGN KEY (`reported_user`) REFERENCES `users`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`listing_id`) REFERENCES `listings`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ── SCHEMA AUDIT UPDATES ──────────────────────────────────────────
+ALTER TABLE `listings` ADD COLUMN IF NOT EXISTS `boosted` TINYINT(1) NOT NULL DEFAULT 0;
+ALTER TABLE `listings` ADD COLUMN IF NOT EXISTS `boosted_until` DATETIME DEFAULT NULL;
+
+ALTER TABLE `transactions` ADD COLUMN IF NOT EXISTS `payment_method` VARCHAR(50) DEFAULT NULL;
+ALTER TABLE `transactions` ADD COLUMN IF NOT EXISTS `promo_code` VARCHAR(50) DEFAULT NULL;

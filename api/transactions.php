@@ -190,8 +190,6 @@ function recordTransaction(array $user): void {
         // Supports: monthly_free plan, OR any paid plan made free by a 100% promo code
         // Like Amazon/Swiggy: bypass payment gateway when final amount is ₹0
         
-        $paymentMethod = clean($b['payment_method'] ?? '');
-        $promoCode     = clean($b['promo_code'] ?? '');
         $isPromoFree   = ($paymentMethod === 'promo_code' && !empty($promoCode));
 
         if ($planId === 'monthly_free') {

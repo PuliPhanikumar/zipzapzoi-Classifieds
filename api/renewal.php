@@ -131,6 +131,23 @@ $db->prepare(
 )->execute([$newExpiry, $listingId]);
 
 // ── 9. Record the renewal transaction ────────────────────────────
+try {
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS transactions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            plan_id VARCHAR(50),
+            plan_name VARCHAR(255),
+            amount DECIMAL(10,2) NOT NULL,
+            razorpay_payment_id VARCHAR(255),
+            razorpay_order_id VARCHAR(255),
+            status VARCHAR(50) DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_user (user_id)
+        )
+    ");
+} catch (Exception $e) {}
+
 $db->prepare(
     'INSERT INTO transactions
      (user_id, plan_id, plan_name, amount, razorpay_payment_id, razorpay_order_id, status)

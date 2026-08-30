@@ -494,7 +494,7 @@ async function loadProfile() {
     }
     const data = await res.json();
     if(data) {
-      const u = data;
+      const u = data.data || data;
       sellerName = u.name || sellerName;
       sellerLocation = u.city || u.state || sellerLocation;
       isVerified = u.is_verified || u.verified;
@@ -525,10 +525,15 @@ async function loadProfile() {
       const img = document.getElementById('profileImage');
       img.src = sellerAvatar;
       img.classList.remove('hidden');
+      const coverImg = document.getElementById('profileAvatarImg');
+      if (coverImg) coverImg.src = sellerAvatar;
   } else {
-      document.getElementById('profileInitial').textContent = sellerName.charAt(0).toUpperCase();
+      const initial = sellerName.charAt(0).toUpperCase();
+      document.getElementById('profileInitial').textContent = initial;
       document.getElementById('profileInitial').classList.remove('hidden');
       document.getElementById('profileImage').classList.add('hidden');
+      const coverImg = document.getElementById('profileAvatarImg');
+      if (coverImg) coverImg.src = `https://placehold.co/96x96/019863/white?text=${initial}`;
   }
   
   document.getElementById('sellerLoc').textContent = sellerLocation;

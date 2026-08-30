@@ -316,8 +316,13 @@
               if (user.email) document.getElementById('fbEmail').value = user.email;
           } else {
               localStorage.removeItem('zzz_user');
+              window.location.href = `Login Page.html?redirect=${encodeURIComponent(window.location.href)}`;
           }
-      }).catch(()=>{});
+      }).catch(()=>{
+          if (!localStorage.getItem('zzz_user')) {
+              window.location.href = `Login Page.html?redirect=${encodeURIComponent(window.location.href)}`;
+          }
+      });
 
       try {
         const userStr = localStorage.getItem('zzz_user') || localStorage.getItem('zipzapzoi_current_user');
@@ -420,5 +425,31 @@
       document.documentElement.classList.add('dark');
     }
   </script>
+  
+  <!-- MOBILE BOTTOM NAVIGATION -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800 flex justify-around items-center h-16 z-[60] pb-safe shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+    <a href="classifieds.html" class="flex flex-col items-center gap-1 text-gray-500 hover:text-primary transition-colors w-1/5">
+      <span class="material-symbols-outlined text-[24px]">home</span>
+      <span class="text-[10px] font-bold">Home</span>
+    </a>
+    <a href="wanted.html" class="flex flex-col items-center gap-1 text-gray-500 hover:text-primary transition-colors w-1/5">
+      <span class="material-symbols-outlined text-[24px]">campaign</span>
+      <span class="text-[10px] font-bold">Wanted</span>
+    </a>
+    <div class="w-1/5 flex justify-center -mt-6">
+      <a href="Post Listing.html" class="w-12 h-12 bg-gradient-to-r from-primary to-green-500 rounded-full flex items-center justify-center text-white shadow-lg transform transition-transform active:scale-95 border-4 border-white dark:border-card-dark">
+        <span class="material-symbols-outlined text-[24px]">add</span>
+      </a>
+    </div>
+    <a href="Inbox.html" class="flex flex-col items-center gap-1 text-gray-500 hover:text-primary transition-colors w-1/5 relative">
+      <span class="material-symbols-outlined text-[24px]">chat</span>
+      <span class="text-[10px] font-bold">Chat</span>
+      <span class="zzz-unread-badge absolute top-0 right-2 w-2.5 h-2.5 bg-red-500 border border-white dark:border-card-dark rounded-full hidden"></span>
+    </a>
+    <a href="Seller Dashboard.html" class="flex flex-col items-center gap-1 text-gray-500 hover:text-primary transition-colors w-1/5">
+      <span class="material-symbols-outlined text-[24px]">person</span>
+      <span class="text-[10px] font-bold">Profile</span>
+    </a>
+  </nav>
 </body>
 </html>

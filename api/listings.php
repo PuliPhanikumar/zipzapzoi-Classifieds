@@ -106,6 +106,15 @@ function getAll(): void {
         $where[] = 'l.user_id = :uid';
         $params[':uid'] = (int)$_GET['user_id'];
     }
+    if (!empty($_GET['my_listings'])) {
+        $currentUser = getCurrentUser();
+        if ($currentUser) {
+            $where[] = 'l.user_id = :my_uid';
+            $params[':my_uid'] = (int)$currentUser['id'];
+        } else {
+            jsonError('Not logged in', 401);
+        }
+    }
     if (isset($_GET['is_story'])) {
         $where[] = 'l.is_story = :is_story';
         $params[':is_story'] = (int)$_GET['is_story'];

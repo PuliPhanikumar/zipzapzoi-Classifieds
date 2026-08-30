@@ -275,12 +275,18 @@ function verifyRazorpaySignature(string $orderId, string $paymentId, string $sig
 // Guarantees all clients (especially Android/iOS) receive absolute URLs
 function toAbsoluteUrl(?string $url): ?string {
     if (empty($url)) return $url;
-    if (str_starts_with($url, '/uploads/')) {
-        return 'https://www.zipzapzoi.com' . $url;
+    if (str_starts_with($url, '/uploads/') || str_starts_with($url, 'uploads/')) {
+        return 'https://www.zipzapzoi.com/' . ltrim($url, '/');
     }
     return $url;
 }
 
-function normalizeImagesArray(array $images): array {
+function normalizeImagesArray($images): array {
+    if (empty($images)) return [];
+    if (is_string($images)) {
+        $decoded = json_decode($images, true);
+        $images = is_array($decoded) ? $decoded : [$images];
+    }
+    if (!is_array($images)) return [];
     return array_map('toAbsoluteUrl', $images);
 }

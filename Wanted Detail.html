@@ -177,6 +177,10 @@
 
     document.addEventListener("DOMContentLoaded", async () => {
       currentUser = getCurrentUser();
+      if (!currentUser) {
+          window.location.href = `Login Page.html?redirect=${encodeURIComponent(window.location.href)}`;
+          return;
+      }
       const params = new URLSearchParams(window.location.search);
       const id = params.get('id');
       
