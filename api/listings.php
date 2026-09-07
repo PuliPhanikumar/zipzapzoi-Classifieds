@@ -54,17 +54,18 @@ switch ($method) {
 function getAll(): void {
     $db     = getDB();
     $requestedStatus = $_GET['status'] ?? 'active';
+    // my_listings=1 means the owner wants to see ALL their own listings (all statuses)
+    $isMyListings = !empty($_GET['my_listings']);
 
-    // status=all: show all statuses for the authenticated owner viewing their own listings
-    // This is used by Seller Dashboard to show pending, active, rejected etc.
+    // status=all OR my_listings=1: show all statuses for the authenticated owner
     $ownerId = null;
-    if ($requestedStatus === 'all') {
+    if ($requestedStatus === 'all' || $isMyListings) {
         $currentUser = getCurrentUser();
         $ownerId = $currentUser ? (int)$currentUser['id'] : null;
     }
 
-    if ($requestedStatus === 'all' && $ownerId) {
-        // No status filter — owner sees all their listings regardless of status
+    if (($requestedStatus === 'all' || $isMyListings) && $ownerId) {
+        // No status filter — owner sees all their listings (pending, active, expired, sold)
         $where  = ['l.user_id = :owner_uid'];
         $params = [':owner_uid' => $ownerId];
     } else {
@@ -114,6 +115,19 @@ function getAll(): void {
         if ($currentUser) {
             $where[] = 'l.user_id = :my_uid';
             $params[':my_uid'] = (int)$currentUser['id'];
+        } else {
+            jsonError('Not logged in', 401);
+        }
+    }
+    // favorites=1: return only listings that the current user has favorited
+    if (!empty($_GET['favorites'])) {
+        $currentUser = getCurrentUser();
+        if ($currentUser) {
+            $where[] = 'l.id IN (SELECT listing_id FROM favorites WHERE user_id = :fav_uid)';
+            $params[':fav_uid'] = (int)$currentUser['id'];
+            // Remove status filter so favorited listings show even if expired/sold
+            $where = array_filter($where, fn($w) => !str_starts_with($w, 'l.status'));
+            $params = array_filter($params, fn($k) => $k !== ':status', ARRAY_FILTER_USE_KEY);
         } else {
             jsonError('Not logged in', 401);
         }
@@ -263,6 +277,11 @@ function getOne(int $id): void {
     $row['allow_whatsapp'] = !empty($row['allow_whatsapp']);
     $row['seller_trusted'] = !empty($row['seller_trusted']);
     $row['is_price_drop']  = isset($row['original_price']) && $row['original_price'] > $row['price'];
+    $row['is_boosted_active'] = !empty($row['boosted']) && !empty($row['boosted_until']) && strtotime($row['boosted_until']) > time();
+    $row['is_boosted']     = !empty($row['boosted']);
+    $row['is_featured']    = !empty($row['is_featured'] ?? false);
+    $row['is_urgent']      = !empty($row['is_urgent'] ?? false);
+    $row['is_story']       = (int)($row['is_story'] ?? 0);
 
     // Similar listings
     $sim = $db->prepare(
@@ -415,12 +434,20 @@ function createListing(): void {
                ? $b['price_type'] : 'fixed';
     $condition = in_array($b['condition'] ?? '', ['new','used','refurbished'])
                ? $b['condition'] : null;
-    // Charity posts go to pending_review; others too (unless auto approve is on)
-    $status    = 'pending_review';
-    if (!$isCharity) {
-        $autoApproveStmt = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'auto_approve_listings'");
-        $autoApprove = $autoApproveStmt->fetchColumn();
-        if ($autoApprove === 'true' || $autoApprove === '1') {
+    // Charity posts go to pending_review; others go active (unless admin has forced moderation)
+    $status    = 'active';
+    if ($isCharity) {
+        $status = 'pending_review';
+    } else {
+        try {
+            $autoApproveStmt = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'auto_approve_listings'");
+            $autoApprove = $autoApproveStmt->fetchColumn();
+            // Only hold for review if explicitly set to false/0
+            if ($autoApprove === 'false' || $autoApprove === '0') {
+                $status = 'pending_review';
+            }
+        } catch (Exception $e) {
+            // If system_settings table doesn't exist or key missing, default to active
             $status = 'active';
         }
     }

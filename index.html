@@ -336,7 +336,9 @@
 </div>
 </div>
 <script>
-  if (localStorage.getItem('zzz_user')) {
+  if (window.ZZZ && window.ZZZ.getCurrentUser()) {
+    window.location.href = "classifieds.html";
+  } else if (localStorage.getItem('zzz_user') || sessionStorage.getItem('zzz_user')) {
     window.location.href = "classifieds.html";
   } else {
     // Auto-redirect from Splash to Dashboard after 4 seconds

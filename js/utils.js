@@ -48,6 +48,39 @@ const ZZZ_GA4_ID = 'G-HVTZDKTMJ9';
     }
 })();
 
+// ============================================
+// Global Utility Functions (available on all pages)
+// ============================================
+
+/**
+ * Convert a date string to a human-readable "time ago" format.
+ * e.g. "3h ago", "2d ago", "just now"
+ */
+function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date)) return dateStr;
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (seconds < 60)      return 'just now';
+    if (seconds < 3600)    return Math.floor(seconds / 60) + 'm ago';
+    if (seconds < 86400)   return Math.floor(seconds / 3600) + 'h ago';
+    if (seconds < 2592000) return Math.floor(seconds / 86400) + 'd ago';
+    if (seconds < 31536000) return Math.floor(seconds / 2592000) + 'mo ago';
+    return Math.floor(seconds / 31536000) + 'y ago';
+}
+window.timeAgo = timeAgo;
+
+/**
+ * Format a number as Indian Rupee price string.
+ * e.g. formatPrice(150000) => "₹1,50,000"
+ */
+function formatPrice(price, priceType) {
+    if (priceType === 'free') return 'FREE';
+    const n = parseFloat(price) || 0;
+    return '₹' + n.toLocaleString('en-IN');
+}
+window.formatPrice = formatPrice;
+
 window.toggleDarkMode = () => {
     const html = document.documentElement;
     const isDark = html.classList.toggle('dark');

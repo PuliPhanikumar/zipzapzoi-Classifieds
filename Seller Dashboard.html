@@ -2314,7 +2314,7 @@
     const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || '';
     if (token) {
       setTimeout(() => {
-        fetch('/api/listings.php?my_listings=1&status=active&limit=200', {
+        fetch('/api/listings.php?my_listings=1&limit=200', {
           headers: { 'Authorization': 'Bearer ' + token }
         })
         .then(r => r.json())
