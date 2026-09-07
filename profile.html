@@ -338,11 +338,16 @@
   </div>
 
   <!-- Tabs -->
+  
   <div class="flex gap-6 border-b border-gray-200 dark:border-gray-700 mb-8 px-1">
     <button id="tab-listings" class="pb-3 font-bold tab-active" onclick="switchTab('listings')">Active Listings</button>
     <button id="tab-reviews" class="pb-3 font-bold tab-inactive" onclick="switchTab('reviews')">Reviews</button>
     <button id="tab-about" class="pb-3 font-bold tab-inactive" onclick="switchTab('about')">About</button>
+    <a href="favorites.html" class="pb-3 font-bold tab-inactive hidden" id="tab-favorites">Favorites</a>
+    <a href="Inbox.html" class="pb-3 font-bold tab-inactive hidden" id="tab-offers">Offers</a>
+    <a href="dashboard.html" class="pb-3 font-bold tab-inactive hidden" id="tab-notifications">Notifications</a>
   </div>
+
 
   <!-- Tab Content -->
   <div id="content-listings" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
@@ -365,6 +370,32 @@
 </footer>
 
 <!-- ===== MODALS ===== -->
+
+<!-- Edit Profile Modal -->
+<div id="editProfileModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-card-dark w-full max-w-md rounded-3xl shadow-bouncy overflow-hidden transform scale-95 transition-all duration-200" id="editProfileContent">
+    <div class="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+      <h3 class="font-bold text-xl text-gray-800 dark:text-white">Edit Profile</h3>
+      <button onclick="closeEditProfile()" class="text-gray-400 hover:text-red-500 transition-colors"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="p-6 space-y-4 text-sm text-gray-600 dark:text-gray-300">
+      <div class="flex justify-center mb-4">
+        <label for="editAvatarInput" class="cursor-pointer relative">
+          <img id="editAvatarPreview" src="https://placehold.co/96x96" class="w-24 h-24 rounded-full object-cover border-4 border-gray-100">
+          <div class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+             <span class="material-symbols-outlined text-white">edit</span>
+          </div>
+          <input type="file" id="editAvatarInput" class="hidden" accept="image/*" onchange="handleAvatarSelect(event)">
+        </label>
+      </div>
+      <input type="text" id="editName" placeholder="Full Name" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-800 dark:text-white">
+      <input type="text" id="editCity" placeholder="City" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-800 dark:text-white">
+      <input type="text" id="editPhone" placeholder="Phone" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-gray-800 dark:text-white">
+      <button onclick="saveProfile()" class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3.5 rounded-xl shadow-lg transition-transform active:scale-95">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 
 <!-- Report User Modal -->
 <div id="reportModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
@@ -441,17 +472,24 @@ function showToast(message, type = 'success') {
 /* ========== INIT ========== */
 const currentUser = JSON.parse(localStorage.getItem('zzz_user'));
 const urlParams = new URLSearchParams(window.location.search);
-const userId = urlParams.get('id') || urlParams.get('sellerId');
-
+let userId = urlParams.get('id') || urlParams.get('sellerId');
 if (!userId) {
-  showToast("No seller profile specified. Redirecting to listings.", "error");
-  window.location.href = "classifieds.html";
+  if (!currentUser) {
+    window.location.href = "Login Page.html";
+  } else {
+    userId = 'me';
+  }
 }
 
 // Avatar + Review button
 if (currentUser) {
+if (userId === 'me' || String(currentUser.id) === String(userId)) {
+    document.getElementById('tab-favorites')?.classList.remove('hidden');
+    document.getElementById('tab-offers')?.classList.remove('hidden');
+    document.getElementById('tab-notifications')?.classList.remove('hidden');
+}
   document.getElementById('navAvatarBtn').textContent = currentUser.name.charAt(0).toUpperCase();
-  if (String(currentUser.id) !== String(userId)) {
+  if (String(currentUser.id) !== String(userId) && userId !== 'me') {
      document.getElementById('btnLeaveReview').classList.remove('hidden');
   }
 } else {
@@ -666,7 +704,7 @@ function startChat() {
 
 /* ========== SHARE ========== */
 function shareProfile() {
-  const url = window.location.href;
+  const url = window.location.origin + window.location.pathname + '?seller=' + (userId === 'me' ? currentUser.id : userId);
   navigator.clipboard.writeText(url).then(() => showToast("Profile link copied!")).catch(() => prompt("Copy this link:", url));
 }
 
@@ -694,7 +732,7 @@ async function submitReport() {
 
     try {
       const res = await fetch('/api/users.php?action=report', {
-        method: 'POST',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
@@ -742,7 +780,7 @@ async function submitReview() {
     if (!text) return showToast("Please write a review", "error");
     try {
       const res = await fetch('/api/reviews.php', {
-        method: 'POST',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
@@ -796,7 +834,7 @@ async function saveProfile() {
     const formData = new FormData();
     formData.append('file', selectedAvatarFile);
     try {
-      const uploadRes = await fetch('/api/uploads.php', { method: 'POST', body: formData, headers: { 'Authorization': 'Bearer ' + token } });
+      const uploadRes = await fetch('/api/uploads.php', { method: 'PUT', body: formData, headers: { 'Authorization': 'Bearer ' + token } });
       const uploadData = await uploadRes.json();
       if (uploadData.success) {
         avatarUrl = uploadData.data.url;
@@ -814,8 +852,8 @@ async function saveProfile() {
   };
 
   try {
-    const res = await fetch('/api/users.php?action=update_profile', {
-      method: 'POST',
+    const res = await fetch('/api/users.php', {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify(payload)
     });
@@ -842,7 +880,7 @@ async function saveProfile() {
 async function handleLogout() {
   try {
     await fetch('/api/auth.php?action=logout', { 
-      method: 'POST', 
+      method: 'PUT', 
       credentials: 'include' 
     });
   } catch(e) {}
@@ -874,6 +912,17 @@ loadProfile();
     if (user.total_listings >= 10) badges.push({ icon: '🚀', label: 'Power Seller', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' });
     if (user.avg_rating >= 4.5) badges.push({ icon: '⭐', label: '5-Star Rated', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' });
     if (user.is_verified) badges.push({ icon: '✅', label: 'Verified', color: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400' });
+
+    let score = 0;
+    if (user.trusted_seller) score += 50;
+    if (user.total_listings) score += user.total_listings * 5;
+    if (user.avg_rating) score += user.avg_rating * 10;
+    
+    let repIcon = '⭐';
+    if (score > 100) repIcon = '🔥';
+    if (user.is_verified) repIcon = '✅';
+    badges.push({ icon: repIcon, label: `Rep Score: ${score}`, color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 font-black' });
+    
 
     const container = document.getElementById('achievementBadges');
     if (container) {

@@ -7,7 +7,22 @@
     } else {
         document.documentElement.classList.remove('dark');
     }
-  </script>
+  
+    function togglePriceDropAlert(listingId, btn) {
+        fetch('/api/alerts.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ listing_id: listingId, type: 'price_drop' })
+        }).then(r => r.json()).then(d => {
+            if(d.success) {
+                btn.classList.toggle('text-blue-500');
+                showToast('Price drop alert toggled!');
+            }
+        });
+    }
+    
+</script>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <meta name="description" content="View your saved and favourite listings on ZipZapZoi. Keep track of the best deals you found."/>
@@ -19,7 +34,22 @@
   <meta name="robots" content="index, follow"/>
   <link rel="canonical" href="https://zipzapzoi.com/favorites.html"/>
     <title>ZipZapZoi - My Favorites</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com">
+    function togglePriceDropAlert(listingId, btn) {
+        fetch('/api/alerts.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ listing_id: listingId, type: 'price_drop' })
+        }).then(r => r.json()).then(d => {
+            if(d.success) {
+                btn.classList.toggle('text-blue-500');
+                showToast('Price drop alert toggled!');
+            }
+        });
+    }
+    
+</script>
     <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
     <script>
@@ -42,7 +72,22 @@
       if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
       }
-    </script>
+    
+    function togglePriceDropAlert(listingId, btn) {
+        fetch('/api/alerts.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ listing_id: listingId, type: 'price_drop' })
+        }).then(r => r.json()).then(d => {
+            if(d.success) {
+                btn.classList.toggle('text-blue-500');
+                showToast('Price drop alert toggled!');
+            }
+        });
+    }
+    
+</script>
     <style>
       .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24 }
       
@@ -159,8 +204,38 @@
 
     </main>
 
-    <script src="js/utils.js"></script>
-    <script src="js/api.js"></script>
+    <script src="js/utils.js">
+    function togglePriceDropAlert(listingId, btn) {
+        fetch('/api/alerts.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ listing_id: listingId, type: 'price_drop' })
+        }).then(r => r.json()).then(d => {
+            if(d.success) {
+                btn.classList.toggle('text-blue-500');
+                showToast('Price drop alert toggled!');
+            }
+        });
+    }
+    
+</script>
+    <script src="js/api.js">
+    function togglePriceDropAlert(listingId, btn) {
+        fetch('/api/alerts.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ listing_id: listingId, type: 'price_drop' })
+        }).then(r => r.json()).then(d => {
+            if(d.success) {
+                btn.classList.toggle('text-blue-500');
+                showToast('Price drop alert toggled!');
+            }
+        });
+    }
+    
+</script>
     <script>
       function getAuthHeaders() {
           return {
@@ -324,7 +399,22 @@
         localStorage.setItem('zzz_theme', dark ? 'dark' : 'light');
         document.getElementById('themeIcon').textContent = dark ? 'light_mode' : 'dark_mode';
       }
-    </script>
+    
+    function togglePriceDropAlert(listingId, btn) {
+        fetch('/api/alerts.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ listing_id: listingId, type: 'price_drop' })
+        }).then(r => r.json()).then(d => {
+            if(d.success) {
+                btn.classList.toggle('text-blue-500');
+                showToast('Price drop alert toggled!');
+            }
+        });
+    }
+    
+</script>
     
     <!-- MOBILE BOTTOM NAVIGATION -->
     <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-card-dark/90 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800 flex justify-around items-center h-16 z-[60] pb-safe shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">

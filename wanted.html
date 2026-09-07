@@ -4,7 +4,22 @@
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title>Post a Request — ZipZapZoi</title>
-  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms">
+        function matchMe(category, city) {
+            fetch(`/api/listings.php?category=${category}&city=${city}&limit=5`)
+            .then(r => r.json())
+            .then(d => {
+                if(d.success && d.data && d.data.listings.length > 0) {
+                    let html = 'Matches found:\n';
+                    d.data.listings.forEach(l => html += '- ' + l.title + '\n');
+                    alert(html);
+                } else {
+                    alert('No matches found for your city/category combination.');
+                }
+            });
+        }
+        
+</script>
   <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet"/>
   <script>
@@ -26,7 +41,22 @@
     if (localStorage.getItem('zzz_theme') === 'dark' || (!('zzz_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
     }
-  </script>
+  
+        function matchMe(category, city) {
+            fetch(`/api/listings.php?category=${category}&city=${city}&limit=5`)
+            .then(r => r.json())
+            .then(d => {
+                if(d.success && d.data && d.data.listings.length > 0) {
+                    let html = 'Matches found:\n';
+                    d.data.listings.forEach(l => html += '- ' + l.title + '\n');
+                    alert(html);
+                } else {
+                    alert('No matches found for your city/category combination.');
+                }
+            });
+        }
+        
+</script>
   <style>
     .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24 }
     .glass-panel {
@@ -133,8 +163,38 @@
     .swipe-action-btn.skip { box-shadow: 0 8px 24px rgba(239,68,68,0.3); }
     .swipe-action-btn.offer { box-shadow: 0 8px 24px rgba(1,152,99,0.4); }
   </style>
-  <script src="js/schema.js"></script>
-  <script src="js/utils.js"></script>
+  <script src="js/schema.js">
+        function matchMe(category, city) {
+            fetch(`/api/listings.php?category=${category}&city=${city}&limit=5`)
+            .then(r => r.json())
+            .then(d => {
+                if(d.success && d.data && d.data.listings.length > 0) {
+                    let html = 'Matches found:\n';
+                    d.data.listings.forEach(l => html += '- ' + l.title + '\n');
+                    alert(html);
+                } else {
+                    alert('No matches found for your city/category combination.');
+                }
+            });
+        }
+        
+</script>
+  <script src="js/utils.js">
+        function matchMe(category, city) {
+            fetch(`/api/listings.php?category=${category}&city=${city}&limit=5`)
+            .then(r => r.json())
+            .then(d => {
+                if(d.success && d.data && d.data.listings.length > 0) {
+                    let html = 'Matches found:\n';
+                    d.data.listings.forEach(l => html += '- ' + l.title + '\n');
+                    alert(html);
+                } else {
+                    alert('No matches found for your city/category combination.');
+                }
+            });
+        }
+        
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet"/>
 
 
@@ -731,7 +791,22 @@
         buildSwipeDeck(window._wantedAds);
     }
   });
-  </script>
+  
+        function matchMe(category, city) {
+            fetch(`/api/listings.php?category=${category}&city=${city}&limit=5`)
+            .then(r => r.json())
+            .then(d => {
+                if(d.success && d.data && d.data.listings.length > 0) {
+                    let html = 'Matches found:\n';
+                    d.data.listings.forEach(l => html += '- ' + l.title + '\n');
+                    alert(html);
+                } else {
+                    alert('No matches found for your city/category combination.');
+                }
+            });
+        }
+        
+</script>
   <!-- MOBILE BOTTOM NAVIGATION -->
   <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-card-dark/90 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800 flex justify-around items-center h-16 z-[60] pb-safe shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
     <a href="classifieds.html" class="flex flex-col items-center gap-1 text-gray-500 hover:text-primary transition-colors w-1/5">
