@@ -1615,5 +1615,186 @@
     })();
   </script>
 
-  </body>
+  
+    <script>
+    // Gen Z Features - Listing Detail
+    
+    function setupPriceDropAlerts() {
+        const priceEl = document.querySelector('.text-3xl.font-bold.text-green-500') || document.querySelector('.text-2xl.font-bold.text-green-500');
+        if(priceEl && !document.getElementById('priceDropBtn')) {
+            const btn = document.createElement('button');
+            btn.id = 'priceDropBtn';
+            btn.className = 'mt-2 flex items-center gap-2 text-sm font-medium text-orange-500 hover:text-orange-600 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-full transition-colors cursor-pointer';
+            
+            const listingId = new URLSearchParams(window.location.search).get('id') || 'unknown';
+            const alerts = JSON.parse(localStorage.getItem('zzz_price_alerts') || '[]');
+            const isWatching = alerts.includes(listingId);
+            
+            btn.innerHTML = isWatching ? '<span class="material-symbols-outlined text-sm">check_circle</span> ✓ Watching Price' : '<span class="material-symbols-outlined text-sm">notifications</span> 🔔 Alert me if price drops';
+            
+            btn.onclick = async () => {
+                const token = localStorage.getItem('zzz_token') || 'mock'; // skip real auth for now
+                if(!token) {
+                    window.location.href = 'Login Page.html';
+                    return;
+                }
+                
+                let currentAlerts = JSON.parse(localStorage.getItem('zzz_price_alerts') || '[]');
+                const currentlyWatching = currentAlerts.includes(listingId);
+                
+                if(currentlyWatching) {
+                    currentAlerts = currentAlerts.filter(id => id !== listingId);
+                    localStorage.setItem('zzz_price_alerts', JSON.stringify(currentAlerts));
+                    btn.innerHTML = '<span class="material-symbols-outlined text-sm">notifications</span> 🔔 Alert me if price drops';
+                    if(typeof showToast === 'function') showToast('Alert removed', 'info');
+                } else {
+                    currentAlerts.push(listingId);
+                    localStorage.setItem('zzz_price_alerts', JSON.stringify(currentAlerts));
+                    btn.innerHTML = '<span class="material-symbols-outlined text-sm">check_circle</span> ✓ Watching Price';
+                    if(typeof showToast === 'function') showToast('We\'ll notify you if the price drops!', 'success');
+                }
+            };
+            priceEl.parentNode.insertBefore(btn, priceEl.nextSibling);
+        }
+    }
+    
+    async function generateSharePoster() {
+      const titleEl = document.querySelector('h1');
+      const priceEl = document.querySelector('.text-3xl.font-bold.text-green-500, .text-2xl.font-bold.text-green-500');
+      const locEl = document.querySelector('.material-symbols-outlined:contains("location_on")')?.nextSibling || document.querySelector('.text-gray-500');
+      
+      const currentListing = {
+          title: titleEl ? titleEl.innerText : 'Listing',
+          price: priceEl ? priceEl.innerText.replace(/[^0-9.]/g, '') : '0',
+          location_city: locEl ? locEl.textContent.trim() : 'Location'
+      };
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = 1080; canvas.height = 1080;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createLinearGradient(0, 0, 1080, 1080);
+      grad.addColorStop(0, '#0f172a'); grad.addColorStop(1, '#1e3a5f');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, 1080, 1080);
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 64px Arial';
+      ctx.fillText(currentListing?.title?.substring(0, 30) || 'ZipZapZoi', 60, 200);
+      ctx.fillStyle = '#22c55e'; ctx.font = 'bold 96px Arial';
+      ctx.fillText('₹' + parseFloat(currentListing?.price || 0).toLocaleString('en-IN'), 60, 340);
+      ctx.fillStyle = '#94a3b8'; ctx.font = '48px Arial';
+      ctx.fillText('📍 ' + (currentListing?.location_city || 'India'), 60, 440);
+      ctx.fillStyle = '#22c55e'; ctx.font = 'bold 56px Arial';
+      ctx.fillText('ZipZapZoi', 60, 980);
+      ctx.fillStyle = '#64748b'; ctx.font = '36px Arial';
+      ctx.fillText('www.zipzapzoi.com', 60, 1040);
+      
+      const link = document.createElement('a');
+      link.download = 'zipzapzoi-listing.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+    
+    function setupSharePoster() {
+        const btn = document.getElementById('btnDownloadPoster');
+        if(btn) btn.onclick = generateSharePoster;
+    }
+    
+    function setupCopyPhone() {
+        const links = document.querySelectorAll('a[href^="tel:"]');
+        links.forEach(link => {
+            if(!link.nextElementSibling || !link.nextElementSibling.classList.contains('copy-phone-btn')) {
+                const btn = document.createElement('button');
+                btn.className = 'copy-phone-btn ml-2 p-1 text-gray-500 hover:text-green-500 transition-colors bg-gray-100 rounded inline-flex items-center justify-center';
+                btn.innerHTML = '<span class="material-symbols-outlined text-sm">content_copy</span>';
+                btn.title = "Copy Phone Number";
+                btn.onclick = (e) => {
+                    e.preventDefault();
+                    navigator.clipboard.writeText(link.innerText.trim()).then(() => {
+                        if(typeof showToast === 'function') showToast('Phone number copied!', 'success');
+                        else alert('Phone number copied!');
+                    });
+                };
+                link.parentNode.insertBefore(btn, link.nextSibling);
+            }
+        });
+    }
+    
+    function recordRecentlyViewed() {
+        setTimeout(() => {
+            const titleEl = document.querySelector('h1');
+            const priceEl = document.querySelector('.text-3xl.font-bold.text-green-500, .text-2xl.font-bold.text-green-500');
+            const imgEl = document.querySelector('img.main-image, .carousel-item.active img, img');
+            
+            if(!titleEl || !priceEl) return;
+            
+            const item = {
+                id: new URLSearchParams(window.location.search).get('id') || 'unknown',
+                title: titleEl.innerText,
+                price: priceEl.innerText.replace(/[^0-9.]/g, ''),
+                image: imgEl ? imgEl.src : ''
+            };
+            
+            let rv = JSON.parse(localStorage.getItem('zzz_recently_viewed') || '[]');
+            rv = rv.filter(x => x.id !== item.id);
+            rv.unshift(item);
+            if(rv.length > 5) rv.pop();
+            localStorage.setItem('zzz_recently_viewed', JSON.stringify(rv));
+        }, 1000);
+    }
+    
+    function renderSimilarListings() {
+        if(document.getElementById('similarListingsContainer')) return;
+        const container = document.createElement('div');
+        container.className = 'mt-12 pt-8 border-t border-gray-200 dark:border-gray-700';
+        container.innerHTML = `
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">You might also like</h2>
+            <div class="flex gap-6 overflow-x-auto pb-6 snap-x" id="similarListingsContainer">
+                <div class="animate-pulse flex gap-6">
+                    <div class="w-64 h-64 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+                    <div class="w-64 h-64 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+                    <div class="w-64 h-64 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+                </div>
+            </div>
+        `;
+        
+        const main = document.querySelector('main') || document.querySelector('.container');
+        if(main) main.appendChild(container);
+        
+        setTimeout(() => {
+            const mockListings = [
+                { id: '1', title: 'Similar Item 1', price: '4500', img: 'https://via.placeholder.com/250' },
+                { id: '2', title: 'Similar Item 2', price: '3200', img: 'https://via.placeholder.com/250' },
+                { id: '3', title: 'Similar Item 3', price: '5000', img: 'https://via.placeholder.com/250' },
+                { id: '4', title: 'Similar Item 4', price: '2100', img: 'https://via.placeholder.com/250' }
+            ];
+            
+            document.getElementById('similarListingsContainer').innerHTML = mockListings.map(item => `
+                <a href="Listing Detail.html?id=${item.id}" class="snap-start flex-shrink-0 w-64 bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-all group">
+                    <div class="h-48 overflow-hidden">
+                        <img src="${item.img}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="${item.title}">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white truncate">${item.title}</h3>
+                        <p class="text-green-500 text-xl font-bold mt-2">₹${parseFloat(item.price).toLocaleString('en-IN')}</p>
+                    </div>
+                </a>
+            `).join('');
+        }, 1500);
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        setupPriceDropAlerts();
+        setupSharePoster();
+        setupCopyPhone();
+        recordRecentlyViewed();
+        renderSimilarListings();
+        
+        const observer = new MutationObserver(() => {
+            setupPriceDropAlerts();
+            setupSharePoster();
+            setupCopyPhone();
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+    });
+    </script>
+    
+</body>
   </html>

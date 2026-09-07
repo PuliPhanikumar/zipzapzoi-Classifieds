@@ -588,6 +588,14 @@
       // =====================================
       document.addEventListener('DOMContentLoaded', () => {
         if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const catParam = urlParams.get('category');
+        if (catParam) activeCategory = catParam;
+        
+        const searchParam = urlParams.get('search');
+        if (searchParam) document.getElementById('searchQuery').value = searchParam;
+
         renderAuth();
         renderCategories();
         renderRecentViews();   // loads from history API
@@ -1502,6 +1510,201 @@
     });
   </script>
 
+
+    <!-- Zoi AI Chat Assistant -->
+    <div id="zoiChat" class="fixed bottom-24 right-6 z-50 hidden flex-col w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
+        <div class="bg-gradient-to-r from-green-400 to-green-600 p-4 text-white flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">🤖</span>
+                <span class="font-bold">Zoi</span>
+            </div>
+            <button onclick="document.getElementById('zoiChat').classList.add('hidden')" class="text-white hover:text-gray-200 material-symbols-outlined">close</button>
+        </div>
+        <div id="zoiMessages" class="p-4 h-64 overflow-y-auto flex flex-col gap-3 bg-gray-50 dark:bg-gray-900 text-sm">
+            <div class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-3 rounded-2xl rounded-tl-sm self-start shadow-sm border border-gray-100 dark:border-gray-700">
+                Hi! I'm Zoi. How can I help you today?
+            </div>
+        </div>
+        <div class="p-3 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex gap-2">
+            <input type="text" id="zoiInput" placeholder="Ask me anything..." class="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-full px-4 py-2 outline-none focus:ring-2 focus:ring-green-400" onkeypress="if(event.key === 'Enter') sendZoiMessage()">
+            <button onclick="sendZoiMessage()" class="bg-green-500 hover:bg-green-600 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors">
+                <span class="material-symbols-outlined text-sm">send</span>
+            </button>
+        </div>
+    </div>
+    <button onclick="document.getElementById('zoiChat').classList.toggle('hidden')" class="fixed bottom-24 right-6 z-40 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+        <span class="text-2xl">🤖</span>
+    </button>
+    
+    <script>
+    const zoiResponses = [
+      { patterns: ['find', 'search', 'looking for', 'want to buy'], response: (msg) => `Sure! <a href="SearchResult.html?q=${encodeURIComponent(msg)}" class="text-green-400 underline">Click here to search for "${msg}"</a>` },
+      { patterns: ['post', 'sell', 'ad', 'listing'], response: () => 'Ready to sell? <a href="Post Listing.html" class="text-green-400 underline">Post your ad here &rarr;</a>' },
+      { patterns: ['inbox', 'message', 'chat'], response: () => 'Check your messages here: <a href="Inbox.html" class="text-green-400 underline">Open Inbox &rarr;</a>' },
+      { patterns: ['price', 'cost', 'expensive'], response: () => 'Use our filters to find listings in your budget! Try sorting by "Price: Low to High".' },
+      { patterns: ['safe', 'scam', 'trust'], response: () => 'Always meet in public places, verify item before payment. Look for the ✓ Trusted Seller badge!' },
+    ];
+    
+    function sendZoiMessage() {
+        const input = document.getElementById('zoiInput');
+        const text = input.value.trim();
+        if(!text) return;
+        
+        const msgs = document.getElementById('zoiMessages');
+        msgs.innerHTML += `<div class="bg-green-500 text-white p-3 rounded-2xl rounded-tr-sm self-end shadow-sm max-w-[85%]">${text}</div>`;
+        input.value = '';
+        msgs.scrollTop = msgs.scrollHeight;
+        
+        setTimeout(() => {
+            const lowerText = text.toLowerCase();
+            let response = "I'm still learning! Try asking about finding items, selling, or safety tips.";
+            for(let r of zoiResponses) {
+                if(r.patterns.some(p => lowerText.includes(p))) {
+                    response = r.response(text);
+                    break;
+                }
+            }
+            msgs.innerHTML += `<div class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-3 rounded-2xl rounded-tl-sm self-start shadow-sm border border-gray-100 dark:border-gray-700 max-w-[85%]">${response}</div>`;
+            msgs.scrollTop = msgs.scrollHeight;
+        }, 600);
+    }
+    </script>
+    
+<script>
+
+    // Gen Z Features
+    function animateCount(el, target, duration = 800) {
+      let start = null;
+      requestAnimationFrame(function step(ts) {
+        if (!start) start = ts;
+        const progress = Math.min((ts - start) / duration, 1);
+        el.textContent = Math.floor(progress * target).toLocaleString('en-IN');
+        if (progress < 1) requestAnimationFrame(step);
+      });
+    }
+    
+    async function quickShare(listing, e) {
+      e.stopPropagation(); e.preventDefault();
+      const url = window.location.origin + '/Listing Detail.html?id=' + listing.id;
+      const text = listing.title + ' - ₹' + parseFloat(listing.price).toLocaleString('en-IN') + ' on ZipZapZoi';
+      if (navigator.share) {
+        await navigator.share({ title: listing.title, text, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        if(typeof showToast === 'function') showToast('Link copied! Share it with friends 🔗', 'success');
+        else alert('Link copied!');
+      }
+    }
+    
+    function enhanceListingCard(card, listing) {
+        // Quick Share
+        if (!card.querySelector('.quick-share-btn')) {
+            const shareBtn = document.createElement('button');
+            shareBtn.innerHTML = '📤';
+            shareBtn.className = 'quick-share-btn absolute top-2 right-12 bg-white/80 dark:bg-gray-800/80 p-2 rounded-full shadow hover:bg-white dark:hover:bg-gray-700 transition-colors z-10';
+            shareBtn.onclick = (e) => quickShare(listing, e);
+            card.style.position = 'relative';
+            card.appendChild(shareBtn);
+        }
+        
+        // Trending Badges
+        if (!card.querySelector('.trending-badge')) {
+            const views = listing.views || Math.floor(Math.random() * 120); 
+            let badgeHtml = '';
+            if (views > 100) badgeHtml = '🔥 Hot';
+            else if (views > 50) badgeHtml = '👀 Trending';
+            else if (views > 20) badgeHtml = '⭐ Popular';
+            
+            if (badgeHtml) {
+                const badge = document.createElement('div');
+                badge.innerHTML = badgeHtml;
+                badge.className = 'trending-badge absolute top-2 right-2 bg-gradient-to-r from-orange-400 to-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow z-10';
+                card.appendChild(badge);
+            }
+        }
+    }
+    
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === 1 && node.classList && (node.classList.contains('listing-card') || node.classList.contains('bg-white') && node.querySelector('img'))) {
+                    if(!node.dataset.enhanced) {
+                        node.dataset.enhanced = "true";
+                        const priceEl = node.querySelector('.text-xl, .font-bold');
+                        const titleEl = node.querySelector('h3');
+                        const listing = {
+                            id: node.dataset.id || Math.random().toString(36).substr(2, 9),
+                            title: titleEl ? titleEl.innerText : 'Listing',
+                            price: priceEl ? priceEl.innerText.replace(/[^0-9.]/g, '') : '0'
+                        };
+                        enhanceListingCard(node, listing);
+                    }
+                }
+            });
+        });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    // Fallback for existing elements
+    setTimeout(() => {
+        document.querySelectorAll('.listing-card, .bg-white').forEach(node => {
+            if(node.querySelector('img') && !node.dataset.enhanced) {
+                node.dataset.enhanced = "true";
+                const priceEl = node.querySelector('.text-xl, .font-bold');
+                const titleEl = node.querySelector('h3');
+                const listing = {
+                    id: node.dataset.id || Math.random().toString(36).substr(2, 9),
+                    title: titleEl ? titleEl.innerText : 'Listing',
+                    price: priceEl ? priceEl.innerText.replace(/[^0-9.]/g, '') : '0'
+                };
+                enhanceListingCard(node, listing);
+            }
+        });
+    }, 1000);
+    
+    function renderRecentlyViewed() {
+        const rv = JSON.parse(localStorage.getItem('zzz_recently_viewed') || '[]');
+        if(rv.length === 0) return;
+        
+        const container = document.createElement('div');
+        container.className = 'container mx-auto px-4 py-6 mb-6 overflow-hidden';
+        container.innerHTML = `
+            <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">👀 Recently Viewed</h2>
+            <div class="flex gap-4 overflow-x-auto pb-4 snap-x">
+                ${rv.map(item => `
+                    <a href="Listing Detail.html?id=${item.id}" class="snap-start flex-shrink-0 w-48 bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow">
+                        <img src="${item.image || 'https://via.placeholder.com/150'}" class="w-full h-32 object-cover" alt="${item.title}">
+                        <div class="p-3">
+                            <h3 class="text-sm font-semibold text-gray-800 dark:text-white truncate">${item.title}</h3>
+                            <p class="text-green-500 font-bold mt-1">₹${parseFloat(item.price || 0).toLocaleString('en-IN')}</p>
+                        </div>
+                    </a>
+                `).join('')}
+            </div>
+        `;
+        
+        const headerOrFilter = document.querySelector('.container');
+        if(headerOrFilter) {
+            headerOrFilter.parentNode.insertBefore(container, headerOrFilter);
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        renderRecentlyViewed();
+        
+        const counterEls = Array.from(document.querySelectorAll('*')).filter(el => el.textContent && el.textContent.match(/^Showing \d+ listings/));
+        if(counterEls.length > 0) {
+            const counterEl = counterEls[counterEls.length - 1]; // Use deepest
+            const match = counterEl.textContent.match(/Showing (\d+) listings/);
+            if(match) {
+                const num = parseInt(match[1]);
+                counterEl.innerHTML = `Showing <span id="animCount">0</span> listings`;
+                animateCount(document.getElementById('animCount'), num);
+            }
+        }
+    });
+    
+</script>
 </body>
 </html>
 
