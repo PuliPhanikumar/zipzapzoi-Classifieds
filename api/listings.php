@@ -209,22 +209,30 @@ function getAll(): void {
     $cstmt->execute();
     $total = (int)$cstmt->fetchColumn();
 
-    // Decode JSON fields
+    // Decode JSON fields — cast ALL boolean fields so Android gets true/false not 0/1
     foreach ($rows as &$row) {
         $row['images'] = normalizeImagesArray(json_decode($row['images'] ?? '[]', true) ?: []);
         $row['fields'] = json_decode($row['fields'] ?? '{}', true) ?: [];
-        $row['price']  = (float)$row['price'];
-        $row['views']  = (int)$row['views'];
-        $row['id']     = (int)$row['id'];
-        $row['user_id']= (int)$row['user_id'];
-        $row['is_highlight']   = !empty($row['is_highlight']);
-        $row['is_top']         = !empty($row['is_top']);
-        $row['hide_phone']     = !empty($row['hide_phone']);
-        $row['allow_whatsapp'] = !empty($row['allow_whatsapp']);
-        $row['is_price_drop']  = !empty($row['is_price_drop']);
-        $row['seller_trusted'] = !empty($row['seller_trusted']);
-        $row['views']          = (int)($row['views'] ?? 0);
-        $row['favorite_count'] = (int)($row['favorite_count'] ?? 0);
+        $row['price']           = (float)$row['price'];
+        $row['id']              = (int)$row['id'];
+        $row['user_id']         = (int)$row['user_id'];
+        $row['views']           = (int)($row['views'] ?? 0);
+        $row['favorite_count']  = (int)($row['favorite_count'] ?? 0);
+        $row['is_story']        = (int)($row['is_story'] ?? 0);
+        // Cast every TINYINT(1) boolean to true/false — prevents Android IllegalStateException
+        $row['is_boosted_active'] = !empty($row['is_boosted_active']);
+        $row['is_boosted']      = !empty($row['boosted'] ?? $row['is_boosted'] ?? false);
+        $row['is_featured']     = !empty($row['is_featured']);
+        $row['is_urgent']       = !empty($row['is_urgent']);
+        $row['is_negotiable']   = !empty($row['is_negotiable'] ?? false);
+        $row['is_highlight']    = !empty($row['is_highlight']);
+        $row['is_top']          = !empty($row['is_top']);
+        $row['hide_phone']      = !empty($row['hide_phone']);
+        $row['allow_whatsapp']  = !empty($row['allow_whatsapp']);
+        $row['is_price_drop']   = !empty($row['is_price_drop']);
+        $row['seller_trusted']  = !empty($row['seller_trusted']);
+        $row['seller_verified'] = !empty($row['is_verified'] ?? $row['seller_verified'] ?? false);
+        $row['is_favorite']     = !empty($row['is_favorite']);
         if (array_key_exists('seller_avatar', $row)) {
             $row['seller_avatar'] = toAbsoluteUrl($row['seller_avatar']);
         }
