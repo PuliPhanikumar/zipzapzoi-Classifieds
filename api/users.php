@@ -79,24 +79,21 @@ function updateProfile(): void {
     $b    = getBody();
     $db   = getDB();
 
-    $allowed = ['name','phone','city','state','avatar','fcm_token'];
+    $allowed = ['name','phone','city','state','avatar','fcm_token',
+                 'bio','whatsapp','hide_phone','push_notifications','email_alerts','deal_alerts'];
     $sets = []; $params = [];
     foreach ($allowed as $f) {
         if (!array_key_exists($f, $b)) continue;
-        $sets[]   = "{$f} = ?";
+        $sets[]   = "$f = ?";
         $params[] = clean((string)$b[$f]);
     }
     if (empty($sets)) jsonError('Nothing to update.');
     $params[] = (int)$user['id'];
     $db->prepare('UPDATE users SET ' . implode(', ', $sets) . ' WHERE id = ?')->execute($params);
-
-    // Return updated user
     $stmt = $db->prepare('SELECT id, name, email, phone, role, avatar, city, state, is_verified FROM users WHERE id = ?');
     $stmt->execute([(int)$user['id']]);
     $updatedUser = $stmt->fetch();
-    if ($updatedUser) {
-        $updatedUser['avatar'] = toAbsoluteUrl($updatedUser['avatar'] ?? null);
-    }
+    if ($updatedUser) { $updatedUser['avatar'] = toAbsoluteUrl($updatedUser['avatar'] ?? null); }
     jsonOk($updatedUser);
 }
 
