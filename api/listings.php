@@ -408,6 +408,9 @@ function createListing(): void {
     // ── Handle images: base64 data URLs → save to disk ───────────────
     $imageUrls = [];
     $rawImages = $b['images'] ?? [];
+    if (is_string($rawImages)) {
+        $rawImages = json_decode($rawImages, true) ?: [];
+    }
     if (is_array($rawImages)) {
         $allowed = ['image/jpeg','image/png','image/webp','image/gif'];
         $maxBytes = MAX_UPLOAD_MB * 1024 * 1024;
@@ -518,7 +521,7 @@ function createListing(): void {
             $allowWhatsapp,
             $contactPhone,
             json_encode($imageUrls),
-            json_encode($b['fields'] ?? []),
+            json_encode(is_string($b['fields'] ?? '') ? json_decode($b['fields'] ?? '{}', true) : ($b['fields'] ?? [])),
             $status,
             $expires,
         ]);
@@ -613,11 +616,15 @@ function updateListing(int $id): void {
 
     // ── Process images: convert any base64 data URLs → disk files ──────
     $processedImages = null;
-    if (array_key_exists('images', $b) && is_array($b['images'])) {
+    $rawImagesUpdate = $b['images'] ?? null;
+    if (is_string($rawImagesUpdate)) {
+        $rawImagesUpdate = json_decode($rawImagesUpdate, true);
+    }
+    if ($rawImagesUpdate !== null && is_array($rawImagesUpdate)) {
         $allowed  = ['image/jpeg','image/png','image/webp','image/gif'];
         $maxBytes = MAX_UPLOAD_MB * 1024 * 1024;
         $processedImages = [];
-        foreach (array_slice($b['images'], 0, 10) as $img) {
+        foreach (array_slice($rawImagesUpdate, 0, 10) as $img) {
             if (!is_string($img)) continue;
             if (str_starts_with($img, 'data:image/')) {
                 // Base64 data URL → decode and save to disk
@@ -673,7 +680,7 @@ function updateListing(int $id): void {
             }
         } elseif ($field === 'fields') {
             $sets[]   = "fields = ?";
-            $params[] = json_encode($b[$field]);
+            $params[] = is_string($b[$field]) ? json_encode(json_decode($b[$field], true)) : json_encode($b[$field]);
         } else {
             $sets[]   = "{$field} = ?";
             $params[] = is_string($b[$field]) ? clean($b[$field]) : $b[$field];

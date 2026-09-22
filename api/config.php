@@ -190,7 +190,9 @@ function requireAdmin(): array {
 // ── Get JSON Request Body ─────────────────────────────────────────────
 function getBody(): array {
     $raw = file_get_contents('php://input');
-    return json_decode($raw, true) ?? [];
+    $json = json_decode($raw, true);
+    if (is_array($json)) return $json;
+    return $_POST;
 }
 
 // ── Input Helpers ─────────────────────────────────────────────────────

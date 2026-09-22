@@ -36,7 +36,7 @@ function getProfile(string $id): void {
     if (!$userId) jsonError('Not authenticated or invalid user ID.', 401);
 
     $stmt = $db->prepare(
-        'SELECT id, name, email, phone, role, avatar, city, state, is_verified, created_at FROM users WHERE id = ? AND is_active = 1'
+        'SELECT id, name, email, phone, role, avatar, city, state, bio, hide_phone, whatsapp AS allow_whatsapp, is_verified, created_at FROM users WHERE id = ? AND is_active = 1'
     );
     $stmt->execute([$userId]);
     $profile = $stmt->fetch();
@@ -90,7 +90,7 @@ function updateProfile(): void {
     if (empty($sets)) jsonError('Nothing to update.');
     $params[] = (int)$user['id'];
     $db->prepare('UPDATE users SET ' . implode(', ', $sets) . ' WHERE id = ?')->execute($params);
-    $stmt = $db->prepare('SELECT id, name, email, phone, role, avatar, city, state, is_verified FROM users WHERE id = ?');
+    $stmt = $db->prepare('SELECT id, name, email, phone, role, avatar, city, state, bio, hide_phone, whatsapp AS allow_whatsapp, is_verified FROM users WHERE id = ?');
     $stmt->execute([(int)$user['id']]);
     $updatedUser = $stmt->fetch();
     if ($updatedUser) { $updatedUser['avatar'] = toAbsoluteUrl($updatedUser['avatar'] ?? null); }
