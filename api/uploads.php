@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * ZipZapZoi Classifieds — Image Upload API
+ * ZipZapZoi Classifieds â€” Image Upload API
  * POST /api/uploads.php
  * Accepts: multipart/form-data
  *   - Single file:   field name 'image'
@@ -30,7 +30,8 @@ if (!is_dir(UPLOAD_DIR)) {
     @mkdir(UPLOAD_DIR, 0755, true);
 }
 
-$allowed  = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif'];
+$allowed  = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif',
+              'video/mp4' => 'mp4', 'video/quicktime' => 'mov', 'video/webm' => 'webm', 'video/3gpp' => '3gp'];
 $maxBytes = MAX_UPLOAD_MB * 1024 * 1024;
 $finfo    = new finfo(FILEINFO_MIME_TYPE);
 
@@ -132,7 +133,7 @@ function processFile(array $file, array $allowed, int $maxBytes, finfo $finfo): 
 
 $results = [];
 
-// ── Handle multi-file field: images[] ────────────────────────────────
+// â”€â”€ Handle multi-file field: images[] â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if (!empty($_FILES['images'])) {
     $images = $_FILES['images'];
     // Re-organise PHP's multi-file array format
@@ -154,7 +155,7 @@ if (!empty($_FILES['images'])) {
     }
 }
 
-// ── Handle single file field: image ──────────────────────────────────
+// â”€â”€ Handle single file field: image â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 if (!empty($_FILES['image']) && empty($results)) {
     $result = processFile($_FILES['image'], $allowed, $maxBytes, $finfo);
     if ($result) $results[] = $result;
@@ -182,4 +183,5 @@ jsonOk([
     'urls'  => $urls,          // new multi-upload callers
     'files' => $results,
 ]);
+
 

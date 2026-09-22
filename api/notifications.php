@@ -1,9 +1,9 @@
-<?php
+﻿<?php
 /**
- * ZipZapZoi — Notifications API
- * GET    /api/notifications.php             → get current user's notifications
- * POST   /api/notifications.php?action=read → mark all as read
- * DELETE /api/notifications.php?id=X       → delete single notification
+ * ZipZapZoi â€” Notifications API
+ * GET    /api/notifications.php             â†’ get current user's notifications
+ * POST   /api/notifications.php?action=read â†’ mark all as read
+ * DELETE /api/notifications.php?id=X       â†’ delete single notification
  */
 require_once __DIR__ . '/config.php';
 
@@ -27,7 +27,7 @@ try {
     ");
 } catch (Exception $e) {}
 
-// requireAuth() — consistent with all other API files (was getCurrentUser())
+// requireAuth() â€” consistent with all other API files (was getCurrentUser())
 $user = requireAuth();
 
 if ($method === 'GET') {
@@ -46,6 +46,21 @@ if ($method === 'GET') {
     ]);
 
 } elseif ($method === 'POST' && $action === 'read') {
+    $db   = getDB();
+    $body = json_decode(file_get_contents('php://input'), true) ?? [];
+    $notifId = isset($body['id']) ? (int)$body['id'] : 0;
+    if ($notifId > 0) {
+        // Mark single notification as read
+        $db->prepare("UPDATE user_notifications SET is_read = 1 WHERE id = ? AND user_id = ?")
+           ->execute([$notifId, $user['id']]);
+        jsonOk(['message' => 'Notification marked as read']);
+    } else {
+        // Mark all as read
+        $db->prepare("UPDATE user_notifications SET is_read = 1 WHERE user_id = ?")
+           ->execute([$user['id']]);
+        jsonOk(['message' => 'All notifications marked as read']);
+    }
+} elseif ($method === 'POST' && $action === 'read_all') {
     $db = getDB();
     $db->prepare("UPDATE user_notifications SET is_read = 1 WHERE user_id = ?")
        ->execute([$user['id']]);
@@ -60,3 +75,4 @@ if ($method === 'GET') {
 } else {
     jsonError('Method not allowed', 405);
 }
+

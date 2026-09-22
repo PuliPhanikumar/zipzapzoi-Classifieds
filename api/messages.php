@@ -1,11 +1,35 @@
-<?php
+﻿<?php
 /**
- * ZipZapZoi Classifieds — Messages API
- * GET  /api/messages.php              → my inbox (grouped by thread)
- * GET  /api/messages.php?thread=X     → messages in thread with user X
- * POST /api/messages.php              → send message { to_user_id, listing_id, subject, body }
- * PUT  /api/messages.php?id=X         → mark as read
- * GET  /api/messages.php?action=unread_count → unread count
+ * ZipZapZoi Classifieds â€” Messages API
+ * GET  /api/messages.php              â†’ my inbox (grouped by thread)
+ * GET  /api/messages.php?thread=X     â†’ messages in thread with user X
+ * POST /api/messages.php              â†’ send message { to_user_id, listing_id, subject, body }
+ * PUT  /api/messages.php?id=X         â†’ mark as read
+ * GET  /api/messages.php?action=unread_count â†’ unread count
+ */
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/fcm_helper.php';
+
+$user   = requireAuth();
+$method = $_SERVER['REQUEST_METHOD'];
+$action = $_GET['action'] ?? '';
+$id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
+$thread = isset($_GET['with']) ? (int)$_GET['with'] : (isset($_GET['thread']) ? (int)$_GET['thread'] : null);
+
+if ($method === 'GET' && $action === 'unread_count') getUnreadCount($user);
+elseif ($method === 'GET' && $thread)                getThread($user, $thread);
+elseif ($method === 'GET')                           getInbox($user);
+elseif ($method === 'POST')                          sendMessage($user);
+elseif ($method === 'PUT'  && $id)                   markRead($user, $id);
+elseif ($method === 'DELETE') {
+    $partnerId = isset(<?php
+/**
+ * ZipZapZoi Classifieds â€” Messages API
+ * GET  /api/messages.php              â†’ my inbox (grouped by thread)
+ * GET  /api/messages.php?thread=X     â†’ messages in thread with user X
+ * POST /api/messages.php              â†’ send message { to_user_id, listing_id, subject, body }
+ * PUT  /api/messages.php?id=X         â†’ mark as read
+ * GET  /api/messages.php?action=unread_count â†’ unread count
  */
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/fcm_helper.php';
@@ -86,7 +110,7 @@ function getThread(array $user, int $otherId): void {
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     $msgs = $stmt->fetchAll();
-    // Mark received messages as read — scoped to this specific thread
+    // Mark received messages as read â€” scoped to this specific thread
     // (include listing_id filter when available to avoid marking unrelated conversations)
     if ($lid) {
         $db->prepare('UPDATE messages SET is_read = 1 WHERE to_user_id = ? AND from_user_id = ? AND listing_id = ?')
@@ -147,3 +171,289 @@ function getUnreadCount(array $user): void {
     $stmt->execute([(int)$user['id']]);
     jsonOk(['count' => (int)$stmt->fetchColumn()]);
 }
+GET['conversation_id']) ? (int)<?php
+/**
+ * ZipZapZoi Classifieds â€” Messages API
+ * GET  /api/messages.php              â†’ my inbox (grouped by thread)
+ * GET  /api/messages.php?thread=X     â†’ messages in thread with user X
+ * POST /api/messages.php              â†’ send message { to_user_id, listing_id, subject, body }
+ * PUT  /api/messages.php?id=X         â†’ mark as read
+ * GET  /api/messages.php?action=unread_count â†’ unread count
+ */
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/fcm_helper.php';
+
+$user   = requireAuth();
+$method = $_SERVER['REQUEST_METHOD'];
+$action = $_GET['action'] ?? '';
+$id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
+$thread = isset($_GET['with']) ? (int)$_GET['with'] : (isset($_GET['thread']) ? (int)$_GET['thread'] : null);
+
+if ($method === 'GET' && $action === 'unread_count') getUnreadCount($user);
+elseif ($method === 'GET' && $thread)                getThread($user, $thread);
+elseif ($method === 'GET')                           getInbox($user);
+elseif ($method === 'POST')                          sendMessage($user);
+elseif ($method === 'PUT'  && $id)                   markRead($user, $id);
+else jsonError('Method not allowed', 405);
+
+function getInbox(array $user): void {
+    $db  = getDB();
+    $uid = (int)$user['id'];
+    // Get only the latest message per unique conversation thread (efficient SQL grouping)
+    $stmt = $db->prepare(
+        'SELECT m.*, 
+                CASE WHEN m.from_user_id = ? THEN m.to_user_id ELSE m.from_user_id END AS other_user_id,
+                u1.name AS from_name, u1.avatar AS from_avatar,
+                u2.name AS to_name, u2.avatar AS to_avatar,
+                l.title AS listing_title
+         FROM messages m
+         JOIN users u1 ON u1.id = m.from_user_id
+         JOIN users u2 ON u2.id = m.to_user_id
+         LEFT JOIN listings l ON l.id = m.listing_id
+         WHERE m.id IN (
+             SELECT MAX(id) FROM messages
+             WHERE from_user_id = ? OR to_user_id = ?
+             GROUP BY LEAST(from_user_id, to_user_id), GREATEST(from_user_id, to_user_id), COALESCE(listing_id, 0)
+         )
+         ORDER BY m.created_at DESC
+         LIMIT 50'
+    );
+    $stmt->execute([$uid, $uid, $uid]);
+    $rows = $stmt->fetchAll();
+    
+    // Build thread objects with unread counts
+    $threads = [];
+    foreach ($rows as $r) {
+        $otherId = (int)$r['other_user_id'];
+        // Get unread count for this thread
+        $unreadStmt = $db->prepare(
+            'SELECT COUNT(*) FROM messages WHERE to_user_id = ? AND from_user_id = ? AND is_read = 0'
+        );
+        $unreadStmt->execute([$uid, $otherId]);
+        $unreadCount = (int)$unreadStmt->fetchColumn();
+        
+        $threads[] = [
+            'other_user_id'   => $otherId,
+            'other_user_name' => $r['from_user_id'] == $uid ? ($r['to_name'] ?? 'User') : ($r['from_name'] ?? 'User'),
+            'other_avatar'    => $r['from_user_id'] == $uid ? ($r['to_avatar'] ?? null) : ($r['from_avatar'] ?? null),
+            'listing_id'      => $r['listing_id'],
+            'listing_title'   => $r['listing_title'],
+            'last_message'    => $r['body'],
+            'last_time'       => $r['created_at'],
+            'unread_count'    => $unreadCount,
+        ];
+    }
+    jsonOk(array_values($threads));
+}
+
+function getThread(array $user, int $otherId): void {
+    $db   = getDB();
+    $lid  = isset($_GET['listing_id']) ? (int)$_GET['listing_id'] : null;
+    $sql  = 'SELECT m.*, u.name AS from_name, u.avatar AS from_avatar
+             FROM messages m JOIN users u ON u.id = m.from_user_id
+             WHERE ((m.from_user_id = ? AND m.to_user_id = ?) OR (m.from_user_id = ? AND m.to_user_id = ?))'
+          . ($lid ? ' AND m.listing_id = ?' : '')
+          . ' ORDER BY m.created_at ASC LIMIT 200';
+    $params = [(int)$user['id'], $otherId, $otherId, (int)$user['id']];
+    if ($lid) $params[] = $lid;
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    $msgs = $stmt->fetchAll();
+    // Mark received messages as read â€” scoped to this specific thread
+    // (include listing_id filter when available to avoid marking unrelated conversations)
+    if ($lid) {
+        $db->prepare('UPDATE messages SET is_read = 1 WHERE to_user_id = ? AND from_user_id = ? AND listing_id = ?')
+           ->execute([(int)$user['id'], $otherId, $lid]);
+    } else {
+        $db->prepare('UPDATE messages SET is_read = 1 WHERE to_user_id = ? AND from_user_id = ?')
+           ->execute([(int)$user['id'], $otherId]);
+    }
+    jsonOk($msgs);
+}
+
+function sendMessage(array $user): void {
+    $b      = getBody();
+    $toId   = (int)($b['to_user_id'] ?? 0);
+    $body   = trim($b['body'] ?? '');
+    if (!$toId)   jsonError('to_user_id is required.');
+    if (!$body)   jsonError('Message body is required.');
+    if ($toId === (int)$user['id']) jsonError('Cannot message yourself.');
+
+    $db = getDB();
+    // Verify recipient exists and fetch fcm_token
+    $chk = $db->prepare('SELECT id, fcm_token FROM users WHERE id = ? AND is_active = 1');
+    $chk->execute([$toId]);
+    $recipient = $chk->fetch();
+    if (!$recipient) jsonError('Recipient not found.', 404);
+
+    $db->prepare(
+        'INSERT INTO messages (from_user_id, to_user_id, listing_id, subject, body)
+         VALUES (?, ?, ?, ?, ?)'
+    )->execute([
+        (int)$user['id'], $toId,
+        !empty($b['listing_id']) ? (int)$b['listing_id'] : null,
+        clean($b['subject'] ?? ''),
+        clean($body)
+    ]);
+    
+    // Send Push Notification if FCM token exists
+    if (!empty($recipient['fcm_token'])) {
+        $senderName = $user['name'] ?: 'Someone';
+        $listingIdStr = !empty($b['listing_id']) ? (string)$b['listing_id'] : '';
+        sendFcmPush($recipient['fcm_token'], "New Message from $senderName", clean($body), [
+            'partner_id' => (string)$user['id'],
+            'listing_id' => $listingIdStr
+        ]);
+    }
+
+    jsonOk(['message' => 'Message sent.'], 201);
+}
+
+function markRead(array $user, int $id): void {
+    getDB()->prepare('UPDATE messages SET is_read = 1 WHERE id = ? AND to_user_id = ?')
+           ->execute([$id, (int)$user['id']]);
+    jsonOk(['message' => 'Marked as read.']);
+}
+
+function getUnreadCount(array $user): void {
+    $stmt = getDB()->prepare('SELECT COUNT(*) FROM messages WHERE to_user_id = ? AND is_read = 0');
+    $stmt->execute([(int)$user['id']]);
+    jsonOk(['count' => (int)$stmt->fetchColumn()]);
+}
+GET['conversation_id'] : 0;
+    if ($partnerId) {
+        $db = getDB();
+        // Mark all messages as deleted for this user (soft delete)
+        $db->prepare("UPDATE messages SET deleted_for = CONCAT(IFNULL(deleted_for,''),',',?) 
+                      WHERE (from_user_id = ? AND to_user_id = ?) OR (from_user_id = ? AND to_user_id = ?)")
+           ->execute([$user['id'], $user['id'], $partnerId, $partnerId, $user['id']]);
+        jsonOk(['message' => 'Conversation deleted']);
+    }
+    jsonError('conversation_id required', 400);
+} else jsonError('Method not allowed', 405);
+
+function getInbox(array $user): void {
+    $db  = getDB();
+    $uid = (int)$user['id'];
+    // Get only the latest message per unique conversation thread (efficient SQL grouping)
+    $stmt = $db->prepare(
+        'SELECT m.*, 
+                CASE WHEN m.from_user_id = ? THEN m.to_user_id ELSE m.from_user_id END AS other_user_id,
+                u1.name AS from_name, u1.avatar AS from_avatar,
+                u2.name AS to_name, u2.avatar AS to_avatar,
+                l.title AS listing_title
+         FROM messages m
+         JOIN users u1 ON u1.id = m.from_user_id
+         JOIN users u2 ON u2.id = m.to_user_id
+         LEFT JOIN listings l ON l.id = m.listing_id
+         WHERE m.id IN (
+             SELECT MAX(id) FROM messages
+             WHERE from_user_id = ? OR to_user_id = ?
+             GROUP BY LEAST(from_user_id, to_user_id), GREATEST(from_user_id, to_user_id), COALESCE(listing_id, 0)
+         )
+         ORDER BY m.created_at DESC
+         LIMIT 50'
+    );
+    $stmt->execute([$uid, $uid, $uid]);
+    $rows = $stmt->fetchAll();
+    
+    // Build thread objects with unread counts
+    $threads = [];
+    foreach ($rows as $r) {
+        $otherId = (int)$r['other_user_id'];
+        // Get unread count for this thread
+        $unreadStmt = $db->prepare(
+            'SELECT COUNT(*) FROM messages WHERE to_user_id = ? AND from_user_id = ? AND is_read = 0'
+        );
+        $unreadStmt->execute([$uid, $otherId]);
+        $unreadCount = (int)$unreadStmt->fetchColumn();
+        
+        $threads[] = [
+            'other_user_id'   => $otherId,
+            'other_user_name' => $r['from_user_id'] == $uid ? ($r['to_name'] ?? 'User') : ($r['from_name'] ?? 'User'),
+            'other_avatar'    => $r['from_user_id'] == $uid ? ($r['to_avatar'] ?? null) : ($r['from_avatar'] ?? null),
+            'listing_id'      => $r['listing_id'],
+            'listing_title'   => $r['listing_title'],
+            'last_message'    => $r['body'],
+            'last_time'       => $r['created_at'],
+            'unread_count'    => $unreadCount,
+        ];
+    }
+    jsonOk(array_values($threads));
+}
+
+function getThread(array $user, int $otherId): void {
+    $db   = getDB();
+    $lid  = isset($_GET['listing_id']) ? (int)$_GET['listing_id'] : null;
+    $sql  = 'SELECT m.*, u.name AS from_name, u.avatar AS from_avatar
+             FROM messages m JOIN users u ON u.id = m.from_user_id
+             WHERE ((m.from_user_id = ? AND m.to_user_id = ?) OR (m.from_user_id = ? AND m.to_user_id = ?))'
+          . ($lid ? ' AND m.listing_id = ?' : '')
+          . ' ORDER BY m.created_at ASC LIMIT 200';
+    $params = [(int)$user['id'], $otherId, $otherId, (int)$user['id']];
+    if ($lid) $params[] = $lid;
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    $msgs = $stmt->fetchAll();
+    // Mark received messages as read â€” scoped to this specific thread
+    // (include listing_id filter when available to avoid marking unrelated conversations)
+    if ($lid) {
+        $db->prepare('UPDATE messages SET is_read = 1 WHERE to_user_id = ? AND from_user_id = ? AND listing_id = ?')
+           ->execute([(int)$user['id'], $otherId, $lid]);
+    } else {
+        $db->prepare('UPDATE messages SET is_read = 1 WHERE to_user_id = ? AND from_user_id = ?')
+           ->execute([(int)$user['id'], $otherId]);
+    }
+    jsonOk($msgs);
+}
+
+function sendMessage(array $user): void {
+    $b      = getBody();
+    $toId   = (int)($b['to_user_id'] ?? 0);
+    $body   = trim($b['body'] ?? '');
+    if (!$toId)   jsonError('to_user_id is required.');
+    if (!$body)   jsonError('Message body is required.');
+    if ($toId === (int)$user['id']) jsonError('Cannot message yourself.');
+
+    $db = getDB();
+    // Verify recipient exists and fetch fcm_token
+    $chk = $db->prepare('SELECT id, fcm_token FROM users WHERE id = ? AND is_active = 1');
+    $chk->execute([$toId]);
+    $recipient = $chk->fetch();
+    if (!$recipient) jsonError('Recipient not found.', 404);
+
+    $db->prepare(
+        'INSERT INTO messages (from_user_id, to_user_id, listing_id, subject, body)
+         VALUES (?, ?, ?, ?, ?)'
+    )->execute([
+        (int)$user['id'], $toId,
+        !empty($b['listing_id']) ? (int)$b['listing_id'] : null,
+        clean($b['subject'] ?? ''),
+        clean($body)
+    ]);
+    
+    // Send Push Notification if FCM token exists
+    if (!empty($recipient['fcm_token'])) {
+        $senderName = $user['name'] ?: 'Someone';
+        $listingIdStr = !empty($b['listing_id']) ? (string)$b['listing_id'] : '';
+        sendFcmPush($recipient['fcm_token'], "New Message from $senderName", clean($body), [
+            'partner_id' => (string)$user['id'],
+            'listing_id' => $listingIdStr
+        ]);
+    }
+
+    jsonOk(['message' => 'Message sent.'], 201);
+}
+
+function markRead(array $user, int $id): void {
+    getDB()->prepare('UPDATE messages SET is_read = 1 WHERE id = ? AND to_user_id = ?')
+           ->execute([$id, (int)$user['id']]);
+    jsonOk(['message' => 'Marked as read.']);
+}
+
+function getUnreadCount(array $user): void {
+    $stmt = getDB()->prepare('SELECT COUNT(*) FROM messages WHERE to_user_id = ? AND is_read = 0');
+    $stmt->execute([(int)$user['id']]);
+    jsonOk(['count' => (int)$stmt->fetchColumn()]);
+}
+

@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 /**
- * ZipZapZoi Classifieds — Auth API
+ * ZipZapZoi Classifieds â€” Auth API
  * Actions: register | verify_otp | login | logout | me
  *          forgot_password | reset_password | request_sensitive_otp | verify_sensitive_otp
  */
@@ -28,14 +28,15 @@ switch ($action) {
     case 'request_sensitive_otp':handleSensitiveOtp($body);      break;
     case 'verify_sensitive_otp': handleVerifySensitiveOtp($body);break;
     case 'validate_reset_token': handleValidateResetToken();     break;
+    case 'send_otp':           handleSendOtp($body);          break;
     case 'update_fcm':           handleUpdateFcm($body);         break;
     case 'change_password':      handleChangePassword($body);    break;
     default:                     jsonError('Unknown action', 400);
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// REGISTER — Step 1: validate + send OTP (don't create user yet)
-// ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// REGISTER â€” Step 1: validate + send OTP (don't create user yet)
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function handleRegister(array $b): void {
     checkRateLimit('register', 5, 15);
 
@@ -61,7 +62,7 @@ function handleRegister(array $b): void {
     $exists->execute([$email]);
     if ($exists->fetch()) jsonError('An account with this email already exists.');
 
-    // ── Block duplicate phone — one free trial per mobile number ──
+    // â”€â”€ Block duplicate phone â€” one free trial per mobile number â”€â”€
     $phoneExists = $db->prepare('SELECT id FROM users WHERE phone = ?');
     $phoneExists->execute([$phone]);
     if ($phoneExists->fetch()) jsonError('An account with this mobile number already exists. Each mobile number can only have one account.');
@@ -89,9 +90,9 @@ function handleRegister(array $b): void {
     ]);
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// VERIFY OTP — Step 2 of register: check OTP and create account
-// ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// VERIFY OTP â€” Step 2 of register: check OTP and create account
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function handleVerifyOtp(array $b): void {
     $email = strtolower(trim($b['email'] ?? ''));
     $otp   = trim($b['otp']   ?? '');
@@ -174,11 +175,11 @@ function handleVerifyOtp(array $b): void {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// LOGIN — verify credentials, issue session directly.
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// LOGIN â€” verify credentials, issue session directly.
 // OTP is only required ONCE at registration to verify the email address.
-// Asking for OTP on every login would be 2FA — not required here.
-// ─────────────────────────────────────────────────────────────────────
+// Asking for OTP on every login would be 2FA â€” not required here.
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function handleLogin(array $b): void {
     checkRateLimit('login', 5, 15);
 
@@ -199,22 +200,22 @@ function handleLogin(array $b): void {
 
     clearRateLimit('login');
 
-    // Issue session directly — email was already verified at registration
+    // Issue session directly â€” email was already verified at registration
     $token = createSession((int)$user['id']);
     jsonOk(['user' => sanitizeUser($user), 'token' => $token, 'message' => 'Login successful.']);
 }
 
-// ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // LOGOUT
-// ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function handleLogout(): void {
     destroySession();
     jsonOk(['message' => 'Logged out successfully.']);
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// ME — return current logged-in user
-// ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ME â€” return current logged-in user
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function handleMe(): void {
     $user = getCurrentUser();
     if (!$user) jsonError('Not authenticated.', 401);
@@ -223,7 +224,7 @@ function handleMe(): void {
     if (!$full) jsonError('User not found.', 404);
     $db = getDB();
 
-    // ── Quota ──────────────────────────────────────────────────────
+    // â”€â”€ Quota â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     $qStmt = $db->prepare(
         'SELECT ads_remaining, total_granted, plan_id, plan_name, expires_at
          FROM user_quotas WHERE user_id = ?'
@@ -238,7 +239,7 @@ function handleMe(): void {
         'expires_at'    => $quota['expires_at'],
     ] : null;
 
-    // ── Listing Stats (aggregated) ─────────────────────────────────
+    // â”€â”€ Listing Stats (aggregated) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     $sStmt = $db->prepare(
         'SELECT status, COUNT(*) AS cnt, COALESCE(SUM(views), 0) AS total_views
          FROM listings WHERE user_id = ? GROUP BY status'
@@ -257,14 +258,14 @@ function handleMe(): void {
         'sold'        => $statSold,
     ];
 
-    // ── Unread message count ────────────────────────────────────────
+    // â”€â”€ Unread message count â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     $mStmt = $db->prepare(
         'SELECT COUNT(*) FROM messages WHERE to_user_id = ? AND is_read = 0'
     );
     $mStmt->execute([(int)$user['id']]);
     $full['unread_messages'] = (int)$mStmt->fetchColumn();
 
-    // ── Listing status notifications (last 7 days) ──────────────────
+    // â”€â”€ Listing status notifications (last 7 days) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     $nStmt = $db->prepare(
         "SELECT id, title, status, updated_at
          FROM listings
@@ -279,8 +280,8 @@ function handleMe(): void {
     foreach ($notifs as &$n) {
         $n['id'] = (int)$n['id'];
         $n['message'] = $n['status'] === 'active'
-            ? '✅ Your ad "' . $n['title'] . '" was approved and is now live!'
-            : '❌ Your ad "' . $n['title'] . '" was rejected by admin.';
+            ? 'âœ… Your ad "' . $n['title'] . '" was approved and is now live!'
+            : 'âŒ Your ad "' . $n['title'] . '" was rejected by admin.';
     }
     $full['listing_notifications'] = $notifs;
     $full['unread_notifications']  = count($notifs);
@@ -288,9 +289,9 @@ function handleMe(): void {
     jsonOk(['user' => $full]);
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// FORGOT PASSWORD — generate reset token
-// ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// FORGOT PASSWORD â€” generate reset token
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function handleForgotPassword(array $b): void {
     $email = strtolower(trim($b['email'] ?? ''));
     if (!validateEmail($email)) jsonError('Invalid email address.');
@@ -323,9 +324,9 @@ function handleForgotPassword(array $b): void {
     ]);
 }
 
-// ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // RESET PASSWORD
-// ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function handleResetPassword(array $b): void {
     $token    = trim($b['token']    ?? '');
     $password = $b['new_password'] ?? '';
@@ -368,9 +369,9 @@ function handleValidateResetToken(): void {
     jsonOk(['valid' => true, 'email' => $userRow['email'] ?? '']);
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// SENSITIVE ACTION OTP — for password/email change etc.
-// ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// SENSITIVE ACTION OTP â€” for password/email change etc.
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function handleSensitiveOtp(array $b): void {
     $user = requireAuth();
     $otp    = generateOtp();
@@ -399,6 +400,19 @@ function handleVerifySensitiveOtp(array $b): void {
     jsonOk(['verified' => true]);
 }
 
+function handleSendOtp(array $body): void {
+    $phone = trim($body['phone'] ?? '');
+    if (!$phone) jsonError('Phone number required', 400);
+    $otp  = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    $exp  = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+    $db   = getDB();
+    $db->prepare("INSERT INTO otp_tokens (phone, otp, expires_at) VALUES (?, ?, ?)
+                  ON DUPLICATE KEY UPDATE otp = VALUES(otp), expires_at = VALUES(expires_at)")
+       ->execute([$phone, $otp, $exp]);
+    // TODO: Integrate SMS provider here. For now log to DB.
+    jsonOk(['message' => 'OTP sent successfully', 'debug_otp' => $otp]); // remove debug_otp in production
+}
+
 function handleUpdateFcm(array $b): void {
     $user = requireAuth();
     $token = trim($b['token'] ?? '');
@@ -417,9 +431,9 @@ function handleUpdateFcm(array $b): void {
     jsonOk();
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// CHANGE PASSWORD — requires current password + new password
-// ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// CHANGE PASSWORD â€” requires current password + new password
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function handleChangePassword(array $b): void {
     $user            = requireAuth();
     $currentPassword = $b['current_password'] ?? '';
@@ -444,9 +458,9 @@ function handleChangePassword(array $b): void {
     jsonOk(['message' => 'Password changed successfully.']);
 }
 
-// ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Helpers
-// ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function generateOtp(): string {
     return str_pad((string)random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
 }
@@ -466,10 +480,10 @@ function sendOtpMail(string $toEmail, string $toName, string $otp, int $expiryMi
   <div style='background:#f0fdf4;border:2px solid #019863;border-radius:12px;padding:24px;text-align:center;margin-bottom:28px;'>
     <span style='font-size:42px;font-weight:800;letter-spacing:12px;color:#019863;'>{$otp}</span>
   </div>
-  <p style='color:#6b7280;font-size:14px;text-align:center;margin:0 0 8px;'>⏱ Valid for <strong>{$expiryMins} minutes</strong></p>
+  <p style='color:#6b7280;font-size:14px;text-align:center;margin:0 0 8px;'>â± Valid for <strong>{$expiryMins} minutes</strong></p>
   <p style='color:#9ca3af;font-size:12px;text-align:center;margin:0;'>If you didn't request this code, please ignore this email.</p>
   <hr style='border:none;border-top:1px solid #f3f4f6;margin:28px 0;'>
-  <p style='color:#d1d5db;font-size:11px;text-align:center;margin:0;'>© 2026 ZipZapZoi. All Rights Reserved.</p>
+  <p style='color:#d1d5db;font-size:11px;text-align:center;margin:0;'>Â© 2026 ZipZapZoi. All Rights Reserved.</p>
 </div>
 </body></html>";
 
@@ -573,3 +587,4 @@ function clearRateLimit(string $action): void {
     } catch (\Throwable $e) {
     }
 }
+
