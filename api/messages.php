@@ -72,7 +72,7 @@ function getInbox(array $user): void {
         $threads[] = [
             'other_user_id'   => $otherId,
             'other_user_name' => $r['from_user_id'] == $uid ? ($r['to_name'] ?? 'User') : ($r['from_name'] ?? 'User'),
-            'other_avatar'    => $r['from_user_id'] == $uid ? ($r['to_avatar'] ?? null) : ($r['from_avatar'] ?? null),
+            'other_avatar'    => toAbsoluteUrl($r['from_user_id'] == $uid ? ($r['to_avatar'] ?? null) : ($r['from_avatar'] ?? null)),
             'listing_id'      => $r['listing_id'],
             'listing_title'   => $r['listing_title'],
             'last_message'    => $r['body'],
@@ -98,6 +98,9 @@ function getThread(array $user, int $otherId): void {
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     $msgs = $stmt->fetchAll();
+    foreach ($msgs as &$msg) {
+        $msg['from_avatar'] = toAbsoluteUrl($msg['from_avatar'] ?? null);
+    }
     if ($lid) {
         $db->prepare('UPDATE messages SET is_read = 1 WHERE to_user_id = ? AND from_user_id = ? AND listing_id = ?')
            ->execute([$uid, $otherId, $lid]);

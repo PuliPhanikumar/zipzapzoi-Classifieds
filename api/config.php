@@ -56,7 +56,15 @@ define('DB_CHARSET', 'utf8mb4');
 define('SESSION_COOKIE', 'zzz_session');
 define('UPLOAD_DIR', __DIR__ . '/../uploads/listings/');
 define('UPLOAD_URL', '/uploads/listings/');
-define('MAX_UPLOAD_MB', 10);
+define('MAX_UPLOAD_MB', 50);
+
+// Global Exception Handler
+set_exception_handler(function(Throwable $e) {
+    error_log('ZZZ Exception: ' . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'An internal server error occurred.'], JSON_UNESCAPED_UNICODE);
+    exit;
+});
 
 // ── PDO Connection ────────────────────────────────────────────────────
 function getDB(): PDO {

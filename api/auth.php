@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ZipZapZoi Classifieds â€” Auth API
  * Actions: register | verify_otp | login | logout | me
@@ -410,7 +410,8 @@ function handleSendOtp(array $body): void {
                   ON DUPLICATE KEY UPDATE otp = VALUES(otp), expires_at = VALUES(expires_at)")
        ->execute([$phone, $otp, $exp]);
     // TODO: Integrate SMS provider here. For now log to DB.
-    jsonOk(['message' => 'OTP sent successfully', 'debug_otp' => $otp]); // remove debug_otp in production
+    jsonOk(['message' => 'OTP sent successfully', // debug_otp removed for production security
+    ]);
 }
 
 function handleUpdateFcm(array $b): void {
@@ -587,4 +588,5 @@ function clearRateLimit(string $action): void {
     } catch (\Throwable $e) {
     }
 }
+
 

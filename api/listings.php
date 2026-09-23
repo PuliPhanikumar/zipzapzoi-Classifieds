@@ -109,6 +109,9 @@ function getAll(): void {
     if (!empty($_GET['user_id'])) {
         $where[] = 'l.user_id = :uid';
         $params[':uid'] = (int)$_GET['user_id'];
+    } elseif (!empty($_GET['seller_id'])) {
+        $where[] = 'l.user_id = :uid';
+        $params[':uid'] = (int)$_GET['seller_id'];
     }
     if (!empty($_GET['my_listings'])) {
         $currentUser = getCurrentUser();
@@ -317,8 +320,13 @@ function createListing(): void {
 
     $title    = clean($b['title']    ?? '');
     $category = clean($b['category'] ?? '');
+    $description = clean($b['description'] ?? '');
+    $price = (float)($b['price'] ?? 0);
+    
     if (!$title)    jsonError('Title is required.');
     if (!$category) jsonError('Category is required.');
+    if (!$description) jsonError('Description is required.');
+    if ($price < 0) jsonError('Price must be greater than or equal to 0.');
 
     $db = getDB();
     $uid = (int)$user['id'];
@@ -664,6 +672,11 @@ function updateListing(int $id): void {
             }
         }
     }
+
+    if (isset($b['title']) && trim($b['title']) === '') jsonError('Title cannot be empty.');
+    if (isset($b['description']) && trim($b['description']) === '') jsonError('Description cannot be empty.');
+    if (isset($b['category']) && trim($b['category']) === '') jsonError('Category cannot be empty.');
+    if (isset($b['price']) && (float)$b['price'] < 0) jsonError('Price must be greater than or equal to 0.');
 
     // Build dynamic SET
     $allowed = ['title','description','category','subcategory','price','price_type',
