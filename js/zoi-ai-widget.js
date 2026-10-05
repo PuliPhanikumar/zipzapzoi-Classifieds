@@ -258,7 +258,12 @@
     const bubble = document.createElement('div');
     bubble.className = 'zai-bubble';
     bubble.style.background = isUser ? currentMode.color : '';
-    bubble.textContent = msg.text;
+    if (isUser) {
+      bubble.style.background = currentMode.color;
+      bubble.textContent = msg.text;
+    } else {
+      bubble.innerHTML = renderMarkdown(msg.text);
+    }
 
     const time = document.createElement('div');
     time.className = 'zai-time';
@@ -284,6 +289,22 @@
     return div;
   }
 
+  // ── Markdown renderer for rich AI responses ───────────────────────────────
+  function renderMarkdown(text) {
+    if (!text) return '';
+    let h = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    h = h.replace(/```[\w]*\n?([\s\S]*?)```/g,(_,c)=>`<pre style="background:#1e1e2e;color:#cdd6f4;padding:10px;border-radius:8px;overflow-x:auto;font-size:12px;margin:6px 0;white-space:pre-wrap;"><code>${c.trim()}</code></pre>`);
+    h = h.replace(/`([^`\n]+)`/g,'<code style="background:#f1f5f9;color:#7c3aed;padding:2px 5px;border-radius:4px;font-size:12px;">$1</code>');
+    h = h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+    h = h.replace(/\*(.+?)\*/g,'<em>$1</em>');
+    h = h.replace(/^### (.+)$/gm,'<div style="font-weight:800;font-size:13px;margin:8px 0 3px;color:#7c3aed;">$1</div>');
+    h = h.replace(/^## (.+)$/gm,'<div style="font-weight:800;font-size:14px;margin:8px 0 3px;">$1</div>');
+    h = h.replace(/^# (.+)$/gm,'<div style="font-weight:900;font-size:15px;margin:10px 0 4px;">$1</div>');
+    h = h.replace(/^\d+\. (.+)$/gm,'<div style="display:flex;gap:6px;margin:2px 0;"><span style="color:#7c3aed;font-weight:700;min-width:16px;">•</span><span>$1</span></div>');
+    h = h.replace(/^[-•*] (.+)$/gm,'<div style="display:flex;gap:6px;margin:2px 0;"><span style="color:#7c3aed;font-weight:700;">•</span><span>$1</span></div>');
+    h = h.replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
+    return h;
+  }
   function addMessage(msg) {
     const full = { id: Date.now() + Math.random(), ts: Date.now(), ...msg };
     messages.push(full);
@@ -327,7 +348,7 @@
     isLoading = true;
 
     const payload = {
-      messages: messages.slice(-20).map(m => ({ role: m.role === 'user' ? 'user' : 'model', text: m.text })),
+      messages: messages.slice(-30).map(m => ({ role: m.role === 'user' ? 'user' : 'model', text: m.text })),
       mode: currentMode.id,
     };
     if (attachedImage) {
@@ -345,7 +366,7 @@
     .then(data => {
       const typingDom = document.getElementById('zai-typing');
       if (typingDom) typingDom.remove();
-      if (data.success && data.data.reply) {
+      if (data.success && data.data && data.data.reply) {
         addMessage({ role: 'ai', text: data.data.reply });
       } else {
         addMessage({ role: 'ai', text: '❌ ' + (data.message || 'Something went wrong. Please try again.'), error: true });
