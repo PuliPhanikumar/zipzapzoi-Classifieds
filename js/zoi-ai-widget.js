@@ -143,7 +143,7 @@
         <div class="zai-avatar" id="zai-header-emoji">🧠</div>
         <div class="zai-title">
           <h3>Zoi AI ✨</h3>
-          <p id="zai-mode-label">General AI Mode</p>
+          <p id="zai-mode-label">General AI Mode · <span id="zai-engine-label" style="opacity:0.7;font-size:10px">🧠 Standalone AI</span></p>
         </div>
         <button class="zai-close" id="zai-clear" title="Clear conversation">🗑️</button>
         <button class="zai-close" id="zai-close" title="Close" aria-label="Close Zoi AI">✕</button>
@@ -368,14 +368,24 @@
       if (typingDom) typingDom.remove();
       if (data.success && data.data && data.data.reply) {
         addMessage({ role: 'ai', text: data.data.reply });
+        // Show engine badge
+        const engineEl = document.getElementById('zai-engine-label');
+        if (engineEl) {
+          engineEl.textContent = data.data.engine === 'gemini' ? '⚡ Gemini' : '🧠 Standalone AI';
+        }
       } else {
-        addMessage({ role: 'ai', text: '❌ ' + ((data.error || data.message || 'Something went wrong. Please try again.')), error: true });
+        const errMsg = data.error || data.message || '';
+        if (errMsg && errMsg.toLowerCase().includes('offline')) {
+          addMessage({ role: 'ai', text: "⚠️ Reloading AI engine... Please send your message again!\n\n💡 I can help with:\n• ZipZapZoi plans & features\n• Posting ads & pricing\n• Negotiation tips\n• Maths & coding questions" });
+        } else {
+          addMessage({ role: 'ai', text: '❌ ' + (errMsg || 'Something went wrong. Please try again.'), error: true });
+        }
       }
     })
     .catch(err => {
       const typingDom = document.getElementById('zai-typing');
       if (typingDom) typingDom.remove();
-      addMessage({ role: 'ai', text: '📡 Connection error. Please check your internet and try again.', error: true });
+      addMessage({ role: 'ai', text: '📡 Connection error. Please check your internet and try again.\n\n💡 Zoi AI is ready when you reconnect! ✨', error: true });
     })
     .finally(() => {
       isLoading = false;
