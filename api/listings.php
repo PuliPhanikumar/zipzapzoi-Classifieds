@@ -193,23 +193,28 @@ function getAll(): void {
             ORDER BY is_boosted_active DESC, {$sort}
             LIMIT :limit OFFSET :offset";
 
-    $stmt = $db->prepare($sql);
-    foreach ($params as $k => $v) $stmt->bindValue($k, $v);
-    $stmt->bindValue(':limit',  $limit,  PDO::PARAM_INT);
-    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-    $stmt->execute();
-    $rows = $stmt->fetchAll();
+    try {
+        $stmt = $db->prepare($sql);
+        foreach ($params as $k => $v) $stmt->bindValue($k, $v);
+        $stmt->bindValue(':limit',  $limit,  PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll();
 
-    // Count total for pagination
-    if ($havingSQL !== '') {
-        $countSQL = "SELECT COUNT(*) FROM (SELECT l.id, l.lat, l.lng {$distanceSelect} FROM listings l JOIN users u ON u.id = l.user_id WHERE {$whereSQL} {$havingSQL}) AS sub";
-    } else {
-        $countSQL = "SELECT COUNT(*) FROM listings l JOIN users u ON u.id = l.user_id WHERE {$whereSQL}";
+        // Count total for pagination
+        if ($havingSQL !== '') {
+            $countSQL = "SELECT COUNT(*) FROM (SELECT l.id, l.lat, l.lng {$distanceSelect} FROM listings l JOIN users u ON u.id = l.user_id WHERE {$whereSQL} {$havingSQL}) AS sub";
+        } else {
+            $countSQL = "SELECT COUNT(*) FROM listings l JOIN users u ON u.id = l.user_id WHERE {$whereSQL}";
+        }
+        $cstmt = $db->prepare($countSQL);
+        foreach ($params as $k => $v) $cstmt->bindValue($k, $v);
+        $cstmt->execute();
+        $total = (int)$cstmt->fetchColumn();
+    } catch (Throwable $e) {
+        error_log('getAll SQL error: ' . $e->getMessage());
+        jsonError('Query error: ' . $e->getMessage() . ' [SQL: ' . substr($sql, 0, 300) . '...]', 500);
     }
-    $cstmt = $db->prepare($countSQL);
-    foreach ($params as $k => $v) $cstmt->bindValue($k, $v);
-    $cstmt->execute();
-    $total = (int)$cstmt->fetchColumn();
 
     // Decode JSON fields — cast ALL boolean fields so Android gets true/false not 0/1
     foreach ($rows as &$row) {
