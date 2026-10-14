@@ -266,7 +266,7 @@ function standaloneAI(array $messages, string $mode): string {
     }
 
     // 7. Maths — solve equations
-    if (preg_match('/(\d+[\+\-\*\/\^]\d+|\bsolve\b|\bcalculate\b|\bmath\b|\bequation\b|\bpercentage\b|\bdiscount\b)/i', $q)) {
+    if (preg_match('/(\d+\s*%|\d+[\+\-\*\/\^]\d+|\d+\s+percent|\bsolve\b|\bcalculate\b|\bmath\b|\bequation\b|\bpercentage\b|\bdiscount\b)/i', $q)) {
         return solveMath($userMsg);
     }
 
