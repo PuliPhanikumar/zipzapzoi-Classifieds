@@ -93,10 +93,13 @@ function getAll(): void {
         $where[] = 'l.location_state = :state';
         $params[':state'] = $_GET['state'];
     }
-    if (!empty($_GET['search'])) {
-        $where[] = '(l.title LIKE :q OR l.description LIKE :q2)';
-        $params[':q']  = '%' . $_GET['search'] . '%';
-        $params[':q2'] = '%' . $_GET['search'] . '%';
+    // Accept both ?search= and ?q= (map page uses ?q=)
+    $searchTerm = $_GET['search'] ?? $_GET['q'] ?? '';
+    if (!empty($searchTerm)) {
+        $where[] = '(l.title LIKE :q OR l.description LIKE :q2 OR l.category LIKE :q3)';
+        $params[':q']  = '%' . $searchTerm . '%';
+        $params[':q2'] = '%' . $searchTerm . '%';
+        $params[':q3'] = '%' . $searchTerm . '%';
     }
     if (!empty($_GET['min_price'])) {
         $where[] = 'l.price >= :minp';
@@ -156,22 +159,25 @@ function getAll(): void {
     // Geo-Search (Near Me) logic
     $distanceSelect = '';
     $havingSQL = '';
+    $geoMode = false;
     if (!empty($_GET['lat']) && !empty($_GET['lng'])) {
         $lat = (float)$_GET['lat'];
         $lng = (float)$_GET['lng'];
-        $radius = !empty($_GET['radius']) ? (float)$_GET['radius'] : 10; // default 10km
+        $radius = !empty($_GET['radius']) ? (float)$_GET['radius'] : 50; // default 50km for map view
 
-        // Haversine formula
-        $distanceSelect = ", (6371 * acos(cos(radians(:my_lat)) * cos(radians(l.lat)) * cos(radians(l.lng) - radians(:my_lng)) + sin(radians(:my_lat)) * sin(radians(l.lat)))) AS distance";
-        $havingSQL = "HAVING distance <= :radius";
-        
+        // Haversine formula — LEAST(1,...) guards acos() domain error when values near 1.0000001
+        // Also require lat/lng NOT NULL to avoid MySQL errors on listings without coordinates
+        $distanceSelect = ", (6371 * acos(LEAST(1, cos(radians(:my_lat)) * cos(radians(IFNULL(l.lat,0))) * cos(radians(IFNULL(l.lng,0)) - radians(:my_lng)) + sin(radians(:my_lat)) * sin(radians(IFNULL(l.lat,0)))))) AS distance";
+        $havingSQL = "HAVING (l.lat IS NULL OR l.lng IS NULL OR distance <= :radius)";
+
         $params[':my_lat'] = $lat;
         $params[':my_lng'] = $lng;
         $params[':radius'] = $radius;
-        
+        $geoMode = true;
+
         // Override sort to distance if 'sort' not explicitly passed
         if (empty($_GET['sort'])) {
-            $sort = 'distance ASC, l.created_at DESC';
+            $sort = 'CASE WHEN l.lat IS NOT NULL AND l.lng IS NOT NULL THEN 0 ELSE 1 END ASC, distance ASC, l.created_at DESC';
         }
     }
 

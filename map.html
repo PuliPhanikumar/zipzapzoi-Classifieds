@@ -60,17 +60,16 @@
       
       /* Map styling */
       #map { 
-        background: #f0f4f8; 
+        background: #e8ecf0; 
         height: 100%;
         width: 100%;
         z-index: 10;
       }
-      .dark #map {
-        background: #0f172a;
-      }
+      .dark #map { background: #0f172a; }
       
       .leaflet-marker-icon { border: none !important; background: transparent !important; }
       
+      /* Price pin markers */
       .map-price-pin {
         background: #019863;
         color: white;
@@ -82,182 +81,187 @@
         box-shadow: 0 3px 10px rgba(1,152,99,0.4);
         border: 2px solid white;
         cursor: pointer;
-        transition: transform 0.2s, background 0.2s, z-index 0.2s;
+        transition: transform 0.2s, background 0.2s;
         position: relative;
+        font-family: 'Spline Sans', sans-serif;
       }
-      .dark .map-price-pin {
-        border-color: #1e293b;
-      }
-      .map-price-pin:hover { transform: scale(1.1); z-index: 1000 !important; }
+      .dark .map-price-pin { border-color: #1e293b; }
+      .map-price-pin:hover { transform: scale(1.12); z-index: 1000 !important; }
       .map-price-pin.highlighted { 
         background: #ff007f; 
-        transform: scale(1.15); 
+        transform: scale(1.2); 
         z-index: 1000 !important;
-        box-shadow: 0 3px 10px rgba(255,0,127,0.4);
+        box-shadow: 0 4px 14px rgba(255,0,127,0.5);
+      }
+      /* No-coord pin (grey) */
+      .map-price-pin.no-coord {
+        background: #6b7280;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       }
       
-      /* Cluster Icon styling */
-      .marker-cluster-custom {
-        background-color: rgba(1, 152, 99, 0.6);
-        border-radius: 50%;
-      }
+      /* Cluster Icon */
+      .marker-cluster-custom { background-color: rgba(1,152,99,0.2); border-radius: 50%; }
       .marker-cluster-custom div {
-        background-color: rgba(1, 152, 99, 0.9);
+        background-color: #019863;
         color: white;
-        font-weight: bold;
-        font-family: "Spline Sans", sans-serif;
+        font-weight: 800;
+        font-family: 'Spline Sans', sans-serif;
         border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        margin-left: 5px;
-        margin-top: 5px;
-        text-align: center;
-        line-height: 30px;
+        width: 32px; height: 32px;
+        margin-left: 4px; margin-top: 4px;
+        text-align: center; line-height: 32px;
         border: 2px solid white;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        font-size: 13px;
       }
-      .dark .marker-cluster-custom div {
-        border-color: #1e293b;
-      }
+      .dark .marker-cluster-custom div { border-color: #1e293b; }
       
-      /* Mobile sidebar sheet */
-      .sidebar-container {
-        height: calc(100vh - 120px);
-      }
+      /* Sidebar */
+      .sidebar-container { height: calc(100vh - 120px); }
       @media (max-width: 768px) {
         .sidebar-container {
           position: fixed;
-          bottom: 0;
-          left: 0;
-          width: 100%;
-          height: 45vh;
+          bottom: 64px; /* above mobile nav */
+          left: 0; width: 100%;
+          height: 42vh;
           z-index: 40;
           border-top-left-radius: 20px;
           border-top-right-radius: 20px;
-          box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+          box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
           transform: translateY(0);
           transition: transform 0.3s ease;
+        }
+        .sidebar-collapsed .sidebar-container {
+          transform: translateY(calc(100% - 48px));
         }
       }
 
       /* Logo animations */
       @keyframes bounce-gentle {
-        0%, 100% { transform: translateY(0); }
+        0%,100% { transform: translateY(0); }
         50% { transform: translateY(-4px); }
       }
       @keyframes bounce-in-letter {
-        0% { opacity: 0; transform: translateY(-15px) scale(0.9); }
-        50% { opacity: 1; transform: translateY(3px) scale(1.05); }
-        75% { transform: translateY(-1px) scale(0.98); }
-        100% { opacity: 1; transform: translateY(0) scale(1); }
+        0%   { opacity:0; transform:translateY(-15px) scale(0.9); }
+        50%  { opacity:1; transform:translateY(3px) scale(1.05); }
+        75%  { transform:translateY(-1px) scale(0.98); }
+        100% { opacity:1; transform:translateY(0) scale(1); }
       }
-      .animate-bounce-in {
-        opacity: 0;
-        display: inline-block;
-        animation: bounce-in-letter 0.5s cubic-bezier(0.28, 0.84, 0.42, 1) forwards;
-      }
-      .animate-logo-bouncy {
-        animation: bounce-gentle 3s infinite ease-in-out;
-      }
+      .animate-bounce-in   { opacity:0; display:inline-block; animation:bounce-in-letter .5s cubic-bezier(.28,.84,.42,1) forwards; }
+      .animate-logo-bouncy { animation: bounce-gentle 3s infinite ease-in-out; }
       
-      /* Hide scrollbar for category pills */
-      .hide-scrollbar::-webkit-scrollbar { display: none; }
-      .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      /* Scrollbar hide for category pills */
+      .hide-scrollbar::-webkit-scrollbar { display:none; }
+      .hide-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
       
       .cat-pill {
-        white-space: nowrap;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.2s;
-        border: 1px solid transparent;
+        white-space: nowrap; padding: 4px 12px; border-radius: 20px;
+        font-size: 13px; font-weight: 700; cursor: pointer;
+        transition: all .2s; border: 1px solid transparent;
       }
-      .cat-pill.active {
-        background: #019863;
-        color: white;
-        border-color: #019863;
-      }
-      .cat-pill:not(.active) {
-        background: rgba(0,0,0,0.05);
-        color: #4b5563;
-      }
-      .dark .cat-pill:not(.active) {
-        background: rgba(255,255,255,0.1);
-        color: #e2e8f0;
-      }
-      .cat-pill:not(.active):hover {
-        background: rgba(0,0,0,0.1);
-      }
-      .dark .cat-pill:not(.active):hover {
-        background: rgba(255,255,255,0.15);
-      }
+      .cat-pill.active  { background:#019863; color:white; border-color:#019863; }
+      .cat-pill:not(.active) { background:rgba(0,0,0,.05); color:#4b5563; }
+      .dark .cat-pill:not(.active) { background:rgba(255,255,255,.08); color:#e2e8f0; }
+      .cat-pill:not(.active):hover { background:rgba(0,0,0,.1); }
+      .dark .cat-pill:not(.active):hover { background:rgba(255,255,255,.15); }
       
-      /* Leaflet Popup Styling */
-      .leaflet-popup-content-wrapper {
-        padding: 0;
-        overflow: hidden;
-        border-radius: 12px;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-      }
-      .dark .leaflet-popup-content-wrapper {
-        background: #1e293b;
-        color: white;
-      }
-      .leaflet-popup-content {
-        margin: 0;
-        width: 220px !important;
-      }
-      .dark .leaflet-popup-tip {
-        background: #1e293b;
-      }
-      .custom-popup-content img {
-        width: 100%;
-        height: 120px;
-        object-fit: cover;
-      }
-      .custom-popup-content .info {
-        padding: 12px;
-      }
+      /* Leaflet Popup */
+      .leaflet-popup-content-wrapper { padding:0; overflow:hidden; border-radius:14px; box-shadow:0 12px 30px rgba(0,0,0,.15); }
+      .dark .leaflet-popup-content-wrapper { background:#1e293b; color:white; }
+      .leaflet-popup-content { margin:0; width:230px !important; }
+      .dark .leaflet-popup-tip { background:#1e293b; }
+      .custom-popup-content img { width:100%; height:130px; object-fit:cover; }
+      .custom-popup-content .info { padding:12px; }
       
-      /* Near me btn */
-      .near-me-btn {
+      /* Near Me + Draw-radius buttons */
+      .map-ctrl-btn {
         position: absolute;
-        bottom: 30px;
-        right: 20px;
-        z-index: 400; /* Above map tiles, below popups */
+        right: 16px;
+        z-index: 400;
+        width: 44px; height: 44px;
+        background: white;
+        border-radius: 50%;
+        box-shadow: 0 2px 8px rgba(0,0,0,.18);
+        display: flex; align-items: center; justify-content: center;
+        color: #019863;
+        cursor: pointer; border: none;
+        transition: all .2s;
       }
+      .dark .map-ctrl-btn { background: #1e293b; color: #34d399; }
+      .map-ctrl-btn:hover { transform: scale(1.08); box-shadow: 0 4px 16px rgba(0,0,0,.25); }
+      .map-ctrl-btn.near-me-btn { bottom: 88px; }
+      .map-ctrl-btn.recenter-btn { bottom: 140px; }
       @media (max-width: 768px) {
-        .near-me-btn {
-          bottom: calc(45vh + 20px);
-        }
+        .map-ctrl-btn.near-me-btn  { bottom: calc(42vh + 80px); }
+        .map-ctrl-btn.recenter-btn { bottom: calc(42vh + 132px); }
       }
+
+      /* Toast notification */
+      #toast {
+        position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(80px);
+        background: #1e293b; color: white; padding: 10px 20px; border-radius: 25px;
+        font-size: 14px; font-weight: 600; z-index: 9999;
+        box-shadow: 0 4px 20px rgba(0,0,0,.3);
+        transition: transform .3s ease, opacity .3s ease;
+        opacity: 0; pointer-events: none;
+        white-space: nowrap;
+      }
+      #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+      
+      /* Loading skeleton */
+      @keyframes shimmer { 0%{background-position:-200px 0} 100%{background-position:calc(200px + 100%) 0} }
+      .skeleton {
+        background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+        background-size: 200px 100%;
+        animation: shimmer 1.2s infinite;
+        border-radius: 8px;
+      }
+      .dark .skeleton { background: linear-gradient(90deg,#374151 25%,#4b5563 50%,#374151 75%); background-size:200px 100%; animation:shimmer 1.2s infinite; }
+      
+      /* Sidebar toggle handle */
+      .sidebar-handle-bar { width:40px; height:4px; background:#d1d5db; border-radius:2px; }
+      .dark .sidebar-handle-bar { background:#4b5563; }
+      
+      /* Geo-badge on listing card */
+      .geo-badge { font-size:10px; padding:2px 7px; border-radius:10px; font-weight:700; }
+      .geo-badge.has-loc { background:#dcfce7; color:#15803d; }
+      .geo-badge.no-loc  { background:#f3f4f6; color:#9ca3af; }
+      .dark .geo-badge.has-loc { background:#052e16; color:#4ade80; }
+      .dark .geo-badge.no-loc  { background:#374151; color:#9ca3af; }
+
+      /* Custom scroll */
+      .custom-scroll::-webkit-scrollbar { width: 4px; }
+      .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+      .custom-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+      .dark .custom-scroll::-webkit-scrollbar-thumb { background: #374151; }
     </style>
 </head>
 <body class="font-display h-screen flex flex-col bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-100">
     
     <!-- HEADER -->
-    <header class="shrink-0 z-50 glass-nav shadow-sm bg-white/90 dark:bg-card-dark/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+    <header class="shrink-0 z-50 shadow-sm bg-white/90 dark:bg-card-dark/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
       <div class="w-full px-4 sm:px-6 py-3">
         <div class="flex items-center justify-between gap-4">
           
           <a href="index.html" class="flex items-center gap-2 group cursor-pointer shrink-0">
             <img src="images/infinity-only.png" alt="ZipZapZoi Logo" class="h-7 md:h-9 object-contain animate-logo-bouncy">
             <h2 class="tracking-tight hidden lg:flex items-baseline gap-1">
-              <span class="text-xl md:text-2xl font-black" style="font-family: 'Fredoka One', cursive;">
-                <span style="color: #0066ff;">ZipZap</span><span style="color: #ff007f;">Zoi</span>
+              <span class="text-xl md:text-2xl font-black" style="font-family:'Fredoka One',cursive;">
+                <span style="color:#0066ff;">ZipZap</span><span style="color:#ff007f;">Zoi</span>
               </span>
-              <span class="text-lg md:text-xl text-black flex items-baseline" style="font-family: 'Righteous', cursive; color: #000; text-shadow: 2px 4px 6px rgba(0,0,0,0.4);">
-                <span class="animate-bounce-in" style="animation-delay: 0.1s">C</span><span class="animate-bounce-in" style="animation-delay: 0.15s">l</span><span class="animate-bounce-in" style="animation-delay: 0.2s">a</span><span class="animate-bounce-in" style="animation-delay: 0.25s">s</span><span class="animate-bounce-in" style="animation-delay: 0.3s">s</span><span class="animate-bounce-in" style="animation-delay: 0.35s">i</span><span class="animate-bounce-in" style="animation-delay: 0.4s">f</span><span class="animate-bounce-in" style="animation-delay: 0.45s">i</span><span class="animate-bounce-in" style="animation-delay: 0.5s">e</span><span class="animate-bounce-in" style="animation-delay: 0.55s">d</span><span class="animate-bounce-in" style="animation-delay: 0.6s">s</span>
+              <span class="text-lg md:text-xl text-black flex items-baseline" style="font-family:'Righteous',cursive;color:#000;text-shadow:2px 4px 6px rgba(0,0,0,0.4);">
+                <span class="animate-bounce-in" style="animation-delay:.1s">C</span><span class="animate-bounce-in" style="animation-delay:.15s">l</span><span class="animate-bounce-in" style="animation-delay:.2s">a</span><span class="animate-bounce-in" style="animation-delay:.25s">s</span><span class="animate-bounce-in" style="animation-delay:.3s">s</span><span class="animate-bounce-in" style="animation-delay:.35s">i</span><span class="animate-bounce-in" style="animation-delay:.4s">f</span><span class="animate-bounce-in" style="animation-delay:.45s">i</span><span class="animate-bounce-in" style="animation-delay:.5s">e</span><span class="animate-bounce-in" style="animation-delay:.55s">d</span><span class="animate-bounce-in" style="animation-delay:.6s">s</span>
               </span>
             </h2>
           </a>
           
+          <!-- Search -->
           <div class="flex-1 max-w-2xl hidden md:flex items-center">
              <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2 flex items-center border border-gray-200 dark:border-gray-700 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
                 <span class="material-symbols-outlined text-gray-400">search</span>
-                <input id="searchInput" type="text" placeholder="Search by city, category, keyword..." class="w-full bg-transparent border-none focus:ring-0 text-sm ml-2 font-bold dark:text-white" onkeypress="if(event.key==='Enter') executeSearch()">
+                <input id="searchInput" type="text" placeholder="Search by keyword, category, city..."
+                  class="w-full bg-transparent border-none focus:ring-0 text-sm ml-2 font-bold dark:text-white"
+                  onkeypress="if(event.key==='Enter') executeSearch()">
              </div>
           </div>
           
@@ -266,9 +270,8 @@
               <a href="index.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Home</a>
               <a href="classifieds.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Classifieds</a>
               <a href="Post Listing.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Post Ad</a>
-              <a href="map.html" class="text-sm font-bold text-primary transition-colors">Map</a>
+              <a href="map.html" class="text-sm font-bold text-primary transition-colors">🗺️ Map</a>
               <a href="Inbox.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Inbox</a>
-              <a href="Seller Dashboard.html" class="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Dashboard</a>
             </nav>
             <a href="classifieds.html" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors text-sm font-bold">
                <span class="material-symbols-outlined text-[18px]">view_list</span> 
@@ -280,11 +283,13 @@
           </div>
         </div>
         
-        <!-- Mobile Search Bar -->
+        <!-- Mobile Search -->
         <div class="mt-3 md:hidden">
            <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2 flex items-center border border-gray-200 dark:border-gray-700">
               <span class="material-symbols-outlined text-gray-400">search</span>
-              <input id="mobileSearchInput" type="text" placeholder="Search..." class="w-full bg-transparent border-none focus:ring-0 text-sm ml-2 font-bold dark:text-white" onkeypress="if(event.key==='Enter'){ document.getElementById('searchInput').value=this.value; executeSearch(); }">
+              <input id="mobileSearchInput" type="text" placeholder="Search listings..."
+                class="w-full bg-transparent border-none focus:ring-0 text-sm ml-2 font-bold dark:text-white"
+                onkeypress="if(event.key==='Enter'){ document.getElementById('searchInput').value=this.value; executeSearch(); }">
            </div>
         </div>
       </div>
@@ -292,28 +297,48 @@
       <!-- Category Filter Bar -->
       <div class="w-full border-t border-gray-200 dark:border-gray-800 px-4 py-2 bg-white/50 dark:bg-card-dark/50">
          <div class="flex items-center gap-2 overflow-x-auto hide-scrollbar" id="categoryBar">
-            <!-- Rendered by JS -->
+            <div class="skeleton h-7 w-20 rounded-full shrink-0"></div>
+            <div class="skeleton h-7 w-24 rounded-full shrink-0"></div>
+            <div class="skeleton h-7 w-20 rounded-full shrink-0"></div>
+            <div class="skeleton h-7 w-28 rounded-full shrink-0"></div>
          </div>
       </div>
     </header>
 
     <!-- MAIN LAYOUT -->
-    <main class="flex-grow flex flex-col md:flex-row relative h-0">
+    <main class="flex-grow flex flex-col md:flex-row relative h-0" id="mainLayout">
         
         <!-- SIDEBAR (Listings) -->
-        <aside class="sidebar-container w-full md:w-[380px] bg-white dark:bg-card-dark border-r border-gray-200 dark:border-gray-800 flex flex-col shrink-0">
+        <aside class="sidebar-container w-full md:w-[360px] bg-white dark:bg-card-dark border-r border-gray-200 dark:border-gray-800 flex flex-col shrink-0" id="sidebar">
             
             <!-- Mobile Drag Handle -->
-            <div class="w-full h-6 flex justify-center items-center md:hidden shrink-0 cursor-grab active:cursor-grabbing">
-                <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+            <div class="w-full h-8 flex justify-center items-center md:hidden shrink-0 cursor-pointer active:opacity-70"
+                 onclick="toggleSidebar()" title="Toggle sidebar">
+                <div class="sidebar-handle-bar"></div>
             </div>
             
-            <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center shrink-0">
-               <h3 class="font-black text-gray-900 dark:text-white" id="resultsCount">Loading...</h3>
+            <!-- Sidebar Header -->
+            <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center shrink-0">
+               <h3 class="font-black text-gray-900 dark:text-white text-sm" id="resultsCount">Loading listings...</h3>
+               <div class="flex items-center gap-2">
+                 <span class="text-xs text-gray-500 dark:text-gray-400" id="radiusLabel"></span>
+                 <button onclick="refreshMap()" class="text-primary hover:text-green-700 transition-colors" title="Refresh">
+                   <span class="material-symbols-outlined text-[18px]">refresh</span>
+                 </button>
+               </div>
             </div>
             
-            <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scroll" id="sidebarListings">
-                <!-- Cards injected via JS -->
+            <!-- Listing Cards -->
+            <div class="flex-1 overflow-y-auto p-3 space-y-3 custom-scroll" id="sidebarListings">
+                <!-- Skeleton loaders -->
+                <div class="flex gap-3 p-2 rounded-xl border border-gray-100 dark:border-gray-700">
+                  <div class="skeleton w-24 h-20 rounded-lg shrink-0"></div>
+                  <div class="flex-1 space-y-2 py-1"><div class="skeleton h-4 rounded w-3/4"></div><div class="skeleton h-3 rounded w-1/2"></div><div class="skeleton h-3 rounded w-1/3"></div></div>
+                </div>
+                <div class="flex gap-3 p-2 rounded-xl border border-gray-100 dark:border-gray-700">
+                  <div class="skeleton w-24 h-20 rounded-lg shrink-0"></div>
+                  <div class="flex-1 space-y-2 py-1"><div class="skeleton h-4 rounded w-2/3"></div><div class="skeleton h-3 rounded w-1/2"></div><div class="skeleton h-3 rounded w-1/4"></div></div>
+                </div>
             </div>
         </aside>
         
@@ -322,300 +347,26 @@
             <div id="map"></div>
             
             <!-- Near Me Button -->
-            <button onclick="zoomToUser()" class="near-me-btn w-12 h-12 bg-white dark:bg-card-dark rounded-full shadow-lg flex items-center justify-center text-primary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-700">
-                <span class="material-symbols-outlined">my_location</span>
+            <button onclick="zoomToUser()" class="map-ctrl-btn near-me-btn" title="Find listings near me">
+                <span class="material-symbols-outlined" id="nearMeIcon">my_location</span>
             </button>
+            
+            <!-- Re-center / Zoom India Button -->
+            <button onclick="resetMapView()" class="map-ctrl-btn recenter-btn" title="View all India">
+                <span class="material-symbols-outlined text-[20px]">public</span>
+            </button>
+            
+            <!-- Map Info Banner (when empty) -->
+            <div id="mapBanner" class="hidden absolute top-3 left-1/2 -translate-x-1/2 bg-white dark:bg-card-dark rounded-full shadow-lg px-4 py-2 text-sm font-semibold text-gray-600 dark:text-gray-300 z-[400] flex items-center gap-2 border border-gray-200 dark:border-gray-700">
+              <span class="material-symbols-outlined text-[18px] text-primary">info</span>
+              <span id="mapBannerText"></span>
+            </div>
         </div>
         
     </main>
     
-    <script src="js/utils.js"></script>
-    <script>
-        // Data and State
-        let map;
-        let markers = {}; // id -> marker
-        let markerClusterGroup;
-        let currentListings = [];
-        let activeCategory = 'All';
-        
-        // Tile URLs
-        const TILE_LIGHT = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-        const TILE_DARK = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-        let tileLayer;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            initCategories();
-            initMap();
-            
-            if (document.documentElement.classList.contains('dark')) {
-                document.getElementById('themeIcon').textContent = 'light_mode';
-            }
-        });
-
-        function toggleDarkMode() {
-            const html = document.documentElement;
-            if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
-                localStorage.setItem('zzz_theme', 'light');
-                document.getElementById('themeIcon').textContent = 'dark_mode';
-                if(tileLayer) tileLayer.setUrl(TILE_LIGHT);
-            } else {
-                html.classList.add('dark');
-                localStorage.setItem('zzz_theme', 'dark');
-                document.getElementById('themeIcon').textContent = 'light_mode';
-                if(tileLayer) tileLayer.setUrl(TILE_DARK);
-            }
-        }
-
-        async function initCategories() {
-            try {
-                const res = await fetch('/api/schema.php');
-                const data = await res.json();
-                const cats = [{id: 'All', label: 'All Categories'}];
-                if(data.success && data.data && data.data.categories) {
-                    data.data.categories.forEach(c => cats.push({id: c.id, label: c.label}));
-                }
-                
-                const container = document.getElementById('categoryBar');
-                container.innerHTML = cats.map(c => `
-                    <button onclick="setCategory('${c.id}')" id="cat-btn-${c.id}" class="cat-pill ${c.id === 'All' ? 'active' : ''}">
-                        ${c.label}
-                    </button>
-                `).join('');
-            } catch (e) {
-                console.error("Failed to load categories", e);
-            }
-        }
-        
-        function setCategory(catId) {
-            activeCategory = catId;
-            document.querySelectorAll('.cat-pill').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`cat-btn-${catId}`).classList.add('active');
-            loadListingsInView();
-        }
-        
-        function executeSearch() {
-            loadListingsInView();
-        }
-
-        function initMap() {
-            const params = new URLSearchParams(window.location.search);
-            const urlLat = params.get('lat');
-            const urlLng = params.get('lng');
-            
-            let center = [19.0760, 72.8777]; // Mumbai default
-            let zoom = 12;
-            
-            if (urlLat && urlLng) {
-                center = [parseFloat(urlLat), parseFloat(urlLng)];
-            } else if (!urlLat && !urlLng) {
-                // Default center: Mumbai if no params
-                center = [19.0760, 72.8777];
-                zoom = 12;
-            }
-
-            map = L.map('map', {
-                zoomControl: false // move zoom control
-            }).setView(center, zoom);
-            
-            L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-            const isDark = document.documentElement.classList.contains('dark');
-            tileLayer = L.tileLayer(isDark ? TILE_DARK : TILE_LIGHT, {
-                maxZoom: 19,
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
-
-            markerClusterGroup = L.markerClusterGroup({
-                iconCreateFunction: function(cluster) {
-                    return L.divIcon({ 
-                        html: '<div><span>' + cluster.getChildCount() + '</span></div>', 
-                        className: 'marker-cluster marker-cluster-custom', 
-                        iconSize: L.point(40, 40) 
-                    });
-                }
-            });
-            map.addLayer(markerClusterGroup);
-
-            map.on('moveend', () => {
-                loadListingsInView();
-            });
-            
-            // Initial load
-            loadListingsInView();
-        }
-
-        function calculateRadius() {
-            const bounds = map.getBounds();
-            const center = map.getCenter();
-            const corner = bounds.getNorthEast();
-            // Distance in meters, convert to km
-            return center.distanceTo(corner) / 1000;
-        }
-
-        async function loadListingsInView() {
-            const center = map.getCenter();
-            const radius = calculateRadius();
-            const q = document.getElementById('searchInput').value.trim();
-            
-            let url = `/api/listings.php?lat=${center.lat}&lng=${center.lng}&radius=${Math.min(radius, 1000)}&status=active&limit=50`;
-            if (activeCategory !== 'All') url += `&category=${encodeURIComponent(activeCategory)}`;
-            if (q) url += `&q=${encodeURIComponent(q)}`;
-
-            try {
-                const res = await fetch(url);
-                const data = await res.json();
-                if(data.success) {
-                    renderMarkersAndSidebar(data.data.listings || []);
-                }
-            } catch (e) {
-                console.error("Error loading map listings", e);
-            }
-        }
-
-        function formatPrice(price) {
-            if(!price) return "Free";
-            return parseFloat(price).toLocaleString('en-IN');
-        }
-
-        function renderMarkersAndSidebar(listings) {
-            currentListings = listings;
-            markerClusterGroup.clearLayers();
-            markers = {};
-            
-            const sidebar = document.getElementById('sidebarListings');
-            document.getElementById('resultsCount').textContent = `${listings.length} listings in this area`;
-            
-            if (listings.length === 0) {
-                sidebar.innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-full text-center p-6 opacity-60">
-                        <span class="material-symbols-outlined text-5xl mb-2">location_off</span>
-                        <p class="font-bold">No listings found in this area.</p>
-                        <p class="text-sm">Try zooming out or moving the map.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            let sidebarHTML = '';
-
-            listings.forEach(item => {
-                // Ignore items without valid coordinates
-                if(!item.latitude || !item.longitude) return;
-                
-                // Create Marker
-                const priceText = item.price ? `₹${formatPrice(item.price)}` : 'Offer';
-                const icon = L.divIcon({
-                    className: 'custom-div-icon',
-                    html: `<div class="map-price-pin" id="pin-${item.id}">${priceText}</div>`,
-                    iconSize: null,
-                    iconAnchor: [20, 15]
-                });
-
-                const marker = L.marker([item.latitude, item.longitude], { icon: icon });
-                
-                const imgUrl = (item.images && item.images.length > 0) ? item.images[0] : (item.thumbnail || 'images/placeholder-item.png');
-                
-                // Popup content
-                const popupContent = `
-                    <div class="custom-popup-content flex flex-col">
-                        <img src="${escapeHtml(imgUrl)}" onerror="this.src='https://placehold.co/400x300/1e293b/6b7280?text=No+Image'" alt="Listing">
-                        <div class="info">
-                            <h4 class="font-bold text-sm truncate mb-1">${escapeHtml(item.title)}</h4>
-                            <div class="text-primary font-black mb-1">${priceText}</div>
-                            <div class="text-xs text-gray-500 flex items-center gap-1 mb-2">
-                                <span class="material-symbols-outlined text-[14px]">location_on</span>
-                                <span class="truncate">${escapeHtml(item.city || 'Location')}</span>
-                            </div>
-                            <a href="Listing Detail.html?id=${item.id}" class="block w-full text-center bg-primary text-white text-xs font-bold py-1.5 rounded-lg hover:bg-green-700 transition-colors">View Details</a>
-                        </div>
-                    </div>
-                `;
-                marker.bindPopup(popupContent);
-                
-                marker.on('click', () => {
-                    const card = document.getElementById(`card-${item.id}`);
-                    if(card) {
-                        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                        // Flash card
-                        card.classList.add('ring-2', 'ring-primary');
-                        setTimeout(() => card.classList.remove('ring-2', 'ring-primary'), 1500);
-                    }
-                });
-                
-                markers[item.id] = marker;
-                markerClusterGroup.addLayer(marker);
-
-                // Sidebar Card HTML
-                sidebarHTML += `
-                    <div id="card-${item.id}" class="flex gap-3 bg-white dark:bg-gray-800 p-2 rounded-xl border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all cursor-pointer group"
-                         onmouseenter="highlightMarker(${item.id})" 
-                         onmouseleave="unhighlightMarker(${item.id})"
-                         onclick="openMarkerPopup(${item.id})">
-                        <div class="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900 relative">
-                            <img src="${escapeHtml(imgUrl)}" onerror="this.src='https://placehold.co/400x300/1e293b/6b7280?text=No+Image'" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
-                        </div>
-                        <div class="flex-1 min-w-0 flex flex-col justify-between py-1">
-                            <div>
-                                <h4 class="font-bold text-sm text-gray-900 dark:text-white truncate" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</h4>
-                                <p class="text-primary font-black text-sm mt-0.5">${priceText}</p>
-                            </div>
-                            <div class="flex items-center justify-between mt-2">
-                                <span class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-0.5 truncate max-w-[100px]">
-                                    <span class="material-symbols-outlined text-[14px]">location_on</span>
-                                    <span class="truncate">${escapeHtml(item.city || 'Loc')}</span>
-                                </span>
-                                <a href="Listing Detail.html?id=${item.id}" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-primary hover:text-white text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full font-bold transition-colors" onclick="event.stopPropagation()">View</a>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            sidebar.innerHTML = sidebarHTML;
-        }
-
-        function highlightMarker(id) {
-            const el = document.getElementById(`pin-${id}`);
-            if(el) el.classList.add('highlighted');
-        }
-        function unhighlightMarker(id) {
-            const el = document.getElementById(`pin-${id}`);
-            if(el) el.classList.remove('highlighted');
-        }
-        function openMarkerPopup(id) {
-            if(markers[id]) {
-                markerClusterGroup.zoomToShowLayer(markers[id], () => {
-                    markers[id].openPopup();
-                });
-            }
-        }
-
-        function zoomToUser() {
-            if ("geolocation" in navigator) {
-                const btn = document.querySelector('.near-me-btn span');
-                btn.classList.add('animate-spin');
-                
-                navigator.geolocation.getCurrentPosition(position => {
-                    btn.classList.remove('animate-spin');
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    map.flyTo([lat, lng], 13, {
-                        animate: true,
-                        duration: 1.5
-                    });
-                }, error => {
-                    btn.classList.remove('animate-spin');
-                    alert("Location access denied or unavailable. Defaulting to Mumbai.");
-                    map.flyTo([19.0760, 72.8777], 13, { animate: true, duration: 1.5 });
-                    // loadListingsInView automatically runs on moveend
-                });
-            } else {
-                alert("Geolocation is not supported by your browser. Defaulting to Mumbai.");
-                map.flyTo([19.0760, 72.8777], 13, { animate: true, duration: 1.5 });
-            }
-        }
-    </script>
+    <!-- Toast Notification -->
+    <div id="toast"></div>
     
     <!-- MOBILE BOTTOM NAVIGATION -->
     <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-card-dark/90 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800 flex justify-around items-center h-16 z-[60] pb-safe shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
@@ -637,11 +388,420 @@
         <span class="text-[10px] font-bold">Chat</span>
         <span class="zzz-unread-badge absolute top-0 right-2 w-2.5 h-2.5 bg-red-500 border border-white dark:border-card-dark rounded-full hidden"></span>
       </a>
-      <a href="Seller Dashboard.html" class="flex flex-col items-center gap-1 text-gray-500 hover:text-primary transition-colors w-1/5">
-        <span class="material-symbols-outlined text-[24px]">person</span>
-        <span class="text-[10px] font-bold">Profile</span>
+      <a href="map.html" class="flex flex-col items-center gap-1 text-primary transition-colors w-1/5">
+        <span class="material-symbols-outlined text-[24px]">map</span>
+        <span class="text-[10px] font-bold">Map</span>
       </a>
     </nav>
+    
+    <script src="js/utils.js"></script>
+    <script>
+        // ── State ──────────────────────────────────────────────────────────────
+        let map;
+        let markers = {};
+        let markerClusterGroup;
+        let currentListings = [];
+        let activeCategory = 'All';
+        let sidebarOpen = true;
+        let isLoadingListings = false;
+        let userLat = null, userLng = null;
+        
+        // Tile URLs
+        const TILE_LIGHT = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        const TILE_DARK  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+        let tileLayer;
+
+        // ── Init ───────────────────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            if (document.documentElement.classList.contains('dark')) {
+                document.getElementById('themeIcon').textContent = 'light_mode';
+            }
+            initCategories();
+            initMap();
+        });
+
+        // ── Dark Mode ──────────────────────────────────────────────────────────
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('zzz_theme', 'light');
+                document.getElementById('themeIcon').textContent = 'dark_mode';
+                if (tileLayer) tileLayer.setUrl(TILE_LIGHT);
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('zzz_theme', 'dark');
+                document.getElementById('themeIcon').textContent = 'light_mode';
+                if (tileLayer) tileLayer.setUrl(TILE_DARK);
+            }
+        }
+
+        // ── Categories ─────────────────────────────────────────────────────────
+        async function initCategories() {
+            try {
+                const res = await fetch('/api/schema.php');
+                const data = await res.json();
+                const cats = [{ id: 'All', label: '🗺️ All' }];
+                if (data.success && data.data && data.data.categories) {
+                    data.data.categories.forEach(c => cats.push({ id: c.id, label: c.label }));
+                }
+                const container = document.getElementById('categoryBar');
+                container.innerHTML = cats.map(c => `
+                    <button onclick="setCategory('${c.id}')" id="cat-btn-${c.id}" class="cat-pill ${c.id === 'All' ? 'active' : ''}">
+                        ${c.label}
+                    </button>
+                `).join('');
+            } catch (e) {
+                document.getElementById('categoryBar').innerHTML = `
+                  <button onclick="setCategory('All')" id="cat-btn-All" class="cat-pill active">🗺️ All</button>
+                `;
+            }
+        }
+        
+        function setCategory(catId) {
+            activeCategory = catId;
+            document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById(`cat-btn-${catId}`);
+            if (btn) btn.classList.add('active');
+            loadListingsInView();
+        }
+        
+        function executeSearch() {
+            loadListingsInView();
+        }
+
+        // ── Map Init ───────────────────────────────────────────────────────────
+        function initMap() {
+            const params = new URLSearchParams(window.location.search);
+            const urlLat = params.get('lat');
+            const urlLng = params.get('lng');
+            
+            // Default center: India centre (Nagpur)
+            let center = [21.1458, 79.0882];
+            let zoom   = 5;
+            
+            if (urlLat && urlLng) {
+                center = [parseFloat(urlLat), parseFloat(urlLng)];
+                zoom   = 13;
+            }
+
+            map = L.map('map', { zoomControl: false }).setView(center, zoom);
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+            const isDark = document.documentElement.classList.contains('dark');
+            tileLayer = L.tileLayer(isDark ? TILE_DARK : TILE_LIGHT, {
+                maxZoom: 19,
+                attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Marker cluster with custom icon
+            markerClusterGroup = L.markerClusterGroup({
+                maxClusterRadius: 60,
+                iconCreateFunction: function(cluster) {
+                    return L.divIcon({
+                        html: '<div><span>' + cluster.getChildCount() + '</span></div>',
+                        className: 'marker-cluster marker-cluster-custom',
+                        iconSize: L.point(40, 40)
+                    });
+                }
+            });
+            map.addLayer(markerClusterGroup);
+
+            map.on('moveend', () => { if (!isLoadingListings) loadListingsInView(); });
+            
+            // Try to get user location on first load
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        userLat = pos.coords.latitude;
+                        userLng = pos.coords.longitude;
+                        if (!urlLat && !urlLng) {
+                            map.setView([userLat, userLng], 12);
+                            // loadListingsInView fires via moveend
+                        } else {
+                            loadListingsInView();
+                        }
+                    },
+                    () => loadListingsInView(),
+                    { timeout: 5000, maximumAge: 60000 }
+                );
+            } else {
+                loadListingsInView();
+            }
+        }
+
+        // ── Load Listings ──────────────────────────────────────────────────────
+        function calculateRadius() {
+            const bounds = map.getBounds();
+            const center = map.getCenter();
+            return Math.ceil(center.distanceTo(bounds.getNorthEast()) / 1000); // km
+        }
+
+        async function loadListingsInView() {
+            if (isLoadingListings) return;
+            isLoadingListings = true;
+            
+            document.getElementById('resultsCount').textContent = 'Loading...';
+            showBanner('');
+            
+            const center = map.getCenter();
+            const radius = Math.min(calculateRadius() * 1.5, 2000); // generous radius
+            const q = document.getElementById('searchInput').value.trim();
+            
+            let url = `/api/listings.php?lat=${center.lat.toFixed(5)}&lng=${center.lng.toFixed(5)}&radius=${Math.ceil(radius)}&status=active&limit=100`;
+            if (activeCategory !== 'All') url += `&category=${encodeURIComponent(activeCategory)}`;
+            if (q) url += `&q=${encodeURIComponent(q)}`;
+
+            try {
+                const res  = await fetch(url);
+                const data = await res.json();
+                if (data.success) {
+                    renderMarkersAndSidebar(data.data.listings || [], radius);
+                } else {
+                    showError('Could not load listings. Please try again.');
+                }
+            } catch (e) {
+                console.error('Map listings error:', e);
+                showError('Connection error. Check your internet and try again.');
+            } finally {
+                isLoadingListings = false;
+            }
+        }
+
+        function refreshMap() { loadListingsInView(); showToast('🔄 Refreshed!'); }
+
+        // ── Render ─────────────────────────────────────────────────────────────
+        function formatPrice(price) {
+            if (!price || price == 0) return 'Free';
+            const n = parseFloat(price);
+            if (n >= 100000) return '₹' + (n / 100000).toFixed(1) + 'L';
+            if (n >= 1000)   return '₹' + (n / 1000).toFixed(1) + 'k';
+            return '₹' + n.toLocaleString('en-IN');
+        }
+
+        function renderMarkersAndSidebar(listings, radius) {
+            currentListings = listings;
+            markerClusterGroup.clearLayers();
+            markers = {};
+            
+            const sidebar    = document.getElementById('sidebarListings');
+            const countEl    = document.getElementById('resultsCount');
+            const radiusEl   = document.getElementById('radiusLabel');
+            
+            const withCoords = listings.filter(l => l.latitude || l.lat);
+            const total      = listings.length;
+
+            countEl.textContent = total > 0
+                ? `${total} listing${total !== 1 ? 's' : ''} found`
+                : 'No listings in this area';
+            
+            radiusEl.textContent = radius ? `~${Math.round(radius)}km` : '';
+
+            if (total === 0) {
+                sidebar.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-center p-6 opacity-70 gap-4">
+                        <span class="material-symbols-outlined text-6xl text-gray-400">location_searching</span>
+                        <div>
+                          <p class="font-black text-gray-700 dark:text-gray-300 mb-1">No listings in this area</p>
+                          <p class="text-sm text-gray-500">Try zooming out, moving the map, or clearing filters</p>
+                        </div>
+                        <a href="Post Listing.html" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full font-bold text-sm hover:bg-green-700 transition-colors">
+                          <span class="material-symbols-outlined text-[16px]">add</span> Be first to post here!
+                        </a>
+                    </div>
+                `;
+                
+                if (withCoords.length === 0 && total > 0) {
+                    showBanner(`${total} listings found — enable location in ads to show on map`);
+                }
+                return;
+            }
+
+            let sidebarHTML = '';
+
+            listings.forEach(item => {
+                const lat = parseFloat(item.latitude || item.lat || 0);
+                const lng = parseFloat(item.longitude || item.lng || 0);
+                const hasCoords = lat !== 0 && lng !== 0;
+                
+                const priceText = formatPrice(item.price);
+                const imgUrl    = (item.images && item.images.length > 0)
+                    ? item.images[0]
+                    : (item.thumbnail || 'images/placeholder-item.png');
+
+                // Only add map marker if listing has coordinates
+                if (hasCoords) {
+                    const icon = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div class="map-price-pin" id="pin-${item.id}">${priceText}</div>`,
+                        iconSize: null,
+                        iconAnchor: [20, 15]
+                    });
+
+                    const marker = L.marker([lat, lng], { icon });
+
+                    const popupContent = `
+                        <div class="custom-popup-content flex flex-col">
+                            <img src="${escapeHtml(imgUrl)}" onerror="this.src='https://placehold.co/400x300/e5e7eb/9ca3af?text=No+Image'" alt="${escapeHtml(item.title)}">
+                            <div class="info">
+                                <h4 class="font-bold text-sm truncate mb-1 dark:text-white">${escapeHtml(item.title)}</h4>
+                                <div class="text-primary font-black mb-1">${priceText}</div>
+                                <div class="text-xs text-gray-500 flex items-center gap-1 mb-3">
+                                    <span class="material-symbols-outlined text-[14px]">location_on</span>
+                                    <span class="truncate">${escapeHtml(item.city || item.location_city || 'Location')}</span>
+                                </div>
+                                <a href="Listing Detail.html?id=${item.id}" class="block w-full text-center bg-primary text-white text-xs font-bold py-2 rounded-lg hover:bg-green-700 transition-colors">
+                                  View Details →
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    marker.bindPopup(popupContent, { maxWidth: 240 });
+
+                    marker.on('click', () => {
+                        const card = document.getElementById(`card-${item.id}`);
+                        if (card) {
+                            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            card.style.boxShadow = '0 0 0 3px #019863';
+                            setTimeout(() => card.style.boxShadow = '', 1500);
+                        }
+                    });
+
+                    markers[item.id] = marker;
+                    markerClusterGroup.addLayer(marker);
+                }
+
+                // Sidebar card — always shown regardless of coordinates
+                const distKm = item.distance != null ? parseFloat(item.distance).toFixed(1) : null;
+                sidebarHTML += `
+                    <div id="card-${item.id}"
+                         class="flex gap-3 bg-white dark:bg-gray-800 p-2 rounded-xl border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all cursor-pointer group"
+                         onmouseenter="highlightMarker(${item.id})"
+                         onmouseleave="unhighlightMarker(${item.id})"
+                         onclick="focusMarker(${item.id}, ${lat}, ${lng})">
+                        <div class="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-900 relative">
+                            <img src="${escapeHtml(imgUrl)}" onerror="this.src='https://placehold.co/400x300/e5e7eb/9ca3af?text=No+Image'" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+                        </div>
+                        <div class="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                            <div>
+                                <h4 class="font-bold text-sm text-gray-900 dark:text-white truncate leading-tight" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</h4>
+                                <p class="text-primary font-black text-sm mt-0.5">${priceText}</p>
+                            </div>
+                            <div class="flex items-center justify-between mt-1">
+                                <div class="flex flex-col gap-0.5">
+                                  <span class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-0.5 max-w-[110px]">
+                                      <span class="material-symbols-outlined text-[13px]">location_on</span>
+                                      <span class="truncate">${escapeHtml(item.city || item.location_city || '—')}</span>
+                                  </span>
+                                  ${distKm ? `<span class="text-[10px] text-primary font-bold">📍 ${distKm} km away</span>` : ''}
+                                </div>
+                                <a href="Listing Detail.html?id=${item.id}" onclick="event.stopPropagation()"
+                                   class="text-xs bg-primary/10 hover:bg-primary hover:text-white text-primary px-2.5 py-1 rounded-full font-bold transition-colors shrink-0">
+                                  View
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            sidebar.innerHTML = sidebarHTML;
+
+            // Info if some listings have no map pin
+            const noCoordCount = listings.length - withCoords.length;
+            if (noCoordCount > 0 && withCoords.length > 0) {
+                showBanner(`${noCoordCount} listing${noCoordCount > 1 ? 's' : ''} without map pin shown in sidebar only`);
+            }
+        }
+
+        // ── Marker Interactions ────────────────────────────────────────────────
+        function highlightMarker(id) {
+            const el = document.getElementById(`pin-${id}`);
+            if (el) el.classList.add('highlighted');
+        }
+        function unhighlightMarker(id) {
+            const el = document.getElementById(`pin-${id}`);
+            if (el) el.classList.remove('highlighted');
+        }
+        function focusMarker(id, lat, lng) {
+            if (markers[id]) {
+                markerClusterGroup.zoomToShowLayer(markers[id], () => {
+                    markers[id].openPopup();
+                });
+            } else if (lat && lng) {
+                // Listing has no marker (no coords) — just show toast
+                showToast('📍 This listing has no map pin yet');
+            }
+        }
+
+        // ── Near Me ────────────────────────────────────────────────────────────
+        function zoomToUser() {
+            if (!('geolocation' in navigator)) {
+                showToast('❌ Geolocation not supported by your browser');
+                return;
+            }
+            const icon = document.getElementById('nearMeIcon');
+            icon.style.animation = 'spin 1s linear infinite';
+            icon.style.cssText += 'animation: spin 1s linear infinite;';
+            const style = document.createElement('style');
+            style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+            document.head.appendChild(style);
+
+            showToast('📡 Getting your location...');
+
+            navigator.geolocation.getCurrentPosition(pos => {
+                icon.style.animation = '';
+                userLat = pos.coords.latitude;
+                userLng = pos.coords.longitude;
+                map.flyTo([userLat, userLng], 13, { animate: true, duration: 1.2 });
+                showToast('📍 Showing listings near you!');
+            }, err => {
+                icon.style.animation = '';
+                const msgs = { 1: 'Location permission denied. Enable in browser settings.', 2: 'Location unavailable.', 3: 'Location request timed out.' };
+                showToast('❌ ' + (msgs[err.code] || 'Could not get location'));
+            }, { timeout: 10000, enableHighAccuracy: true });
+        }
+
+        function resetMapView() {
+            map.flyTo([22.5, 80.5], 5, { animate: true, duration: 1.2 });
+            showToast('🗺️ Showing all of India');
+        }
+
+        // ── Sidebar Toggle (Mobile) ────────────────────────────────────────────
+        function toggleSidebar() {
+            sidebarOpen = !sidebarOpen;
+            document.getElementById('mainLayout').classList.toggle('sidebar-collapsed', !sidebarOpen);
+        }
+
+        // ── UI Helpers ─────────────────────────────────────────────────────────
+        function showToast(msg, duration = 3000) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.classList.remove('show'), duration);
+        }
+
+        function showBanner(msg) {
+            const b  = document.getElementById('mapBanner');
+            const bt = document.getElementById('mapBannerText');
+            if (!msg) { b.classList.add('hidden'); return; }
+            bt.textContent = msg;
+            b.classList.remove('hidden');
+            setTimeout(() => b.classList.add('hidden'), 5000);
+        }
+
+        function showError(msg) {
+            document.getElementById('sidebarListings').innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full text-center p-6 gap-3 opacity-80">
+                    <span class="material-symbols-outlined text-5xl text-red-400">wifi_off</span>
+                    <p class="font-bold text-gray-700 dark:text-gray-300">${msg}</p>
+                    <button onclick="refreshMap()" class="px-4 py-2 bg-primary text-white rounded-full font-bold text-sm">Try Again</button>
+                </div>
+            `;
+            document.getElementById('resultsCount').textContent = 'Error loading';
+        }
+    </script>
     
 <script src="js/zoi-ai-widget.js" defer></script>
 </body>
