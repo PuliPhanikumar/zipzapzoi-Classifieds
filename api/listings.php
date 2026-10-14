@@ -159,21 +159,14 @@ function getAll(): void {
     // Geo-Search (Near Me) logic
     $distanceSelect = '';
     $havingSQL = '';
-    $geoMode = false;
     if (!empty($_GET['lat']) && !empty($_GET['lng'])) {
         $lat = (float)$_GET['lat'];
         $lng = (float)$_GET['lng'];
-        $radius = !empty($_GET['radius']) ? (float)$_GET['radius'] : 50; // default 50km for map view
+        $radius = !empty($_GET['radius']) ? (float)$_GET['radius'] : 50; // default 50km
 
-        // Haversine formula — LEAST(1,...) guards acos() domain error when values near 1.0000001
-        // Also require lat/lng NOT NULL to avoid MySQL errors on listings without coordinates
-        $distanceSelect = ", (6371 * acos(LEAST(1, cos(radians(:my_lat)) * cos(radians(IFNULL(l.lat,0))) * cos(radians(IFNULL(l.lng,0)) - radians(:my_lng)) + sin(radians(:my_lat)) * sin(radians(IFNULL(l.lat,0)))))) AS distance";
-        $havingSQL = "HAVING (l.lat IS NULL OR l.lng IS NULL OR distance <= :radius)";
-
-        $params[':my_lat'] = $lat;
-        $params[':my_lng'] = $lng;
-        $params[':radius'] = $radius;
-        $geoMode = true;
+        // Haversine formula using safe numeric literals to prevent PDO parameter reuse error (HY093)
+        $distanceSelect = ", (6371 * acos(LEAST(1.0, GREATEST(-1.0, cos(radians({$lat})) * cos(radians(IFNULL(l.lat, {$lat}))) * cos(radians(IFNULL(l.lng, {$lng})) - radians({$lng})) + sin(radians({$lat})) * sin(radians(IFNULL(l.lat, {$lat}))))))) AS distance";
+        $havingSQL = "HAVING distance <= {$radius}";
 
         // Override sort to distance if 'sort' not explicitly passed
         if (empty($_GET['sort'])) {
@@ -209,7 +202,7 @@ function getAll(): void {
 
     // Count total for pagination
     if ($havingSQL !== '') {
-        $countSQL = "SELECT COUNT(*) FROM (SELECT l.id {$distanceSelect} FROM listings l JOIN users u ON u.id = l.user_id WHERE {$whereSQL} {$havingSQL}) AS sub";
+        $countSQL = "SELECT COUNT(*) FROM (SELECT l.id, l.lat, l.lng {$distanceSelect} FROM listings l JOIN users u ON u.id = l.user_id WHERE {$whereSQL} {$havingSQL}) AS sub";
     } else {
         $countSQL = "SELECT COUNT(*) FROM listings l JOIN users u ON u.id = l.user_id WHERE {$whereSQL}";
     }
