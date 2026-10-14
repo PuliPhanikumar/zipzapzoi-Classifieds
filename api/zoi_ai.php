@@ -5,118 +5,99 @@
  *
  * Body: { messages: [{role, text}], mode: string, image?: string, mimeType?: string }
  * Returns: { success: true, data: { reply: string } }
+ *          { success: false, error: "..." }
  *
- * API key is stored in system_settings table — never exposed to the browser.
+ * CORS + DB connection handled by config.php (do NOT duplicate here).
  */
 
 require_once __DIR__ . '/config.php';
+// config.php already: sets CORS headers, defines getDB(), jsonOk(), jsonError(), clean()
 
-// ── CORS Headers ─────────────────────────────────────────────────────────────
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-$allowed = ['https://www.zipzapzoi.com', 'https://zipzapzoi.com'];
-if (in_array($origin, $allowed) || strpos($origin, 'localhost') !== false) {
-    header("Access-Control-Allow-Origin: $origin");
-} else {
-    header('Access-Control-Allow-Origin: https://www.zipzapzoi.com');
+// Only accept POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    jsonError('Method not allowed', 405);
 }
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-header('Content-Type: application/json; charset=UTF-8');
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit; }
 
-// ── Get Gemini API Key from DB (uses getDB() from config.php) ────────────────
+// ── Get Gemini API Key from system_settings table ─────────────────────────────
 function getGeminiKey(): string {
     try {
-        $db   = getDB();   // getDB() is defined in config.php — NOT global $pdo
+        $db   = getDB();   // getDB() defined in config.php via static PDO singleton
         $stmt = $db->prepare("SELECT setting_value FROM system_settings WHERE setting_key = 'gemini_api_key' LIMIT 1");
         $stmt->execute();
         $row  = $stmt->fetch(PDO::FETCH_ASSOC);
         $key  = trim($row['setting_value'] ?? '');
         if ($key) return $key;
-    } catch (Exception $e) {
-        // DB unavailable — fall through to env var
+    } catch (Throwable $e) {
+        error_log('ZoiAI: DB key fetch failed: ' . $e->getMessage());
     }
-    // Fallback: server environment variable (set in Hostinger's PHP config if needed)
+    // Fallback: server environment variable
     return trim(getenv('GEMINI_API_KEY') ?: '');
 }
 
-// ── System prompts — Zoi AI's identity and expertise per mode ────────────────
+// ── System prompts per mode ───────────────────────────────────────────────────
 function getSystemPrompt(string $mode): string {
-    // Shared identity injected into every mode
-    $identity = "You are Zoi AI ✨ — the world's most powerful, continuously learning AI assistant, built exclusively into ZipZapZoi (www.zipzapzoi.com), India's smartest classifieds marketplace.
+    $identity = "You are Zoi AI ✨ — the world's most powerful AI assistant, built exclusively into ZipZapZoi (www.zipzapzoi.com), India's smartest classifieds marketplace.
 
-CORE IDENTITY RULES:
-- Your name is 'Zoi AI'. Never say you are Gemini, ChatGPT, Claude, or any other AI brand.
-- You learn from every message in this conversation — always reference earlier context when relevant.
-- You can answer ANYTHING: maths (show full working step-by-step), science, coding (write complete runnable code), history, geography, medicine, law, finance, cooking, sports, entertainment — NO topic is off-limits.
-- Give complete, accurate, thorough answers. Never say 'I cannot help with that' for reasonable questions.
-- Format beautifully: use bullet points, numbered steps, code blocks, bold headings where they help clarity.
-- Adapt your tone: technical with coders, simple with beginners, friendly with everyone.
-- Remember conversation history and build on it — if user mentioned something 3 messages ago, refer to it.
-- When you don't know something precise, say so honestly AND give your best informed estimate.\n\n";
+CORE RULES:
+- Your name is 'Zoi AI'. Never identify as Gemini, ChatGPT, Claude, or any other AI brand.
+- You learn from every message in this conversation — always use earlier context when relevant.
+- You answer ANYTHING: maths (show full step-by-step working), science, coding (write complete runnable code), history, geography, medicine, law, finance, cooking, sports, entertainment — NO topic is off-limits for reasonable questions.
+- Give complete, accurate, thorough answers. Format with bullet points, numbered steps, code blocks, bold headings.
+- Adapt tone: technical with coders, simple with beginners, warm with everyone.
+- Reference conversation history to show continuity and learning.\n\n";
 
-    $prompts = [
+    $modes = [
         'general' =>
             $identity .
-            "MODE: General AI — You are the most helpful AI on earth. Answer everything the user asks with full detail. " .
-            "For maths: show every step. For code: write complete working programs. For science: explain with examples. " .
-            "For history/geography: give context. For creative tasks: be imaginative and original. " .
-            "Start responses with the direct answer, then elaborate.",
+            "MODE: General AI — Answer EVERYTHING thoroughly. " .
+            "Maths: show every step. Code: write complete working programs. Science: explain with real examples. " .
+            "Always give the direct answer first, then elaborate.",
 
         'classifieds' =>
             $identity .
-            "MODE: Classifieds Expert — You are the ultimate ZipZapZoi marketplace assistant.\n" .
-            "ZipZapZoi Plans: Free (1 ad/mo, ₹0), Starter (10 ads/mo, ₹149), Growth (25 ads/mo, ₹299), Business (50 ads/mo, ₹599), Pro (100 ads/mo, ₹999).\n" .
-            "Categories: Electronics, Mobiles & Tablets, Computers, Cars & Bikes, Property & Rentals, Furniture, Fashion, Books & Education, Sports, Kitchen, Baby & Kids, Jobs & Services, Pets, Musical Instruments, Art & Collectibles, Health & Beauty, Agriculture, Business & Industrial, Other.\n" .
-            "Help with: posting ads, finding buyers/sellers, safety tips, scam detection (never pay upfront, meet in public), pricing strategy, account issues.\n" .
-            "Also answer any general question — you are not limited to classifieds topics.",
+            "MODE: ZipZapZoi Classifieds Expert.\n" .
+            "Plans: Free (1 ad/mo ₹0) | Starter (10 ads ₹149) | Growth (25 ads ₹299) | Business (50 ads ₹599) | Pro (100 ads ₹999).\n" .
+            "Categories: Electronics, Mobiles, Computers, Cars & Bikes, Property, Furniture, Fashion, Books, Sports, Kitchen, Baby & Kids, Jobs, Pets, Musical Instruments, Art, Health, Agriculture, Business, Other.\n" .
+            "Help with: posting ads, finding buyers, safety tips, scam detection, pricing, account issues. Also answer any general question.",
 
         'ad_writer' =>
             $identity .
-            "MODE: Ad Writer — You are an expert classified ad copywriter specialising in India's resale market.\n" .
-            "When user describes an item, ALWAYS produce ALL of these:\n" .
-            "🏷️ TITLE: (max 60 chars — punchy, include key specs like storage/year/condition)\n" .
-            "📝 DESCRIPTION: (200-350 words — condition, full specs, reason for selling, what's included, urgency hook)\n" .
-            "💰 SUGGESTED PRICE: (₹ range based on realistic Indian resale market)\n" .
-            "📂 BEST CATEGORY: (exact ZipZapZoi category name)\n" .
-            "📸 PHOTO TIPS: (3 specific tips for this item type)\n" .
+            "MODE: Expert Ad Copywriter for India's classifieds market.\n" .
+            "For any item described, ALWAYS produce:\n" .
+            "🏷️ TITLE: (max 60 chars — punchy, include key specs)\n" .
+            "📝 DESCRIPTION: (200-300 words — condition, specs, reason for selling, what's included)\n" .
+            "💰 SUGGESTED PRICE: (₹ based on realistic Indian resale market)\n" .
+            "📂 BEST CATEGORY: (exact ZipZapZoi category)\n" .
             "⚡ SELL FASTER TIPS: (3 actionable tips)\n" .
-            "If the description is vague, ask 2-3 targeted questions before writing the ad.",
+            "If description is too vague, ask 2-3 clarifying questions first.",
 
         'price_advisor' =>
             $identity .
-            "MODE: Price Advisor — You are an expert at India's second-hand and resale market pricing.\n" .
-            "For any item asked about, provide ALL of:\n" .
-            "📊 MARKET VALUE RANGE: ₹X,XXX – ₹X,XXX (low to high condition)\n" .
-            "🎯 YOUR OPTIMAL PRICE: ₹X,XXX (to sell within 7-14 days)\n" .
-            "📉 DEPRECIATION: X% from original MRP of ₹X,XXX — reason why\n" .
-            "📈 PRICE TREND: Rising / Falling / Stable — and WHY (new model launched? demand spike?)\n" .
-            "🛒 BEST PLATFORMS: rank OLX / ZipZapZoi / Quikr / Facebook Marketplace / others for this item\n" .
-            "⚡ VALUE BOOSTERS: 3 specific things this seller can do to get a higher price\n" .
-            "Base everything on current Indian market conditions (2025-2026). If you need more details, ask.",
+            "MODE: Indian Resale Market Price Expert.\n" .
+            "For any item, provide:\n" .
+            "📊 MARKET VALUE RANGE: ₹X – ₹Y\n" .
+            "🎯 OPTIMAL SELLING PRICE: ₹X (to sell in 7-14 days)\n" .
+            "📉 DEPRECIATION: X% from original MRP — reason why\n" .
+            "📈 PRICE TREND: Rising/Falling/Stable — and WHY\n" .
+            "🛒 BEST PLATFORMS: ranked for this item type\n" .
+            "⚡ VALUE BOOSTERS: 3 things seller can do to get higher price",
 
         'negotiation' =>
             $identity .
-            "MODE: Negotiation Coach — You are a master of buying/selling psychology for Indian classifieds market.\n" .
-            "Give SPECIFIC, ACTIONABLE advice with exact scripts and example conversations — not generic tips.\n" .
-            "Cover: how to counter lowball offers, how to handle 'last price?' queries, creating urgency, " .
-            "reading buyer/seller intent, BATNA (walk-away price), psychological anchoring, WhatsApp negotiation tactics.\n" .
-            "Provide real example message exchanges the user can copy-paste. Be practical and India-market-specific.\n" .
-            "Also answer any general question — you are a complete AI assistant.",
+            "MODE: Negotiation Coach for Indian classifieds market.\n" .
+            "Give SPECIFIC scripts and real example message exchanges — not generic tips.\n" .
+            "Cover: countering lowballs, handling 'last price?' queries, creating urgency, psychology of pricing, WhatsApp negotiation tactics, when to walk away.\n" .
+            "Also answer any general question.",
     ];
 
-    return $prompts[$mode] ?? $prompts['general'];
+    return $modes[$mode] ?? $modes['general'];
 }
 
-// ── Main Request Handler ──────────────────────────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    jsonError('Method not allowed', 405);
-}
-
+// ── Parse Request ─────────────────────────────────────────────────────────────
 $rawBody = file_get_contents('php://input');
 $body    = json_decode($rawBody, true);
 if (!$body || !is_array($body)) {
-    jsonError('Invalid JSON body — send { messages, mode }');
+    jsonError('Invalid JSON — send: { messages: [], mode: "general" }');
 }
 
 $messages    = is_array($body['messages'] ?? null) ? $body['messages'] : [];
@@ -124,46 +105,35 @@ $mode        = preg_replace('/[^a-z_]/', '', strtolower($body['mode'] ?? 'genera
 $imageBase64 = $body['image']    ?? null;
 $mimeType    = $body['mimeType'] ?? 'image/jpeg';
 
-// ── Get API key ───────────────────────────────────────────────────────────────
+// ── Validate API key ──────────────────────────────────────────────────────────
 $geminiKey = getGeminiKey();
-if (!$geminiKey) {
-    jsonError('Zoi AI is offline — API key not configured. Contact support@zipzapzoi.com.', 503);
+if (empty($geminiKey)) {
+    jsonError('Zoi AI offline — Gemini API key not found in system_settings. Please add gemini_api_key to the database.', 503);
 }
 
-// ── Build Gemini contents array ───────────────────────────────────────────────
+// ── Build Gemini request ──────────────────────────────────────────────────────
 $systemPrompt = getSystemPrompt($mode);
 $contents     = [];
 
-// Inject system instruction as first user/model exchange
-$contents[] = [
-    'role'  => 'user',
-    'parts' => [['text' => "<<SYSTEM>>\n{$systemPrompt}\n<<END>>\n\nPlease acknowledge you are ready."]]
-];
-$contents[] = [
-    'role'  => 'model',
-    'parts' => [['text' => "✨ Ready! I'm Zoi AI in " . ucwords(str_replace('_', ' ', $mode)) . " mode. How can I help you today?"]]
-];
+// System instruction as opening user/model pair
+$contents[] = ['role' => 'user',  'parts' => [['text' => "<<SYSTEM>>\n{$systemPrompt}\n<<END>>\nAcknowledge briefly."]]];
+$contents[] = ['role' => 'model', 'parts' => [['text' => "✨ Ready! I'm Zoi AI — " . ucwords(str_replace('_', ' ', $mode)) . " mode. How can I help?"]]];
 
-// Add full conversation history (last 30 messages for context/learning)
-$historyMsgs = array_slice($messages, -30);
-$lastIdx     = count($historyMsgs) - 1;
-foreach ($historyMsgs as $idx => $msg) {
+// Add conversation history (last 30 messages for learning/context)
+$historySlice = array_slice($messages, -30);
+$lastIdx      = count($historySlice) - 1;
+foreach ($historySlice as $idx => $msg) {
     $role  = ($msg['role'] === 'user') ? 'user' : 'model';
-    $parts = [['text' => $msg['text'] ?? '']];
+    $text  = trim($msg['text'] ?? '');
+    $parts = $text ? [['text' => $text]] : [['text' => '...']];
 
-    // Attach image only on the last user message
+    // Attach image only on last user message
     if ($role === 'user' && $imageBase64 && $idx === $lastIdx) {
-        $parts[] = [
-            'inlineData' => [
-                'mimeType' => $mimeType,
-                'data'     => $imageBase64,
-            ]
-        ];
+        $parts[] = ['inlineData' => ['mimeType' => $mimeType, 'data' => $imageBase64]];
     }
     $contents[] = ['role' => $role, 'parts' => $parts];
 }
 
-// ── Gemini API Request ────────────────────────────────────────────────────────
 $payload = [
     'contents'         => $contents,
     'generationConfig' => [
@@ -171,9 +141,8 @@ $payload = [
         'topK'            => 40,
         'topP'            => 0.95,
         'maxOutputTokens' => 8192,
-        'stopSequences'   => [],
     ],
-    'safetySettings' => [
+    'safetySettings'   => [
         ['category' => 'HARM_CATEGORY_HARASSMENT',        'threshold' => 'BLOCK_ONLY_HIGH'],
         ['category' => 'HARM_CATEGORY_HATE_SPEECH',       'threshold' => 'BLOCK_ONLY_HIGH'],
         ['category' => 'HARM_CATEGORY_DANGEROUS_CONTENT', 'threshold' => 'BLOCK_ONLY_HIGH'],
@@ -181,6 +150,7 @@ $payload = [
     ],
 ];
 
+// ── Call Gemini API ───────────────────────────────────────────────────────────
 $apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$geminiKey}";
 
 $ch = curl_init($apiUrl);
@@ -201,34 +171,34 @@ curl_close($ch);
 
 // ── Handle Errors ─────────────────────────────────────────────────────────────
 if ($curlError) {
-    jsonError("Zoi AI connection error. Please try again. (cURL: {$curlError})", 503);
+    error_log("ZoiAI cURL error: $curlError");
+    jsonError("Zoi AI connection failed. Check server internet access. ($curlError)", 503);
 }
 
 $data = json_decode($response, true);
 
 if ($httpCode !== 200) {
     $errMsg = $data['error']['message'] ?? "Gemini API returned HTTP {$httpCode}";
-    // Surface helpful message for common errors
-    if ($httpCode === 400) jsonError("Zoi AI: Invalid request — {$errMsg}", 400);
-    if ($httpCode === 403 || $httpCode === 401) jsonError("Zoi AI: API key invalid or quota exceeded. Contact support@zipzapzoi.com.", 403);
-    if ($httpCode === 429) jsonError("Zoi AI is very busy right now — please wait 10 seconds and try again.", 429);
-    jsonError("Zoi AI error: {$errMsg}", 500);
+    error_log("ZoiAI Gemini error HTTP $httpCode: $errMsg");
+    if ($httpCode === 400) jsonError("Bad request to Gemini: $errMsg", 400);
+    if ($httpCode === 401 || $httpCode === 403) jsonError("Gemini API key invalid or quota exceeded. Update gemini_api_key in system_settings.", 403);
+    if ($httpCode === 429) jsonError("Zoi AI is very busy — please wait 10 seconds and try again.", 429);
+    jsonError("Zoi AI error: $errMsg", 500);
 }
 
-// Extract reply — handle safety blocks gracefully
-$candidate   = $data['candidates'][0] ?? null;
+// ── Extract reply ─────────────────────────────────────────────────────────────
+$candidate    = $data['candidates'][0] ?? null;
 $finishReason = $candidate['finishReason'] ?? 'STOP';
 
 if ($finishReason === 'SAFETY') {
-    jsonOk(['reply' => "I appreciate your question! I want to keep our conversation helpful and safe. Could you rephrase that or ask something else? I'm here to help with anything related to ZipZapZoi, buying/selling, prices, or general knowledge! 😊"]);
+    jsonOk(['reply' => "I'm here to keep things helpful and safe! Could you rephrase that? I can help with ZipZapZoi, buying/selling, prices, or any general topic. 😊"]);
 }
 
 $reply = $candidate['content']['parts'][0]['text'] ?? '';
 
-if (!$reply) {
-    // Fallback if no text in response
+if (empty($reply)) {
+    error_log("ZoiAI: Empty reply from Gemini. FinishReason: $finishReason. Raw: " . substr($response, 0, 500));
     jsonError('Zoi AI returned an empty response. Please try again or rephrase your question.', 500);
 }
 
-// ── Return successful reply ───────────────────────────────────────────────────
 jsonOk(['reply' => $reply]);

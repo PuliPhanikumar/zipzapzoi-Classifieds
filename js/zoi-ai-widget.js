@@ -369,7 +369,7 @@
       if (data.success && data.data && data.data.reply) {
         addMessage({ role: 'ai', text: data.data.reply });
       } else {
-        addMessage({ role: 'ai', text: '❌ ' + (data.message || 'Something went wrong. Please try again.'), error: true });
+        addMessage({ role: 'ai', text: '❌ ' + ((data.error || data.message || 'Something went wrong. Please try again.')), error: true });
       }
     })
     .catch(err => {
