@@ -834,7 +834,8 @@ async function saveProfile() {
     const formData = new FormData();
     formData.append('file', selectedAvatarFile);
     try {
-      const uploadRes = await fetch('/api/uploads.php', { method: 'PUT', body: formData, headers: { 'Authorization': 'Bearer ' + token } });
+      formData.append('image', selectedAvatarFile);
+      const uploadRes = await fetch('/api/uploads.php', { method: 'POST', body: formData, headers: { 'Authorization': 'Bearer ' + token } });
       const uploadData = await uploadRes.json();
       if (uploadData.success) {
         avatarUrl = uploadData.data.url;

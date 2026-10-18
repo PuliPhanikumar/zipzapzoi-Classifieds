@@ -54,77 +54,101 @@ function processFile(array $file, array $allowed, int $maxBytes, finfo $finfo): 
         return null;
     }
 
-    // Helper to merge PNG with opacity without breaking alpha
-    if (!function_exists('imagecopymerge_alpha')) {
-        function imagecopymerge_alpha($dst_im, $src_im, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct) {
-            $cut = imagecreatetruecolor($src_w, $src_h);
-            imagecopy($cut, $dst_im, 0, 0, $dst_x, $dst_y, $src_w, $src_h);
-            imagecopy($cut, $src_im, 0, 0, $src_x, $src_y, $src_w, $src_h);
-            imagecopymerge($dst_im, $cut, $dst_x, $dst_y, 0, 0, $src_w, $src_h, $pct);
-            imagedestroy($cut);
-        }
-    }
-
-    // Apply Watermark
-    $watermarkPath = __DIR__ . '/../images/watermark.png';
-    if (file_exists($watermarkPath) && function_exists('imagecreatefrompng')) {
+    // Server-Side Auto-Compress & Auto-Resize to max 1600px
+    $isImage = in_array($ext, ['jpg', 'png', 'webp', 'gif']);
+    if ($isImage && extension_loaded('gd')) {
         try {
             $img = null;
-            if ($ext === 'jpg' && function_exists('imagecreatefromjpeg')) $img = imagecreatefromjpeg($destPath);
-            elseif ($ext === 'png' && function_exists('imagecreatefrompng')) $img = imagecreatefrompng($destPath);
-            elseif ($ext === 'webp' && function_exists('imagecreatefromwebp')) $img = imagecreatefromwebp($destPath);
-            elseif ($ext === 'gif' && function_exists('imagecreatefromgif')) $img = imagecreatefromgif($destPath);
-            
+            if ($ext === 'jpg' && function_exists('imagecreatefromjpeg')) $img = @imagecreatefromjpeg($destPath);
+            elseif ($ext === 'png' && function_exists('imagecreatefrompng')) $img = @imagecreatefrompng($destPath);
+            elseif ($ext === 'webp' && function_exists('imagecreatefromwebp')) $img = @imagecreatefromwebp($destPath);
+            elseif ($ext === 'gif' && function_exists('imagecreatefromgif')) $img = @imagecreatefromgif($destPath);
+
             if ($img) {
-                $watermark = imagecreatefrompng($watermarkPath);
-                if ($watermark) {
-                    $imgWidth = imagesx($img);
-                    $imgHeight = imagesy($img);
-                    $wmWidth = imagesx($watermark);
-                    $wmHeight = imagesy($watermark);
-                    
-                    // Scale watermark to be 15% of image width for a smaller, cleaner look
-                    $scale = 1;
-                    if ($wmWidth > ($imgWidth * 0.15)) {
-                        $scale = ($imgWidth * 0.15) / $wmWidth;
+                $imgWidth  = imagesx($img);
+                $imgHeight = imagesy($img);
+                $maxPx     = 1600;
+
+                // Resize if exceeding maxPx
+                if ($imgWidth > $maxPx || $imgHeight > $maxPx) {
+                    if ($imgWidth > $imgHeight) {
+                        $newWidth  = $maxPx;
+                        $newHeight = (int)round($imgHeight * ($maxPx / $imgWidth));
+                    } else {
+                        $newHeight = $maxPx;
+                        $newWidth  = (int)round($imgWidth * ($maxPx / $imgHeight));
                     }
-                    $newWmWidth = (int)($wmWidth * $scale);
-                    $newWmHeight = (int)($wmHeight * $scale);
-                    
-                    $resizedWm = imagecreatetruecolor($newWmWidth, $newWmHeight);
-                    imagealphablending($resizedWm, false);
-                    imagesavealpha($resizedWm, true);
-                    $transparent = imagecolorallocatealpha($resizedWm, 255, 255, 255, 127);
-                    imagefilledrectangle($resizedWm, 0, 0, $newWmWidth, $newWmHeight, $transparent);
-                    imagecopyresampled($resizedWm, $watermark, 0, 0, 0, 0, $newWmWidth, $newWmHeight, $wmWidth, $wmHeight);
-                    
-                    // Place at bottom right with 10px padding
-                    $dstX = $imgWidth - $newWmWidth - 10;
-                    $dstY = $imgHeight - $newWmHeight - 10;
-                    
-                    // Copy watermark with 50% opacity using alpha-safe helper
-                    imagecopymerge_alpha($img, $resizedWm, $dstX, $dstY, 0, 0, $newWmWidth, $newWmHeight, 50);
-                    
-                    // Save back
-                    if ($ext === 'jpg') imagejpeg($img, $destPath, 85);
-                    elseif ($ext === 'png') imagepng($img, $destPath);
-                    elseif ($ext === 'webp') imagewebp($img, $destPath, 85);
-                    elseif ($ext === 'gif') imagegif($img, $destPath);
-                    
-                    imagedestroy($watermark);
-                    imagedestroy($resizedWm);
+
+                    $resized = imagecreatetruecolor($newWidth, $newHeight);
+                    if ($ext === 'png' || $ext === 'webp') {
+                        imagealphablending($resized, false);
+                        imagesavealpha($resized, true);
+                        $transparent = imagecolorallocatealpha($resized, 255, 255, 255, 127);
+                        imagefilledrectangle($resized, 0, 0, $newWidth, $newHeight, $transparent);
+                    }
+                    imagecopyresampled($resized, $img, 0, 0, 0, 0, $newWidth, $newHeight, $imgWidth, $imgHeight);
+                    imagedestroy($img);
+                    $img = $resized;
+                    $imgWidth = $newWidth;
+                    $imgHeight = $newHeight;
+                }
+
+                // Optional Watermark
+                $watermarkPath = __DIR__ . '/../images/watermark.png';
+                if (file_exists($watermarkPath) && function_exists('imagecreatefrompng')) {
+                    $watermark = @imagecreatefrompng($watermarkPath);
+                    if ($watermark) {
+                        $wmWidth  = imagesx($watermark);
+                        $wmHeight = imagesy($watermark);
+                        $scale    = 1;
+                        if ($wmWidth > ($imgWidth * 0.15)) {
+                            $scale = ($imgWidth * 0.15) / $wmWidth;
+                        }
+                        $newWmWidth  = max(1, (int)($wmWidth * $scale));
+                        $newWmHeight = max(1, (int)($wmHeight * $scale));
+
+                        $resizedWm = imagecreatetruecolor($newWmWidth, $newWmHeight);
+                        imagealphablending($resizedWm, false);
+                        imagesavealpha($resizedWm, true);
+                        $transparent = imagecolorallocatealpha($resizedWm, 255, 255, 255, 127);
+                        imagefilledrectangle($resizedWm, 0, 0, $newWmWidth, $newWmHeight, $transparent);
+                        imagecopyresampled($resizedWm, $watermark, 0, 0, 0, 0, $newWmWidth, $newWmHeight, $wmWidth, $wmHeight);
+
+                        $dstX = max(0, $imgWidth - $newWmWidth - 10);
+                        $dstY = max(0, $imgHeight - $newWmHeight - 10);
+
+                        // Merge watermark with transparency
+                        if (function_exists('imagecopy')) {
+                            imagealphablending($img, true);
+                            imagecopy($img, $resizedWm, $dstX, $dstY, 0, 0, $newWmWidth, $newWmHeight);
+                        }
+                        imagedestroy($watermark);
+                        imagedestroy($resizedWm);
+                    }
+                }
+
+                // Save compressed image back (82% quality balances pristine clarity + tiny file size)
+                if ($ext === 'jpg') {
+                    imagejpeg($img, $destPath, 82);
+                } elseif ($ext === 'webp') {
+                    imagewebp($img, $destPath, 82);
+                } elseif ($ext === 'png') {
+                    // Try converting large non-transparent PNGs to JPEG or WebP to save up to 80% space
+                    imagepng($img, $destPath, 6);
                 }
                 imagedestroy($img);
             }
-        } catch (\Exception $e) {
-            error_log("Watermark error: " . $e->getMessage());
+        } catch (Exception $e) {
+            error_log('Compression error: ' . $e->getMessage());
         }
     }
+
+    $finalSize = file_exists($destPath) ? filesize($destPath) : $file['size'];
 
     return [
         'url'      => UPLOAD_URL . $filename,
         'filename' => $filename,
-        'size'     => $file['size'],
+        'size'     => $finalSize,
         'type'     => $mimeType,
     ];
 }
@@ -156,8 +180,9 @@ if (!empty($_FILES['images'])) {
 }
 
 // â”€â”€ Handle single file field: image â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-if (!empty($_FILES['image']) && empty($results)) {
-    $result = processFile($_FILES['image'], $allowed, $maxBytes, $finfo);
+$singleFile = $_FILES['image'] ?? $_FILES['file'] ?? $_FILES['avatar'] ?? null;
+if (!empty($singleFile) && empty($results)) {
+    $result = processFile($singleFile, $allowed, $maxBytes, $finfo);
     if ($result) $results[] = $result;
 }
 
