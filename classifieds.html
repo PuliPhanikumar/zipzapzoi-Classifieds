@@ -957,12 +957,24 @@
           // Render
           if(filtered.length === 0) {
             if (!append) {
+              const isFiltered = activeFilters > 0;
               grid.innerHTML = `
-                <div class="col-span-full flex flex-col items-center justify-center py-20 text-center animate-pop">
-                  <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">search_off</span>
-                  <h3 class="text-xl font-bold text-gray-800 dark:text-white">No results found</h3>
-                  <p class="text-gray-500 dark:text-gray-400 mt-2">Try adjusting your filters or search query.</p>
-                  <button onclick="clearFilters()" class="mt-6 font-bold text-primary hover:underline">Clear Filters</button>
+                <div class="col-span-full flex flex-col items-center justify-center py-16 px-4 text-center bg-gradient-to-br from-emerald-50/60 to-teal-50/60 dark:from-emerald-950/20 dark:to-teal-950/20 rounded-3xl border-2 border-dashed border-emerald-200 dark:border-emerald-800/60 my-6 animate-pop">
+                  <div class="w-16 h-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-4 shadow-sm">
+                    <span class="material-symbols-outlined text-4xl">${isFiltered ? 'search_off' : 'add_shopping_cart'}</span>
+                  </div>
+                  <h3 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">
+                    ${isFiltered ? 'No matching listings found' : 'Be the First to Sell Here! 🚀'}
+                  </h3>
+                  <p class="text-gray-600 dark:text-gray-300 mt-2 max-w-md text-sm leading-relaxed">
+                    ${isFiltered ? 'Try clearing your filters or changing your search terms to see more items.' : 'No active ads in this area right now. Reach local buyers across your city for free in 60 seconds!'}
+                  </p>
+                  <div class="flex flex-wrap items-center justify-center gap-3 mt-6">
+                    <a href="Post Listing.html" class="px-6 py-3 bg-primary hover:bg-emerald-600 text-white font-black rounded-xl shadow-lg hover:shadow-xl transition-all transform active:scale-95 flex items-center gap-2 text-sm">
+                      <span class="material-symbols-outlined text-lg">add_circle</span> Post Free Ad Now
+                    </a>
+                    ${isFiltered ? `<button onclick="clearFilters()" class="px-5 py-3 border border-gray-300 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-xl text-sm transition-colors">Clear Filters</button>` : ''}
+                  </div>
                 </div>
               `;
             }
