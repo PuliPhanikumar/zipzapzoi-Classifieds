@@ -730,7 +730,16 @@
 
       let currentListing = null;
       let isFavorite     = false;
-      let currentUser    = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      let rawUser        = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      let currentUser    = (rawUser && rawUser.user) ? rawUser.user : rawUser;
+
+      function getAuthHeaders(extra = {}) {
+        const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token') || '';
+        const headers = { ...extra };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        return headers;
+      }
+
       // Gallery globals
       window.pgImages       = [];
       window.pgCurrentIndex = 0;
@@ -781,13 +790,16 @@
         if (document.documentElement.classList.contains('dark')) document.getElementById('themeIcon').textContent = 'light_mode';
 
         // Non-blocking session verify — updates stale localStorage
-        fetch('/api/auth.php?action=me', { credentials: 'include' }).then(r => r.json()).then(d => {
+        const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token') || '';
+        fetch('/api/auth.php?action=me', { credentials: 'include', headers: getAuthHeaders() }).then(r => r.json()).then(d => {
           if (d.success && d.data) {
-            currentUser = d.data;
+            currentUser = (d.data && d.data.user) ? d.data.user : d.data;
             localStorage.setItem('zzz_user', JSON.stringify(currentUser));
-          } else if (!d.success) {
+          } else if (!d.success && token) {
             currentUser = null;
             localStorage.removeItem('zzz_user');
+            localStorage.removeItem('zipzapzoi_token');
+            localStorage.removeItem('zzz_token');
           }
         }).catch(() => {});
 
@@ -981,10 +993,10 @@
           if (l.allow_whatsapp == 1) {
             btnWhatsapp.classList.remove('hidden');
             btnWhatsapp.classList.add('flex');
-            const waText = `Hi ${l.seller_name}, I'm interested in your ad "${l.title}" on ZipZapZoi.`;
-            // Strip non-digits except +
-            let cleanPhone = sellerPhone.replace(/[^\d+]/g, '');
-            if (!cleanPhone.startsWith('+')) cleanPhone = '+91' + cleanPhone; // Fallback to India code
+            let cleanPhone = (sellerPhone || '').replace(/[^0-9]/g, '');
+            if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+            else if (cleanPhone.startsWith('0') && cleanPhone.length === 11) cleanPhone = '91' + cleanPhone.slice(1);
+            const waText = `Hi ${l.seller_name || 'Seller'}, I am interested in your listing "${l.title}" on ZipZapZoi: ${window.location.origin}/Listing%20Detail.html?id=${l.id}. Is it still available?`;
             btnWhatsapp.href = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waText)}`;
           }
         }
@@ -1056,7 +1068,16 @@
                   </a>
                 </div>`;
             } else {
-              actions.innerHTML = '<div class="p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl text-center font-bold">This listing has expired and is no longer available.</div>';
+              actions.innerHTML = `
+                <div class="p-5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl text-center space-y-3 mb-4">
+                  <p class="text-red-600 dark:text-red-400 font-bold text-sm">This listing has expired and is no longer available.</p>
+                  <a href="classifieds.html?category=${encodeURIComponent(l.category || '')}" class="inline-flex items-center justify-center gap-2 w-full py-3 px-4 bg-primary hover:bg-emerald-600 text-white font-bold rounded-xl text-sm transition-all shadow-md">
+                    <span class="material-symbols-outlined text-[18px]">travel_explore</span> Browse More in ${escapeHtml(l.category || 'Classifieds')}
+                  </a>
+                  <a href="classifieds.html" class="inline-block text-xs text-gray-500 dark:text-gray-400 hover:text-primary underline">
+                    View All Active Ads
+                  </a>
+                </div>`;
             }
           }
         }
@@ -1085,9 +1106,12 @@
             `;
             
             if (l.allow_whatsapp == 1 && l.contact_phone) {
-                const waNumber = l.contact_phone.replace(/[^0-9]/g, '');
+                let waNumber = (l.contact_phone || '').replace(/[^0-9]/g, '');
+                if (waNumber.length === 10) waNumber = '91' + waNumber;
+                else if (waNumber.startsWith('0') && waNumber.length === 11) waNumber = '91' + waNumber.slice(1);
+                const waText = `Hi ${l.seller_name || 'Seller'}, I am interested in your listing "${l.title}" on ZipZapZoi: ${window.location.origin}/Listing%20Detail.html?id=${l.id}. Is it still available?`;
                 btnsHtml += `
-                  <a href="https://wa.me/${waNumber}?text=Hi,%20I%20am%20interested%20in%20your%20listing:%20${encodeURIComponent(l.title)}" target="_blank" class="flex-1 py-3.5 rounded-xl bg-[#25D366] hover:bg-[#1ebd5a] text-white font-bold transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-2 text-sm">
+                  <a href="https://wa.me/${waNumber}?text=${encodeURIComponent(waText)}" target="_blank" class="flex-1 py-3.5 rounded-xl bg-[#25D366] hover:bg-[#1ebd5a] text-white font-bold transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-2 text-sm">
                     <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
                     WhatsApp
                   </a>
@@ -1208,7 +1232,7 @@
           fetch('/api/history.php', {
             method: 'POST',
             credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ listing_id: parseInt(l.id) })
           }).catch(() => {});  // fire-and-forget
         }
@@ -1441,7 +1465,7 @@
         if (feed) {
           feed.innerHTML = '<div class="flex justify-center"><span class="text-xs bg-white/70 dark:bg-gray-700/70 px-3 py-1 rounded-full text-gray-500">Loading messages...</span></div>';
           const listId = currentListing ? currentListing.id : '';
-          fetch(`/api/messages.php?thread=${sellerId}&listing_id=${listId}`, { credentials: 'include' })
+          fetch(`/api/messages.php?thread=${sellerId}&listing_id=${listId}`, { credentials: 'include', headers: getAuthHeaders() })
             .then(r => r.json())
             .then(d => {
               feed.innerHTML = '';
@@ -1491,7 +1515,7 @@
           const res = await fetch('/api/messages.php', {
             method: 'POST',
             credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({
               to_user_id: _chatRecipientId,
               listing_id: currentListing ? currentListing.id : null,

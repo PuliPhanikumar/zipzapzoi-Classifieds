@@ -581,7 +581,15 @@
       let currentPage = 1;
       let allListings = [];
       let favIds = new Set();   // populated from API — keeps heart states accurate
-      let currentUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      let rawUser = window.ZZZ ? window.ZZZ.getCurrentUser() : JSON.parse(localStorage.getItem('zzz_user') || 'null');
+      let currentUser = (rawUser && rawUser.user) ? rawUser.user : rawUser;
+
+      function getAuthHeaders(extra = {}) {
+        const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token') || '';
+        const headers = { ...extra };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        return headers;
+      }
 
       // =====================================
       // 2. INITIALIZATION
@@ -618,15 +626,18 @@
         }, 50);
 
         // Non-blocking session verify — runs after paint
-        fetch('/api/auth.php?action=me', { credentials: 'include' }).then(r => r.json()).then(d => {
+        const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token') || '';
+        fetch('/api/auth.php?action=me', { credentials: 'include', headers: getAuthHeaders() }).then(r => r.json()).then(d => {
           if (d.success && d.data) {
-            currentUser = d.data;
+            currentUser = (d.data && d.data.user) ? d.data.user : d.data;
             localStorage.setItem('zzz_user', JSON.stringify(currentUser));
             renderAuth();
             loadFavIds();
-          } else if (!d.success) {
+          } else if (!d.success && token) {
             currentUser = null;
             localStorage.removeItem('zzz_user');
+            localStorage.removeItem('zipzapzoi_token');
+            localStorage.removeItem('zzz_token');
             renderAuth();
           }
         }).catch(() => {});
@@ -681,7 +692,7 @@
       // ── Pre-fetch favourite IDs from API so heart buttons reflect real DB state ──
       async function loadFavIds() {
         try {
-          const res = await fetch('/api/favorites.php?ids_only=1', { credentials: 'include' });
+          const res = await fetch('/api/favorites.php?ids_only=1', { credentials: 'include', headers: getAuthHeaders() });
           const data = await res.json();
           if (data.success && Array.isArray(data.data)) {
             favIds = new Set(data.data.map(String));

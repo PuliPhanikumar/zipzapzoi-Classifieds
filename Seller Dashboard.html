@@ -696,10 +696,18 @@
     //  1. AUTH & INIT
     // ═══════════════════════════════════════════
     // Auth — localStorage cache + non-blocking API verify
-    const currentUser = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+    const rawUser = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+    const currentUser = (rawUser && rawUser.user) ? rawUser.user : rawUser;
     if (!currentUser) {
       window.location.href = 'Login Page.html?redirect=Seller+Dashboard.html';
       throw new Error('Not authenticated');
+    }
+
+    function getAuthHeaders(extra = {}) {
+      const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token') || '';
+      const headers = { ...extra };
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      return headers;
     }
 
     // Set user name
@@ -776,7 +784,7 @@
       document.body.appendChild(modal);
 
       try {
-        const res = await fetch('/api/notifications.php', {credentials: 'include'});
+        const res = await fetch('/api/notifications.php', {credentials: 'include', headers: getAuthHeaders()});
         const data = await res.json();
         const list = document.getElementById('notifList');
         if (data.data && data.data.notifications.length > 0) {
@@ -796,7 +804,7 @@
 
     async function markAllRead() {
       try {
-        await fetch('/api/notifications.php?action=read', {method: 'POST', credentials: 'include'});
+        await fetch('/api/notifications.php?action=read', {method: 'POST', credentials: 'include', headers: getAuthHeaders()});
         const badge1 = document.getElementById('notifCountBadge');
         const badge2 = document.getElementById('notifCountBadgeMobile');
         if(badge1) badge1.classList.add('hidden');
@@ -807,7 +815,7 @@
 
     // Fetch initial notification count — uses currentUser (already API-verified in loadDashboard)
     if (currentUser) {
-       fetch('/api/notifications.php', {credentials: 'include'})
+       fetch('/api/notifications.php', {credentials: 'include', headers: getAuthHeaders()})
          .then(r => r.json())
          .then(data => {
             if (data.data && data.data.unread_count > 0) {
@@ -859,17 +867,22 @@
 
     async function loadDashboard() {
       try {
+        const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token') || '';
         // One call — user + quota + stats + unread count
-        const meRes  = await fetch('/api/auth.php?action=me', { credentials: 'include' });
+        const meRes  = await fetch('/api/auth.php?action=me', { credentials: 'include', headers: getAuthHeaders() });
         const meData = await meRes.json();
 
         if (!meData.success) {
-          localStorage.removeItem('zzz_user');
-          window.location.href = 'Login Page.html';
+          if (token) {
+            localStorage.removeItem('zzz_user');
+            localStorage.removeItem('zipzapzoi_token');
+            localStorage.removeItem('zzz_token');
+          }
+          window.location.href = 'Login Page.html?redirect=Seller+Dashboard.html';
           return;
         }
 
-        const me = meData.data.user;
+        const me = meData.data.user || meData.data;
         localStorage.setItem('zzz_user', JSON.stringify(me));
 
         // Evaluate Profile Completeness
@@ -963,10 +976,9 @@
         }
 
         // Load my listings from API
-        const token = localStorage.getItem('zipzapzoi_token') || sessionStorage.getItem('zipzapzoi_token') || '';
         const lRes  = await fetch(`/api/listings.php?user_id=${me.id}&status=all&limit=100`, { 
             credentials: 'include',
-            headers: { 'Authorization': 'Bearer ' + token }
+            headers: getAuthHeaders()
         });
         const lData = await lRes.json();
         if (lData.success) {
@@ -1304,14 +1316,14 @@
                 </div>
               </div>
             </div>
-            <script>
+            \x3Cscript\x3E
               window.onload = function() {
                 setTimeout(function() {
                   window.print();
                   window.close();
                 }, 750);
               }
-            <\/script>
+            \x3C/script\x3E
 </body>
         </html>
       `);
@@ -1341,7 +1353,7 @@
       try {
         const res  = await fetch(`/api/listings.php?id=${pendingSoldId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
           credentials: 'include',
           body: JSON.stringify({ status: 'sold' }),
         });
@@ -1371,6 +1383,7 @@
         const res  = await fetch(`/api/listings.php?id=${pendingDeleteId}`, {
           method: 'DELETE',
           credentials: 'include',
+          headers: getAuthHeaders()
         });
         const data = await res.json();
         if (data.success) {
@@ -1386,7 +1399,7 @@
     // Wanted Logic
     async function fetchMyWanted(userId) {
         try {
-            const res = await fetch('/api/wanted.php?user_id=' + userId).then(r=>r.json());
+            const res = await fetch('/api/wanted.php?user_id=' + userId, { credentials: 'include', headers: getAuthHeaders() }).then(r=>r.json());
             const list = document.getElementById('wantedList');
             const ads = res.data && res.data.wanted_ads ? res.data.wanted_ads : [];
             if (ads.length === 0) {
@@ -1419,7 +1432,7 @@
     async function deleteWanted(id) {
         if (!confirm('Are you sure you want to delete this wanted request?')) return;
         try {
-            const res = await fetch('/api/wanted.php?id=' + id, { method: 'DELETE', credentials: 'include' }).then(r=>r.json());
+            const res = await fetch('/api/wanted.php?id=' + id, { method: 'DELETE', credentials: 'include', headers: getAuthHeaders() }).then(r=>r.json());
             if (res.success) {
                 showToast('Wanted request deleted', 'success');
                 const user = JSON.parse(localStorage.getItem('zzz_user'));
@@ -1434,7 +1447,7 @@
 
     async function fetchOffers(userId) {
         try {
-            const res = await fetch('/api/offers.php?my_offers_as_seller=1', { credentials: 'include' }).then(r=>r.json());
+            const res = await fetch('/api/offers.php?my_offers_as_seller=1', { credentials: 'include', headers: getAuthHeaders() }).then(r=>r.json());
             const list = document.getElementById('offersList');
             const offers = res.data && res.data.offers ? res.data.offers : [];
             if (offers.length === 0) {
@@ -1472,13 +1485,9 @@
     async function handleOffer(offerId, action) {
         if (!confirm('Are you sure you want to ' + action + ' this offer?')) return;
         try {
-            const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token') || '';
             const res = await fetch('/api/offers.php?id=' + offerId, {
                 method: 'PUT',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
+                headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                 credentials: 'include',
                 body: JSON.stringify({ action: action })
             }).then(r=>r.json());
@@ -1580,7 +1589,7 @@
       try {
         const orderRes = await fetch('/api/create_order.php', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
           credentials: 'include',
           body: JSON.stringify({ amount: amountPaise, currency: 'INR' })
         });
@@ -1619,7 +1628,7 @@
           try {
             const res = await fetch('/api/boost.php', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
               credentials: 'include',
               body: JSON.stringify({
                 listing_id:          _boostListingId,
@@ -1696,6 +1705,42 @@
       const user = JSON.parse(localStorage.getItem('zzz_user') || 'null');
       if (!user) { showToast('Please log in first.', 'error'); return; }
 
+      if (currentUser && currentUser.role === 'admin') {
+        const btn = document.getElementById('renewPayBtn');
+        btn.disabled = true;
+        btn.textContent = 'Renewing (Admin)...';
+        try {
+          const res = await fetch('/api/renewal.php', {
+            method: 'POST',
+            headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+            credentials: 'include',
+            body: JSON.stringify({
+              listing_id: _renewListingId,
+              razorpay_payment_id: 'admin_free',
+              razorpay_order_id: 'admin_order',
+              razorpay_signature: 'admin_sig'
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            closeRenewalModal();
+            showToast('✅ ' + (data.data?.message || 'Listing renewed for 30 days!'), 'success');
+            loadDashboard();
+            return;
+          } else {
+            showToast(data.error || 'Renewal failed', 'error');
+            btn.disabled = false;
+            btn.textContent = '🔄 Pay ₹16 to Renew';
+            return;
+          }
+        } catch(e) {
+          showToast('Network error during renewal', 'error');
+          btn.disabled = false;
+          btn.textContent = '🔄 Pay ₹16 to Renew';
+          return;
+        }
+      }
+
       if (typeof Razorpay === 'undefined') {
         showToast('Payment system loading… Please try again.', 'error');
         return;
@@ -1711,7 +1756,7 @@
       try {
         const orderRes = await fetch('/api/create_order.php', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
           credentials: 'include',
           body: JSON.stringify({ amount: RENEWAL_PAISE, currency: 'INR' })
         });
@@ -1748,7 +1793,7 @@
           try {
             const res = await fetch('/api/renewal.php', {
               method:  'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
               credentials: 'include',
               body: JSON.stringify({
                 listing_id:          _renewListingId,
@@ -1906,6 +1951,29 @@
     // ═══════════════════════════════════════════
     let _epAvatarUrl = null;
 
+    async function compressAvatar(file) {
+      if (!file || !file.type.startsWith('image/')) return file;
+      return new Promise(resolve => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const MAX = 400;
+          let { width, height } = img;
+          if (width > MAX || height > MAX) {
+            if (width > height) { height = Math.round(height * (MAX / width)); width = MAX; }
+            else { width = Math.round(width * (MAX / height)); height = MAX; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          canvas.toBlob(blob => resolve(blob || file), 'image/jpeg', 0.85);
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+        img.src = url;
+      });
+    }
+
     async function uploadAvatarFile(input) {
       if (!input.files || !input.files[0]) return;
       const file = input.files[0];
@@ -1914,12 +1982,14 @@
       if (loading) loading.classList.remove('hidden');
       
       try {
+        const compressedBlob = await compressAvatar(file);
         const formData = new FormData();
-        formData.append('image', file);
+        formData.append('image', compressedBlob, 'avatar.jpg');
         
         const response = await fetch('/api/uploads.php', {
           method: 'POST',
           credentials: 'include',
+          headers: getAuthHeaders(),
           body: formData
         });
         
@@ -2003,7 +2073,7 @@
       try {
         const res  = await fetch(`/api/users.php?id=${user.id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
           credentials: 'include',
           body: JSON.stringify({ name, phone, city, avatar: _epAvatarUrl }),
         });
@@ -2052,10 +2122,9 @@
       formData.append('id_photo', fileInput.files[0]);
 
       try {
-        const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token');
         const res = await fetch('/api/users.php?action=verify_identity', {
           method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + token },
+          headers: getAuthHeaders(),
           body: formData
         });
         const r = await res.json();

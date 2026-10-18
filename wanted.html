@@ -379,12 +379,17 @@
 
     document.addEventListener("DOMContentLoaded", async () => {
       currentUser = getCurrentUser();
-      if (currentUser) {
-          fetch('/api/auth.php?action=me', { credentials: 'include' }).then(r => r.json()).then(d => {
+      const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token') || '';
+      const authHeaders = token ? { 'Authorization': 'Bearer ' + token } : {};
+      if (currentUser || token) {
+          fetch('/api/auth.php?action=me', { credentials: 'include', headers: authHeaders }).then(r => r.json()).then(d => {
               if (d.success && d.data) {
-                  localStorage.setItem('zzz_user', JSON.stringify(d.data));
-              } else if (!d.success) {
+                  currentUser = (d.data && d.data.user) ? d.data.user : d.data;
+                  localStorage.setItem('zzz_user', JSON.stringify(currentUser));
+              } else if (!d.success && token) {
                   localStorage.removeItem('zzz_user');
+                  localStorage.removeItem('zipzapzoi_token');
+                  localStorage.removeItem('zzz_token');
                   window.location.href = 'Login Page.html?redirect=wanted.html';
               }
           }).catch(()=>{});

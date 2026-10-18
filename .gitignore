@@ -1,4 +1,4 @@
-﻿uploads/listings/*
+uploads/listings/*
 !uploads/listings/.htaccess
 
 api/.env
@@ -8,3 +8,4 @@ ZipZapZoi_Admin_App.apk
 uploads/
 api/firebase-adminsdk.json
 api/.env
+scratch/

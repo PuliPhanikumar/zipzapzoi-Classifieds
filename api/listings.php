@@ -484,15 +484,20 @@ function createListing(): void {
     }
 
 
-    $expiresDays = $isCharity ? 12 : 30;  // Default
-    if (!$isCharity) {
-        $expiryStmt = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'listing_expiry_days'");
-        $expiryVal = $expiryStmt->fetchColumn();
-        if (is_numeric($expiryVal) && (int)$expiryVal > 0) {
-            $expiresDays = (int)$expiryVal;
+    $isAdmin = in_array($user['role'] ?? '', ['admin', 'super_admin']);
+    if ($isAdmin) {
+        $expires = null; // Admin/Founder seed listings do not expire
+    } else {
+        $expiresDays = $isCharity ? 12 : 30;  // Default
+        if (!$isCharity) {
+            $expiryStmt = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'listing_expiry_days'");
+            $expiryVal = $expiryStmt ? $expiryStmt->fetchColumn() : false;
+            if (is_numeric($expiryVal) && (int)$expiryVal > 0) {
+                $expiresDays = (int)$expiryVal;
+            }
         }
+        $expires = date('Y-m-d H:i:s', strtotime("+{$expiresDays} days"));
     }
-    $expires = date('Y-m-d H:i:s', strtotime("+{$expiresDays} days"));
     $lat = isset($b['lat']) && $b['lat'] !== '' ? (float)$b['lat'] : null;
     $lng = isset($b['lng']) && $b['lng'] !== '' ? (float)$b['lng'] : null;
     $originalPrice = isset($b['original_price']) && $b['original_price'] !== '' ? (float)$b['original_price'] : null;

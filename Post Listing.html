@@ -595,17 +595,30 @@
 (function() {
   // Auth check — non-blocking. Unauthenticated users can fill the form;
   // the auth gate modal shows only when they try to submit.
-  const currentUserAuth = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+  const rawUserAuth = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+  const currentUserAuth = (rawUserAuth && rawUserAuth.user) ? rawUserAuth.user : rawUserAuth;
+  const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token') || '';
+
+  function getAuthHeaders(extra = {}) {
+    const headers = { ...extra };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    return headers;
+  }
+
   // Verify session silently if logged in
   if (currentUserAuth) {
-    fetch('/api/auth.php?action=me', { credentials: 'include' })
+    fetch('/api/auth.php?action=me', { credentials: 'include', headers: getAuthHeaders() })
       .then(r => r.json())
       .then(d => {
-        if (!d.success) { localStorage.removeItem('zzz_user'); }
-        else {
-          localStorage.setItem('zzz_user', JSON.stringify(d.data));
+        if (!d.success && token) {
+          localStorage.removeItem('zzz_user');
+          localStorage.removeItem('zipzapzoi_token');
+          localStorage.removeItem('zzz_token');
+        } else if (d.success && d.data) {
+          const user = d.data.user || d.data;
+          localStorage.setItem('zzz_user', JSON.stringify(user));
           const urlParams = new URLSearchParams(window.location.search);
-          if (!urlParams.has('id') && d.data.quota && d.data.quota.ads_remaining <= 0) {
+          if (!urlParams.has('id') && user.quota && user.quota.ads_remaining <= 0) {
               window.location.href = 'Classifieds Plans.html';
           }
         }
@@ -1521,6 +1534,7 @@
           const upRes  = await fetch('/api/uploads.php', {
             method: 'POST',
             credentials: 'include',
+            headers: getAuthHeaders(),
             body: formData,
           });
           const upText = await upRes.text();
@@ -1575,7 +1589,7 @@
       const method = editId ? 'PUT' : 'POST';
       const res    = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         credentials: 'include',
         body: JSON.stringify(payload),
       });

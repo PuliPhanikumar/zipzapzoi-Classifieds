@@ -62,59 +62,61 @@ if (in_array($listing['status'], ['sold', 'rejected', 'draft'])) {
     jsonError("Cannot renew a listing with status '{$listing['status']}'.");
 }
 
-// ── 4. One renewal per listing — EVER (no stacking) ──────────────
-if ((int)$listing['renewal_count'] >= 1) {
-    jsonError('This listing has already been renewed once. To continue selling, please post a new listing.');
-}
+$isAdmin = in_array($user['role'] ?? '', ['admin', 'super_admin']);
+$isAdminFree = $isAdmin && ($paymentId === 'admin_free');
 
-// ── 5. Verify Razorpay signature (server-side HMAC) ─────────────
-if (!verifyRazorpaySignature($orderId, $paymentId, $signature)) {
-    error_log("Renewal sig mismatch: listing={$listingId} user={$user['id']} payment={$paymentId}");
-    jsonError('Payment verification failed. Please contact support.', 422);
-}
-
-// ── 6. Replay protection — payment ID must be unique ─────────────
-$dup = $db->prepare('SELECT id FROM transactions WHERE razorpay_payment_id = ?');
-$dup->execute([$paymentId]);
-if ($dup->fetch()) {
-    error_log("Renewal replay: listing={$listingId} payment={$paymentId}");
-    jsonError('This payment has already been used.', 409);
-}
-
-// ── 7. Verify amount via Razorpay API (₹16 = 1600 paise) ─────────
-$expectedPaise = 1600; // Matches api/transactions.php renewal plan
-$keys  = getRazorpayKeys();
-$keyId = $keys['razorpay_key']    ?? '';
-$secret= $keys['razorpay_secret'] ?? '';
-
-if ($keyId && $secret) {
-    $ch = curl_init("https://api.razorpay.com/v1/payments/{$paymentId}");
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_USERPWD        => "$keyId:$secret",
-        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
-        CURLOPT_TIMEOUT        => 10,
-    ]);
-    $rpBody = curl_exec($ch);
-    $rpErr  = curl_error($ch);
-    curl_close($ch);
-
-    if ($rpErr) {
-        error_log("Renewal Razorpay API error: $rpErr");
-        jsonError('Could not verify payment with Razorpay. Please try again.');
+if (!$isAdminFree) {
+    // ── 4. One renewal per listing — EVER (no stacking) ──────────────
+    if ((int)$listing['renewal_count'] >= 1 && !$isAdmin) {
+        jsonError('This listing has already been renewed once. To continue selling, please post a new listing.');
     }
 
-    $rp = json_decode($rpBody, true);
-    if (!$rp || !in_array($rp['status'] ?? '', ['captured', 'authorized'])) {
-        jsonError('Payment has not been captured yet. Complete payment first.');
+    // ── 5. Verify Razorpay signature (server-side HMAC) ─────────────
+    if (!verifyRazorpaySignature($orderId, $paymentId, $signature)) {
+        error_log("Renewal sig mismatch: listing={$listingId} user={$user['id']} payment={$paymentId}");
+        jsonError('Payment verification failed. Please contact support.', 422);
     }
-    if ((int)($rp['amount'] ?? 0) < $expectedPaise) {
-        error_log("Renewal underpayment: paid={$rp['amount']} expected={$expectedPaise} listing={$listingId}");
-        jsonError('Incorrect renewal payment amount. Expected ₹16.', 422);
+
+    // ── 6. Replay protection — payment ID must be unique ─────────────
+    $dup = $db->prepare('SELECT id FROM transactions WHERE razorpay_payment_id = ?');
+    $dup->execute([$paymentId]);
+    if ($dup->fetch()) {
+        error_log("Renewal replay: listing={$listingId} payment={$paymentId}");
+        jsonError('This payment has already been used.', 409);
     }
-} else {
-    // Razorpay not configured yet — only allow in dev/test (log warning)
-    error_log("ZZZ Renewal: Razorpay keys not set. Proceeding without amount verify. Listing:{$listingId}");
+
+    // ── 7. Verify amount via Razorpay API (₹16 = 1600 paise) ─────────
+    $expectedPaise = 1600; // Matches api/transactions.php renewal plan
+    $keys  = getRazorpayKeys();
+    $keyId = $keys['razorpay_key']    ?? '';
+    $secret= $keys['razorpay_secret'] ?? '';
+
+    if ($keyId && $secret) {
+        $ch = curl_init("https://api.razorpay.com/v1/payments/{$paymentId}");
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_USERPWD        => "$keyId:$secret",
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+            CURLOPT_TIMEOUT        => 10,
+        ]);
+        $rpBody = curl_exec($ch);
+        $rpErr  = curl_error($ch);
+        curl_close($ch);
+
+        if ($rpErr) {
+            error_log("Renewal Razorpay API error: $rpErr");
+            jsonError('Could not verify payment with Razorpay. Please try again.');
+        }
+
+        $rp = json_decode($rpBody, true);
+        if (!$rp || !in_array($rp['status'] ?? '', ['captured', 'authorized'])) {
+            jsonError('Payment has not been captured yet. Complete payment first.');
+        }
+        if ((int)($rp['amount'] ?? 0) < $expectedPaise) {
+            error_log("Renewal underpayment: paid={$rp['amount']} expected={$expectedPaise} listing={$listingId}");
+            jsonError('Incorrect renewal payment amount. Expected ₹16.', 422);
+        }
+    }
 }
 
 // ── 8. All checks passed — execute renewal ────────────────────────
@@ -152,13 +154,15 @@ try {
     try { $db->exec("ALTER TABLE transactions ADD COLUMN promo_code VARCHAR(50) DEFAULT NULL"); } catch(Exception $e) {}
 } catch (Exception $e) {}
 
+$amount = $isAdminFree ? 0.00 : 16.00;
+$planName = $isAdminFree ? 'Ad Renewal (Admin Free)' : 'Ad Renewal (₹16)';
 $db->prepare(
     'INSERT INTO transactions
      (user_id, plan_id, plan_name, amount, razorpay_payment_id, razorpay_order_id, status)
      VALUES (?, ?, ?, ?, ?, ?, ?)'
 )->execute([
-    (int)$user['id'], 'renewal_single', 'Ad Renewal (₹16)',
-    16.00, $paymentId, $orderId, 'success',
+    (int)$user['id'], 'renewal_single', $planName,
+    $amount, $paymentId, $orderId, 'success',
 ]);
 
 jsonOk([

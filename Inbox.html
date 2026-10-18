@@ -446,21 +446,31 @@
     <script src="js/utils.js"></script>
     <script>
     // ── AUTH ─────────────────────────────────────
-    const currentUser = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+    const rawUser = JSON.parse(localStorage.getItem('zzz_user') || 'null');
+    const currentUser = (rawUser && rawUser.user) ? rawUser.user : rawUser;
+    const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token') || '';
+
+    function getAuthHeaders(extra = {}) {
+      const headers = { ...extra };
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      return headers;
+    }
+
     if (!currentUser) {
       window.location.href = 'Login Page.html?redirect=Inbox.html';
       throw new Error('Not authenticated');
     }
 
     // Non-blocking session verify — catches cases where localStorage is stale
-    // after session expiry on server side
-    fetch('/api/auth.php?action=me', { credentials: 'include' })
+    fetch('/api/auth.php?action=me', { credentials: 'include', headers: getAuthHeaders() })
       .then(r => r.json())
       .then(d => {
-        if (!d.success) {
+        if (!d.success && token) {
           localStorage.removeItem('zzz_user');
+          localStorage.removeItem('zipzapzoi_token');
+          localStorage.removeItem('zzz_token');
           window.location.href = 'Login Page.html?redirect=Inbox.html';
-        } else {
+        } else if (d.success && d.data) {
           // Refresh local cache with latest server data
           localStorage.setItem('zzz_user', JSON.stringify(d.data.user || d.data));
         }
@@ -485,7 +495,7 @@
     // --- 1. LOAD INBOX ---
     async function loadInbox() {
       try {
-        const res  = await fetch('/api/messages.php?conversations=1', { credentials: 'include' });
+        const res  = await fetch('/api/messages.php?conversations=1', { credentials: 'include', headers: getAuthHeaders() });
         const data = await res.json();
         if (!data.success) return;
         allThreads = data.data || [];
@@ -592,7 +602,7 @@
         const params = new URLSearchParams({ with: otherId });
         if (listingId) params.set('listing_id', listingId);
         
-        const res  = await fetch('/api/messages.php?' + params, { credentials: 'include' });
+        const res  = await fetch('/api/messages.php?' + params, { credentials: 'include', headers: getAuthHeaders() });
         const data = await res.json();
         if (data.success) {
           const msgs = data.data || [];
@@ -609,7 +619,7 @@
                 displayedMessageIds.add(m.id);
                 // Mark as read explicitly
                 if (String(m.from_user_id) !== String(currentUser.id)) {
-                   fetch('/api/messages.php?id=' + m.id, { method: 'PUT', credentials: 'include' });
+                   fetch('/api/messages.php?id=' + m.id, { method: 'PUT', credentials: 'include', headers: getAuthHeaders() });
                 }
               }
             });
@@ -624,7 +634,7 @@
 
     async function refreshMessages() {
       try {
-        const res  = await fetch('/api/messages.php?conversations=1', { credentials: 'include' });
+        const res  = await fetch('/api/messages.php?conversations=1', { credentials: 'include', headers: getAuthHeaders() });
         const data = await res.json();
         if (!data.success) return;
         
@@ -656,7 +666,7 @@
     }
 
     function updateUnreadBadge() {
-       fetch('/api/messages.php?action=unread_count', { credentials: 'include' })
+       fetch('/api/messages.php?action=unread_count', { credentials: 'include', headers: getAuthHeaders() })
          .then(r => r.json())
          .then(d => {
             if(d.success) {
@@ -730,7 +740,7 @@
         if (listingId) body.listing_id = listingId;
         const res  = await fetch('/api/messages.php', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
           credentials: 'include',
           body: JSON.stringify(body),
         });
