@@ -812,8 +812,8 @@
           const canInspect = isAdminPreview || (viewer && (viewer.id === currentListing.user_id || viewer.role === 'admin' || viewer.role === 'super_admin'));
           
           if (currentListing.status !== 'active' && !canInspect) {
-            alert('This listing is not currently active.');
-            window.location.href = 'classifieds.html';
+            showToast('This listing is not currently active.', 'warning');
+            setTimeout(() => { window.location.href = 'classifieds.html'; }, 1500);
             return;
           }
 
@@ -822,7 +822,7 @@
           initSellerHypeChips(currentListing);
 
           // Non-blocking favourite state — uses ids_only fast path (single DB query)
-          if (viewer) {
+          if (currentUser) {
             fetch('/api/favorites.php?ids_only=1', { credentials: 'include' })
               .then(r => r.json())
               .then(d => {
@@ -834,7 +834,6 @@
           }
         } catch(e) {
           console.error('[ZZZ] Listing load error:', e);
-          alert('Error loading listing: ' + e.message);
           showToast('Failed to load listing. Please refresh or check your connection.', 'error');
         }
       });
@@ -842,6 +841,8 @@
       // ─── RENDER ──────────────────────────────────────────────────────────
       function renderData() {
         const l = currentListing;
+        if (!l) return;
+        const viewer = currentUser;
         document.title = l.title + ' - ZipZapZoi';
         // Dynamic SEO & OpenGraph
         const siteUrl = "https://www.zipzapzoi.com";
@@ -1028,15 +1029,35 @@
 
         // Check if expired
         const isExpired = l.expires_at && new Date(l.expires_at) < new Date();
+        const isOwner = currentUser && (String(currentUser.id) === String(l.user_id));
+
+        // Clean up previous expired badge if re-rendered
+        const existingExpiredBadge = document.getElementById('listingExpiredBadge');
+        if (existingExpiredBadge) existingExpiredBadge.remove();
+
         if (isExpired) {
-          const badge = document.createElement('p');
-          badge.className = 'text-xs font-bold bg-red-100 text-red-600 px-2 py-1 rounded inline-block ml-2';
+          const badge = document.createElement('span');
+          badge.id = 'listingExpiredBadge';
+          badge.className = 'text-xs font-bold bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-400 px-2 py-1 rounded inline-block ml-2';
           badge.textContent = 'EXPIRED';
-          document.getElementById('conditionBadge').parentNode.appendChild(badge);
+          const condBadge = document.getElementById('conditionBadge');
+          if (condBadge && condBadge.parentNode) {
+            condBadge.parentNode.appendChild(badge);
+          }
           
           const actions = document.getElementById('actionButtonsContainer');
           if (actions) {
-            actions.innerHTML = '<div class="p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-center font-bold">This listing has expired and is no longer available.</div>';
+            if (isOwner) {
+              actions.innerHTML = `
+                <div class="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 rounded-2xl text-center space-y-3 mb-4">
+                  <p class="font-bold text-sm">⚠️ Your listing expired on ${new Date(l.expires_at).toLocaleDateString('en-IN')}. It is currently hidden from public search.</p>
+                  <a href="Seller Dashboard.html" class="inline-flex items-center justify-center gap-2 w-full py-3 px-4 bg-primary hover:bg-primary/90 text-white font-black rounded-xl text-sm transition-all shadow-md">
+                    <span class="material-symbols-outlined text-[18px]">autorenew</span> Renew or Edit in Seller Dashboard
+                  </a>
+                </div>`;
+            } else {
+              actions.innerHTML = '<div class="p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl text-center font-bold">This listing has expired and is no longer available.</div>';
+            }
           }
         }
 
@@ -1194,9 +1215,10 @@
         // Always keep localStorage so guests see recents too
         let recents = JSON.parse(localStorage.getItem('zzz_recents') || '[]');
         recents = recents.filter(x => String(x.id) !== String(l.id));
+        const firstImg = (window.pgImages && window.pgImages[0]) || (l.images && l.images[0]) || 'https://placehold.co/400x300/f0f4f8/9ca3af?text=No+Image';
         recents.unshift({
           id: l.id, title: l.title, price: l.price,
-          img: pgImages[0] || 'https://placehold.co/400x300/f0f4f8/9ca3af?text=No+Image',
+          img: firstImg,
           city: l.location_city
         });
         if (recents.length > 6) recents.pop();
