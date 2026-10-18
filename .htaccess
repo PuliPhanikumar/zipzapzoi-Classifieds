@@ -27,6 +27,24 @@ Options -Indexes
 # Redirect sitemap.xml to sitemap.php
 RewriteRule ^sitemap\.xml$ sitemap.php [L]
 
+# Clean & Friendly Routes
+RewriteRule ^privacy/?$ legal.html?tab=privacy [L,QSA]
+RewriteRule ^terms/?$ legal.html?tab=terms [L,QSA]
+RewriteRule ^help/?$ help.html [L,QSA]
+RewriteRule ^contact/?$ contact.html [L,QSA]
+RewriteRule ^about/?$ about.html [L,QSA]
+RewriteRule ^classifieds/?$ classifieds.html [L,QSA]
+RewriteRule ^wanted/?$ wanted.html [L,QSA]
+RewriteRule ^post/?$ Post\ Listing.html [L,QSA]
+RewriteRule ^login/?$ Login\ Page.html [L,QSA]
+RewriteRule ^register/?$ User\ Registration.html [L,QSA]
+RewriteRule ^plans/?$ Classifieds\ Plans.html [L,QSA]
+RewriteRule ^map/?$ map.html [L,QSA]
+RewriteRule ^inbox/?$ Inbox.html [L,QSA]
+RewriteRule ^favorites/?$ favorites.html [L,QSA]
+RewriteRule ^dashboard/?$ Seller\ Dashboard.html [L,QSA]
+RewriteRule ^listing/([0-9]+)/?$ Listing\ Detail.html?id=$1 [L,QSA]
+
 # Serve dynamic OpenGraph tags to social scrapers for listing URLs
 RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|WhatsApp|Twitterbot|Pinterest|Googlebot|LinkedInBot) [NC]
 RewriteCond %{REQUEST_URI} ^/Listing\sDetail\.html$ [NC]

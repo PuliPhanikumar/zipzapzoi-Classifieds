@@ -264,18 +264,26 @@
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
 
     function switchTab(tabId) {
+      const activeBtn = document.getElementById('tab-' + tabId);
+      if (!activeBtn) return;
       document.querySelectorAll('aside button').forEach(btn => {
         btn.classList.remove('tab-active');
         btn.classList.add('tab-inactive');
       });
-      const activeBtn = document.getElementById('tab-' + tabId);
       activeBtn.classList.remove('tab-inactive');
       activeBtn.classList.add('tab-active');
       document.querySelectorAll('.legal-content').forEach(content => content.classList.add('hidden'));
-      document.getElementById('content-' + tabId).classList.remove('hidden');
+      const activeContent = document.getElementById('content-' + tabId);
+      if (activeContent) activeContent.classList.remove('hidden');
       if (window.innerWidth < 768) {
         document.querySelector('main').scrollIntoView({ behavior: 'smooth' });
       }
+    }
+
+    // Auto-activate tab from URL parameter or hash (#privacy, #terms, ?tab=privacy)
+    const initialTab = new URLSearchParams(window.location.search).get('tab') || window.location.hash.replace('#', '');
+    if (initialTab && ['terms', 'privacy', 'prohibited', 'refund'].includes(initialTab.toLowerCase())) {
+      switchTab(initialTab.toLowerCase());
     }
   </script>
   <script src="js/utils.js"></script>
