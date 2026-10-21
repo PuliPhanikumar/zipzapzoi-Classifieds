@@ -135,19 +135,24 @@ function callGemini(array $messages, string $mode, ?string $imageBase64, string 
  */
 function ensureKnowledgeTable(): void {
     try {
-        getDB()->exec("CREATE TABLE IF NOT EXISTS zoi_knowledge (
+        $db = getDB();
+        $db->exec("CREATE TABLE IF NOT EXISTS zoi_knowledge (
             id          INT AUTO_INCREMENT PRIMARY KEY,
-            question    TEXT NOT NULL,
+            question    VARCHAR(500) NOT NULL,
             answer      TEXT NOT NULL,
             keywords    TEXT,
             category    VARCHAR(50) DEFAULT 'general',
             weight      INT DEFAULT 1,
             created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_question (question(250)),
             FULLTEXT KEY ft_qa (question, answer)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+        // Clean out any polluted canned default answers that were saved previously
+        $db->exec("DELETE FROM zoi_knowledge WHERE answer LIKE '%I\'m still learning!%' OR answer LIKE '%I\'m Zoi AI and I can help you with:%';");
     } catch (Throwable $e) {
-        error_log("ZoiAI: Could not create zoi_knowledge table: " . $e->getMessage());
+        error_log('ZoiAI: Could not create/clean zoi_knowledge table: ' . $e->getMessage());
     }
 }
 
@@ -158,9 +163,16 @@ function ensureKnowledgeTable(): void {
 function searchKnowledge(string $query): ?string {
     try {
         $db = getDB();
-        $clean = preg_replace('/[^\w\s]/u', ' ', $query);
-        $clean = trim($clean);
-        if (strlen($clean) < 2) return null;
+        $clean = trim(preg_replace('/[^\w\s]/u', ' ', strtolower($query)));
+        if (strlen($clean) < 3) return null;
+
+        // Try exact/like question match first
+        $stmt0 = $db->prepare("SELECT answer FROM zoi_knowledge WHERE question LIKE :q ORDER BY weight DESC LIMIT 1");
+        $stmt0->execute([':q' => '%' . substr($clean, 0, 100) . '%']);
+        $row0 = $stmt0->fetch(PDO::FETCH_ASSOC);
+        if ($row0 && !empty($row0['answer'])) {
+            return $row0['answer'];
+        }
 
         // FULLTEXT match
         $stmt = $db->prepare(
@@ -169,30 +181,29 @@ function searchKnowledge(string $query): ?string {
              FROM zoi_knowledge
              WHERE MATCH(question, answer) AGAINST (:q IN NATURAL LANGUAGE MODE)
              ORDER BY score DESC, weight DESC
-             LIMIT 3"
+             LIMIT 1"
         );
         $stmt->execute([':q' => $clean]);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        if (!empty($rows) && $rows[0]['score'] > 0) {
-            // Bump weight (usage count)
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row && ($row['score'] ?? 0) > 0.5) {
             $db->prepare("UPDATE zoi_knowledge SET weight = weight + 1 WHERE answer = :a LIMIT 1")
-               ->execute([':a' => $rows[0]['answer']]);
-            return $rows[0]['answer'];
+               ->execute([':a' => $row['answer']]);
+            return $row['answer'];
         }
 
-        // Keyword fallback — LIKE search on keywords column
-        $words = array_filter(explode(' ', strtolower($clean)), fn($w) => strlen($w) > 3);
+        // Keyword fallback - match meaningful words (length > 3, exclude common stopwords)
+        $stopwords = ['what', 'when', 'where', 'which', 'who', 'whom', 'this', 'that', 'with', 'from', 'have', 'your', 'about', 'some', 'could', 'would', 'should', 'tell', 'want'];
+        $words = array_filter(explode(' ', $clean), fn($w) => strlen($w) > 3 && !in_array($w, $stopwords));
         if (empty($words)) return null;
 
         foreach ($words as $word) {
             $stmt2 = $db->prepare("SELECT answer FROM zoi_knowledge WHERE keywords LIKE :kw ORDER BY weight DESC LIMIT 1");
             $stmt2->execute([':kw' => '%' . $word . '%']);
-            $row = $stmt2->fetch(PDO::FETCH_ASSOC);
-            if ($row) return $row['answer'];
+            $r = $stmt2->fetch(PDO::FETCH_ASSOC);
+            if ($r && !empty($r['answer'])) return $r['answer'];
         }
     } catch (Throwable $e) {
-        error_log("ZoiAI knowledge search error: " . $e->getMessage());
+        error_log('ZoiAI knowledge search error: ' . $e->getMessage());
     }
     return null;
 }
@@ -202,18 +213,28 @@ function searchKnowledge(string $query): ?string {
  */
 function saveKnowledge(string $question, string $answer, string $category = 'general'): void {
     try {
+        // Never save canned fallback or trivial messages
+        if (str_contains($answer, "I'm still learning") || str_contains($answer, "What would you like help with?")) {
+            return;
+        }
         $db = getDB();
-        $words    = preg_split('/\s+/', strtolower($question));
-        $keywords = implode(',', array_filter($words, fn($w) => strlen($w) > 3));
+        $words = preg_split('/\s+/', strtolower($question));
+        $stopwords = ['what', 'when', 'where', 'which', 'who', 'whom', 'this', 'that', 'with', 'from', 'have', 'your', 'about', 'some', 'could', 'would', 'should', 'tell', 'want'];
+        $keywords = implode(',', array_filter($words, fn($w) => strlen($w) > 3 && !in_array($w, $stopwords)));
 
         $stmt = $db->prepare(
             "INSERT INTO zoi_knowledge (question, answer, keywords, category)
              VALUES (:q, :a, :kw, :cat)
              ON DUPLICATE KEY UPDATE answer = :a, weight = weight + 1, updated_at = NOW()"
         );
-        $stmt->execute([':q' => substr($question, 0, 1000), ':a' => substr($answer, 0, 5000), ':kw' => $keywords, ':cat' => $category]);
+        $stmt->execute([
+            ':q'   => substr(trim($question), 0, 500),
+            ':a'   => substr(trim($answer), 0, 5000),
+            ':kw'  => $keywords,
+            ':cat' => $category
+        ]);
     } catch (Throwable $e) {
-        error_log("ZoiAI: Could not save knowledge: " . $e->getMessage());
+        error_log('ZoiAI: Could not save knowledge: ' . $e->getMessage());
     }
 }
 
@@ -226,6 +247,10 @@ function standaloneAI(array $messages, string $mode): string {
         if (($m['role'] ?? '') === 'user') { $userMsg = trim($m['text'] ?? ''); break; }
     }
 
+    if (empty($userMsg)) {
+        return "👋 **Hello! I'm Zoi AI** — your assistant for ZipZapZoi. How can I help you today?";
+    }
+
     $q       = strtolower($userMsg);
     $context = buildContext($messages);
 
@@ -235,7 +260,7 @@ function standaloneAI(array $messages, string $mode): string {
         (str_contains($q, 'write') && (str_contains($q, 'ad') || str_contains($q, 'sell')))) {
 
         $title = '';
-        if (preg_match("/(?:titled|title|item|sell|product|for)[:\s'\"]+([^'\"\n,\.]+)/i", $userMsg, $tm)) {
+        if (preg_match("/(?:titled|title|item|sell|product|for)[:\s'"]+([^'"\n,\.]+)/i", $userMsg, $tm)) {
             $title = trim($tm[1]);
         }
         if (!$title) {
@@ -249,95 +274,121 @@ function standaloneAI(array $messages, string $mode): string {
         $title = ucwords($title ?: 'Item');
 
         $condition = 'Good';
-        if (preg_match("/condition\s*(?:is)?\s*[:'\"]?\s*([a-zA-Z\s\-]+)/i", $userMsg, $cm)) {
+        if (preg_match("/condition\s*(?:is)?\s*[:'"]?\s*([a-zA-Z\s\-]+)/i", $userMsg, $cm)) {
             $condition = trim(explode('.', explode(',', $cm[1])[0])[0]);
         }
 
-        return "Up for sale: **{$title}** in **{$condition}** condition! 🌟\n\n" .
+        return "Up for sale: **{$title}** in **{$condition}** condition! 🚀\n\n" .
                "100% genuine, very well-maintained, and functions flawlessly. Clean aesthetic with minimal signs of use. " .
                "A great value deal for anyone looking for reliable quality. " .
                "Ready for instant inspection or pick-up. Serious buyers, please message or call for a quick and smooth deal!";
     }
 
-    // 1. Greetings
-    if (preg_match('/^(hi|hello|hey|namaste|vanakkam|hii|helo|sup|howdy|yo)\b/i', $q)) {
+    // 1. Well-being & Greetings
+    if (preg_match('/\b(how are you|how r u|how are u|how do you do|what\'s up|whats up|how\'s it going|hows it going|how have you been|how are things|are you doing well|are you okay)\b/i', $q)) {
+        return "😊 **I'm doing great, thank you for asking!**\n\nI'm Zoi AI — your smart companion built into ZipZapZoi! I'm always energized and ready to help you with:\n  🏷️ **Buying & Selling** on India's smartest classifieds\n  🙋 **Buyer Demands** — find or post what you need\n  💰 **Price Checks** — fair market valuations for resale\n  🔐 **Account & Login Guidance**\n  💡 **Any Questions** — math, science, coding, history, and daily advice\n\nWhat can I help you with today?";
+    }
+
+    if (preg_match('/^(hi|hello|hey|namaste|vanakkam|hii|helo|sup|howdy|yo|good morning|good afternoon|good evening)\b/i', $q)) {
         return randomPick([
-            "✨ **Hello! I'm Zoi AI** — your smart assistant for ZipZapZoi!\n\nI can help you with:\n• 🏪 Buying & selling on ZipZapZoi\n• ✍️ Writing perfect classified ads\n• 💰 Getting the best price for your items\n• 🤝 Negotiation tips\n• 🧠 General questions — maths, coding, science, anything!\n\nWhat's on your mind?",
-            "✨ **Namaste! Zoi AI here!** 🙏\n\nI'm your AI assistant for ZipZapZoi — India's smartest classifieds marketplace. Ask me anything about buying, selling, pricing, or any general topic. How can I help you today?",
-            "Hey! 👋 **Zoi AI at your service!** I'm here to make your ZipZapZoi experience smoother. Want to post an ad, check prices, or just ask a random question? Go ahead — I'm all ears! 😊",
+            "👋 **Hello! I'm Zoi AI** — your smart assistant for ZipZapZoi!\n\nI can help you with:\n  🏷️ Buying & selling on ZipZapZoi\n  🙋 Posting & viewing Buyer Demands\n  ✍️ Writing catchy classified ads\n  💰 Getting the best price for your items\n  🔐 Account login & safety tips\n  🧠 General questions — maths, coding, science, anything!\n\nWhat's on your mind today?",
+            "🙏 **Namaste! Zoi AI here!** ✨\n\nI'm your AI assistant for ZipZapZoi — India's smartest classifieds marketplace. Ask me anything about buying, selling, pricing, or any general topic. How can I help you right now?",
+            "Hey! 🚀 **Zoi AI at your service!** I'm here to make your ZipZapZoi experience smoother. Want to post an ad, check prices, or just ask any question? Go ahead — I'm all ears! 💡",
         ]);
     }
 
-    // 2. Who are you / what are you
-    if (preg_match('/(who are you|what are you|introduce yourself|your name|\bwho is zoi ai\b|\bwhat is zoi ai\b|tell me about yourself)/i', $q)) {
-        return "✨ **I'm Zoi AI** — ZipZapZoi's built-in AI assistant!\n\n**What I can do:**\n• 🏪 **Classifieds Expert** — help you buy, sell, post ads\n• ✍️ **Ad Writer** — write compelling ad copy for any item\n• 💰 **Price Advisor** — estimate fair market prices in India\n• 🤝 **Negotiation Coach** — scripts to handle lowballers\n• 🧠 **General AI** — maths, science, coding, history, anything!\n\nI learn from every conversation and get smarter over time. Try me! 🚀";
+    // 2. Developer, Origin & Creation Details
+    if (preg_match('/(developer|who developed|who created|who made you|who built you|who designed you|who is your creator|who owns you|creator details|developer details|who is your developer|about your developer|who programmed you|who are your developers|team behind)/i', $q)) {
+        return "👨‍💻 **Zoi AI Developer & Origin Details:**\n\nI was designed, engineered, and developed exclusively by the **ZipZapZoi Engineering Team** for **ZipZapZoi** (www.zipzapzoi.com) — India's smartest modern classifieds marketplace.\n\n✨ **Key Highlights:**\n• **Platform:** ZipZapZoi Technologies\n• **Headquarters:** India\n• **Purpose:** Empower Indian buyers and sellers with an intelligent, 100% scam-free, zero-commission marketplace.\n• **Technology:** Built with native Android (Jetpack Compose & Kotlin), high-performance PHP REST APIs, real-time shared learning knowledge base (`zoi_knowledge`), and multimodal intelligence.\n• **Cross-Platform Sync:** I learn and assist seamlessly across both the **ZipZapZoi Android App** and the **www.zipzapzoi.com Website**!\n\nWhether you need help with listings, pricing, or technical questions, my team and I are here for you 24/7! 🚀";
     }
 
-    // 3. ZipZapZoi plans
-    if (preg_match('/(plan|subscription|price|cost|fee|paid|free|starter|growth|business|pro)/i', $q) &&
-        preg_match('/(plan|subscribe|membership|upgrade|listing limit)/i', $q)) {
-        return "📋 **ZipZapZoi Subscription Plans:**\n\n| Plan | Price | Listings/Month |\n|------|-------|---------------|\n| **Free** | ₹0 | 1 ad |\n| **Starter** | ₹149 | 10 ads |\n| **Growth** | ₹299 | 25 ads |\n| **Business** | ₹599 | 50 ads |\n| **Pro** | ₹999 | 100 ads |\n\n💡 **My recommendation:** Start with **Starter (₹149)** if you're a casual seller, or **Growth (₹299)** if you sell regularly.\n\nAll plans include: Featured listings support, photo uploads, direct buyer messaging, and price alert tools!";
+    // 3. How to Log In & Account Guidance
+    if (preg_match('/(how.{0,10}(log in|login|sign in|signin)|guide me.{0,15}log in|guide me.{0,15}login|how to create account|how to register|cant log in|cannot log in|login problem|login guide|login issue|forgot password|how do i login|how to sign in)/i', $q)) {
+        return "🔐 **How to Log In to ZipZapZoi (Quick Step-by-Step Guide):**\n\n**📱 On the Android App:**\n1. Tap the **Profile** icon in the bottom navigation bar (bottom-right).\n2. Tap the **'Sign In'** button (or 'Create Account' if you're new).\n3. Enter your registered **Email address** or **10-digit Mobile Number**.\n4. Enter your **Password** and tap **Sign In**.\n5. You can also sign in or verify using **Email OTP** for fast, passwordless access!\n\n**🌐 On the Website (www.zipzapzoi.com):**\n1. Click the **'Sign In'** button at the top-right corner of any page.\n2. Choose **Password Login** or **Email OTP Login**.\n3. Enter your credentials and click **Submit**.\n\n💡 **Forgot your password?**\nSimply tap **'Forgot Password?'** on the login screen, enter your email or mobile number, and you will receive an instant reset code to set a new password securely!";
     }
 
-    // 4. How to post ad
+    // 4. What is ZipZapZoi / About ZipZapZoi
+    if (preg_match('/(about zipzapzoi|what is zipzapzoi|tell me about zipzapzoi|zipzapzoi classifieds|how does zipzapzoi work|features of zipzapzoi|why zipzapzoi|about the app|about website)/i', $q)) {
+        return "🌟 **About ZipZapZoi Classifieds:**\n\n**ZipZapZoi** (www.zipzapzoi.com) is **India's smartest, AI-powered classifieds marketplace** designed to make buying and selling used & new items super fast, transparent, and completely free of broker commissions!\n\n**🚀 Standout Features:**\n• 🤖 **Zoi AI Assistant:** That's me! I automatically generate catchy ad copy, value fair resale prices, and assist you in real time.\n• 🙋 **Buyer Demand Marketplace:** Can't find what you need? Post what you want to buy, and local sellers will bring offers directly to you!\n• 📍 **Interactive Maps & Radius Search:** Discover genuine deals in your exact neighborhood or city.\n• 💬 **Direct WhatsApp & In-App Chat:** Connect with genuine local buyers and sellers with zero middleman commissions.\n• 🛡️ **Verified Seller Badges:** Extra peace of mind with ID-verified profiles and scam prevention.\n• ⚡ **Live Watcher Counts & Price Drops:** Track real-time buyer demand and get alerted when prices drop.\n• 📱 **Seamless Sync:** Fully synced between the Android App and Website anytime!";
+    }
+
+    // 5. Buyer Demand Section
+    if (preg_match('/(buyer demand|buyers demand|buyer\'s demand|demand section|post demand|how to post demand|what is buyer demand|want to buy|demand feature)/i', $q)) {
+        return "🙋 **ZipZapZoi Buyer Demand Section:**\n\nThe Buyer Demand section is designed for when you want to buy something specific without having to search every day!\n\n**Why Use Buyer Demands?**\n• Post what item you're looking for (e.g. *'Need iPhone 13 128GB under ₹25,000'* or *'Looking for Study Table in Bangalore'*).\n• Local sellers who have that item will see your demand and contact you directly with their best deals!\n\n**How to Post a Buyer Demand in the App:**\n1. Tap the **Post (+)** button in the bottom navigation bar.\n2. At the top of the screen, tap the **[ 🙋 Buyer Demand ]** tab.\n3. Enter the item name, your **Budget Range (Min ₹ & Max ₹)**, Category, and your City.\n4. Tap **'Publish Buyer Demand'** — it goes live immediately for all sellers to see!";
+    }
+
+    // 6. ZipZapZoi subscription plans
+    if (preg_match('/(plan|subscription|price|cost|fee|paid|free|starter|growth|business|pro|package)/i', $q) &&
+        preg_match('/(plan|subscribe|membership|upgrade|listing limit|ad limit)/i', $q)) {
+        return "💎 **ZipZapZoi Subscription Plans:**\n\n| Plan | Price | Listings/Month | Features |\n|------|-------|---------------|----------|\n| **Free** | ₹0 | 1 ad | Basic listing, 30 days |\n| **Starter** | ₹149 | 10 ads | Verified badge, 5 photos/ad |\n| **Growth** | ₹299 | 25 ads | Featured boost, priority search |\n| **Business** | ₹599 | 50 ads | Analytics, top-tier placement |\n| **Pro** | ₹999 | 100 ads | Maximum visibility, unlimited edits |\n\n💡 **Recommendation:** Casual sellers love the **Starter (₹149)** plan, while active retailers get the best ROI with **Growth (₹299)**!";
+    }
+
+    // 7. How to post ad / sell item
     if (preg_match('/(post|list|sell|create|add).{0,20}(ad|listing|item|product)/i', $q) ||
         preg_match('/(how.{0,10}sell|want to sell)/i', $q)) {
-        return "🏪 **How to Post Your Ad on ZipZapZoi:**\n\n**Step 1:** Click **\"Post Ad\"** button in the top navigation\n**Step 2:** Choose the right **category** for your item (Electronics, Mobiles, Cars, etc.)\n**Step 3:** Fill in:\n   • 🏷️ Catchy title (include brand + model + condition)\n   • 📝 Detailed description (mention what's included, any defects)\n   • 💰 Fair asking price (I can help with pricing!)\n   • 📍 Your location\n   • 📷 Clear photos (more photos = faster sale!)\n**Step 4:** Choose your **contact preference** — phone, WhatsApp, or in-app message\n**Step 5:** Hit **Publish!** 🎉\n\n💡 **Pro tip:** Ads with 5+ photos sell 3x faster. Use the **Price Advisor** mode to set the right price!";
+        return "📝 **How to Post Your Ad on ZipZapZoi:**\n\n**Step 1:** Tap or click the **"Post Ad (+)"** button\n**Step 2:** Select **[ 🏷️ Sell an Item ]** at the top\n**Step 3:** Fill in your listing details:\n     • **Title:** Brand + Model + Key Spec (e.g. *Samsung Galaxy S23 256GB Phantom Black*)\n     • **Category:** Select from Electronics, Mobiles, Cars, etc.\n     • **Price:** Fair asking price in ₹ (I can help you price it!)\n     • **Description:** Use our **Auto-write with AI** button for instant high-converting text!\n     • **Photos:** Add 3-5 clear, well-lit photos (ads with photos sell 3x faster!)\n**Step 4:** Choose your contact preference (Chat, Phone, or WhatsApp)\n**Step 5:** Tap **Publish Listing!** 🚀";
     }
 
-    // 5. Categories
-    if (preg_match('/(categor|what can.{0,10}sell|what.{0,10}sell)/i', $q)) {
-        return "📂 **ZipZapZoi Categories — You Can Sell Anything!**\n\n📱 **Electronics** — TVs, Cameras, Headphones, Speakers\n📲 **Mobiles** — Phones, Tablets, Accessories, SIM cards\n💻 **Computers** — Laptops, Desktops, Printers, Parts\n🚗 **Cars & Bikes** — Cars, Motorcycles, Scooters, Spare parts\n🏠 **Property** — Rent/Sale Flats, Houses, Plots, PG\n🛋️ **Furniture** — Sofas, Beds, Wardrobes, Office furniture\n👗 **Fashion** — Clothing, Shoes, Bags, Jewellery\n📚 **Books** — Textbooks, Novels, Competitive exam books\n⚽ **Sports** — Gym equipment, Cycles, Cricket/Football gear\n🍳 **Kitchen** — Appliances, Cookware, Dining sets\n👶 **Baby & Kids** — Toys, Clothing, Strollers, School items\n💼 **Jobs** — Part-time, Full-time, Work-from-home\n🐾 **Pets** — Dogs, Cats, Aquarium fish, Accessories\n🎸 **Musical Instruments** — Guitars, Keyboards, Drums\n🎨 **Art & Antiques** — Paintings, Collectibles, Handicrafts\n🌾 **Agriculture** — Seeds, Tools, Farm equipment\n🏢 **Business** — Machinery, Office equipment, Franchises";
+    // 8. Categories
+    if (preg_match('/(categor|what can.{0,10}sell|what.{0,10}sell|types of items)/i', $q)) {
+        return "📦 **ZipZapZoi Categories — You Can Sell Anything!**\n\n📱 **Mobiles** — Phones, Tablets, Accessories, Smartwatches\n💻 **Electronics & Computers** — Laptops, Desktops, TVs, Audio, Cameras\n🚗 **Cars & Bikes** — Cars, Motorcycles, Scooters, Spare parts\n🏠 **Property** — Rent/Sale Flats, Houses, Plots, Commercial\n🛋️ **Furniture** — Sofas, Beds, Wardrobes, Office furniture\n👗 **Fashion** — Clothing, Shoes, Watches, Jewellery\n📚 **Books & Hobbies** — Textbooks, Novels, Musical Instruments\n⚽ **Sports & Fitness** — Gym equipment, Bicycles, Sports gear\n🍳 **Kitchen & Home** — Appliances, Cookware, Dining\n💼 **Jobs & Services** — Part-time, Full-time, Freelance, Local services\n🐾 **Pets** — Pet supplies, Accessories, Food";
     }
 
-    // 6. Safety / scam detection
+    // 9. Safety / Scam detection
     if (preg_match('/(scam|fraud|safe|safety|trust|fake|cheat|avoid|suspicious)/i', $q)) {
-        return "🛡️ **Staying Safe on ZipZapZoi — Anti-Scam Guide:**\n\n**🚨 RED FLAGS to watch for:**\n• Buyer offers more than your asking price\n• Asks you to pay first (shipping, processing, customs)\n• Wants to move conversation off the platform immediately\n• Can't meet in person / always \"out of town\"\n• Sends a cheque — wait for it to clear!\n• Asks for OTP, passwords, or bank details\n\n**✅ Safe Selling Tips:**\n• Meet buyers in **public places** (malls, police stations, etc.)\n• **Never share OTP** with anyone — ZipZapZoi will never ask\n• Accept **cash on delivery** for expensive items\n• Verify the buyer's profile — check reviews and join date\n• Take payment **before handing over the item**\n• Trust your gut — if it feels wrong, it probably is!\n\n**📞 Report fraud:** Use the **\"Report Listing\"** button on any suspicious ad.";
+        return "🛡️ **Staying Safe on ZipZapZoi — Anti-Scam Guide:**\n\n**⚠️ RED FLAGS to watch out for:**\n• Buyer offers more than your asking price without seeing the item\n• Asks you to pay advance "courier fees", "verification charges", or "customs clearance"\n• Insists on sending QR codes to "receive money" — **QR codes are only for paying, never for receiving!**\n• Demands OTP, bank PIN, or credit card details\n• Refuses to meet in person or use in-app messaging\n\n**✅ Safe Trading Rules:**\n1. Meet in a **busy public place** (metro station, mall, coffee shop).\n2. Inspect and test the item in person before handing over money.\n3. Use direct UPI or cash only after inspecting the product.\n4. **Never share OTPs** under any circumstances.";
     }
 
-    // 7. Maths — solve equations
-    if (preg_match('/(\d+\s*%|\d+[\+\-\*\/\^]\d+|\d+\s+percent|\bsolve\b|\bcalculate\b|\bmath\b|\bequation\b|\bpercentage\b|\bdiscount\b)/i', $q)) {
+    // 10. Maths - solve equations
+    if (preg_match('/(\d+\s*%|\d+[\+\-\*/\^]\d+|\d+\s+percent|\bsolve\b|\bcalculate\b|\bmath\b|\bequation\b|\bpercentage\b|\bdiscount\b)/i', $q)) {
         return solveMath($userMsg);
     }
 
-    // 8. Coding questions
+    // 11. Coding questions
     if (preg_match('/(code|program|function|algorithm|python|javascript|php|java|kotlin|html|css|sql|api|debug|error|variable|loop|array)/i', $q)) {
         return handleCoding($userMsg);
     }
 
-    // 9. Price estimation
+    // 12. Price estimation
     if (preg_match('/(price|value|worth|cost|rate|how much|market price|resale)/i', $q)) {
         return estimatePrice($userMsg);
     }
 
-    // 10. Negotiation help
+    // 13. Negotiation help
     if (preg_match('/(negotiat|counter offer|lowball|haggle|bargain|price negotiation|deal)/i', $q)) {
-        return "🤝 **Negotiation Scripts for Indian Classifieds:**\n\n**When a buyer lowballs you:**\n> Buyer: \"Can you do ₹3,000?\" (your price: ₹7,000)\n> **You:** \"Hey! Thanks for your interest. This is priced fair at ₹7,000 based on current market rates. I can go to ₹6,500 since you're serious, but that's my final. Item is in great condition and includes [accessories]. Let me know!\"\n\n**When buyer asks 'last price?':**\n> Don't reveal your bottom immediately. Say:\n> **\"The price is already competitive. What makes you ask — is there something specific you're concerned about?\"\n\n**Creating urgency:**\n> \"I have 2 other interested buyers coming this weekend. If you can confirm today, I'll give you first priority at ₹X.\"\n\n**Handling 'I'll think about it':**\n> \"Of course! Just so you know, I'll keep the listing up. If someone else takes it, I can't hold it — these things go fast. Want me to message you if anyone else shows serious interest?\"\n\n**When to walk away:** If offer is below 70% of your fair price — politely decline. Better to wait for the right buyer! ⏰";
+        return "🤝 **Negotiation Tactics for Indian Classifieds:**\n\n**When a buyer lowballs you:**\n> Buyer: *"Bhai, ₹5,000 me de do?"* (Your price: ₹10,000)\n> **Your Reply:** *"Thanks for the offer! The item is already priced competitively given its excellent condition and accessories. The absolute best I can do for a fast pick-up today is ₹9,200. Let me know if that works for you!"*\n\n**When a buyer asks 'What is your last price?':**\n> **Your Reply:** *"My listed price is already very close to fair market value. What budget do you have in mind? If you can pick it up today, I can do a small courtesy discount."*\n\n**Creating urgency:**\n> *"I have two other inquiries scheduled for this weekend. I can reserve it for you if you can confirm by this evening."*\n\n💡 **Golden Rule:** Never sell below your walk-away price — genuine buyers are always willing to pay for well-cared-for items!";
     }
 
-    // 11. How ZipZapZoi works
-    if (preg_match('/(how does zipzapzoi|what is zipzapzoi|about zipzapzoi|zipzapzoi works)/i', $q)) {
-        return "🌟 **What is ZipZapZoi?**\n\nZipZapZoi (www.zipzapzoi.com) is **India's smartest classifieds marketplace** — think of it as a smarter, AI-powered version of OLX or Quikr!\n\n**🎯 Key Features:**\n• 🤖 **Zoi AI** — that's me! Built-in AI assistant for buyers and sellers\n• 📍 **Map View** — see listings near you on an interactive map\n• 🔔 **Price Drop Alerts** — get notified when prices drop\n• 💬 **In-app Messaging** — chat with buyers/sellers safely\n• 👀 **Live Watcher Count** — see how many people are viewing a listing (FOMO!)\n• 😍 **Emoji Reactions** — react to listings\n• 🏆 **Verified Sellers** — trust badges for genuine sellers\n• 📊 **Seller Analytics** — see your ad performance\n\n**📱 Available on:** Website + Android App (on Google Play Soon!)\n\nStart selling or buying today — it's **free**! 🚀";
+    // 14. Contact & Support
+    if (preg_match('/(contact|support|help|problem|issue|complaint|not working|report)/i', $q)) {
+        return "📞 **ZipZapZoi Support & Help Center:**\n\n• **Website:** www.zipzapzoi.com/help.html\n• **Contact Us:** www.zipzapzoi.com/contact.html\n• **Email Support:** support@zipzapzoi.com\n\n**Quick Troubleshooting:**\n• **Ad Under Review?** Listings are automatically verified and go live within 15–30 minutes.\n• **Can't Post Ad?** Check if you have reached your plan's monthly ad limit on your Profile dashboard.\n• **Report Suspicious User:** Click the 'Report Listing' button directly on any suspicious ad.\n\nI'm Zoi AI, here 24/7 — feel free to ask me anything specific!";
     }
 
-    // 12. Contact/Help
-    if (preg_match('/(contact|support|help|problem|issue|complaint|not working)/i', $q)) {
-        return "📞 **ZipZapZoi Support:**\n\n🌐 **Help Center:** www.zipzapzoi.com/help.html\n📧 **Contact Form:** www.zipzapzoi.com/contact.html\n💬 **In-app:** Use the \"Report\" button on any listing for urgent issues\n\n**Common Issues & Quick Fixes:**\n• **Can't post ad?** — Check if you've reached your plan's listing limit\n• **Login issues?** — Try \"Forgot Password\" on the login page\n• **Payment not processed?** — Wait 10 minutes, then check your dashboard\n• **Ad not showing?** — It may be under review (usually takes <1 hour)\n• **Suspicious buyer?** — Use the Report button immediately\n\nI'm here 24/7 as Zoi AI — ask me anything specific and I'll do my best to help! 🤗";
-    }
-
-    // 13. General knowledge — give helpful answer
+    // 15. Search shared knowledge base (zoi_knowledge)
     $knowledgeAnswer = searchKnowledge($userMsg);
     if ($knowledgeAnswer) {
         return $knowledgeAnswer;
     }
 
-    // 14. Contextual response using conversation history
-    if (count($messages) > 2) {
-        return buildContextualResponse($userMsg, $messages, $mode);
-    }
+    // 16. Smart, intelligent fallback that addresses the user's specific query
+    return buildSmartResponse($userMsg, $mode);
+}
 
-    // 15. Default — helpful fallback
-    return buildDefaultResponse($userMsg, $mode);
+/**
+ * Intelligent response when no direct pattern matches.
+ */
+function buildSmartResponse(string $q, string $mode): string {
+    $clean = trim(preg_replace('/[^\w\s]/u', ' ', $q));
+    $words = array_filter(explode(' ', strtolower($clean)), fn($w) => strlen($w) > 2);
+    $topic = !empty($words) ? implode(' ', array_slice($words, 0, 4)) : 'your question';
+
+    return "💡 **Regarding \"" . htmlspecialchars($topic) . "\":**\n\n" .
+           "I'm Zoi AI, continuously learning and improving on ZipZapZoi! While I'm looking into the exact details for this, here is how I can assist you right now:\n\n" .
+           "• 🏷️ **Post or Buy:** Ask me *'How do I post a watch ad?'* or *'How does Buyer Demand work?'*\n" .
+           "• 💰 **Price Estimates:** Ask *'What is iPhone 13 resale price?'* or *'Activa 6G market value'*\n" .
+           "• 🔐 **Account & Login:** Ask *'How to log in to my account'*\n" .
+           "• 🧮 **Maths & Code:** Ask me to solve formulas, write Python/Kotlin code, or calculate discounts\n\n" .
+           "Could you add a bit more detail to your question? I'm ready to help you!";
 }
 
 /**
@@ -438,38 +489,12 @@ function estimatePrice(string $q): string {
 /**
  * Build contextual response using conversation history.
  */
-function buildContextualResponse(string $q, array $messages, string $mode): string {
-    // Find previous AI context
-    $prevTopics = [];
-    foreach ($messages as $m) {
-        if (($m['role'] ?? '') === 'ai' && !empty($m['text'])) {
-            $prevTopics[] = substr($m['text'], 0, 100);
-        }
-    }
 
-    $modeLabels = [
-        'general'      => 'General AI',
-        'classifieds'  => 'Classifieds',
-        'ad_writer'    => 'Ad Writer',
-        'price_advisor'=> 'Price Advisor',
-        'negotiation'  => 'Negotiation Coach',
-    ];
-    $modeLabel = $modeLabels[$mode] ?? 'General AI';
-
-    return "🤔 I'm processing your question: **\"" . htmlspecialchars(substr($q, 0, 100)) . "\"**\n\nIn **{$modeLabel}** mode, I'll do my best to help!\n\n" . buildDefaultResponse($q, $mode);
-}
 
 /**
  * Default response when nothing else matches.
  */
-function buildDefaultResponse(string $q, string $mode): string {
-    $suggestions = [
-        "💡 **I'm Zoi AI** and I can help you with:\n\n🏪 **ZipZapZoi questions** — \"How do I post an ad?\", \"Which plan is best?\", \"How to avoid scams?\"\n\n💰 **Pricing** — \"What's my iPhone 13 worth?\", \"Laptop resale value?\"\n\n✍️ **Ad writing** — Describe your item and I'll write a killer ad!\n\n🤝 **Negotiations** — Scripts to handle lowballer buyers\n\n🧮 **Maths** — \"25% of 4800\", \"15% discount on ₹3999\"\n\n💻 **Coding** — Python, PHP, JavaScript, Android/Kotlin\n\nWhat would you like help with?",
-        "I'm still learning! 🌱 Could you be more specific? For example:\n\n• **\"Write an ad for my Samsung A54, 6 months old, ₹18,000\"**\n• **\"What's a fair price for a 2021 Pulsar 150?\"**\n• **\"How to negotiate with a lowball buyer?\"**\n• **\"How do I post my first ad?\"**\n\nI get smarter with every conversation. Ask away! ✨",
-    ];
 
-    return $suggestions[array_rand($suggestions)];
-}
 
 /**
  * Helper: pick random item from array.
