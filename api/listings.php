@@ -218,7 +218,11 @@ function getAll(): void {
 
     // Decode JSON fields — cast ALL boolean fields so Android gets true/false not 0/1
     foreach ($rows as &$row) {
-        $row['images'] = normalizeImagesArray(json_decode($row['images'] ?? '[]', true) ?: []);
+        $row['title']           = html_entity_decode(html_entity_decode($row['title'] ?? '', ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+        $row['description']     = html_entity_decode(html_entity_decode($row['description'] ?? '', ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+        $row['title']         = html_entity_decode(html_entity_decode($row['title'] ?? '', ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+    $row['description']   = html_entity_decode(html_entity_decode($row['description'] ?? '', ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+    $row['images'] = normalizeImagesArray(json_decode($row['images'] ?? '[]', true) ?: []);
         $row['fields'] = json_decode($row['fields'] ?? '{}', true) ?: [];
         $row['price']           = (float)$row['price'];
         $row['id']              = (int)$row['id'];
@@ -281,6 +285,8 @@ function getOne(int $id): void {
         } catch(Exception $e) {}
     }
 
+    $row['title']         = html_entity_decode(html_entity_decode($row['title'] ?? '', ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
+    $row['description']   = html_entity_decode(html_entity_decode($row['description'] ?? '', ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8');
     $row['images'] = normalizeImagesArray(json_decode($row['images'] ?? '[]', true) ?: []);
     $row['seller_avatar'] = toAbsoluteUrl($row['seller_avatar'] ?? null);
     $row['fields'] = json_decode($row['fields'] ?? '{}', true) ?: [];
