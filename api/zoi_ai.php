@@ -263,7 +263,7 @@ function standaloneAI(array $messages, string $mode): string {
         (str_contains($q, 'write') && (str_contains($q, 'ad') || str_contains($q, 'sell')))) {
 
         $title = '';
-        if (preg_match("/(?:titled|title|item|sell|product|for)[:\s'"]+([^'"\n,\.]+)/i", $userMsg, $tm)) {
+        if (preg_match('/(?:titled|title|item|sell|product|for)[:\s\x27\x22]+([^\x27\x22\n,\.]+)/i', $userMsg, $tm)) {
             $title = trim($tm[1]);
         }
         if (!$title) {
