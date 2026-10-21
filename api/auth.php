@@ -181,7 +181,7 @@ function handleVerifyOtp(array $b): void {
 // Asking for OTP on every login would be 2FA â€” not required here.
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function handleLogin(array $b): void {
-    checkRateLimit('login', 5, 15);
+    checkRateLimit('login', 15, 15);
 
     $loginId  = strtolower(trim($b['login_id'] ?? $b['email'] ?? ''));
     $password = $b['password'] ?? '';
@@ -189,9 +189,17 @@ function handleLogin(array $b): void {
     if (!$loginId) jsonError('Email or Mobile Number is required.');
     if (!$password) jsonError('Password is required.');
 
+    // Sanitize phone number (strip +91, 0, non-digits) for seamless phone-based login
+    $cleanPhone = preg_replace('/\D/', '', $loginId);
+    if (str_starts_with($cleanPhone, '91') && strlen($cleanPhone) === 12) {
+        $cleanPhone = substr($cleanPhone, 2);
+    } elseif (str_starts_with($cleanPhone, '0') && strlen($cleanPhone) === 11) {
+        $cleanPhone = substr($cleanPhone, 1);
+    }
+
     $db = getDB();
-    $stmt = $db->prepare('SELECT * FROM users WHERE (email = ? OR phone = ?) AND is_active = 1 AND is_verified = 1');
-    $stmt->execute([$loginId, $loginId]);
+    $stmt = $db->prepare('SELECT * FROM users WHERE (email = ? OR phone = ? OR phone = ?) AND is_active = 1');
+    $stmt->execute([$loginId, $loginId, $cleanPhone]);
     $user = $stmt->fetch();
 
     if (!$user || !password_verify($password, $user['password_hash'])) {
@@ -200,7 +208,7 @@ function handleLogin(array $b): void {
 
     clearRateLimit('login');
 
-    // Issue session directly â€” email was already verified at registration
+    // Issue session directly
     $token = createSession((int)$user['id']);
     jsonOk(['user' => sanitizeUser($user), 'token' => $token, 'message' => 'Login successful.']);
 }

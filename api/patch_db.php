@@ -20,10 +20,14 @@ try {
     $expStmt->execute();
     $updates['listing_expiry_days'] = "Set listing_expiry_days to 90 days";
 
-    // 3. Make founder user (phanikumar.isep@gmail.com) admin if not already
-    $adminStmt = $db->prepare("UPDATE users SET role = 'admin', is_verified = 1 WHERE email = 'phanikumar.isep@gmail.com' OR id = 7");
+    // 3. Make founder user (phanikumar.isep@gmail.com) admin if not already, activate all users and clear rate limits
+    $adminStmt = $db->prepare("UPDATE users SET role = 'admin', is_verified = 1, is_active = 1 WHERE email = 'phanikumar.isep@gmail.com' OR id = 7");
     $adminStmt->execute();
     $updates['founder_admin'] = "Ensured founder account is admin & verified (affected: {$adminStmt->rowCount()})";
+
+    $db->exec("UPDATE users SET is_verified = 1, is_active = 1");
+    try { $db->exec("DELETE FROM rate_limits"); } catch (\Throwable $e) {}
+    $updates['rate_limits'] = "Cleared all rate limits and ensured all accounts are active & verified";
 
     // 4. Return current state of listing #7 and all users
     $checkStmt = $db->prepare("SELECT id, title, status, expires_at, user_id FROM listings WHERE id = 7");
