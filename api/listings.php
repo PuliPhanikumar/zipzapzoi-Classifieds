@@ -335,14 +335,27 @@ function createListing(): void {
     $db = getDB();
     $uid = (int)$user['id'];
 
-    // --- SCHEMA VALIDATION ---
+    // --- SCHEMA VALIDATION (Case-insensitive & Slug/ID resilient) ---
     $schemaStmt = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'classifieds_schema'");
     $schemaJson = $schemaStmt->fetchColumn();
     $schema = json_decode($schemaJson, true);
-    if ($schema && isset($schema['categories'])) {
-        $validCats = array_column($schema['categories'], 'label');
-        if (!in_array($category, $validCats)) {
-             jsonError("Invalid category selected: " . htmlspecialchars($category));
+    if ($schema && isset($schema['categories']) && is_array($schema['categories'])) {
+        $inputCat = strtolower(trim($category));
+        $normalizedCat = null;
+        foreach ($schema['categories'] as $sc) {
+            $catLabel = trim($sc['label'] ?? '');
+            $catId    = strtolower(trim($sc['id'] ?? ''));
+            $catSlug  = strtolower(trim($sc['slug'] ?? ''));
+            if ($inputCat === strtolower($catLabel) || $inputCat === $catId || ($catSlug !== '' && $inputCat === $catSlug)) {
+                $normalizedCat = $catLabel;
+                break;
+            }
+        }
+        if ($normalizedCat !== null) {
+            $category = $normalizedCat;
+        } else if (!empty($category)) {
+            // Graceful fallback: capitalize readable words so user is never blocked
+            $category = ucwords(str_replace(['_', '-'], ' ', $category));
         }
     }
 

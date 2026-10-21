@@ -229,6 +229,36 @@ function standaloneAI(array $messages, string $mode): string {
     $q       = strtolower($userMsg);
     $context = buildContext($messages);
 
+    // 0. Dedicated Classifieds Ad Copywriter Mode / Ad Description Generation
+    if ($mode === 'ad_writer' || $mode === 'ad_creator' ||
+        (str_contains($q, 'description') && (str_contains($q, 'ad') || str_contains($q, 'item') || str_contains($q, 'classified'))) ||
+        (str_contains($q, 'write') && (str_contains($q, 'ad') || str_contains($q, 'sell')))) {
+
+        $title = '';
+        if (preg_match("/(?:titled|title|item|sell|product|for)[:\s'\"]+([^'\"\n,\.]+)/i", $userMsg, $tm)) {
+            $title = trim($tm[1]);
+        }
+        if (!$title) {
+            $cleanTitle = trim(preg_replace('/(?i)\b(write|catchy|professional|classified|ad|description|for|an|item|titled|category|condition|is|make|it|ready|to|post|output|only|text|without|conversational|filler|or|greetings)\b/', '', $userMsg));
+            $cleanTitle = trim(preg_replace('/[^\w\s]/', '', $cleanTitle));
+            if (!empty($cleanTitle)) {
+                $words = explode(' ', $cleanTitle);
+                $title = implode(' ', array_slice(array_filter($words), 0, 4));
+            }
+        }
+        $title = ucwords($title ?: 'Item');
+
+        $condition = 'Good';
+        if (preg_match("/condition\s*(?:is)?\s*[:'\"]?\s*([a-zA-Z\s\-]+)/i", $userMsg, $cm)) {
+            $condition = trim(explode('.', explode(',', $cm[1])[0])[0]);
+        }
+
+        return "Up for sale: **{$title}** in **{$condition}** condition! 🌟\n\n" .
+               "100% genuine, very well-maintained, and functions flawlessly. Clean aesthetic with minimal signs of use. " .
+               "A great value deal for anyone looking for reliable quality. " .
+               "Ready for instant inspection or pick-up. Serious buyers, please message or call for a quick and smooth deal!";
+    }
+
     // 1. Greetings
     if (preg_match('/^(hi|hello|hey|namaste|vanakkam|hii|helo|sup|howdy|yo)\b/i', $q)) {
         return randomPick([
@@ -239,7 +269,7 @@ function standaloneAI(array $messages, string $mode): string {
     }
 
     // 2. Who are you / what are you
-    if (preg_match('/(who are you|what are you|introduce yourself|your name|zoi ai|tell me about yourself)/i', $q)) {
+    if (preg_match('/(who are you|what are you|introduce yourself|your name|\bwho is zoi ai\b|\bwhat is zoi ai\b|tell me about yourself)/i', $q)) {
         return "✨ **I'm Zoi AI** — ZipZapZoi's built-in AI assistant!\n\n**What I can do:**\n• 🏪 **Classifieds Expert** — help you buy, sell, post ads\n• ✍️ **Ad Writer** — write compelling ad copy for any item\n• 💰 **Price Advisor** — estimate fair market prices in India\n• 🤝 **Negotiation Coach** — scripts to handle lowballers\n• 🧠 **General AI** — maths, science, coding, history, anything!\n\nI learn from every conversation and get smarter over time. Try me! 🚀";
     }
 

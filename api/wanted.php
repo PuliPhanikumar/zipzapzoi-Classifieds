@@ -107,8 +107,16 @@ if ($method === 'GET') {
     }
     
     if (!$title) jsonError('Title is required.');
-    if ($max < $min) jsonError('Max budget cannot be less than Min budget.');
     
+    // Auto-adjust budget ranges smoothly
+    if ($max <= 0 && $min > 0) {
+        $max = $min;
+    } elseif ($min > 0 && $max > 0 && $max < $min) {
+        $temp = $min;
+        $min = $max;
+        $max = $temp;
+    }
+
     $db = getDB();
     
     // Rate limit: max 5 active wanted ads per user
@@ -120,8 +128,16 @@ if ($method === 'GET') {
 
     $stmt = $db->prepare("INSERT INTO wanted_ads (user_id, title, category, subcategory, description, budget_min, budget_max, location_state, location_city, dynamic_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->execute([$user['id'], $title, $category, $subcategory, $desc, $min, $max, $state, $city, $dynamic_data]);
-    
-    jsonOk(['id' => $db->lastInsertId(), 'message' => 'Wanted ad posted!']);
+    $newId = (int)$db->lastInsertId();
+
+    jsonOk([
+        'id'          => $newId,
+        'title'       => $title,
+        'category'    => $category,
+        'budget_min'  => $min,
+        'budget_max'  => $max,
+        'message'     => 'Buyer demand posted successfully!'
+    ]);
 } elseif ($method === 'DELETE') {
     $user = requireAuth();
     $id = $_GET['id'] ?? null;
