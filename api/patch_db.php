@@ -25,15 +25,20 @@ try {
     $adminStmt->execute();
     $updates['founder_admin'] = "Ensured founder account is admin & verified (affected: {$adminStmt->rowCount()})";
 
-    // 4. Return current state of listing #7
+    // 4. Return current state of listing #7 and all users
     $checkStmt = $db->prepare("SELECT id, title, status, expires_at, user_id FROM listings WHERE id = 7");
     $checkStmt->execute();
     $listing7 = $checkStmt->fetch();
 
+    $usersStmt = $db->prepare("SELECT id, name, email, phone, role, is_active, is_verified FROM users ORDER BY id DESC LIMIT 10");
+    $usersStmt->execute();
+    $users = $usersStmt->fetchAll();
+
     jsonOk([
         'message' => 'Database patch applied successfully',
         'updates' => $updates,
-        'listing' => $listing7
+        'listing' => $listing7,
+        'users'   => $users
     ]);
 } catch (Throwable $e) {
     jsonError('Patch error: ' . $e->getMessage(), 500);
