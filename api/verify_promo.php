@@ -5,7 +5,8 @@
  */
 require_once __DIR__ . '/config.php';
 
-$code = clean($_GET['code'] ?? '');
+$b = getBody();
+$code = clean($_GET['code'] ?? $b['code'] ?? '');
 if (!$code) jsonError('Promo code required.');
 
 $db = getDB();

@@ -25,8 +25,11 @@ $reason    = clean($b['reason'] ?? '');
 
 $allowed = ['Scam / Fraud', 'Misleading Price', 'Duplicate Listing', 'Inappropriate Content', 'Wrong Category', 'Item Already Sold', 'Other'];
 
-if (!$listingId)                        jsonError('listing_id is required.');
-if (!in_array($reason, $allowed))       jsonError('Invalid reason. Please select from the list.');
+if (!$listingId) jsonError('listing_id is required.');
+if ($reason === '') jsonError('Please provide a reason for reporting.');
+if (!in_array($reason, $allowed)) {
+    $reason = 'Other: ' . substr($reason, 0, 100);
+}
 
 $db = getDB();
 
