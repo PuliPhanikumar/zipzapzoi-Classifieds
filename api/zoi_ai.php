@@ -274,7 +274,7 @@ function standaloneAI(array $messages, string $mode): string {
         $title = ucwords($title ?: 'Item');
 
         $condition = 'Good';
-        if (preg_match("/condition\s*(?:is)?\s*[:'"]?\s*([a-zA-Z\s\-]+)/i", $userMsg, $cm)) {
+        if (preg_match('/condition\s*(?:is)?\s*[:\x27\x22]?\s*([a-zA-Z\s\-]+)/i', $userMsg, $cm)) {
             $condition = trim(explode('.', explode(',', $cm[1])[0])[0]);
         }
 
@@ -326,7 +326,7 @@ function standaloneAI(array $messages, string $mode): string {
     // 7. How to post ad / sell item
     if (preg_match('/(post|list|sell|create|add).{0,20}(ad|listing|item|product)/i', $q) ||
         preg_match('/(how.{0,10}sell|want to sell)/i', $q)) {
-        return "📝 **How to Post Your Ad on ZipZapZoi:**\n\n**Step 1:** Tap or click the **"Post Ad (+)"** button\n**Step 2:** Select **[ 🏷️ Sell an Item ]** at the top\n**Step 3:** Fill in your listing details:\n     • **Title:** Brand + Model + Key Spec (e.g. *Samsung Galaxy S23 256GB Phantom Black*)\n     • **Category:** Select from Electronics, Mobiles, Cars, etc.\n     • **Price:** Fair asking price in ₹ (I can help you price it!)\n     • **Description:** Use our **Auto-write with AI** button for instant high-converting text!\n     • **Photos:** Add 3-5 clear, well-lit photos (ads with photos sell 3x faster!)\n**Step 4:** Choose your contact preference (Chat, Phone, or WhatsApp)\n**Step 5:** Tap **Publish Listing!** 🚀";
+        return "📝 **How to Post Your Ad on ZipZapZoi:**\n\n**Step 1:** Tap or click the **\"Post Ad (+)\"** button\n**Step 2:** Select **[ 🏷️ Sell an Item ]** at the top\n**Step 3:** Fill in your listing details:\n     • **Title:** Brand + Model + Key Spec (e.g. *Samsung Galaxy S23 256GB Phantom Black*)\n     • **Category:** Select from Electronics, Mobiles, Cars, etc.\n     • **Price:** Fair asking price in ₹ (I can help you price it!)\n     • **Description:** Use our **Auto-write with AI** button for instant high-converting text!\n     • **Photos:** Add 3-5 clear, well-lit photos (ads with photos sell 3x faster!)\n**Step 4:** Choose your contact preference (Chat, Phone, or WhatsApp)\n**Step 5:** Tap **Publish Listing!** 🚀";
     }
 
     // 8. Categories
@@ -336,7 +336,7 @@ function standaloneAI(array $messages, string $mode): string {
 
     // 9. Safety / Scam detection
     if (preg_match('/(scam|fraud|safe|safety|trust|fake|cheat|avoid|suspicious)/i', $q)) {
-        return "🛡️ **Staying Safe on ZipZapZoi — Anti-Scam Guide:**\n\n**⚠️ RED FLAGS to watch out for:**\n• Buyer offers more than your asking price without seeing the item\n• Asks you to pay advance "courier fees", "verification charges", or "customs clearance"\n• Insists on sending QR codes to "receive money" — **QR codes are only for paying, never for receiving!**\n• Demands OTP, bank PIN, or credit card details\n• Refuses to meet in person or use in-app messaging\n\n**✅ Safe Trading Rules:**\n1. Meet in a **busy public place** (metro station, mall, coffee shop).\n2. Inspect and test the item in person before handing over money.\n3. Use direct UPI or cash only after inspecting the product.\n4. **Never share OTPs** under any circumstances.";
+        return "🛡️ **Staying Safe on ZipZapZoi — Anti-Scam Guide:**\n\n**⚠️ RED FLAGS to watch out for:**\n• Buyer offers more than your asking price without seeing the item\n• Asks you to pay advance \"courier fees\", \"verification charges\", or \"customs clearance\"\n• Insists on sending QR codes to \"receive money\" — **QR codes are only for paying, never for receiving!**\n• Demands OTP, bank PIN, or credit card details\n• Refuses to meet in person or use in-app messaging\n\n**✅ Safe Trading Rules:**\n1. Meet in a **busy public place** (metro station, mall, coffee shop).\n2. Inspect and test the item in person before handing over money.\n3. Use direct UPI or cash only after inspecting the product.\n4. **Never share OTPs** under any circumstances.";
     }
 
     // 10. Maths - solve equations
@@ -356,7 +356,7 @@ function standaloneAI(array $messages, string $mode): string {
 
     // 13. Negotiation help
     if (preg_match('/(negotiat|counter offer|lowball|haggle|bargain|price negotiation|deal)/i', $q)) {
-        return "🤝 **Negotiation Tactics for Indian Classifieds:**\n\n**When a buyer lowballs you:**\n> Buyer: *"Bhai, ₹5,000 me de do?"* (Your price: ₹10,000)\n> **Your Reply:** *"Thanks for the offer! The item is already priced competitively given its excellent condition and accessories. The absolute best I can do for a fast pick-up today is ₹9,200. Let me know if that works for you!"*\n\n**When a buyer asks 'What is your last price?':**\n> **Your Reply:** *"My listed price is already very close to fair market value. What budget do you have in mind? If you can pick it up today, I can do a small courtesy discount."*\n\n**Creating urgency:**\n> *"I have two other inquiries scheduled for this weekend. I can reserve it for you if you can confirm by this evening."*\n\n💡 **Golden Rule:** Never sell below your walk-away price — genuine buyers are always willing to pay for well-cared-for items!";
+        return "🤝 **Negotiation Tactics for Indian Classifieds:**\n\n**When a buyer lowballs you:**\n> Buyer: *\"Bhai, ₹5,000 me de do?\"* (Your price: ₹10,000)\n> **Your Reply:** *\"Thanks for the offer! The item is already priced competitively given its excellent condition and accessories. The absolute best I can do for a fast pick-up today is ₹9,200. Let me know if that works for you!\"*\n\n**When a buyer asks 'What is your last price?':**\n> **Your Reply:** *\"My listed price is already very close to fair market value. What budget do you have in mind? If you can pick it up today, I can do a small courtesy discount.\"*\n\n**Creating urgency:**\n> *\"I have two other inquiries scheduled for this weekend. I can reserve it for you if you can confirm by this evening.\"*\n\n💡 **Golden Rule:** Never sell below your walk-away price — genuine buyers are always willing to pay for well-cared-for items!";
     }
 
     // 14. Contact & Support
