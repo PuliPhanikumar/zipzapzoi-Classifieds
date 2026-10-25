@@ -22,9 +22,15 @@ $users = $stmt->fetchAll();
 
 $sentCount = 0;
 foreach ($users as $u) {
-    if (sendFcmPush($u['fcm_token'], $title, $body)) {
+    if (sendFcmPush($u['fcm_token'], $title, $body, ['type' => 'broadcast'])) {
         $sentCount++;
     }
 }
 
-jsonOk(['message' => "Broadcast sent to $sentCount devices."]);
+// Also persist broadcast notification to in-app notification inbox for all active users
+try {
+    $db->prepare("INSERT INTO user_notifications (user_id, type, title, message) SELECT id, 'broadcast', ?, ? FROM users WHERE is_active = 1")
+       ->execute([$title, $body]);
+} catch (\Throwable $e) {}
+
+jsonOk(['message' => "Broadcast sent to $sentCount mobile devices and added to user notifications."]);
