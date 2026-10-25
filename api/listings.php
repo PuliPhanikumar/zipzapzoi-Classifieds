@@ -180,7 +180,7 @@ function getAll(): void {
     $offset = ($page - 1) * $limit;
 
     $whereSQL = implode(' AND ', $where);
-    $sql = "SELECT l.*, u.name AS seller_name, u.avatar AS seller_avatar,
+    $sql = "SELECT l.*, u.id AS seller_id, u.name AS seller_name, u.avatar AS seller_avatar,
                    u.city AS seller_city, u.phone AS seller_phone, u.trusted_seller AS seller_trusted,
                    (SELECT COUNT(*) FROM favorites f WHERE f.listing_id = l.id) AS favorite_count,
                    (l.boosted = 1 AND l.boosted_until > NOW()) AS is_boosted_active,
@@ -227,6 +227,7 @@ function getAll(): void {
         $row['price']           = (float)$row['price'];
         $row['id']              = (int)$row['id'];
         $row['user_id']         = (int)$row['user_id'];
+        $row['seller_id']       = (int)($row['seller_id'] ?? $row['user_id']);
         $row['views']           = (int)($row['views'] ?? 0);
         $row['favorite_count']  = (int)($row['favorite_count'] ?? 0);
         $row['is_story']        = (int)($row['is_story'] ?? 0);
@@ -264,7 +265,7 @@ function getAll(): void {
 function getOne(int $id): void {
     $db   = getDB();
     $stmt = $db->prepare(
-        'SELECT l.*, u.name AS seller_name, u.email AS seller_email,
+        'SELECT l.*, u.id AS seller_id, u.name AS seller_name, u.email AS seller_email,
                 u.phone AS seller_phone, u.avatar AS seller_avatar,
                 u.city AS seller_city, u.state AS seller_state,
                 u.created_at AS seller_since, u.is_verified AS seller_is_verified, u.trusted_seller AS seller_trusted
@@ -292,6 +293,8 @@ function getOne(int $id): void {
     $row['fields'] = json_decode($row['fields'] ?? '{}', true) ?: [];
     $row['price']  = (float)$row['price'];
     $row['id']     = (int)$row['id'];
+    $row['user_id'] = (int)($row['user_id'] ?? 0);
+    $row['seller_id'] = (int)($row['seller_id'] ?? $row['user_id']);
     $row['is_highlight']   = !empty($row['is_highlight']);
     $row['is_top']         = !empty($row['is_top']);
     $row['hide_phone']     = !empty($row['hide_phone']);

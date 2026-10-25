@@ -138,14 +138,25 @@ function sendMessage(array $user): void {
     $insertedId = (int)$db->lastInsertId();
     
     // Send Push Notification if FCM token exists
+    $senderName = $user['name'] ?: 'Someone';
+    $listingIdStr = !empty($b['listing_id']) ? (string)$b['listing_id'] : '';
+
     if (!empty($recipient['fcm_token'])) {
-        $senderName = $user['name'] ?: 'Someone';
-        $listingIdStr = !empty($b['listing_id']) ? (string)$b['listing_id'] : '';
         sendFcmPush($recipient['fcm_token'], "New Message from $senderName", clean($body), [
-            'partner_id' => (string)$user['id'],
-            'listing_id' => $listingIdStr
+            'type'                    => 'new_message',
+            'conversation_partner_id' => (string)$user['id'],
+            'partner_id'              => (string)$user['id'],
+            'sender_name'             => (string)$senderName,
+            'listing_id'              => (string)$listingIdStr,
+            'body'                    => (string)clean($body)
         ]);
     }
+
+    // Also persist in-app notification
+    try {
+        $db->prepare("INSERT INTO user_notifications (user_id, type, title, message, link) VALUES (?, 'new_message', ?, ?, ?)")
+           ->execute([$toId, "New message from $senderName", clean($body), "chat/" . $user['id'] . "/$senderName"]);
+    } catch (\Throwable $e) {}
 
     $sql  = 'SELECT m.*, u.name AS from_name, u.avatar AS from_avatar
              FROM messages m JOIN users u ON u.id = m.from_user_id

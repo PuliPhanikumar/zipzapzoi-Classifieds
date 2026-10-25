@@ -7,10 +7,25 @@
  */
 require_once __DIR__ . '/config.php';
 
+// Self-healing schema — safe column verification
 try {
-    getDB()->exec("ALTER TABLE users ADD COLUMN verification_status ENUM('unverified', 'pending', 'rejected', 'verified') DEFAULT 'unverified', ADD COLUMN verification_id_url VARCHAR(255) DEFAULT NULL");
-    getDB()->exec("ALTER TABLE users ADD COLUMN trusted_seller TINYINT(1) NOT NULL DEFAULT 0");
-} catch (\PDOException $e) {}
+    $db = getDB();
+    $cols = $db->query("SHOW COLUMNS FROM users")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('verification_status', $cols)) $db->exec("ALTER TABLE users ADD COLUMN verification_status ENUM('unverified','pending','rejected','verified') DEFAULT 'unverified'");
+    if (!in_array('verification_id_url', $cols)) $db->exec("ALTER TABLE users ADD COLUMN verification_id_url VARCHAR(255) DEFAULT NULL");
+    if (!in_array('trusted_seller', $cols)) $db->exec("ALTER TABLE users ADD COLUMN trusted_seller TINYINT(1) NOT NULL DEFAULT 0");
+    if (!in_array('push_notifications', $cols)) $db->exec("ALTER TABLE users ADD COLUMN push_notifications TINYINT(1) NOT NULL DEFAULT 1");
+    if (!in_array('email_alerts', $cols)) $db->exec("ALTER TABLE users ADD COLUMN email_alerts TINYINT(1) NOT NULL DEFAULT 1");
+    if (!in_array('deal_alerts', $cols)) $db->exec("ALTER TABLE users ADD COLUMN deal_alerts TINYINT(1) NOT NULL DEFAULT 1");
+    if (!in_array('fcm_token', $cols)) $db->exec("ALTER TABLE users ADD COLUMN fcm_token TEXT NULL");
+    if (!in_array('bio', $cols)) $db->exec("ALTER TABLE users ADD COLUMN bio TEXT NULL");
+    if (!in_array('city', $cols)) $db->exec("ALTER TABLE users ADD COLUMN city VARCHAR(100) NULL");
+    if (!in_array('state', $cols)) $db->exec("ALTER TABLE users ADD COLUMN state VARCHAR(100) NULL");
+    if (!in_array('hide_phone', $cols)) $db->exec("ALTER TABLE users ADD COLUMN hide_phone TINYINT(1) NOT NULL DEFAULT 0");
+    if (!in_array('whatsapp', $cols)) $db->exec("ALTER TABLE users ADD COLUMN whatsapp TINYINT(1) NOT NULL DEFAULT 1");
+} catch (\Throwable $e) {
+    error_log('ZZZ users schema patch: ' . $e->getMessage());
+}
 
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = $_GET['id'] ?? 'me';
@@ -46,7 +61,7 @@ function getProfile(string $id): void {
     $lStmt = $db->prepare("SELECT COUNT(*) FROM listings WHERE user_id = ? AND status = 'active'");
     $lStmt->execute([$userId]);
     $profile['active_listings'] = (int)$lStmt->fetchColumn();
-    
+
     // Total listings count
     $tStmt = $db->prepare("SELECT COUNT(*) FROM listings WHERE user_id = ?");
     $tStmt->execute([$userId]);
@@ -54,10 +69,14 @@ function getProfile(string $id): void {
 
     // Quota info (only for self)
     if ($id === 'me' && $user) {
-        $qStmt = $db->prepare('SELECT * FROM user_quotas WHERE user_id = ?');
-        $qStmt->execute([$userId]);
-        $quota = $qStmt->fetch();
-        $profile['quota'] = $quota ?: ['ads_remaining' => 0, 'plan_name' => 'No Plan'];
+        try {
+            $qStmt = $db->prepare('SELECT * FROM user_quotas WHERE user_id = ?');
+            $qStmt->execute([$userId]);
+            $quota = $qStmt->fetch();
+            $profile['quota'] = $quota ?: ['ads_remaining' => 0, 'plan_name' => 'No Plan'];
+        } catch (\Throwable $e) {
+            $profile['quota'] = ['ads_remaining' => 0, 'plan_name' => 'No Plan'];
+        }
     }
 
     $profile['id']          = (int)$profile['id'];
@@ -79,22 +98,39 @@ function updateProfile(): void {
     $b    = getBody();
     $db   = getDB();
 
+    // Fetch existing columns to prevent SQL errors on missing columns
+    try {
+        $cols = $db->query("SHOW COLUMNS FROM users")->fetchAll(PDO::FETCH_COLUMN);
+    } catch (\Throwable $e) {
+        $cols = ['name', 'phone', 'city', 'state', 'avatar', 'bio'];
+    }
+
     $allowed = ['name','phone','city','state','avatar','fcm_token',
                  'bio','whatsapp','hide_phone','push_notifications','email_alerts','deal_alerts'];
     $sets = []; $params = [];
     foreach ($allowed as $f) {
         if (!array_key_exists($f, $b)) continue;
+        if (!in_array($f, $cols)) continue; // Safeguard against non-existent columns
         $sets[]   = "$f = ?";
         $params[] = clean((string)$b[$f]);
     }
     if (empty($sets)) jsonError('Nothing to update.');
     $params[] = (int)$user['id'];
-    $db->prepare('UPDATE users SET ' . implode(', ', $sets) . ' WHERE id = ?')->execute($params);
-    $stmt = $db->prepare('SELECT id, name, email, phone, role, avatar, city, state, bio, hide_phone, whatsapp AS allow_whatsapp, is_verified FROM users WHERE id = ?');
-    $stmt->execute([(int)$user['id']]);
-    $updatedUser = $stmt->fetch();
-    if ($updatedUser) { $updatedUser['avatar'] = toAbsoluteUrl($updatedUser['avatar'] ?? null); }
-    jsonOk($updatedUser);
+
+    try {
+        $db->prepare('UPDATE users SET ' . implode(', ', $sets) . ' WHERE id = ?')->execute($params);
+        $stmt = $db->prepare('SELECT id, name, email, phone, role, avatar, city, state, bio, hide_phone, whatsapp AS allow_whatsapp, is_verified FROM users WHERE id = ?');
+        $stmt->execute([(int)$user['id']]);
+        $updatedUser = $stmt->fetch();
+        if ($updatedUser) {
+            $updatedUser['avatar'] = toAbsoluteUrl($updatedUser['avatar'] ?? null);
+            $updatedUser['is_verified'] = (bool)($updatedUser['is_verified'] ?? false);
+        }
+        jsonOk($updatedUser);
+    } catch (\Throwable $e) {
+        error_log('updateProfile error: ' . $e->getMessage());
+        jsonError('Failed to update profile: ' . $e->getMessage(), 500);
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -109,7 +145,6 @@ function handleNotify(): void {
     $db     = getDB();
 
     try {
-        // Create table if not exists (self-healing)
         $db->exec(
             'CREATE TABLE IF NOT EXISTS notify_signups (
                 id         INT AUTO_INCREMENT PRIMARY KEY,
@@ -123,32 +158,28 @@ function handleNotify(): void {
             'INSERT IGNORE INTO notify_signups (email, module) VALUES (?, ?)'
         )->execute([$email, $module]);
     } catch (\Exception $e) {
-        // Table may already exist or DB issue — still return success to frontend
         error_log('notify_signups error: ' . $e->getMessage());
+        jsonError('Failed to save notification request. Please try again.');
     }
 
-    jsonOk(['message' => 'You are on the notify list!']);
+    jsonOk(['message' => 'Thanks! We will notify you as soon as this feature goes live.']);
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// POST ?action=report — Report a user (requires login)
+// POST ?action=report — Report a user or listing
 // ─────────────────────────────────────────────────────────────────────
 function handleReport(): void {
-    $user = requireAuth();
-    $b    = getBody();
-
-    $reportedId = (int)($b['reportedBy'] ?? $b['reported_user_id'] ?? 0);
+    $user       = requireAuth();
+    $b          = getBody();
+    $reportedId = (int)($b['user_id']    ?? 0);
     $listingId  = (int)($b['listing_id'] ?? 0);
-    $reason     = clean($b['reason']  ?? 'Other');
-    $details    = clean($b['details'] ?? '');
+    $reason     = clean($b['reason']     ?? 'Other');
+    $details    = clean($b['details']    ?? '');
     $db         = getDB();
 
-    // Validate: must report someone or something
     if (!$reportedId && !$listingId) {
         jsonError('Must specify a user or listing to report.');
     }
-
-    // Cannot report yourself
     if ($reportedId && $reportedId === (int)$user['id']) {
         jsonError('You cannot report yourself.');
     }
@@ -167,7 +198,6 @@ function handleReport(): void {
             )'
         );
 
-        // Duplicate check: prevent same user reporting same target twice
         $dup = $db->prepare(
             'SELECT id FROM user_reports WHERE reported_by = ? AND reported_user <=> ? AND listing_id <=> ?'
         );
@@ -188,7 +218,7 @@ function handleReport(): void {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// POST ?action=review — Submit a seller review (requires login)
+// POST ?action=review — Submit a seller review
 // ─────────────────────────────────────────────────────────────────────
 function handleReview(): void {
     $user = requireAuth();
@@ -196,7 +226,7 @@ function handleReview(): void {
 
     $sellerId = (int)($b['seller_id'] ?? 0);
     $rating   = max(1, min(5, (int)($b['rating'] ?? 0)));
-    $text     = clean($b['text'] ?? '');
+    $text     = clean($b['comment'] ?? $b['text'] ?? '');
 
     if (!$sellerId) jsonError('seller_id required.');
     if (!$rating)   jsonError('Rating (1-5) required.');
@@ -231,11 +261,11 @@ function handleReview(): void {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// POST ?action=verify_identity - Upload Govt ID to request verification
+// POST ?action=verify_identity — Upload Govt ID to request verification
 // ─────────────────────────────────────────────────────────────────────
 function handleVerifyIdentity(): void {
     $me = requireAuth();
-    if ($me['trusted_seller']) jsonError('You are already verified.');
+    if (!empty($me['trusted_seller'])) jsonError('You are already verified.');
 
     if (!isset($_FILES['id_photo']) || $_FILES['id_photo']['error'] !== UPLOAD_ERR_OK) {
         jsonError('Please upload a valid image of your Govt ID.');
@@ -253,11 +283,10 @@ function handleVerifyIdentity(): void {
 
     $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
     $filename = 'id_' . $me['id'] . '_' . time() . '.' . $ext;
-    
-    // Ensure the uploads directory exists
+
     $uploadDir = __DIR__ . '/../uploads/ids';
     if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-    
+
     $dest = $uploadDir . '/' . $filename;
     if (!move_uploaded_file($file['tmp_name'], $dest)) {
         jsonError('Failed to save the image.');

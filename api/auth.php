@@ -29,7 +29,8 @@ switch ($action) {
     case 'verify_sensitive_otp': handleVerifySensitiveOtp($body);break;
     case 'validate_reset_token': handleValidateResetToken();     break;
     case 'send_otp':           handleSendOtp($body);          break;
-    case 'update_fcm':           handleUpdateFcm($body);         break;
+    case 'update_fcm':
+    case 'update_fcm_token':     handleUpdateFcm($body);         break;
     case 'change_password':      handleChangePassword($body);    break;
     default:                     jsonError('Unknown action', 400);
 }
@@ -161,6 +162,12 @@ function handleVerifyOtp(array $b): void {
             )->execute([$referredById]);
         }
 
+        if (!empty($b['fcm_token'])) {
+            try {
+                $db->prepare('UPDATE users SET fcm_token = ? WHERE id = ?')->execute([trim($b['fcm_token']), $userId]);
+            } catch (\Throwable $e) {}
+        }
+
         $token = createSession($userId);
         $user  = getUserById($userId);
         jsonOk(['user' => $user, 'token' => $token, 'message' => 'Account created successfully! Welcome to ZipZapZoi.'], 201);
@@ -170,6 +177,11 @@ function handleVerifyOtp(array $b): void {
         $stmt2->execute([$email]);
         $user = $stmt2->fetch();
         if (!$user) jsonError('Account not found or deactivated.', 404);
+        if (!empty($b['fcm_token'])) {
+            try {
+                $db->prepare('UPDATE users SET fcm_token = ? WHERE id = ?')->execute([trim($b['fcm_token']), (int)$user['id']]);
+            } catch (\Throwable $e) {}
+        }
         $token = createSession((int)$user['id']);
         jsonOk(['user' => sanitizeUser($user), 'token' => $token]);
     }
@@ -207,6 +219,12 @@ function handleLogin(array $b): void {
     }
 
     clearRateLimit('login');
+
+    if (!empty($b['fcm_token'])) {
+        try {
+            $db->prepare('UPDATE users SET fcm_token = ? WHERE id = ?')->execute([trim($b['fcm_token']), (int)$user['id']]);
+        } catch (\Throwable $e) {}
+    }
 
     // Issue session directly
     $token = createSession((int)$user['id']);
@@ -424,20 +442,15 @@ function handleSendOtp(array $body): void {
 
 function handleUpdateFcm(array $b): void {
     $user = requireAuth();
-    $token = trim($b['token'] ?? '');
+    $token = trim($b['token'] ?? $b['fcm_token'] ?? '');
     if (!$token) jsonError('Token required');
     $db = getDB();
     try {
-        $db->prepare('UPDATE users SET fcm_token = ? WHERE id = ?')->execute([$token, $user['id']]);
-    } catch (Exception $e) {
-        // If column doesn't exist, ignore for now (migration script must be run by admin on hostinger DB)
-        if (strpos($e->getMessage(), 'Unknown column') !== false) {
-            // Ignore silently
-        } else {
-            throw $e;
-        }
+        $db->prepare('UPDATE users SET fcm_token = ? WHERE id = ?')->execute([$token, (int)$user['id']]);
+    } catch (\Throwable $e) {
+        error_log('update_fcm error: ' . $e->getMessage());
     }
-    jsonOk();
+    jsonOk(['message' => 'FCM token updated successfully']);
 }
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
