@@ -131,8 +131,8 @@ function sendMessage(array $user): void {
     )->execute([
         (int)$user['id'], $toId,
         !empty($b['listing_id']) ? (int)$b['listing_id'] : null,
-        clean($b['subject'] ?? ''),
-        clean($body)
+        trim($b['subject'] ?? ''),   // No htmlspecialchars — store raw text, encode on display
+        trim($body)                  // No htmlspecialchars — messages are displayed in native app, not HTML
     ]);
     
     $insertedId = (int)$db->lastInsertId();
@@ -142,20 +142,20 @@ function sendMessage(array $user): void {
     $listingIdStr = !empty($b['listing_id']) ? (string)$b['listing_id'] : '';
 
     if (!empty($recipient['fcm_token'])) {
-        sendFcmPush($recipient['fcm_token'], "New Message from $senderName", clean($body), [
+        sendFcmPush($recipient['fcm_token'], "New Message from $senderName", trim($body), [
             'type'                    => 'new_message',
             'conversation_partner_id' => (string)$user['id'],
             'partner_id'              => (string)$user['id'],
             'sender_name'             => (string)$senderName,
             'listing_id'              => (string)$listingIdStr,
-            'body'                    => (string)clean($body)
+            'body'                    => (string)trim($body)
         ]);
     }
 
     // Also persist in-app notification
     try {
         $db->prepare("INSERT INTO user_notifications (user_id, type, title, message, link) VALUES (?, 'new_message', ?, ?, ?)")
-           ->execute([$toId, "New message from $senderName", clean($body), "chat/" . $user['id'] . "/$senderName"]);
+           ->execute([$toId, "New message from $senderName", trim($body), "chat/" . $user['id'] . "/$senderName"]);
     } catch (\Throwable $e) {}
 
     $sql  = 'SELECT m.*, u.name AS from_name, u.avatar AS from_avatar

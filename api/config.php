@@ -156,7 +156,7 @@ function getCurrentUser(): ?array {
         if (!$user) return null;
 
         // Auto-renew session (refresh expiry on activity)
-        $timeoutMins = 43200; // default 30 days
+        $timeoutMins = 43200; // default 30 days (43200 min) (43200 min) — overridable from system_settings
         $timeoutStmt = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'session_timeout_mins'");
         $val = $timeoutStmt->fetchColumn();
         if (is_numeric($val) && (int)$val > 0) $timeoutMins = (int)$val;
@@ -215,7 +215,7 @@ function validateEmail(string $email): bool {
 function createSession(int $userId): string {
     $token     = bin2hex(random_bytes(32)); // 64-char secure token
     $db = getDB();
-    $timeoutMins = 43200; // default 30 days
+    $timeoutMins = 43200; // default 30 days (43200 min)
     $timeoutStmt = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'session_timeout_mins'");
     $val = $timeoutStmt->fetchColumn();
     if (is_numeric($val) && (int)$val > 0) $timeoutMins = (int)$val;

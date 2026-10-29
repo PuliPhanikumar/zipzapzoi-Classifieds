@@ -63,6 +63,10 @@ function saveSettings(array $admin): void {
     $saved = [];
     foreach ($settings as $key => $val) {
         if (!in_array($key, $allowed)) continue;
+        // Guard: session_timeout_mins must be at least 7 days (10080 min) to keep mobile apps working
+        if ($key === 'session_timeout_mins' && (int)$val < 10080) {
+            jsonError('session_timeout_mins must be at least 10080 (7 days). Setting it lower breaks mobile app sessions.', 400);
+        }
         $stmt->execute([$key, (string)$val]);
         $saved[] = $key;
     }
