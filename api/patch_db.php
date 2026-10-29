@@ -92,6 +92,17 @@ try {
     ");
     $updates['user_notifications_table'] = 'Ensured user_notifications table exists';
 
+    // 3b. Schema migration for messages table
+    $mCols = $db->query("SHOW COLUMNS FROM messages")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('deleted_for', $mCols)) {
+        $db->exec("ALTER TABLE messages ADD COLUMN deleted_for TEXT DEFAULT NULL");
+        $updates['messages_deleted_for'] = 'Added deleted_for column to messages';
+    }
+    if (!in_array('media_url', $mCols)) {
+        $db->exec("ALTER TABLE messages ADD COLUMN media_url TEXT DEFAULT NULL");
+        $updates['messages_media_url'] = 'Added media_url column to messages';
+    }
+
     // 4. Reactivate listing #7 and extend expiry by 90 days
     $stmt7 = $db->prepare("UPDATE listings SET status = 'active', expires_at = DATE_ADD(NOW(), INTERVAL 90 DAY) WHERE id = 7");
     $stmt7->execute();
