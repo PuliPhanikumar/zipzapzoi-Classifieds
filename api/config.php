@@ -380,14 +380,16 @@ function normalizeImagesArray($images): array {
 }
 
 // ── Admin & Logging Helpers ───────────────────────────────────────────
-function adminLog(?array $admin, string $action, string $detail = ''): void {
-    try {
-        $adminId   = (int)($admin['id'] ?? 0);
-        $adminName = $admin['name'] ?? 'Admin';
-        getDB()->prepare(
-            'INSERT INTO admin_logs (admin_id, admin_name, action, detail) VALUES (?,?,?,?)'
-        )->execute([$adminId, $adminName, $action, $detail]);
-    } catch (\Throwable $e) {}
+if (!function_exists('adminLog')) {
+    function adminLog(?array $admin, string $action, string $detail = ''): void {
+        try {
+            $adminId   = (int)($admin['id'] ?? 0);
+            $adminName = $admin['name'] ?? 'Admin';
+            getDB()->prepare(
+                'INSERT INTO admin_logs (admin_id, admin_name, action, detail) VALUES (?,?,?,?)'
+            )->execute([$adminId, $adminName, $action, $detail]);
+        } catch (\Throwable $e) {}
+    }
 }
 
 function logAdminAction($adminId, string $action, array $context = []): void {

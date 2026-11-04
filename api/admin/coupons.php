@@ -71,10 +71,12 @@ function toggleCoupon(array $admin): void {
     jsonOk(['message' => "Coupon $code toggled."]);
 }
 
-function adminLog(array $admin, string $action, string $detail = ''): void {
-    try {
-        getDB()->prepare(
-            'INSERT INTO admin_logs (admin_id, admin_name, action, detail) VALUES (?,?,?,?)'
-        )->execute([(int)$admin['id'], $admin['name'], $action, $detail]);
-    } catch (\Throwable $e) {}
+if (!function_exists('adminLog')) {
+    function adminLog(array $admin, string $action, string $detail = ''): void {
+        try {
+            getDB()->prepare(
+                'INSERT INTO admin_logs (admin_id, admin_name, action, detail) VALUES (?,?,?,?)'
+            )->execute([(int)$admin['id'], $admin['name'], $action, $detail]);
+        } catch (\Throwable $e) {}
+    }
 }
