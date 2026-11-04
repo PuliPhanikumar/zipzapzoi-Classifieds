@@ -251,7 +251,7 @@ function handleNotify(): void {
 function handleReport(): void {
     $user       = requireAuth();
     $b          = getBody();
-    $reportedId = (int)($b['user_id']    ?? 0);
+    $reportedId = (int)($b['user_id'] ?? $b['reported_user_id'] ?? 0);
     $listingId  = (int)($b['listing_id'] ?? 0);
     $reason     = clean($b['reason']     ?? 'Other');
     $details    = clean($b['details']    ?? '');

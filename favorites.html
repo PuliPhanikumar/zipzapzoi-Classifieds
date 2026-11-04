@@ -300,7 +300,7 @@
           }
           
           const responseData = await res.json();
-          const favListings = responseData.data || [];
+          const favListings = Array.isArray(responseData.data) ? responseData.data : (responseData.data && responseData.data.listings ? responseData.data.listings : []);
 
           if(favListings.length === 0) {
               grid.classList.add('hidden');

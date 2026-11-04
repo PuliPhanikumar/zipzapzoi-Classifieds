@@ -253,6 +253,14 @@
               <span class="stat-pill-label">Listings</span>
             </div>
             <div class="stat-pill flex-1 min-w-20 stagger-item">
+              <span class="stat-pill-value" id="statFollowers">0</span>
+              <span class="stat-pill-label">Followers</span>
+            </div>
+            <div class="stat-pill flex-1 min-w-20 stagger-item">
+              <span class="stat-pill-value" id="statFollowing">0</span>
+              <span class="stat-pill-label">Following</span>
+            </div>
+            <div class="stat-pill flex-1 min-w-20 stagger-item">
               <span class="stat-pill-value" id="statFavorites">0</span>
               <span class="stat-pill-label">Saves</span>
             </div>
@@ -274,6 +282,11 @@
 
         <!-- Action Buttons -->
         <div class="flex flex-wrap justify-center md:justify-end gap-3 w-full md:w-auto mt-6 md:mt-0">
+          <button onclick="toggleFollow()" id="btnFollow"
+            class="hidden bg-primary hover:bg-emerald-600 text-white px-7 py-3.5 rounded-full font-black flex gap-2 items-center shadow-[0_15px_30px_-5px_rgba(1,152,99,0.4)] transition-all duration-300 hover:-translate-y-1 active:scale-95 text-[15px] border-b-4 border-emerald-800">
+            <span class="material-symbols-outlined text-xl" id="followIcon">person_add</span>
+            <span id="followText">Follow</span>
+          </button>
           <button onclick="startChat()"
             class="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3.5 rounded-full font-black flex gap-2 items-center shadow-[0_15px_30px_-5px_rgba(16,185,129,0.4)] transition-all duration-300 hover:-translate-y-1 active:scale-95 text-[15px] border-b-4 border-emerald-700">
             <span class="material-symbols-outlined text-xl">chat_bubble</span> Message
@@ -544,6 +557,19 @@ async function loadProfile() {
       if (memberSince && document.getElementById('statMemberSince')) {
         document.getElementById('statMemberSince').textContent = memberSince;
       }
+
+      // Followers & Following counts + Follow state
+      _followersCount = u.followers || 0;
+      _followingCount = u.following || 0;
+      _isFollowing = !!u.is_following;
+      if (document.getElementById('statFollowers')) document.getElementById('statFollowers').textContent = _followersCount;
+      if (document.getElementById('statFollowing')) document.getElementById('statFollowing').textContent = _followingCount;
+
+      const followBtn = document.getElementById('btnFollow');
+      if (followBtn && (!currentUser || String(currentUser.id) !== String(userId))) {
+        followBtn.classList.remove('hidden');
+        updateFollowBtnState(_isFollowing);
+      }
       
       if (currentUser && currentUser.id == userId && u.referral_code) {
         document.getElementById('referralSection').classList.remove('hidden');
@@ -708,6 +734,67 @@ function shareProfile() {
   navigator.clipboard.writeText(url).then(() => showToast("Profile link copied!")).catch(() => prompt("Copy this link:", url));
 }
 
+/* ========== FOLLOW / UNFOLLOW ========== */
+let _isFollowing = false;
+let _followersCount = 0;
+let _followingCount = 0;
+
+function updateFollowBtnState(following) {
+  _isFollowing = following;
+  const btn = document.getElementById('btnFollow');
+  const icon = document.getElementById('followIcon');
+  const text = document.getElementById('followText');
+  if (!btn || !text || !icon) return;
+  if (_isFollowing) {
+    btn.className = "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-emerald-600 dark:text-emerald-400 px-7 py-3.5 rounded-full font-black flex gap-2 items-center shadow-sm transition-all duration-300 hover:-translate-y-1 active:scale-95 text-[15px] border-b-4 border-gray-300 dark:border-gray-900";
+    icon.textContent = "check";
+    text.textContent = "Following";
+  } else {
+    btn.className = "bg-primary hover:bg-emerald-600 text-white px-7 py-3.5 rounded-full font-black flex gap-2 items-center shadow-[0_15px_30px_-5px_rgba(1,152,99,0.4)] transition-all duration-300 hover:-translate-y-1 active:scale-95 text-[15px] border-b-4 border-emerald-800";
+    icon.textContent = "person_add";
+    text.textContent = "Follow";
+  }
+}
+
+async function toggleFollow() {
+  const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token') || '';
+  if (!currentUser || !token) {
+    window.location.href = `Login Page.html?redirect=${encodeURIComponent('profile.html?id=' + userId)}`;
+    return;
+  }
+  const action = _isFollowing ? 'unfollow' : 'follow';
+  const newFollowState = !_isFollowing;
+  updateFollowBtnState(newFollowState);
+  _followersCount = Math.max(0, _followersCount + (newFollowState ? 1 : -1));
+  if (document.getElementById('statFollowers')) document.getElementById('statFollowers').textContent = _followersCount;
+
+  try {
+    const res = await fetch(`/api/users.php?action=${action}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      credentials: 'include',
+      body: JSON.stringify({ user_id: parseInt(userId) })
+    });
+    const d = await res.json();
+    if (!d.success) {
+      updateFollowBtnState(!newFollowState);
+      _followersCount = Math.max(0, _followersCount + (!newFollowState ? 1 : -1));
+      if (document.getElementById('statFollowers')) document.getElementById('statFollowers').textContent = _followersCount;
+      showToast(d.error || 'Action failed', 'error');
+    } else {
+      showToast(newFollowState ? 'You are now following ' + sellerName : 'Unfollowed ' + sellerName);
+    }
+  } catch (e) {
+    updateFollowBtnState(!newFollowState);
+    _followersCount = Math.max(0, _followersCount + (!newFollowState ? 1 : -1));
+    if (document.getElementById('statFollowers')) document.getElementById('statFollowers').textContent = _followersCount;
+    showToast('Network error', 'error');
+  }
+}
+
 /* ========== REPORT ========== */
 function openReportModal() {
     if(!currentUser) {
@@ -730,13 +817,19 @@ async function submitReport() {
     const btn = document.querySelector('#reportModal button[onclick="submitReport()"]');
     if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
 
+    const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token') || '';
+
     try {
       const res = await fetch('/api/users.php?action=report', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+        },
         credentials: 'include',
         body: JSON.stringify({
-          reported_user_id: userId,   // was 'user_id' — fixed to match users.php handleReport
+          user_id: parseInt(userId),
+          reported_user_id: parseInt(userId),
           reason,
           details,
           type: 'user'
@@ -778,13 +871,19 @@ async function submitReview() {
     const text = document.getElementById('reviewText').value.trim();
     if (stars === 0) return showToast("Please select a star rating", "error");
     if (!text) return showToast("Please write a review", "error");
+
+    const token = localStorage.getItem('zipzapzoi_token') || localStorage.getItem('zzz_token') || sessionStorage.getItem('zipzapzoi_token') || '';
+
     try {
       const res = await fetch('/api/reviews.php', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+        },
         credentials: 'include',
         body: JSON.stringify({
-          seller_id: userId,
+          seller_id: parseInt(userId),
           rating: stars,
           comment: text
         })

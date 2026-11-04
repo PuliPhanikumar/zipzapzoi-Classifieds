@@ -1400,6 +1400,12 @@
         window.open(whatsappUrl, '_blank');
       }
 
+      function viewSellerProfile() {
+        if (currentListing && currentListing.user_id) {
+          window.location.href = 'profile.html?id=' + encodeURIComponent(currentListing.user_id);
+        }
+      }
+
       // ─── CHAT ──────────────────────────────────────────────────────────
       function initiateChat() {
         const user = currentUser;
