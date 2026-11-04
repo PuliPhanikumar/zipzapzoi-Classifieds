@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ZipZapZoi â€” Notifications API
  * GET    /api/notifications.php             â†’ get current user's notifications

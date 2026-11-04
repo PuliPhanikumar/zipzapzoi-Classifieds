@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * ZipZapZoi Classifieds â€” Image Upload API
  * POST /api/uploads.php
