@@ -221,8 +221,8 @@ try {
     $testPass = password_hash('TestBot@123', PASSWORD_BCRYPT);
     $db->prepare("
         INSERT INTO users (id, name, email, phone, password_hash, role, is_active, is_verified)
-        VALUES (9999, 'Verification Bot', 'test.bot@zipzapzoi.com', '9000000000', ?, 'user', 1, 1)
-        ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), is_active = 1, is_verified = 1
+        VALUES (9999, 'Verification Bot', 'test.bot@zipzapzoi.com', '9000000000', ?, 'admin', 1, 1)
+        ON DUPLICATE KEY UPDATE role = 'admin', password_hash = VALUES(password_hash), is_active = 1, is_verified = 1
     ")->execute([$testPass]);
     $updates['test_bot'] = "Verified test bot account";
 
