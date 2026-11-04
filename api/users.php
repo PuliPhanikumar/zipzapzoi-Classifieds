@@ -27,17 +27,39 @@ try {
     error_log('ZZZ users schema patch: ' . $e->getMessage());
 }
 
+// ── Auto-create user_follows table ──────────────────────────────────────
+try {
+    getDB()->exec(
+        'CREATE TABLE IF NOT EXISTS user_follows (
+            id          INT AUTO_INCREMENT PRIMARY KEY,
+            follower_id INT NOT NULL,
+            following_id INT NOT NULL,
+            created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_follow (follower_id, following_id),
+            INDEX idx_follower (follower_id),
+            INDEX idx_following (following_id)
+        )'
+    );
+} catch (\Throwable $e) {
+    error_log('ZZZ user_follows schema: ' . $e->getMessage());
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = $_GET['id'] ?? 'me';
-$action = $_GET['action'] ?? '';
+$action = $_GET['action'] ?? $_GET['type'] ?? '';
 
-if ($method === 'GET')        getProfile($id);
-elseif ($method === 'PUT')    updateProfile();
+if ($method === 'GET') {
+    if ($action === 'followers') listFollowers();
+    elseif ($action === 'following') listFollowing();
+    else getProfile($id);
+} elseif ($method === 'PUT') updateProfile();
 elseif ($method === 'POST') {
     if ($action === 'notify') handleNotify();
     elseif ($action === 'report') handleReport();
     elseif ($action === 'review') handleReview();
     elseif ($action === 'verify_identity') handleVerifyIdentity();
+    elseif ($action === 'follow') handleFollow();
+    elseif ($action === 'unfollow') handleUnfollow();
     else jsonError('Unknown action', 400);
 }
 else jsonError('Method not allowed', 405);
@@ -66,6 +88,43 @@ function getProfile(string $id): void {
     $tStmt = $db->prepare("SELECT COUNT(*) FROM listings WHERE user_id = ?");
     $tStmt->execute([$userId]);
     $profile['total_listings'] = (int)$tStmt->fetchColumn();
+
+    // Followers & Following counts
+    try {
+        $fwStmt = $db->prepare("SELECT COUNT(*) FROM user_follows WHERE following_id = ?");
+        $fwStmt->execute([$userId]);
+        $profile['followers'] = (int)$fwStmt->fetchColumn();
+
+        $fgStmt = $db->prepare("SELECT COUNT(*) FROM user_follows WHERE follower_id = ?");
+        $fgStmt->execute([$userId]);
+        $profile['following'] = (int)$fgStmt->fetchColumn();
+
+        // Is the requesting user following this profile?
+        $viewerId = (int)($user['id'] ?? 0);
+        if ($viewerId && $viewerId !== $userId) {
+            $isFollowStmt = $db->prepare("SELECT COUNT(*) FROM user_follows WHERE follower_id = ? AND following_id = ?");
+            $isFollowStmt->execute([$viewerId, $userId]);
+            $profile['is_following'] = (bool)$isFollowStmt->fetchColumn();
+        } else {
+            $profile['is_following'] = false;
+        }
+    } catch (\Throwable $e) {
+        $profile['followers']   = 0;
+        $profile['following']   = 0;
+        $profile['is_following'] = false;
+    }
+
+    // Reviews count + average rating
+    try {
+        $rStmt = $db->prepare("SELECT COUNT(*), IFNULL(AVG(rating),0) FROM user_reviews WHERE seller_id = ?");
+        $rStmt->execute([$userId]);
+        [$reviewCount, $avgRating] = $rStmt->fetch(PDO::FETCH_NUM);
+        $profile['reviews'] = (int)$reviewCount;
+        $profile['rating']  = round((float)$avgRating, 1);
+    } catch (\Throwable $e) {
+        $profile['reviews'] = 0;
+        $profile['rating']  = 0.0;
+    }
 
     // Quota info (only for self)
     if ($id === 'me' && $user) {
@@ -261,8 +320,124 @@ function handleReview(): void {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// POST ?action=verify_identity — Upload Govt ID to request verification
+// POST ?action=follow — Follow a user
 // ─────────────────────────────────────────────────────────────────────
+function handleFollow(): void {
+    $me = requireAuth();
+    $b  = getBody();
+    $targetId = (int)($b['user_id'] ?? 0);
+
+    if (!$targetId) jsonError('user_id required.');
+    if ($targetId === (int)$me['id']) jsonError('You cannot follow yourself.');
+
+    $db = getDB();
+    try {
+        $db->prepare(
+            'INSERT IGNORE INTO user_follows (follower_id, following_id) VALUES (?, ?)'
+        )->execute([(int)$me['id'], $targetId]);
+
+        // Send in-app notification to followed user
+        try {
+            $senderName = $me['name'] ?: 'Someone';
+            $db->prepare("
+                INSERT INTO user_notifications (user_id, type, title, message, link)
+                VALUES (?, 'follow', 'New Follower', ?, ?)
+            ")->execute([$targetId, "$senderName started following you.", "seller/" . (int)$me['id']]);
+        } catch (\Throwable $ne) {}
+
+        // Return updated counts
+        $fwStmt = $db->prepare("SELECT COUNT(*) FROM user_follows WHERE following_id = ?");
+        $fwStmt->execute([$targetId]);
+        $followers = (int)$fwStmt->fetchColumn();
+
+        jsonOk(['message' => 'Followed successfully.', 'followers' => $followers, 'is_following' => true]);
+    } catch (\Throwable $e) {
+        error_log('handleFollow error: ' . $e->getMessage());
+        jsonError('Failed to follow user. Please try again.', 500);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// POST ?action=unfollow — Unfollow a user
+// ─────────────────────────────────────────────────────────────────────
+function handleUnfollow(): void {
+    $me = requireAuth();
+    $b  = getBody();
+    $targetId = (int)($b['user_id'] ?? 0);
+
+    if (!$targetId) jsonError('user_id required.');
+
+    $db = getDB();
+    try {
+        $db->prepare(
+            'DELETE FROM user_follows WHERE follower_id = ? AND following_id = ?'
+        )->execute([(int)$me['id'], $targetId]);
+
+        // Return updated counts
+        $fwStmt = $db->prepare("SELECT COUNT(*) FROM user_follows WHERE following_id = ?");
+        $fwStmt->execute([$targetId]);
+        $followers = (int)$fwStmt->fetchColumn();
+
+        jsonOk(['message' => 'Unfollowed successfully.', 'followers' => $followers, 'is_following' => false]);
+    } catch (\Throwable $e) {
+        error_log('handleUnfollow error: ' . $e->getMessage());
+        jsonError('Failed to unfollow user. Please try again.', 500);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// GET ?action=followers&user_id=X — List followers of a user
+// ─────────────────────────────────────────────────────────────────────
+function listFollowers(): void {
+    $userId = (int)($_GET['user_id'] ?? $_GET['id'] ?? 0);
+    if (!$userId) jsonError('user_id required.');
+
+    $db = getDB();
+    try {
+        $stmt = $db->prepare(
+            'SELECT u.id, u.name, u.avatar FROM users u
+             INNER JOIN user_follows f ON f.follower_id = u.id
+             WHERE f.following_id = ? AND u.is_active = 1
+             ORDER BY f.created_at DESC LIMIT 100'
+        );
+        $stmt->execute([$userId]);
+        $rows = $stmt->fetchAll();
+        foreach ($rows as &$r) {
+            $r['id']     = (int)$r['id'];
+            $r['avatar'] = toAbsoluteUrl($r['avatar'] ?? null);
+        }
+        jsonOk($rows);
+    } catch (\Throwable $e) {
+        jsonError('Failed to load followers.', 500);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// GET ?action=following&user_id=X — List users followed by X
+// ─────────────────────────────────────────────────────────────────────
+function listFollowing(): void {
+    $userId = (int)($_GET['user_id'] ?? $_GET['id'] ?? 0);
+    if (!$userId) jsonError('user_id required.');
+
+    $db = getDB();
+    try {
+        $stmt = $db->prepare(
+            'SELECT u.id, u.name, u.avatar FROM users u
+             INNER JOIN user_follows f ON f.following_id = u.id
+             WHERE f.follower_id = ? AND u.is_active = 1
+             ORDER BY f.created_at DESC LIMIT 100'
+        );
+        $stmt->execute([$userId]);
+        $rows = $stmt->fetchAll();
+        foreach ($rows as &$r) {
+            $r['id']     = (int)$r['id'];
+            $r['avatar'] = toAbsoluteUrl($r['avatar'] ?? null);
+        }
+        jsonOk($rows);
+    } catch (\Throwable $e) {
+        jsonError('Failed to load following.', 500);
+    }
+}
 function handleVerifyIdentity(): void {
     $me = requireAuth();
     if (!empty($me['trusted_seller'])) jsonError('You are already verified.');

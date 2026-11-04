@@ -113,7 +113,21 @@ try {
     $expStmt->execute();
     $updates['listing_expiry_days'] = "Set listing_expiry_days to 90 days";
 
-    // 6. Make founder user admin if not already, activate all users and clear rate limits
+    // 6. Ensure user_follows table exists
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS user_follows (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            follower_id INT NOT NULL,
+            following_id INT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_follow (follower_id, following_id),
+            INDEX idx_follower (follower_id),
+            INDEX idx_following (following_id)
+        )
+    ");
+    $updates['user_follows'] = "Verified user_follows table";
+
+    // 7. Make founder user admin if not already, activate all users and clear rate limits
     $adminStmt = $db->prepare("UPDATE users SET role = 'admin', is_verified = 1, is_active = 1 WHERE email = 'phanikumar.isep@gmail.com' OR id = 7");
     $adminStmt->execute();
     $updates['founder_admin'] = "Ensured founder account is admin & verified (affected: {$adminStmt->rowCount()})";
@@ -122,7 +136,7 @@ try {
     try { $db->exec("DELETE FROM rate_limits"); } catch (\Throwable $e) {}
     $updates['rate_limits'] = "Cleared all rate limits and ensured all accounts are active & verified";
 
-    // 7. Return current state
+    // 8. Return current state
     $checkStmt = $db->prepare("SELECT id, title, status, expires_at, user_id FROM listings WHERE id = 7");
     $checkStmt->execute();
     $listing7 = $checkStmt->fetch();

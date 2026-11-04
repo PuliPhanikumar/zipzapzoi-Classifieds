@@ -295,6 +295,15 @@ function getOne(int $id): void {
     $row['id']     = (int)$row['id'];
     $row['user_id'] = (int)($row['user_id'] ?? 0);
     $row['seller_id'] = (int)($row['seller_id'] ?? $row['user_id']);
+
+    // Seller follower count
+    try {
+        $fStmt = $db->prepare("SELECT COUNT(*) FROM user_follows WHERE following_id = ?");
+        $fStmt->execute([$row['user_id']]);
+        $row['seller_followers'] = (int)$fStmt->fetchColumn();
+    } catch (\Throwable $e) {
+        $row['seller_followers'] = 0;
+    }
     $row['is_highlight']   = !empty($row['is_highlight']);
     $row['is_top']         = !empty($row['is_top']);
     $row['hide_phone']     = !empty($row['hide_phone']);
