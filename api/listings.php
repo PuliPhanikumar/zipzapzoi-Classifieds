@@ -30,7 +30,13 @@ try {
 } catch (Exception $e) {}
 
 $method = $_SERVER['REQUEST_METHOD'];
-$id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
+if ($method === 'POST') {
+    $override = $_POST['_method'] ?? $_GET['_method'] ?? $_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'] ?? '';
+    if (strtoupper($override) === 'PUT') {
+        $method = 'PUT';
+    }
+}
+$id     = isset($_GET['id']) ? (int)$_GET['id'] : (isset($_POST['id']) ? (int)$_POST['id'] : null);
 
 
 
@@ -789,6 +795,31 @@ function updateListing(int $id): void {
         }
     }
     
+    $fetchUpdated = $db->prepare(
+        'SELECT l.*, u.id AS seller_id, u.name AS seller_name, u.email AS seller_email,
+                u.phone AS seller_phone, u.avatar AS seller_avatar,
+                u.city AS seller_city, u.state AS seller_state,
+                u.created_at AS seller_since, u.is_verified AS seller_is_verified, u.trusted_seller AS seller_trusted
+         FROM listings l
+         JOIN users u ON u.id = l.user_id
+         WHERE l.id = ?'
+    );
+    $fetchUpdated->execute([$id]);
+    $updatedRow = $fetchUpdated->fetch();
+    if ($updatedRow) {
+        $updatedRow['id']               = (int)$updatedRow['id'];
+        $updatedRow['user_id']          = (int)$updatedRow['user_id'];
+        $updatedRow['price']            = (float)$updatedRow['price'];
+        if ($updatedRow['original_price'] !== null) $updatedRow['original_price'] = (float)$updatedRow['original_price'];
+        $updatedRow['images']           = normalizeImagesArray($updatedRow['images'] ?? []);
+        $updatedRow['thumbnail']        = $updatedRow['images'][0] ?? null;
+        $updatedRow['seller_avatar']    = toAbsoluteUrl($updatedRow['seller_avatar'] ?? null);
+        $updatedRow['seller_is_verified']= (bool)$updatedRow['seller_is_verified'];
+        $updatedRow['seller_trusted']   = (bool)$updatedRow['seller_trusted'];
+        $updatedRow['message']          = 'Listing updated.';
+        jsonOk($updatedRow);
+    }
+
     jsonOk(['message' => 'Listing updated.']);
 }
 

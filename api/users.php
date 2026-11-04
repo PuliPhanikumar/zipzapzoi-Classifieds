@@ -40,8 +40,19 @@ try {
             INDEX idx_following (following_id)
         )'
     );
+    getDB()->exec(
+        'CREATE TABLE IF NOT EXISTS user_blocks (
+            id          INT AUTO_INCREMENT PRIMARY KEY,
+            blocker_id  INT NOT NULL,
+            blocked_id  INT NOT NULL,
+            created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_block (blocker_id, blocked_id),
+            INDEX idx_blocker (blocker_id),
+            INDEX idx_blocked (blocked_id)
+        )'
+    );
 } catch (\Throwable $e) {
-    error_log('ZZZ user_follows schema: ' . $e->getMessage());
+    error_log('ZZZ user_follows/blocks schema: ' . $e->getMessage());
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -60,6 +71,8 @@ elseif ($method === 'POST') {
     elseif ($action === 'verify_identity') handleVerifyIdentity();
     elseif ($action === 'follow') handleFollow();
     elseif ($action === 'unfollow') handleUnfollow();
+    elseif ($action === 'block') handleBlock();
+    elseif ($action === 'unblock') handleUnblock();
     else jsonError('Unknown action', 400);
 }
 else jsonError('Method not allowed', 405);
@@ -114,10 +127,18 @@ function getProfile(string $id): void {
         $profile['is_following'] = false;
     }
 
-    // Reviews count + average rating
+    // Reviews count + average rating (canonical union of reviews & user_reviews)
     try {
-        $rStmt = $db->prepare("SELECT COUNT(*), IFNULL(AVG(rating),0) FROM user_reviews WHERE seller_id = ?");
-        $rStmt->execute([$userId]);
+        $rStmt = $db->prepare("
+            SELECT COUNT(*), IFNULL(AVG(rating),0) FROM (
+                SELECT rating FROM reviews WHERE seller_id = ?
+                UNION ALL
+                SELECT rating FROM user_reviews ur WHERE ur.seller_id = ? AND NOT EXISTS (
+                    SELECT 1 FROM reviews r WHERE r.seller_id = ur.seller_id AND r.buyer_id = ur.reviewer_id
+                )
+            ) as all_revs
+        ");
+        $rStmt->execute([$userId, $userId]);
         [$reviewCount, $avgRating] = $rStmt->fetch(PDO::FETCH_NUM);
         $profile['reviews'] = (int)$reviewCount;
         $profile['rating']  = round((float)$avgRating, 1);
@@ -268,6 +289,14 @@ function handleReport(): void {
         $db->prepare(
             'INSERT INTO user_reports (reported_by, reported_user, listing_id, reason, details) VALUES (?, ?, ?, ?, ?)'
         )->execute([(int)$user['id'], $reportedId ?: null, $listingId ?: null, $reason, $details]);
+
+        if ($listingId) {
+            try {
+                $db->prepare(
+                    'INSERT IGNORE INTO reports (listing_id, reporter_id, reason, status, created_at) VALUES (?, ?, ?, "pending", NOW())'
+                )->execute([$listingId, (int)$user['id'], $reason]);
+            } catch (\Throwable $re) {}
+        }
     } catch (\Exception $e) {
         error_log('user_reports error: ' . $e->getMessage());
         jsonError('Could not submit report. Please try again.', 500);
@@ -311,6 +340,14 @@ function handleReview(): void {
              VALUES (?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE rating = VALUES(rating), review_text = VALUES(review_text)'
         )->execute([$sellerId, (int)$user['id'], $rating, $text]);
+
+        // Cross-sync into reviews table for complete consistency
+        try {
+            $db->prepare(
+                'INSERT INTO reviews (seller_id, buyer_id, rating, comment) VALUES (?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE rating = VALUES(rating), comment = VALUES(comment)'
+            )->execute([$sellerId, (int)$user['id'], $rating, $text]);
+        } catch (\Throwable $re) {}
     } catch (\Exception $e) {
         error_log('user_reviews error: ' . $e->getMessage());
         jsonError('Failed to save review. Please try again.');
@@ -382,6 +419,57 @@ function handleUnfollow(): void {
     } catch (\Throwable $e) {
         error_log('handleUnfollow error: ' . $e->getMessage());
         jsonError('Failed to unfollow user. Please try again.', 500);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// POST ?action=block — Block a user
+// ─────────────────────────────────────────────────────────────────────
+function handleBlock(): void {
+    $me = requireAuth();
+    $b  = getBody();
+    $targetId = (int)($b['user_id'] ?? 0);
+
+    if (!$targetId) jsonError('user_id required.');
+    if ($targetId === (int)$me['id']) jsonError('You cannot block yourself.');
+
+    $db = getDB();
+    try {
+        $db->prepare(
+            'INSERT IGNORE INTO user_blocks (blocker_id, blocked_id) VALUES (?, ?)'
+        )->execute([(int)$me['id'], $targetId]);
+
+        // Break any existing follow relationships between blocker and blocked
+        $db->prepare('DELETE FROM user_follows WHERE (follower_id = ? AND following_id = ?) OR (follower_id = ? AND following_id = ?)')
+           ->execute([(int)$me['id'], $targetId, $targetId, (int)$me['id']]);
+
+        jsonOk(['message' => 'User blocked successfully.', 'blocked' => true]);
+    } catch (\Throwable $e) {
+        error_log('handleBlock error: ' . $e->getMessage());
+        jsonError('Failed to block user. Please try again.', 500);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// POST ?action=unblock — Unblock a user
+// ─────────────────────────────────────────────────────────────────────
+function handleUnblock(): void {
+    $me = requireAuth();
+    $b  = getBody();
+    $targetId = (int)($b['user_id'] ?? 0);
+
+    if (!$targetId) jsonError('user_id required.');
+
+    $db = getDB();
+    try {
+        $db->prepare(
+            'DELETE FROM user_blocks WHERE blocker_id = ? AND blocked_id = ?'
+        )->execute([(int)$me['id'], $targetId]);
+
+        jsonOk(['message' => 'User unblocked successfully.', 'blocked' => false]);
+    } catch (\Throwable $e) {
+        error_log('handleUnblock error: ' . $e->getMessage());
+        jsonError('Failed to unblock user. Please try again.', 500);
     }
 }
 

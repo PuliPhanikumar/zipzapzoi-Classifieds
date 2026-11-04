@@ -13,7 +13,11 @@ $totalUsers    = (int)$db->query('SELECT COUNT(*) FROM users WHERE is_active=1')
 $activeListings= (int)$db->query("SELECT COUNT(*) FROM listings WHERE status='active'")->fetchColumn();
 $pendingListings=(int)$db->query("SELECT COUNT(*) FROM listings WHERE status='pending_review'")->fetchColumn();
 $totalRevenue  = (float)$db->query("SELECT COALESCE(SUM(amount),0) FROM transactions WHERE status='success'")->fetchColumn();
-$openTickets   = 0; // tickets table not implemented yet — returns 0
+try {
+    $openTickets = (int)$db->query("SELECT COUNT(*) FROM support_tickets WHERE status='open'")->fetchColumn();
+} catch (\Throwable $e) {
+    $openTickets = 0;
+}
 
 // ── 7-Day Activity (new listings per day) ─────────────────────────
 $actStmt = $db->prepare(

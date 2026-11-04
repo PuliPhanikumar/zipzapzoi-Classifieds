@@ -130,14 +130,87 @@ if ($method === 'GET') {
     $stmt->execute([$user['id'], $title, $category, $subcategory, $desc, $min, $max, $state, $city, $dynamic_data]);
     $newId = (int)$db->lastInsertId();
 
-    jsonOk([
+    $newRowStmt = $db->prepare("SELECT w.*, u.name as buyer_name, u.avatar as buyer_avatar, u.phone as buyer_phone, u.trusted_seller 
+                                FROM wanted_ads w 
+                                JOIN users u ON u.id = w.user_id 
+                                WHERE w.id = ?");
+    $newRowStmt->execute([$newId]);
+    $created = $newRowStmt->fetch();
+    if ($created) {
+        $created['id']         = (int)$created['id'];
+        $created['budget_min'] = (float)$created['budget_min'];
+        $created['budget_max'] = (float)$created['budget_max'];
+        $created['budget']     = (float)$created['budget_max'];
+        $created['user_id']    = (int)$created['user_id'];
+        $created['is_active']  = ($created['status'] === 'active');
+        $created['buyer_avatar'] = toAbsoluteUrl($created['buyer_avatar'] ?? null);
+    }
+
+    jsonOk($created ?: [
         'id'          => $newId,
         'title'       => $title,
         'category'    => $category,
         'budget_min'  => $min,
         'budget_max'  => $max,
+        'budget'      => $max,
         'message'     => 'Buyer demand posted successfully!'
     ]);
+} elseif ($method === 'PUT') {
+    $user = requireAuth();
+    $body = getBody();
+
+    $id = (int)($body['id'] ?? $_GET['id'] ?? 0);
+    if (!$id) jsonError('Demand ID required', 400);
+
+    $db = getDB();
+    $chk = $db->prepare("SELECT id FROM wanted_ads WHERE id = ? AND user_id = ? AND status != 'deleted'");
+    $chk->execute([$id, $user['id']]);
+    if (!$chk->fetch()) {
+        jsonError('Wanted ad not found or not owned by you', 404);
+    }
+
+    $title       = isset($body['title']) ? trim($body['title']) : null;
+    $category    = isset($body['category']) ? trim($body['category']) : null;
+    $subcategory = isset($body['subcategory']) ? trim($body['subcategory']) : null;
+    $desc        = isset($body['description']) ? trim($body['description']) : null;
+    $min         = isset($body['budget_min']) ? (float)$body['budget_min'] : null;
+    $max         = isset($body['budget_max']) ? (float)$body['budget_max'] : null;
+    $state       = isset($body['location_state']) ? trim($body['location_state']) : null;
+    $city        = isset($body['location_city']) ? trim($body['location_city']) : null;
+
+    $sets = [];
+    $params = [];
+    if ($title !== null && $title !== '') { $sets[] = "title = ?"; $params[] = $title; }
+    if ($category !== null) { $sets[] = "category = ?"; $params[] = $category; }
+    if ($subcategory !== null) { $sets[] = "subcategory = ?"; $params[] = $subcategory; }
+    if ($desc !== null) { $sets[] = "description = ?"; $params[] = $desc; }
+    if ($min !== null) { $sets[] = "budget_min = ?"; $params[] = $min; }
+    if ($max !== null) { $sets[] = "budget_max = ?"; $params[] = $max; }
+    if ($state !== null) { $sets[] = "location_state = ?"; $params[] = $state; }
+    if ($city !== null) { $sets[] = "location_city = ?"; $params[] = $city; }
+
+    if (!empty($sets)) {
+        $params[] = $id;
+        $params[] = $user['id'];
+        $db->prepare("UPDATE wanted_ads SET " . implode(', ', $sets) . " WHERE id = ? AND user_id = ?")->execute($params);
+    }
+
+    $updatedStmt = $db->prepare("SELECT w.*, u.name as buyer_name, u.avatar as buyer_avatar, u.phone as buyer_phone, u.trusted_seller 
+                                 FROM wanted_ads w 
+                                 JOIN users u ON u.id = w.user_id 
+                                 WHERE w.id = ?");
+    $updatedStmt->execute([$id]);
+    $updated = $updatedStmt->fetch();
+    if ($updated) {
+        $updated['id']         = (int)$updated['id'];
+        $updated['budget_min'] = (float)$updated['budget_min'];
+        $updated['budget_max'] = (float)$updated['budget_max'];
+        $updated['budget']     = (float)$updated['budget_max'];
+        $updated['user_id']    = (int)$updated['user_id'];
+        $updated['is_active']  = ($updated['status'] === 'active');
+        $updated['buyer_avatar'] = toAbsoluteUrl($updated['buyer_avatar'] ?? null);
+    }
+    jsonOk($updated ?: ['message' => 'Wanted ad updated successfully.']);
 } elseif ($method === 'DELETE') {
     $user = requireAuth();
     $id = $_GET['id'] ?? null;

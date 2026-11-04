@@ -123,9 +123,90 @@ try {
             UNIQUE KEY uniq_follow (follower_id, following_id),
             INDEX idx_follower (follower_id),
             INDEX idx_following (following_id)
-        )
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ");
     $updates['user_follows'] = "Verified user_follows table";
+
+    // 6b. Ensure user_blocks table exists
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS user_blocks (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            blocker_id INT NOT NULL,
+            blocked_id INT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_block (blocker_id, blocked_id),
+            INDEX idx_blocker (blocker_id),
+            INDEX idx_blocked (blocked_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    ");
+    $updates['user_blocks'] = "Verified user_blocks table";
+
+    // 6c. Ensure support_tickets table exists
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS support_tickets (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            subject VARCHAR(255) NOT NULL,
+            message TEXT NOT NULL,
+            priority ENUM('low','medium','high') DEFAULT 'low',
+            sla_hours INT DEFAULT 48,
+            status ENUM('open','resolved') DEFAULT 'open',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_ticket_user (user_id),
+            INDEX idx_ticket_status (status)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    ");
+    $updates['support_tickets'] = "Verified support_tickets table";
+
+    // 6d. Ensure reports table exists
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS reports (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            listing_id INT NOT NULL,
+            reporter_id INT NOT NULL,
+            reason VARCHAR(200) NOT NULL,
+            status ENUM('pending','reviewed','dismissed') DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_report_listing (listing_id),
+            INDEX idx_report_reporter (reporter_id),
+            INDEX idx_report_status (status)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    ");
+    $updates['reports'] = "Verified reports table";
+
+    // 6e. Ensure user_reports table exists
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS user_reports (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            reported_by INT NOT NULL,
+            reported_user INT NULL,
+            listing_id INT NULL,
+            reason VARCHAR(200) NULL,
+            details TEXT NULL,
+            status VARCHAR(50) DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_ur_by (reported_by),
+            INDEX idx_ur_user (reported_user),
+            INDEX idx_ur_listing (listing_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    ");
+    $updates['user_reports'] = "Verified user_reports table";
+
+    // 6f. Ensure default plan_config in system_settings if empty
+    $currPlans = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'plan_config'")->fetchColumn();
+    if (empty($currPlans) || $currPlans === 'null') {
+        $defaultPlans = json_encode([
+            ['id' => 'monthly_free', 'name' => 'Free', 'price' => 0, 'ads' => 1, 'days' => 30, 'features' => ['1 active ad', 'Standard listing', '30-day validity', 'Basic support', 'Community access']],
+            ['id' => 'starter', 'name' => 'Starter', 'price' => 149, 'ads' => 10, 'days' => 30, 'features' => ['10 active ads', 'Featured badge ✨', '30-day validity', 'Priority support', 'Push notifications', 'Basic analytics']],
+            ['id' => 'growth', 'name' => 'Growth', 'price' => 299, 'ads' => 25, 'days' => 45, 'features' => ['25 active ads', 'Top placement 🔝', '45-day validity', 'Boost credits (5/mo)', 'Full analytics', 'Priority support', 'Story ads']],
+            ['id' => 'business', 'name' => 'Business', 'price' => 599, 'ads' => 50, 'days' => 60, 'features' => ['50 active ads', 'Top placement & Story ads', '60-day validity', 'Boost credits (15/mo)', 'VIP support', 'Verified seller badge']],
+            ['id' => 'pro', 'name' => 'Pro Seller', 'price' => 999, 'ads' => 100, 'days' => 90, 'features' => ['100 active ads', 'Homepage Showcase ✨', '90-day validity', 'Boost credits (30/mo)', 'Dedicated account manager', 'Unlimited edits & renewals']],
+            ['id' => 'extra_ad', 'name' => 'Single Extra Ad', 'price' => 19, 'ads' => 1, 'days' => 30, 'features' => ['1 additional active ad slot', '30-day validity']],
+            ['id' => 'renewal', 'name' => 'Ad Renewal', 'price' => 16, 'ads' => 1, 'days' => 30, 'features' => ['Extend existing listing for 30 days']]
+        ], JSON_UNESCAPED_UNICODE);
+        $db->prepare("INSERT INTO system_settings (setting_key, setting_value) VALUES ('plan_config', ?) ON DUPLICATE KEY UPDATE setting_value = ?")->execute([$defaultPlans, $defaultPlans]);
+        $updates['plan_config'] = "Populated default plan_config";
+    }
 
     // 7. Make founder user admin if not already, activate all users and clear rate limits
     $adminStmt = $db->prepare("UPDATE users SET role = 'admin', is_verified = 1, is_active = 1 WHERE email = 'phanikumar.isep@gmail.com' OR id = 7");

@@ -20,6 +20,24 @@ if (strlen($message) < 10) jsonError('Please provide more details in your messag
 
 $db = getDB();
 
+// Auto-create support_tickets table if not exists
+try {
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS support_tickets (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            subject VARCHAR(255) NOT NULL,
+            message TEXT NOT NULL,
+            priority ENUM('low','medium','high') DEFAULT 'low',
+            sla_hours INT DEFAULT 48,
+            status ENUM('open','resolved') DEFAULT 'open',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_ticket_user (user_id),
+            INDEX idx_ticket_status (status)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    ");
+} catch (\Throwable $e) {}
+
 // Anti-spam: prevent user from submitting more than 3 open tickets at a time
 $openStmt = $db->prepare('SELECT COUNT(*) FROM support_tickets WHERE user_id = ? AND status = "open"');
 $openStmt->execute([$user['id']]);

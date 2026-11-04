@@ -27,9 +27,21 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 } catch (Exception $e) { /* table already exists */ }
 
-$user   = requireAuth();
+$user   = getCurrentUser();
 $method = $_SERVER['REQUEST_METHOD'];
 $db     = getDB();
+
+if (!$user) {
+    if ($method === 'GET') {
+        jsonOk([]);
+    } elseif ($method === 'POST') {
+        jsonOk(['message' => 'Guest view ignored.']);
+    } elseif ($method === 'DELETE') {
+        jsonOk(['message' => 'History cleared.']);
+    } else {
+        jsonError('Method not allowed.', 405);
+    }
+}
 
 // ── GET — fetch recently viewed listings ───────────────────────────────────
 if ($method === 'GET') {

@@ -152,6 +152,16 @@ function sendMessage(array $user): void {
     if ($toId === (int)$user['id']) jsonError('Cannot message yourself.');
 
     $db = getDB();
+
+    // Check if either user has blocked the other
+    try {
+        $blk = $db->prepare('SELECT COUNT(*) FROM user_blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)');
+        $blk->execute([(int)$user['id'], $toId, $toId, (int)$user['id']]);
+        if ($blk->fetchColumn() > 0) {
+            jsonError('Cannot send message. Messaging between these accounts is restricted.', 403);
+        }
+    } catch (\Throwable $e) {}
+
     $chk = $db->prepare('SELECT id, name, fcm_token FROM users WHERE id = ? AND is_active = 1');
     $chk->execute([$toId]);
     $recipient = $chk->fetch();

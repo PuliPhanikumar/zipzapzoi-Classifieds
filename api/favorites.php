@@ -49,7 +49,14 @@ function getFavorites(array $user): void {
         $r['price'] = (float)$r['price'];
         $r['id'] = (int)$r['id'];
     }
-    jsonOk($rows);
+    unset($r);
+
+    $isListingsResponse = isset($_GET['all']) || !empty($_SERVER['HTTP_X_APP_CLIENT']) || stripos($_SERVER['HTTP_USER_AGENT'] ?? '', 'okhttp') !== false;
+    if ($isListingsResponse) {
+        jsonOk(['listings' => $rows, 'total' => count($rows)]);
+    } else {
+        jsonOk($rows);
+    }
 }
 
 function addFavorite(array $user): void {

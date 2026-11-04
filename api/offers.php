@@ -222,8 +222,6 @@ elseif ($method === 'PUT') {
             $stmt = $db->prepare("INSERT INTO messages (from_user_id, to_user_id, listing_id, body) VALUES (?, ?, ?, ?)");
             $stmt->execute([$user['id'], $buyer_id, $listing_id, $chat_msg]);
         } catch (Exception $e) {}
-
-        jsonOk(['message' => 'Offer accepted.']);
     } 
     elseif ($action === 'decline') {
         $stmt = $db->prepare("UPDATE offers SET status = 'declined' WHERE id = ?");
@@ -239,8 +237,6 @@ elseif ($method === 'PUT') {
             $db->prepare("INSERT INTO messages (from_user_id, to_user_id, listing_id, body) VALUES (?, ?, ?, ?)")
                ->execute([$user['id'], $buyer_id, $listing_id, "Sorry, your offer has been declined. Feel free to make a new offer or contact me."]);
         } catch(Exception $e) {}
-
-        jsonOk(['message' => 'Offer declined.']);
     } 
     elseif ($action === 'counter') {
         $counter_amount = isset($body['counter_amount']) ? (float)$body['counter_amount'] : 0.0;
@@ -258,9 +254,34 @@ elseif ($method === 'PUT') {
             $stmt = $db->prepare("INSERT INTO user_notifications (user_id, type, title, message, link) VALUES (?, 'counter_offer', 'Counter Offer Received', ?, ?)");
             $stmt->execute([$buyer_id, $notif_text, $link]);
         } catch (Exception $e) {}
-
-        jsonOk(['message' => 'Counter offer submitted.']);
     }
+
+    // Return the updated Offer model so mobile and web receive complete object
+    $fetchStmt = $db->prepare("
+        SELECT o.*, l.title as listing_title, l.price as listing_price, l.images as listing_images,
+               u.name as buyer_name, u.avatar as buyer_avatar
+        FROM offers o
+        JOIN listings l ON l.id = o.listing_id
+        JOIN users u ON u.id = o.buyer_id
+        WHERE o.id = ?
+    ");
+    $fetchStmt->execute([$offer_id]);
+    $updatedOffer = $fetchStmt->fetch(PDO::FETCH_ASSOC);
+    if ($updatedOffer) {
+        $imgs = json_decode($updatedOffer['listing_images'] ?? '[]', true);
+        $updatedOffer['listing_image'] = is_array($imgs) && count($imgs) > 0 ? toAbsoluteUrl($imgs[0]) : null;
+        $updatedOffer['buyer_avatar']  = toAbsoluteUrl($updatedOffer['buyer_avatar'] ?? null);
+        $updatedOffer['id']            = (int)$updatedOffer['id'];
+        $updatedOffer['listing_id']    = (int)$updatedOffer['listing_id'];
+        $updatedOffer['buyer_id']      = (int)$updatedOffer['buyer_id'];
+        $updatedOffer['seller_id']     = (int)$updatedOffer['seller_id'];
+        $updatedOffer['amount']        = (float)$updatedOffer['amount'];
+        if ($updatedOffer['counter_amount'] !== null) $updatedOffer['counter_amount'] = (float)$updatedOffer['counter_amount'];
+        $updatedOffer['message']       = $action === 'accept' ? 'Offer accepted.' : ($action === 'decline' ? 'Offer declined.' : 'Counter offer submitted.');
+        jsonOk($updatedOffer);
+    }
+
+    jsonOk(['message' => "Offer {$action} processed."]);
 } 
 else {
     jsonError("Method not allowed", 405);

@@ -556,6 +556,17 @@ function sanitizeUser(array $u): array {
     $stmt->execute([(int)$u['id']]);
     $totalListings = (int)$stmt->fetchColumn();
 
+    $followers = 0; $following = 0;
+    try {
+        $fwStmt = $db->prepare("SELECT COUNT(*) FROM user_follows WHERE following_id = ?");
+        $fwStmt->execute([(int)$u['id']]);
+        $followers = (int)$fwStmt->fetchColumn();
+
+        $fgStmt = $db->prepare("SELECT COUNT(*) FROM user_follows WHERE follower_id = ?");
+        $fgStmt->execute([(int)$u['id']]);
+        $following = (int)$fgStmt->fetchColumn();
+    } catch (\Throwable $e) {}
+
     return [
         'id'            => (int)$u['id'],
         'name'          => $u['name'],
@@ -571,6 +582,8 @@ function sanitizeUser(array $u): array {
         'created_at'    => $u['created_at'],
         'referral_code' => $u['referral_code'] ?? null,
         'total_listings'=> $totalListings,
+        'followers'     => $followers,
+        'following'     => $following,
     ];
 }
 

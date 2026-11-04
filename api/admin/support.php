@@ -14,6 +14,23 @@ else jsonError('Method not allowed', 405);
 
 function listTickets(): void {
     $db   = getDB();
+    try {
+        $db->exec("
+            CREATE TABLE IF NOT EXISTS support_tickets (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                subject VARCHAR(255) NOT NULL,
+                message TEXT NOT NULL,
+                priority ENUM('low','medium','high') DEFAULT 'low',
+                sla_hours INT DEFAULT 48,
+                status ENUM('open','resolved') DEFAULT 'open',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_ticket_user (user_id),
+                INDEX idx_ticket_status (status)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        ");
+    } catch (\Throwable $e) {}
+
     // In SLA management, highest priority and oldest un-resolved should be at top.
     $stmt = $db->query(
         "SELECT t.id, t.subject, t.message, t.status, t.priority, t.sla_hours, t.created_at,

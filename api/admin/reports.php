@@ -14,19 +14,36 @@ else jsonError('Method not allowed', 405);
 
 function listReports(): void {
     $db   = getDB();
-    $stmt = $db->query(
-        "SELECT r.id, r.reason, r.status, r.created_at,
-                l.id AS listing_id, l.title AS listing_title, l.status AS listing_status,
-                u.name AS reporter_name, u.email AS reporter_email,
-                s.name AS seller_name
-         FROM reports r
-         JOIN listings l ON l.id = r.listing_id
-         JOIN users u ON u.id = r.reporter_id
-         JOIN users s ON s.id = l.user_id
-         ORDER BY r.created_at DESC
-         LIMIT 200"
-    );
-    $rows = $stmt->fetchAll();
+    try {
+        $stmt = $db->query(
+            "SELECT r.id, r.reason, r.status, r.created_at,
+                    l.id AS listing_id, l.title AS listing_title, l.status AS listing_status,
+                    u.name AS reporter_name, u.email AS reporter_email,
+                    s.name AS seller_name
+             FROM reports r
+             JOIN listings l ON l.id = r.listing_id
+             JOIN users u ON u.id = r.reporter_id
+             JOIN users s ON s.id = l.user_id
+             UNION ALL
+             SELECT ur.id, CONCAT(ur.reason, IF(ur.details IS NOT NULL AND ur.details != '', CONCAT(' - ', ur.details), '')) AS reason,
+                    ur.status, ur.created_at,
+                    IFNULL(ur.listing_id, 0) AS listing_id,
+                    IFNULL(l.title, 'User Profile Report') AS listing_title,
+                    IFNULL(l.status, 'active') AS listing_status,
+                    u.name AS reporter_name, u.email AS reporter_email,
+                    IFNULL(s.name, 'Reported User') AS seller_name
+             FROM user_reports ur
+             JOIN users u ON u.id = ur.reported_by
+             LEFT JOIN listings l ON l.id = ur.listing_id
+             LEFT JOIN users s ON s.id = IFNULL(ur.reported_user, l.user_id)
+             WHERE ur.listing_id IS NULL OR ur.listing_id NOT IN (SELECT listing_id FROM reports WHERE reporter_id = ur.reported_by)
+             ORDER BY created_at DESC
+             LIMIT 200"
+        );
+        $rows = $stmt->fetchAll();
+    } catch (\Throwable $e) {
+        $rows = [];
+    }
     foreach ($rows as &$r) {
         $r['id']         = (int)$r['id'];
         $r['listing_id'] = (int)$r['listing_id'];

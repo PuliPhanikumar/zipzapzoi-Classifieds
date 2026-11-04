@@ -195,12 +195,90 @@ function requireAdmin(): array {
     return $user;
 }
 
-// ── Get JSON Request Body ─────────────────────────────────────────────
+// ── Multipart / PUT Body Parser ──────────────────────────────────────
+function parseMultipartFormData(string $raw, string $contentType): array {
+    $data = [];
+    if (!preg_match('/boundary=(.*)$/i', $contentType, $matches)) {
+        return $data;
+    }
+    $boundary = trim($matches[1], " \t\n\r\0\x0B\"");
+    $parts = explode('--' . $boundary, $raw);
+    foreach ($parts as $part) {
+        $part = ltrim($part, "\r\n");
+        if (empty($part) || $part === '--' || $part === "--\r\n") continue;
+
+        $pos = strpos($part, "\r\n\r\n");
+        $delimiterLen = 4;
+        if ($pos === false) {
+            $pos = strpos($part, "\n\n");
+            $delimiterLen = 2;
+        }
+        if ($pos === false) continue;
+
+        $rawHeaders = substr($part, 0, $pos);
+        $body = substr($part, $pos + $delimiterLen);
+        $body = rtrim($body, "\r\n");
+
+        if (preg_match('/name="([^"]+)"/', $rawHeaders, $nameMatch)) {
+            $name = $nameMatch[1];
+            if (preg_match('/filename="([^"]*)"/', $rawHeaders, $fileMatch)) {
+                $filename = $fileMatch[1];
+                if (!empty($filename)) {
+                    $type = 'application/octet-stream';
+                    if (preg_match('/Content-Type:\s*([^\r\n]+)/i', $rawHeaders, $typeMatch)) {
+                        $type = trim($typeMatch[1]);
+                    }
+                    $tmpName = tempnam(sys_get_temp_dir(), 'php_put_');
+                    file_put_contents($tmpName, $body);
+                    $_FILES[$name] = [
+                        'name'     => $filename,
+                        'type'     => $type,
+                        'tmp_name' => $tmpName,
+                        'error'    => UPLOAD_ERR_OK,
+                        'size'     => strlen($body)
+                    ];
+                }
+            } else {
+                $data[$name] = $body;
+            }
+        }
+    }
+    return $data;
+}
+
+// ── Get JSON / Multipart Request Body ─────────────────────────────────
 function getBody(): array {
+    static $parsedBody = null;
+    if ($parsedBody !== null) return $parsedBody;
+
     $raw = file_get_contents('php://input');
-    $json = json_decode($raw, true);
-    if (is_array($json)) return $json;
-    return $_POST;
+    if (!empty($raw)) {
+        $json = json_decode($raw, true);
+        if (is_array($json)) {
+            $parsedBody = $json;
+            return $parsedBody;
+        }
+
+        $cType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+        if (stripos($cType, 'multipart/form-data') !== false) {
+            $parsed = parseMultipartFormData($raw, $cType);
+            if (!empty($parsed)) {
+                $_POST = array_merge($_POST, $parsed);
+                $parsedBody = $_POST;
+                return $parsedBody;
+            }
+        } elseif (stripos($cType, 'application/x-www-form-urlencoded') !== false) {
+            parse_str($raw, $parsed);
+            if (is_array($parsed) && !empty($parsed)) {
+                $_POST = array_merge($_POST, $parsed);
+                $parsedBody = $_POST;
+                return $parsedBody;
+            }
+        }
+    }
+
+    $parsedBody = $_POST;
+    return $parsedBody;
 }
 
 // ── Input Helpers ─────────────────────────────────────────────────────

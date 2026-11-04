@@ -18,7 +18,7 @@ if (!is_array($promoCodes) || empty($promoCodes)) {
     // ONLY if the promo code matches ZOI100 as a hardcoded emergency fallback.
     // Otherwise, reject.
     if (strtoupper($code) === 'ZOI100') {
-        jsonOk(['valid' => true, 'discount' => 100]);
+        jsonOk(['valid' => true, 'discount' => 100, 'code' => 'ZOI100']);
         exit;
     }
     jsonError('Invalid coupon code.');
@@ -34,7 +34,7 @@ foreach ($promoCodes as $pc) {
 }
 
 if ($validCoupon) {
-    jsonOk(['valid' => true, 'discount' => (float)($validCoupon['discount'] ?? 100)]);
+    jsonOk(['valid' => true, 'discount' => (float)($validCoupon['discount'] ?? 100), 'code' => strtoupper($code)]);
 } else {
     jsonError('Invalid coupon code.');
 }
