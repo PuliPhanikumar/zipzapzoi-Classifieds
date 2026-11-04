@@ -13,7 +13,10 @@ elseif ($method === 'PUT') updateReport($admin);
 else jsonError('Method not allowed', 405);
 
 function listReports(): void {
-    $db   = getDB();
+    $db = getDB();
+    $rows = [];
+    $abuse = [];
+
     try {
         $stmt = $db->query(
             "SELECT r.id, r.reason, r.status, r.created_at,
@@ -40,30 +43,38 @@ function listReports(): void {
              ORDER BY created_at DESC
              LIMIT 200"
         );
-        $rows = $stmt->fetchAll();
+        $rows = $stmt->fetchAll() ?: [];
     } catch (\Throwable $e) {
         $rows = [];
     }
+
     foreach ($rows as &$r) {
         $r['id']         = (int)$r['id'];
         $r['listing_id'] = (int)$r['listing_id'];
     }
+    unset($r);
 
     // Abuse tracking: count reports per seller
-    $abuseStmt = $db->query(
-        "SELECT s.name AS seller_name, s.id AS seller_id, COUNT(r.id) AS report_count
-         FROM reports r
-         JOIN listings l ON l.id = r.listing_id
-         JOIN users s ON s.id = l.user_id
-         GROUP BY s.id
-         ORDER BY report_count DESC
-         LIMIT 20"
-    );
-    $abuse = $abuseStmt->fetchAll();
+    try {
+        $abuseStmt = $db->query(
+            "SELECT s.name AS seller_name, s.id AS seller_id, COUNT(r.id) AS report_count
+             FROM reports r
+             JOIN listings l ON l.id = r.listing_id
+             JOIN users s ON s.id = l.user_id
+             GROUP BY s.id, s.name
+             ORDER BY report_count DESC
+             LIMIT 20"
+        );
+        $abuse = $abuseStmt->fetchAll() ?: [];
+    } catch (\Throwable $e) {
+        $abuse = [];
+    }
+
     foreach ($abuse as &$a) {
         $a['seller_id']    = (int)$a['seller_id'];
         $a['report_count'] = (int)$a['report_count'];
     }
+    unset($a);
 
     jsonOk(['reports' => $rows, 'abuse_tracking' => $abuse]);
 }
