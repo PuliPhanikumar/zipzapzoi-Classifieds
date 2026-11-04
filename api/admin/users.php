@@ -8,6 +8,7 @@
  * POST /api/admin/users.php                     → create user or grant quota
  */
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../fcm_helper.php';
 $admin  = requireAdmin();
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
@@ -112,6 +113,17 @@ function updateUser(array $admin): void {
         case 'trust':
             $db->prepare("UPDATE users SET trusted_seller=1, verification_status='verified', verification_id_url=NULL WHERE id=?")->execute([$id]);
             adminLog($admin, 'TRUST_SELLER', "User ID: $id");
+            try {
+                $chkUser = $db->prepare("SELECT fcm_token FROM users WHERE id = ?");
+                $chkUser->execute([$id]);
+                $uData = $chkUser->fetch();
+                $msg = "Congratulations! Your account has been verified as a Trusted Seller 🌟";
+                $db->prepare("INSERT INTO user_notifications (user_id, type, title, message, link) VALUES (?, 'verification_approved', 'Seller Verified! 🌟', ?, 'profile')")
+                   ->execute([$id, $msg]);
+                if (!empty($uData['fcm_token'])) {
+                    sendFcmPush($uData['fcm_token'], 'Seller Verified! 🌟', $msg, ['type' => 'verification_approved']);
+                }
+            } catch (\Throwable $e) {}
             jsonOk(['message' => 'User marked as Trusted Seller.']);
             
         case 'untrust':
@@ -122,6 +134,17 @@ function updateUser(array $admin): void {
         case 'reject_verification':
             $db->prepare("UPDATE users SET verification_status='rejected', verification_id_url=NULL WHERE id=?")->execute([$id]);
             adminLog($admin, 'REJECT_VERIFICATION', "User ID: $id");
+            try {
+                $chkUser = $db->prepare("SELECT fcm_token FROM users WHERE id = ?");
+                $chkUser->execute([$id]);
+                $uData = $chkUser->fetch();
+                $msg = "Your Govt ID verification request could not be approved. Please re-upload a clear ID in your Profile.";
+                $db->prepare("INSERT INTO user_notifications (user_id, type, title, message, link) VALUES (?, 'verification_rejected', 'ID Verification Update', ?, 'edit_profile')")
+                   ->execute([$id, $msg]);
+                if (!empty($uData['fcm_token'])) {
+                    sendFcmPush($uData['fcm_token'], 'ID Verification Update', $msg, ['type' => 'verification_rejected']);
+                }
+            } catch (\Throwable $e) {}
             jsonOk(['message' => 'Verification rejected.']);
 
         case 'verify':
@@ -176,6 +199,19 @@ function grantQuota(array $admin, array $b): void {
     )->execute([$userId, $ads, $ads]);
 
     adminLog($admin, 'GRANT_QUOTA', "User ID: $userId + $ads ads");
+
+    try {
+        $chkUser = $db->prepare("SELECT fcm_token FROM users WHERE id = ?");
+        $chkUser->execute([$userId]);
+        $uData = $chkUser->fetch();
+        $msg = "Bonus: $ads ad credits have been granted to your account by the ZipZapZoi admin team! 🎁";
+        $db->prepare("INSERT INTO user_notifications (user_id, type, title, message, link) VALUES (?, 'quota_granted', 'Free Ad Credits Added! 🎁', ?, 'plans')")
+           ->execute([$userId, $msg]);
+        if (!empty($uData['fcm_token'])) {
+            sendFcmPush($uData['fcm_token'], 'Free Ad Credits Added! 🎁', $msg, ['type' => 'quota_granted']);
+        }
+    } catch (\Throwable $e) {}
+
     jsonOk(['message' => "$ads ads granted successfully."]);
 }
 

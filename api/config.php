@@ -378,3 +378,26 @@ function normalizeImagesArray($images): array {
     if (!is_array($images)) return [];
     return array_map('toAbsoluteUrl', $images);
 }
+
+// ── Admin & Logging Helpers ───────────────────────────────────────────
+function adminLog(?array $admin, string $action, string $detail = ''): void {
+    try {
+        $adminId   = (int)($admin['id'] ?? 0);
+        $adminName = $admin['name'] ?? 'Admin';
+        getDB()->prepare(
+            'INSERT INTO admin_logs (admin_id, admin_name, action, detail) VALUES (?,?,?,?)'
+        )->execute([$adminId, $adminName, $action, $detail]);
+    } catch (\Throwable $e) {}
+}
+
+function logAdminAction($adminId, string $action, array $context = []): void {
+    adminLog(['id' => (int)$adminId, 'name' => 'Admin #' . (int)$adminId], $action, json_encode($context));
+}
+
+function logError(string $msg, array $context = []): void {
+    error_log($msg . (!empty($context) ? ' ' . json_encode($context) : ''));
+}
+
+function jsonResponse($data = null, int $code = 200): void {
+    jsonOk($data, $code);
+}

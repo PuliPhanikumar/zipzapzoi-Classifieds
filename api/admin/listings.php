@@ -7,6 +7,7 @@
  * DELETE /api/admin/listings.php?id=X        → hard delete
  */
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../fcm_helper.php';
 $admin  = requireAdmin();
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -83,8 +84,43 @@ function updateListing(array $admin): void {
         
         $db->prepare('UPDATE listings SET status=?, created_at=NOW(), updated_at=NOW(), expires_at=DATE_ADD(NOW(), INTERVAL ? DAY) WHERE id=?')
            ->execute([$status, $expiresDays, $id]);
+
+        // Send instant notification and push to the seller
+        try {
+            $stmtListing = $db->prepare("SELECT l.user_id, l.title, u.fcm_token FROM listings l JOIN users u ON u.id = l.user_id WHERE l.id = ?");
+            $stmtListing->execute([$id]);
+            $lData = $stmtListing->fetch();
+            if ($lData) {
+                $uid    = (int)$lData['user_id'];
+                $ltitle = $lData['title'];
+                $msg    = "Your listing \"$ltitle\" is now live and visible to buyers across India!";
+                $db->prepare("INSERT INTO user_notifications (user_id, type, title, message, link) VALUES (?, 'listing_approved', 'Listing Approved 🎉', ?, ?)")
+                   ->execute([$uid, $msg, "listing/$id"]);
+                if (!empty($lData['fcm_token'])) {
+                    sendFcmPush($lData['fcm_token'], 'Listing Approved 🎉', $msg, ['listing_id' => (string)$id, 'type' => 'listing_approved']);
+                }
+            }
+        } catch (\Throwable $ne) {}
     } else {
         $db->prepare('UPDATE listings SET status=?, updated_at=NOW() WHERE id=?')->execute([$status, $id]);
+
+        if ($status === 'rejected') {
+            try {
+                $stmtListing = $db->prepare("SELECT l.user_id, l.title, u.fcm_token FROM listings l JOIN users u ON u.id = l.user_id WHERE l.id = ?");
+                $stmtListing->execute([$id]);
+                $lData = $stmtListing->fetch();
+                if ($lData) {
+                    $uid    = (int)$lData['user_id'];
+                    $ltitle = $lData['title'];
+                    $msg    = "Your listing \"$ltitle\" was reviewed and rejected. Please review our posting guidelines.";
+                    $db->prepare("INSERT INTO user_notifications (user_id, type, title, message, link) VALUES (?, 'listing_rejected', 'Listing Review Update', ?, ?)")
+                       ->execute([$uid, $msg, "my_listings"]);
+                    if (!empty($lData['fcm_token'])) {
+                        sendFcmPush($lData['fcm_token'], 'Listing Review Update', $msg, ['listing_id' => (string)$id, 'type' => 'listing_rejected']);
+                    }
+                }
+            } catch (\Throwable $ne) {}
+        }
     }
 
     $actionMap = [

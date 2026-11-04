@@ -45,7 +45,13 @@ function listWantedAds(): void {
         $stmt = $db->prepare($sql);
         $stmt->execute($params);
         $ads = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        jsonResponse([
+        foreach ($ads as &$ad) {
+            $ad['id']         = (int)$ad['id'];
+            $ad['user_id']    = (int)$ad['user_id'];
+            $ad['budget_min'] = (float)$ad['budget_min'];
+            $ad['budget_max'] = (float)$ad['budget_max'];
+        }
+        jsonOk([
             'wanted_ads' => $ads,
             'count'      => count($ads)
         ]);
@@ -56,7 +62,7 @@ function listWantedAds(): void {
 }
 
 function updateWantedAd(array $admin): void {
-    $data = json_decode(file_get_contents('php://input'), true);
+    $data = getBody();
     $id     = $data['id'] ?? null;
     $status = $data['status'] ?? null;
 
@@ -68,7 +74,7 @@ function updateWantedAd(array $admin): void {
         $stmt->execute([':status' => $status, ':id' => $id]);
         if ($stmt->rowCount() > 0) {
             logAdminAction($admin['id'], 'wanted_status_update', ['wanted_id' => $id, 'new_status' => $status]);
-            jsonResponse(['message' => "Wanted request status updated to $status"]);
+            jsonOk(['message' => "Wanted request status updated to $status"]);
         } else {
             jsonError('Wanted request not found or status already set', 404);
         }
@@ -88,7 +94,7 @@ function deleteWantedAd(array $admin): void {
         $stmt->execute([':id' => $id]);
         if ($stmt->rowCount() > 0) {
             logAdminAction($admin['id'], 'wanted_hard_delete', ['wanted_id' => $id]);
-            jsonResponse(['message' => 'Wanted request deleted permanently']);
+            jsonOk(['message' => 'Wanted request deleted permanently']);
         } else {
             jsonError('Wanted request not found', 404);
         }

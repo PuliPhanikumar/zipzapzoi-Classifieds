@@ -5,6 +5,7 @@
  * PUT /api/admin/support.php           → resolve ticket {id, status}
  */
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../fcm_helper.php';
 $admin  = requireAdmin();
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -63,6 +64,24 @@ function updateTicket(array $admin): void {
 
     $db->prepare('UPDATE support_tickets SET status=? WHERE id=?')->execute([$status, $id]);
     
+    if ($status === 'resolved') {
+        try {
+            $tStmt = $db->prepare("SELECT t.user_id, t.subject, u.fcm_token FROM support_tickets t JOIN users u ON u.id = t.user_id WHERE t.id = ?");
+            $tStmt->execute([$id]);
+            $tData = $tStmt->fetch();
+            if ($tData) {
+                $uid  = (int)$tData['user_id'];
+                $subj = $tData['subject'];
+                $msg  = "Your support ticket #$id (\"$subj\") has been resolved by our support team.";
+                $db->prepare("INSERT INTO user_notifications (user_id, type, title, message, link) VALUES (?, 'ticket_resolved', 'Support Ticket Resolved 💬', ?, 'support')")
+                   ->execute([$uid, $msg]);
+                if (!empty($tData['fcm_token'])) {
+                    sendFcmPush($tData['fcm_token'], 'Support Ticket Resolved 💬', $msg, ['ticket_id' => (string)$id, 'type' => 'ticket_resolved']);
+                }
+            }
+        } catch (\Throwable $e) {}
+    }
+
     try {
         $db->prepare(
             'INSERT INTO admin_logs (admin_id, admin_name, action, detail) VALUES (?,?,?,?)'
