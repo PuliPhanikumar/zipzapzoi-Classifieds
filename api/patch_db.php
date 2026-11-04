@@ -226,6 +226,27 @@ try {
     ")->execute([$testPass]);
     $updates['test_bot'] = "Verified test bot account";
 
+    // Diagnostic for reports tables
+    $reportCols = $db->query("SHOW COLUMNS FROM reports")->fetchAll(PDO::FETCH_COLUMN);
+    $userReportCols = $db->query("SHOW COLUMNS FROM user_reports")->fetchAll(PDO::FETCH_COLUMN);
+    $updates['reports_columns'] = $reportCols;
+    $updates['user_reports_columns'] = $userReportCols;
+
+    // Test query
+    try {
+        $testQuery = $db->query("
+            SELECT s.name AS seller_name, s.id AS seller_id, COUNT(r.id) AS report_count
+            FROM reports r
+            JOIN listings l ON l.id = r.listing_id
+            JOIN users s ON s.id = l.user_id
+            GROUP BY s.id, s.name
+            LIMIT 1
+        ")->fetchAll();
+        $updates['test_abuse_query'] = "SUCCESS";
+    } catch (\Throwable $e) {
+        $updates['test_abuse_query_error'] = $e->getMessage();
+    }
+
     // 8. Return current state
     $checkStmt = $db->prepare("SELECT id, title, status, expires_at, user_id FROM listings WHERE id = 7");
     $checkStmt->execute();
